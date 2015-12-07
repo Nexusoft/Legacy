@@ -1,5 +1,5 @@
-#ifndef COINSHIELD_LLP_TYPES_H
-#define COINSHIELD_LLP_TYPES_H
+#ifndef NEXUS_LLP_TYPES_H
+#define NEXUS_LLP_TYPES_H
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 

@@ -1,5 +1,5 @@
-#ifndef COINSHIELD_LLP_SERVER_H
-#define COINSHIELD_LLP_SERVER_H
+#ifndef NEXUS_LLP_SERVER_H
+#define NEXUS_LLP_SERVER_H
 
 #include "types.h"
 
