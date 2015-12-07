@@ -1,19 +1,45 @@
-#ifndef Nexus_LLP_TYPES_H
-#define Nexus_LLP_TYPES_H
+#ifndef COINSHIELD_LLP_TYPES_H
+#define COINSHIELD_LLP_TYPES_H
+
+#include <boost/date_time/posix_time/posix_time.hpp>
+
+#include <string>
+#include <vector>
+#include <stdio.h>
+#include <boost/bind.hpp>
+#include <boost/smart_ptr.hpp>
+#include <boost/asio.hpp>
+#include <boost/thread/thread.hpp>         
+
+#define LOCK_GUARD(a) boost::lock_guard<boost::mutex> lock(a)
 
 #include "../util/util.h"
 	
 namespace LLP
 {
+	
+	/** Event Enumeration. Used to determine each Event from LLP Server. **/
+	enum 
+	{
+		EVENT_HEADER         = 0,
+		EVENT_PACKET         = 1,
+		EVENT_CONNECT        = 2,
+		EVENT_DISCONNECT     = 3,
+		EVENT_GENERIC        = 4
+	};
 
 
-
-	/** Definitions for LLP Functions **/
+	/** Type Definitions for LLP Functions **/
 	typedef boost::shared_ptr<boost::asio::ip::tcp::socket>      Socket_t;
 	typedef boost::asio::ip::tcp::acceptor                       Listener_t;
 	typedef boost::asio::io_service                              Service_t;
 	typedef boost::thread                                        Thread_t;
 	typedef boost::system::error_code                            Error_t;
+	typedef boost::mutex                                         Mutex_t;
+	
+	
+	/** Sleep for a duration in Milliseconds. **/
+	inline void Sleep(unsigned int nTime){ boost::this_thread::sleep(boost::posix_time::milliseconds(nTime)); }
 	
 	
 	
@@ -28,8 +54,9 @@ namespace LLP
 	public:
 		inline void Start() { TIMER_START = boost::posix_time::microsec_clock::local_time(); fStopped = false; }
 		inline void Reset() { Start(); }
-		inline void Stop() { TIMER_END = boost::posix_time::microsec_clock::local_time(); fStopped = true; }
+		inline void Stop()  { TIMER_END = boost::posix_time::microsec_clock::local_time(); fStopped = true; }
 		
+		/** Return the Total Seconds Elapsed Since Timer Started. **/
 		unsigned int Elapsed()
 		{
 			if(fStopped)
@@ -38,6 +65,7 @@ namespace LLP
 			return (boost::posix_time::microsec_clock::local_time() - TIMER_START).total_seconds();
 		}
 		
+		/** Return the Total Milliseconds Elapsed Since Timer Started. **/
 		unsigned int ElapsedMilliseconds()
 		{
 			if(fStopped)
@@ -56,7 +84,10 @@ namespace LLP
 		std::vector< std::pair<bool, int> > SCORE;
 		Timer TIMER;
 		int nIterator;
+		Mutex_t MUTEX;
 		
+		
+		/** Reset the Timer and the Score Flags to be Overwritten. **/
 		void Reset()
 		{
 			for(int i = 0; i < SCORE.size(); i++)
@@ -67,8 +98,12 @@ namespace LLP
 		}
 		
 	public:
+	
+		/** Construct a DDOS Score of Moving Average Timespan. **/
 		DDOS_Score(int nTimespan)
 		{
+			LOCK_GUARD(MUTEX);
+			
 			for(int i = 0; i < nTimespan; i++)
 				SCORE.push_back(std::make_pair(true, 0));
 				
@@ -76,15 +111,23 @@ namespace LLP
 			nIterator = 0;
 		}
 		
+		
+		/** Flush the DDOS Score to 0. **/
 		void Flush()
 		{
+			LOCK_GUARD(MUTEX);
+			
 			Reset();
 			for(int i = 0; i < SCORE.size(); i++)
 				SCORE[i].second = 0;
 		}
 		
+		
+		/** Access the DDOS Score from the Moving Average. **/
 		int Score()
 		{
+			LOCK_GUARD(MUTEX);
+			
 			int nMovingAverage = 0;
 			for(int i = 0; i < SCORE.size(); i++)
 				nMovingAverage += SCORE[i].second;
@@ -92,16 +135,24 @@ namespace LLP
 			return nMovingAverage / SCORE.size();
 		}
 		
-		DDOS_Score & operator++(int)
+		
+		/** Increase the Score by nScore. Operates on the Moving Average to Increment Score per Second. **/
+		DDOS_Score & operator+=(const int& nScore)
 		{
+			LOCK_GUARD(MUTEX);
+			
 			int nTime = TIMER.Elapsed();
+			
+			
+			/** If the Time has been greater than Moving Average Timespan, Set to Add Score on Time Overlap. **/
 			if(nTime >= SCORE.size())
 			{
 				Reset();
-				nTime -= SCORE.size();
+				nTime = nTime % SCORE.size();
 			}
 				
-			
+				
+			/** Iterate as many seconds as needed, flagging that each has been iterated. **/
 			for(int i = nIterator; i <= nTime; i++)
 			{
 				if(!SCORE[i].first)
@@ -110,13 +161,19 @@ namespace LLP
 					SCORE[i].second = 0;
 				}
 			}
-					
-			SCORE[nTime].second++;
+			
+			
+			/** Update the Moving Average Iterator and Score for that Second Instance. **/
+			SCORE[nTime].second += nScore;
 			nIterator = nTime;
+			
+			
+			return *this;
 		}
 	};
 	
 	
+	/** Filter to Contain DDOS Scores and Handle DDOS Bans. **/
 	class DDOS_Filter
 	{
 		Timer TIMER;
@@ -124,21 +181,29 @@ namespace LLP
 		
 	public:
 		DDOS_Score rSCORE, cSCORE;
-			
 		DDOS_Filter(unsigned int nTimespan) : rSCORE(nTimespan), cSCORE(nTimespan), BANTIME(0), TOTALBANS(0) { }
+		Mutex_t MUTEX;
 		
+		/** Ban a Connection, and Flush its Scores. **/
 		void Ban()
 		{
+			LOCK_GUARD(MUTEX);
+			
+			if(Banned())
+				return;
+			
 			TIMER.Start();
 			TOTALBANS++;
 			
-			BANTIME = std::max(TOTALBANS * (rSCORE.Score() + 1) * (cSCORE.Score() + 1), 60u);
+			BANTIME = std::max(TOTALBANS * (rSCORE.Score() + 1) * (cSCORE.Score() + 1), TOTALBANS * 1200u);
 			
 			printf("XXXXX DDOS Filter cScore = %i rScore = %i Banned for %u Seconds.\n", cSCORE.Score(), rSCORE.Score(), BANTIME);
+			
 			cSCORE.Flush();
 			rSCORE.Flush();
 		}
 		
+		/** Check if Connection is Still Banned. **/
 		bool Banned() { return (TIMER.Elapsed() < BANTIME); }
 	};
 	
@@ -209,18 +274,11 @@ namespace LLP
 	class Connection
 	{
 	protected:
-		/** Incoming Packet Being Built. **/
-		Packet        INCOMING;
-		
 		
 		/** Basic Connection Variables. **/
 		Timer         TIMER;
 		Error_t       ERROR_HANDLE;
 		Socket_t      SOCKET;
-		
-		
-		/** Connected Flag. **/
-		bool CONNECTED;
 		
 		
 		/** 
@@ -229,20 +287,36 @@ namespace LLP
 			Useful to check Header length to maximum size of packet type for DDOS protection, 
 			sending a keep-alive ping while downloading large files, etc.
 			
-			nSize == 0 : Header Is Complete for Data Packet
-			nSize  > 0 : Read nSize Bytes into Data Packet  
+			LENGTH == 0: General Events
+			LENGTH  > 0 && PACKET: Read nSize Bytes into Data Packet
 		**/
-		virtual inline void Event(unsigned int nSize = 0){ }
+		virtual void Event(unsigned char EVENT, unsigned int LENGTH = 0){ }
 		
+		/** Virtual Process Function. To be overridden with your own custom packet processing. **/
+		virtual bool ProcessPacket(){ }
 	public:
 	
+	
+		/** Incoming Packet Being Built. **/
+		Packet        INCOMING;
+		
+		
 		/** DDOS Score if a Incoming Server Connection. **/
 		DDOS_Filter*   DDOS;
 		
 		
+		/** Connected Flag. **/
+		bool CONNECTED;
+		
+		
+		/** Flag to Determine if DDOS is Enabled. **/
+		bool fDDOS;
+		
+		
 		/** Connection Constructors **/
-		Connection() : SOCKET(), DDOS(NULL), INCOMING(), CONNECTED(false) { INCOMING.SetNull(); }
-		Connection( Socket_t SOCKET_IN, DDOS_Filter* DDOS_IN ) : SOCKET(SOCKET_IN), DDOS(DDOS_IN), INCOMING(), CONNECTED(true) { TIMER.Start(); }
+		Connection() : SOCKET(), DDOS(NULL), INCOMING(), CONNECTED(false), fDDOS(false) { INCOMING.SetNull(); }
+		Connection( Socket_t SOCKET_IN, DDOS_Filter* DDOS_IN, bool isDDOS = false) : SOCKET(SOCKET_IN), fDDOS(isDDOS), DDOS(DDOS_IN), INCOMING(), CONNECTED(false) { TIMER.Start(); }
+		
 		
 		/** Checks for any flags in the Error Handle. **/
 		bool Errors(){ return (ERROR_HANDLE == boost::asio::error::eof || ERROR_HANDLE); }
@@ -252,7 +326,7 @@ namespace LLP
 		bool Timeout(unsigned int nTime){ return (TIMER.Elapsed() >= nTime); }
 		
 		
-		/** Flag to determine if TCP Connection is still alive. **/
+		/** Determines if Connected or Not. **/
 		bool Connected(){ return CONNECTED; }
 		
 		
@@ -265,13 +339,7 @@ namespace LLP
 		
 		
 		/** Write a single packet to the TCP stream. **/
-		void WritePacket(Packet PACKET)
-		{
-			if(Errors())
-				return;
-				
-			Write(PACKET.GetBytes());
-		}
+		void WritePacket(Packet PACKET) { Write(PACKET.GetBytes()); }
 		
 		
 		/** Non-Blocking Packet reader to build a packet from TCP Connection.
@@ -290,7 +358,6 @@ namespace LLP
 				
 			if(!INCOMING.IsNull() && !INCOMING.Complete())
 			{
-			
 				/** Handle Reading Packet Length Header. **/
 				if(SOCKET->available() >= 4 && INCOMING.LENGTH == 0)
 				{
@@ -298,7 +365,7 @@ namespace LLP
 					if(Read(BYTES, 4) == 4)
 					{
 						INCOMING.SetLength(BYTES);
-						Event(0);
+						Event(EVENT_HEADER);
 					}
 				}
 					
@@ -312,7 +379,7 @@ namespace LLP
 					if(nRead == DATA.size())
 					{
 						INCOMING.DATA.insert(INCOMING.DATA.end(), DATA.begin(), DATA.end());
-						Event(nRead);
+						Event(EVENT_PACKET, nRead);
 					}
 				}
 			}
@@ -349,7 +416,7 @@ namespace LLP
 	};
 
 	
-	
+
 }
 
 #endif

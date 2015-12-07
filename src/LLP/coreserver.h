@@ -34,12 +34,15 @@ namespace LLP
 	
 	public:
 		CoreLLP() : Connection(){ }
-		CoreLLP( Socket_t SOCKET_IN, DDOS_Filter* DDOS_IN ) : Connection( SOCKET_IN, DDOS_IN ) 
+		CoreLLP( Socket_t SOCKET_IN, DDOS_Filter* DDOS_IN, bool isDDOS = false ) : Connection( SOCKET_IN, DDOS_IN ) 
 		{ ADDRESS = parse_ip(SOCKET_IN->remote_endpoint().address().to_string()); }
+		
+		/** Handle Event Inheritance. **/
+		void Event(unsigned char EVENT, unsigned int LENGTH = 0){ }
 		
 		/** This function is necessary for a template LLP server. It handles your 
 			custom messaging system, and how to interpret it from raw packets. **/
-		inline bool ProcessPacket()
+		bool ProcessPacket()
 		{
 			Packet PACKET   = this->INCOMING;
 			

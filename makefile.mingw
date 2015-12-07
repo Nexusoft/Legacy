@@ -1,0 +1,124 @@
+############################################################################################
+# 
+#			Hash(BEGIN(Satoshi[2010]), END(Sunny[2012])) == Videlicet[2014] ++
+#   
+# [Learn, Create, but do not Forge] Viz. http://www.opensource.org/licenses/mit-license.php
+# 
+############################################################################################
+
+USE_UPNP=1
+
+INCLUDEPATHS= \
+ -I"$(CURDIR)" \
+ -I"$(CURDIR)\src" \
+ -I"$(CURDIR)\src\core" \
+ -I"$(CURDIR)\src\hash" \
+ -I"$(CURDIR)\src\json" \
+ -I"$(CURDIR)\src\LLP" \
+ -I"$(CURDIR)\src\net" \
+ -I"$(CURDIR)\src\util" \
+ -I"$(CURDIR)\src\wallet" \
+ -I"C:\Deps\boost_1_57_0" \
+ -I"C:\Deps\db-4.8.30.NC\build_unix" \
+ -I"C:\Deps\openssl-1.0.1p\include"
+
+LIBPATHS= \
+ -L"C:\Deps\boost_1_57_0\stage\lib" \
+ -L"C:\Deps\db-4.8.30.NC\build_unix" \
+ -L"C:\Deps\openssl-1.0.1p"
+
+LIBS= \
+ -l boost_system-mgw49-mt-s-1_57 \
+ -l boost_filesystem-mgw49-mt-s-1_57 \
+ -l boost_program_options-mgw49-mt-s-1_57 \
+ -l boost_thread-mgw49-mt-s-1_57 \
+ -l db_cxx \
+ -l ssl \
+ -l crypto
+
+DEFS=-DWIN32 -D_WINDOWS -DBOOST_THREAD_USE_LIB -DBOOST_SPIRIT_THREADSAFE
+DEBUGFLAGS=-g
+CFLAGS=-mthreads -static -static-libgcc -static-libstdc++ -O2 -w -Wno-invalid-offsetof -Wformat $(DEBUGFLAGS) $(DEFS) $(INCLUDEPATHS)
+
+ifdef USE_UPNP
+ INCLUDEPATHS += -I"C:/Deps/"
+ LIBPATHS += -L"C:/Deps/miniupnpc"
+ LIBS += -l miniupnpc -l iphlpapi
+ DEFS += -DSTATICLIB -DUSE_UPNP=$(USE_UPNP)
+endif
+
+LIBS += -l kernel32 -l user32 -l gdi32 -l comdlg32 -l winspool -l winmm -l shell32 -l comctl32 -l ole32 -l oleaut32 -l uuid -l rpcrt4 -l advapi32 -l ws2_32 -l shlwapi
+
+# TODO: make the mingw builds smarter about dependencies, like the linux/osx builds are
+HEADERS = $(wildcard *.h)
+OBJS= \
+    build/version.o \
+    build/netbase.o \
+    build/addrman.o \
+    build/crypter.o \
+    build/key.o \
+    build/db.o \
+    build/start.o \
+    build/keystore.o \
+	build/difficulty.o \
+	build/checkpoints.o \
+    build/net.o \
+    build/protocol.o \
+	build/unifiedtime.o \
+    build/rpcserver.o \
+    build/rpcdump.o \
+    build/script.o \
+    build/util.o \
+    build/wallet.o \
+    build/walletdb.o \
+    build/noui.o \
+    build/kernel.o \
+	build/debug.o \
+	build/prime.o \
+	build/skein.o \
+	build/skein_block.o \
+	build/KeccakDuplex.o \
+	build/KeccakSponge.o \
+	build/Keccak-compact64.o \
+	build/KeccakHash.o \
+	build/release.o \
+	build/block.o \
+	build/dispatch.o \
+	build/message.o \
+	build/mining.o \
+	build/transaction.o \
+	build/global.o
+
+
+
+all: release/Nexus.exe
+
+build/%.o: ./src/%.cpp $(HEADERS)
+	g++ -c $(CFLAGS) -o $@ $<
+	
+build/%.o: ./src/core/%.cpp $(HEADERS)
+	g++ -c $(CFLAGS) -o $@ $<
+	
+build/%.o: ./src/hash/%.cpp $(HEADERS)
+	g++ -c $(CFLAGS) -o $@ $<
+	
+build/%.o: ./src/hash/%.c $(HEADERS)
+	g++ -c $(CFLAGS) -fpermissive -o $@ $<
+	
+build/%.o: ./src/keys/%.cpp $(HEADERS)
+	g++ -c $(CFLAGS) -o $@ $<
+	
+build/%.o: ./src/LLP/%.cpp $(HEADERS)
+	g++ -c $(CFLAGS) -o $@ $<
+	
+build/%.o: ./src/net/%.cpp $(HEADERS)
+	g++ -c $(CFLAGS) -o $@ $<
+	
+build/%.o: ./src/util/%.cpp $(HEADERS)
+	g++ -c $(CFLAGS) -o $@ $<
+	
+build/%.o: ./src/wallet/%.cpp $(HEADERS)
+	g++ -c $(CFLAGS) -o $@ $<
+
+release/Nexus.exe: $(OBJS:build/%=build/%)
+	g++ $(CFLAGS) -o $@ $(LIBPATHS) $^ $(LIBS)

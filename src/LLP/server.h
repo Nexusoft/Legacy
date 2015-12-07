@@ -1,27 +1,31 @@
-#ifndef Nexus_LLP_SERVER_H
-#define Nexus_LLP_SERVER_H
+#ifndef COINSHIELD_LLP_SERVER_H
+#define COINSHIELD_LLP_SERVER_H
 
 #include "types.h"
 
 namespace LLP
 {
 
+	//Mutex_t     DDOS_MUTEX;
+
+
 	/** Base Template Thread Class for Server base. Used for Core LLP Packet Functionality. 
 		Not to be inherited, only for use by the LLP Server Base Class. **/
 	template <class ProtocolType> class DataThread
 	{
+		/** Data Thread. **/
+		Thread_t DATA_THREAD;
+		
 	public:
+	
 		/** Service that is used to handle Connections on this Thread. **/
 		Service_t IO_SERVICE;
 		
 		/** Variables to track Connection / Request Count. **/
-		bool fDDOS; unsigned int nConnections, DDOS_rSCORE, ID, TIMEOUT, REQUESTS;
+		bool fDDOS; unsigned int nConnections, ID, REQUESTS, TIMEOUT, DDOS_rSCORE, DDOS_cSCORE;
 		
 		/** Vector to store Connections. **/
 		std::vector< ProtocolType* > CONNECTIONS;
-		
-		/** Data Thread. **/
-		Thread_t DATA_THREAD;
 		
 		/** Returns the index of a component of the CONNECTIONS vector that has been flagged Disconnected **/
 		int FindSlot()
@@ -40,31 +44,36 @@ namespace LLP
 			int nSlot = FindSlot();
 			if(nSlot == CONNECTIONS.size())
 				CONNECTIONS.push_back(NULL);
-					
-			CONNECTIONS[nSlot] = new ProtocolType(SOCKET, DDOS);
-			++nConnections;
+				
+			if(fDDOS)
+				DDOS -> cSCORE += 1;
 			
-			//printf("New LLP Connection Added to Slot %i on Thread %i...\n", nSlot, ID);
+			CONNECTIONS[nSlot] = new ProtocolType(SOCKET, DDOS, fDDOS);
+			
+			CONNECTIONS[nSlot]->Event(EVENT_CONNECT);
+			CONNECTIONS[nSlot]->CONNECTED = true;
+			
+			++nConnections;
 		}
 		
 		/** Removes given connection from current Data Thread. 
 			Happens with a timeout / error, graceful close, or disconnect command. **/
 		void RemoveConnection(int index)
 		{
+			CONNECTIONS[index]->Event(EVENT_DISCONNECT);
 			CONNECTIONS[index]->Disconnect();
+			
 			delete CONNECTIONS[index];
 					
 			CONNECTIONS[index] = NULL;
 			-- nConnections;
-			
-			//printf("LLP Connection Removed from Slot %i on Thread %i...\n", index, ID);
 		}
 		
 		/** Thread that handles all the Reading / Writing of Data from Sockets. 
 			Creates a Packet QUEUE on this connection to be processed by an LLP Messaging Thread. **/
 		void Thread()
 		{
-			loop
+			for(;;)
 			{
 				/** Keep data threads at 1000 FPS Maximum. **/
 				Sleep(1);
@@ -75,10 +84,11 @@ namespace LLP
 				{
 					try
 					{
+						
 						/** Skip over Inactive Connections. **/
 						if(!CONNECTIONS[nIndex])
 							continue;
-							
+		
 							
 						/** Remove Connection if it has Timed out or had any Errors. **/
 						if(CONNECTIONS[nIndex]->Timeout(TIMEOUT) || CONNECTIONS[nIndex]->Errors())
@@ -89,12 +99,16 @@ namespace LLP
 						}
 						
 						
+						/** Skip over Connection if not Connected. **/
+						if(!CONNECTIONS[nIndex]->Connected())
+							continue;
+						
+						
 						/** Handle any DDOS Filters. **/
 						if(fDDOS)
 						{
-							
-							/** Ban a node if it fails DDOS Packet Check or has too many Requests per Second. **/
-							if(CONNECTIONS[nIndex]->DDOS->rSCORE.Score() > DDOS_rSCORE)
+							/** Ban a node if it has too many Requests per Second. **/
+							if(CONNECTIONS[nIndex]->DDOS->rSCORE.Score() > DDOS_rSCORE || CONNECTIONS[nIndex]->DDOS->cSCORE.Score() > DDOS_cSCORE)
 							   CONNECTIONS[nIndex]->DDOS->Ban();
 							
 							/** Remove a connection if it was banned by DDOS Protection. **/
@@ -105,6 +119,10 @@ namespace LLP
 								continue;
 							}
 						}
+						
+						
+						/** Generic event for Connection. **/
+						CONNECTIONS[nIndex]->Event(EVENT_GENERIC);
 						
 						/** Work on Reading a Packet. **/
 						CONNECTIONS[nIndex]->ReadPacket();
@@ -125,7 +143,8 @@ namespace LLP
 							REQUESTS++;
 							
 							if(fDDOS)
-								CONNECTIONS[nIndex]->DDOS->rSCORE++;
+								CONNECTIONS[nIndex]->DDOS->rSCORE += 1;
+							
 						}
 					}
 					catch(std::exception& e)
@@ -136,34 +155,33 @@ namespace LLP
 			}
 		}
 		
-		DataThread<ProtocolType>(unsigned int id, bool isDDOS, unsigned int rScore, unsigned int nTimeout) : 
-			ID(id), fDDOS(isDDOS), DDOS_rSCORE(rScore), TIMEOUT(nTimeout), REQUESTS(0), CONNECTIONS(0), nConnections(0), DATA_THREAD(boost::bind(&DataThread::Thread, this)) { }
+		DataThread<ProtocolType>(unsigned int id, bool isDDOS, unsigned int rScore, unsigned int cScore, unsigned int nTimeout) : 
+			ID(id), fDDOS(isDDOS), DDOS_rSCORE(rScore), DDOS_cSCORE(cScore), TIMEOUT(nTimeout), REQUESTS(0), CONNECTIONS(0), nConnections(0), DATA_THREAD(boost::bind(&DataThread::Thread, this)){ }
 	};
 
 	
 	
 	/** Base Class to create a Custom LLP Server. Protocol Type class must inherit Connection,
-		and provide a Process method. Optional Broadcasting System added by creating a thread in
-		Inherited Server Class, to Broadcast Packet(s) of your choice. **/
+		and provide a ProcessPacket method. Optional Events by providing GenericEvent method. **/
 	template <class ProtocolType> class Server
 	{
-	protected:
+		/** The DDOS variables. Tracks the Requests and Connections per Second
+			from each connected address. **/
+		std::map<unsigned int,   DDOS_Filter*> DDOS_MAP;
+		bool fDDOS;
+		
+	public:
 		int PORT, MAX_THREADS;
 		
 		/** The data type to keep track of current running threads. **/
 		std::vector< DataThread<ProtocolType>* > DATA_THREADS;
 		
-		/** The DDOS variables. Tracks the Requests and Connections per Second
-			from each connected address. **/
-		std::map<unsigned int,   DDOS_Filter*> DDOS_MAP;
-		bool fDDOS; unsigned int DDOS_cSCORE;
 		
-	public:
 		Server<ProtocolType>(int nPort, int nMaxThreads, bool isDDOS, int cScore, int rScore, int nTimeout) : 
-			fDDOS(isDDOS), DDOS_cSCORE(cScore), LISTENER(SERVICE), PORT(nPort), MAX_THREADS(nMaxThreads), LISTEN_THREAD(boost::bind(&Server::ListeningThread, this))
+			fDDOS(isDDOS), LISTENER(SERVICE), PORT(nPort), MAX_THREADS(nMaxThreads), LISTEN_THREAD(boost::bind(&Server::ListeningThread, this)) //,METER_THREAD(boost::bind(&Server::MeterThread, this)), 
 		{
 			for(int index = 0; index < MAX_THREADS; index++)
-				DATA_THREADS.push_back(new DataThread<ProtocolType>(index, fDDOS, rScore, nTimeout));
+				DATA_THREADS.push_back(new DataThread<ProtocolType>(index, fDDOS, rScore, cScore, nTimeout));
 		}
 		
 	private:
@@ -173,6 +191,8 @@ namespace LLP
 		Listener_t  LISTENER;
 		Error_t     ERROR_HANDLE;
 		Thread_t    LISTEN_THREAD;
+		Thread_t    METER_THREAD;
+		
 	
 		/** Determine the thread with the least amount of active connections. 
 			This keeps the load balanced across all server threads. **/
@@ -189,6 +209,28 @@ namespace LLP
 			}
 			
 			return nIndex;
+		}
+		
+		/** LLP Meter Thread. Tracks the Requests / Second. **/
+		void MeterThread()
+		{
+			Timer TIMER;
+			TIMER.Start();
+			
+			for(;;)
+			{	
+				Sleep(10000);
+				
+				unsigned int nGlobalConnections = 0;
+				for(int nIndex = 0; nIndex < MAX_THREADS; nIndex++)
+					nGlobalConnections += DATA_THREADS[nIndex]->nConnections;
+					
+				double RPS = (double) TotalRequests() / TIMER.Elapsed();
+				printf("[METERS] LLP Running at %f Requests per Second with %u Connections.\n", RPS, nGlobalConnections);
+				
+				TIMER.Reset();
+				ClearRequests();
+			}
 		}
 		
 		/** Main Listening Thread of LLP Server. Handles new Connections and DDOS associated with Connection if enabled. **/
@@ -212,8 +254,8 @@ namespace LLP
 			LISTENER.bind(ENDPOINT);
 			LISTENER.listen(1000, ERROR_HANDLE);
 			
-			printf("LLP Server Listening on Port %u\n", PORT);
-			loop
+			//printf("LLP Server Listening on Port %u\n", PORT);
+			for(;;)
 			{
 				/** Limit listener to allow maximum of 200 new connections per second. **/
 				Sleep(5);
@@ -225,52 +267,52 @@ namespace LLP
 					Socket_t SOCKET(new boost::asio::ip::tcp::socket(DATA_THREADS[nThread]->IO_SERVICE));
 					LISTENER.accept(*SOCKET);
 					
-					
 					/** Initialize DDOS Protection for Incoming IP Address. **/
-					std::vector<unsigned char> BYTES = parse_ip(SOCKET->remote_endpoint().address().to_string());
-					unsigned int ADDRESS = bytes2uint(BYTES);
+					std::vector<unsigned char> BYTES(4, 0);
+					sscanf(SOCKET->remote_endpoint().address().to_string().c_str(), "%u.%u.%u.%u", &BYTES[0], &BYTES[1], &BYTES[2], &BYTES[3]);
 					
+					unsigned int ADDRESS = (BYTES[0] << 24) + (BYTES[1] << 16) + (BYTES[2] << 8) + BYTES[3];
 					
-					if(!DDOS_MAP.count(ADDRESS))
-						DDOS_MAP[ADDRESS] = new DDOS_Filter(60);
-						
-					/** DDOS Operations: Only executed when DDOS is enabled. **/
-					if(fDDOS)
-					{
-						/** Disallow new connections if they are currently banned **/
-						if(DDOS_MAP[ADDRESS]->Banned())
+					{ //LOCK(DDOS_MUTEX);
+						if(!DDOS_MAP.count(ADDRESS))
+							DDOS_MAP[ADDRESS] = new DDOS_Filter(30);
+							
+						/** DDOS Operations: Only executed when DDOS is enabled. **/
+						if(fDDOS && DDOS_MAP[ADDRESS]->Banned())
 						{
 							SOCKET -> shutdown(boost::asio::ip::tcp::socket::shutdown_both, ERROR_HANDLE);
 							SOCKET -> close();
-							
+								
 							continue;
 						}
-							
-						/** Ban a node with more than 2 connection attempts per second **/
-						if(DDOS_MAP[ADDRESS] -> cSCORE.Score() > DDOS_cSCORE)
-						{
-							/** DDOS ban time gets larger the more you attempt to DDOS. **/
-							DDOS_MAP[ADDRESS]->Ban();
-							
-							SOCKET -> shutdown(boost::asio::ip::tcp::socket::shutdown_both, ERROR_HANDLE);
-							SOCKET -> close();
-							
-							continue;
-						}
-						
-						/** Continue to increase DDOS score. **/
-						DDOS_MAP[ADDRESS] -> cSCORE++;
 					
+					
+						/** Add new connection if passed all DDOS checks. **/
+						DATA_THREADS[nThread]->AddConnection(SOCKET, DDOS_MAP[ADDRESS]);
 					}
-					
-					/** Add new connection if passed all DDOS checks. **/
-					DATA_THREADS[nThread]->AddConnection(SOCKET, DDOS_MAP[ADDRESS]);
 				}
 				catch(std::exception& e)
 				{
 					printf("error: %s\n", e.what());
 				}
 			}
+		}
+		
+		/** Used for Meter. Adds up the total amount of requests from each Data Thread. **/
+		int TotalRequests()
+		{
+			int nTotalRequests = 0;
+			for(int nThread = 0; nThread < MAX_THREADS; nThread++)
+				nTotalRequests += DATA_THREADS[nThread]->REQUESTS;
+					
+			return nTotalRequests;
+		}
+			
+		/** Used for Meter. Resets the REQUESTS variable to 0 in each Data Thread. **/
+		void ClearRequests()
+		{
+			for(int nThread = 0; nThread < MAX_THREADS; nThread++)
+				DATA_THREADS[nThread]->REQUESTS = 0;
 		}
 	};
 

@@ -111,6 +111,9 @@ namespace LLP
 		map<uint512, Core::CBlock*> MAP_BLOCKS;
 		unsigned int nChannel, nBestHeight;
 		
+		/** Subscribed To Display how many Blocks connection Subscribed to. **/
+		unsigned int nSubscribed = 0;
+		
 		enum
 		{
 			/** DATA PACKETS **/
@@ -126,7 +129,7 @@ namespace LLP
 			
 			/** DATA REQUESTS **/
 			CHECK_BLOCK  = 64,
-			
+			SUBSCRIBE    = 65,
 					
 					
 			/** REQUEST PACKETS **/
@@ -141,17 +144,17 @@ namespace LLP
 			
 			
 			/** RESPONSE PACKETS **/
-			GOOD       = 200,
-			FAIL       = 201,
+			BLOCK_ACCEPTED       = 200,
+			BLOCK_REJECTED       = 201,
 
 			
 			/** VALIDATION RESPONSES **/
 			COINBASE_SET  = 202,
 			COINBASE_FAIL = 203,
 			
+			/** ROUND VALIDATIONS. **/
 			NEW_ROUND     = 204,
 			OLD_ROUND     = 205,
-					
 					
 			/** GENERIC **/
 			PING     = 253,
@@ -160,7 +163,7 @@ namespace LLP
 	
 	public:
 		MiningLLP() : Connection(){ pMiningKey = new Wallet::CReserveKey(pwalletMain); nChannel = 0; nBestHeight = 0; }
-		MiningLLP( Socket_t SOCKET_IN, DDOS_Filter* DDOS_IN ) : Connection( SOCKET_IN, DDOS_IN ) { pMiningKey = new Wallet::CReserveKey(pwalletMain); nChannel = 0; nBestHeight = 0; }
+		MiningLLP( Socket_t SOCKET_IN, DDOS_Filter* DDOS_IN, bool isDDOS = false ) : Connection( SOCKET_IN, DDOS_IN ) { pMiningKey = new Wallet::CReserveKey(pwalletMain); nChannel = 0; nBestHeight = 0; }
 		
 		~MiningLLP()
 		{
@@ -186,21 +189,74 @@ namespace LLP
 			printf("%%%%%%%%%% Mining LLP: New Block, Clearing Blocks Map.\n");
 		}
 		
-		inline void Event(unsigned int nSize)
+		void Event(unsigned char EVENT, unsigned int LENGTH = 0)
 		{
-			if(nSize == 0)
+			/** Handle any DDOS Packet Filters. **/
+			if(EVENT == EVENT_HEADER)
+				return;
+			
+			
+			/** Handle for a Packet Data Read. **/
+			if(EVENT == EVENT_PACKET)
+				return;
+			
+			
+			/** On Generic Event, Broadcast new block if flagged. **/
+			if(EVENT == EVENT_GENERIC)
 			{
-				Packet PACKET = this->INCOMING;
+				/** Skip Generic Event if not Subscribed to Work. **/
+				if(nSubscribed == 0)
+					return;
+					
+				/** Check the Round Automatically on Subscribed Worker. **/
+				if(pindexBest == NULL || !pindexBest || pindexBest->GetBlockHash() != Core::pindexBest->GetBlockHash())
+				{
+					pindexBest = Core::pindexBest;
+					ClearMap();
+					
+					/** Construct a response packet by serializing the Block. **/
+					Packet RESPONSE;
+					RESPONSE.HEADER = NEW_ROUND;
+					this->WritePacket(RESPONSE);
+					
+					/** Create all Blocks Worker Subscribed to. **/
+					for(int nBlock = 0; nBlock < nSubscribed; nBlock++) {
+						Core::CBlock* NEW_BLOCK = Core::CreateNewBlock(*pMiningKey, pwalletMain, nChannel, MAP_BLOCKS.size() + 1, pCoinbaseTx);
+						
+						/** Fault Tolerance Check. **/
+						if(!NEW_BLOCK)
+							continue;
+						
+						/** Handle the Block Key as Merkle Root for Block Submission. **/
+						MAP_BLOCKS[NEW_BLOCK->hashMerkleRoot] = NEW_BLOCK;
+							
+						/** Construct a response packet by serializing the Block. **/
+						Packet RESPONSE;
+						RESPONSE.HEADER = BLOCK_DATA;
+						RESPONSE.DATA   = SerializeBlock(NEW_BLOCK);
+						RESPONSE.LENGTH = RESPONSE.DATA.size();
+						
+						this->WritePacket(RESPONSE);
+						printf("%%%%%%%%%% Mining LLP: Sent Block %s to Worker.\n\n", NEW_BLOCK->GetHash().ToString().c_str());
+					}
+				}
 				
-				/** Check a block packet size. **/
-				if(PACKET.HEADER == BLOCK_DATA && PACKET.LENGTH > 212)
-					DDOS->Ban();
+				return;
 			}
+			
+			/** On Connect Event, Assign the Proper Daemon Handle. **/
+			if(EVENT == EVENT_CONNECT)
+				return;
+			
+			/** On Disconnect Event, Reduce the Connection Count for Daemon **/
+			if(EVENT == EVENT_DISCONNECT)
+				return;
+		
 		}
 		
 		/** This function is necessary for a template LLP server. It handles your 
 			custom messaging system, and how to interpret it from raw packets. **/
-		inline bool ProcessPacket()
+		bool ProcessPacket()
 		{
 			Packet PACKET   = this->INCOMING;
 			
@@ -314,6 +370,8 @@ namespace LLP
 				{
 					pindexBest = Core::pindexBest;
 					RESPONSE.HEADER = NEW_ROUND;
+					
+					ClearMap();
 				}
 				
 				this->WritePacket(RESPONSE);
@@ -339,6 +397,19 @@ namespace LLP
 				return true;
 			}
 			
+			/** Allow Block Subscriptions. **/
+			if(PACKET.HEADER == SUBSCRIBE)
+			{
+				nSubscribed = bytes2uint(PACKET.DATA); 
+				
+				/** Don't allow Mining LLP Requests for Proof of Stake Channel. **/
+				if(nSubscribed == 0)
+					return false; 
+				
+				printf("%%%%%%%%%% Mining LLP: Subscribed to %u Blocks\n", nSubscribed); 
+				
+				return true; 
+			}
 			
 			/** New block Process:
 				Keeps a map of requested blocks for this connection.
@@ -382,7 +453,7 @@ namespace LLP
 				if(!MAP_BLOCKS.count(hashMerkleRoot))
 				{
 					Packet RESPONSE;
-					RESPONSE.HEADER = FAIL;
+					RESPONSE.HEADER = BLOCK_REJECTED;
 					
 					this->WritePacket(RESPONSE);
 					
@@ -399,12 +470,12 @@ namespace LLP
 				if(NEW_BLOCK->SignBlock(*pwalletMain) && Core::CheckWork(NEW_BLOCK, *pwalletMain, *pMiningKey))
 				{
 					printf("%%%%%%%%%% Mining LLP: Created New Block %s\n", NEW_BLOCK->hashMerkleRoot.ToString().substr(0, 10).c_str());
-					RESPONSE.HEADER = GOOD;
+					RESPONSE.HEADER = BLOCK_ACCEPTED;
 					
 					ClearMap();
 				}
 				else
-					RESPONSE.HEADER = FAIL;
+					RESPONSE.HEADER = BLOCK_REJECTED;
 				
 				this->WritePacket(RESPONSE);
 				

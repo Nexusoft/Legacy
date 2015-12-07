@@ -561,7 +561,7 @@ namespace Core
 			CTrustKey cTrustKey(vKeys[0], cBlock.GetHash(), cBlock.vtx[0].GetHash(), cBlock.nTime);
 			mapTrustKeys[cKey] = cTrustKey;
 			
-			cTrustKey.Print();
+			//cTrustKey.Print();
 			printf("CTrustPool::accept() : New Genesis Coinstake Transaction From Block %u\n", cBlock.nHeight);
 			printf("CTrustPool::ACCEPTED %s\n", cKey.ToString().substr(0, 20).c_str());
 			
@@ -574,7 +574,7 @@ namespace Core
 			/** Add the new block to the Trust Key. **/
 			mapTrustKeys[cKey].hashPrevBlocks.push_back(cBlock.GetHash());
 			
-			mapTrustKeys[cKey].Print();
+			//mapTrustKeys[cKey].Print();
 			printf("CTrustPool::accept() : New Trust Coinstake Transaction From Block %u\n", cBlock.nHeight);
 			printf("CTrustPool::ACCEPTED %s\n", cKey.ToString().substr(0, 20).c_str());
 			
