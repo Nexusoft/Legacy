@@ -5,7 +5,7 @@ A good chunk of the Core Features are located in src/core.
 
 I will spend more time updating the documentation for this code base as I continue to make progress developing the Trust System.
 
-Updates Coming in Full 0.2.1 Release will include:
+Updates Coming in Full 0.2.1 Release will include:\n
 1. Trust Key Penalties to deprecate Trust Key Expiration.
 2. Possible Trust Key Reactivation.
 3. Push Packets in Mining LLP.
