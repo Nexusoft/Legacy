@@ -4,8 +4,8 @@
 # file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
 USE_UPNP:=0
-BOOST_INCLUDE_PATH:=/home/viz/boost_1_57_0
-BOOST_LIB_PATH:=/home/viz/boost_1_57_0/stage/lib
+#BOOST_INCLUDE_PATH:=/home/viz/boost_1_57_0
+#BOOST_LIB_PATH:=/home/viz/boost_1_57_0/stage/lib
 
 
 DEFS=-DBOOST_SPIRIT_THREADSAFE
