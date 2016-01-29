@@ -647,7 +647,7 @@ namespace Wallet
 				}
 				
 				/** Add Transaction to Current Trust Keys **/
-				else if(pindex->IsProofOfStake() && !Core::cTrustPool.Accept(block))
+				else if(pindex->IsProofOfStake() && !Core::cTrustPool.Accept(block, true))
 				{
 					pindex->nCoinbaseRewards[0] = 0;
 					pindex->nCoinbaseRewards[1] = 0;
@@ -728,7 +728,7 @@ namespace Wallet
 				
 				
 			/** Add the Pending Checkpoint into the Blockchain. **/
-			if(!pindex->pprev || Core::HardenCheckpoint(pindex))
+			if(!pindex->pprev || Core::HardenCheckpoint(pindex, true))
 				pindex->PendingCheckpoint = make_pair(pindex->nHeight, pindex->GetBlockHash());
 			else
 				pindex->PendingCheckpoint = pindex->pprev->PendingCheckpoint;

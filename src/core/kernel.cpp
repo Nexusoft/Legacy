@@ -535,7 +535,7 @@ namespace Core
 	
 	/** Accept a Block's Coinstake into the Trust Pool Assigning it to Specified Trust Key.  
 		This Method shouldn't be called before CTrustPool::Check **/
-	bool CTrustPool::Accept(CBlock cBlock)
+	bool CTrustPool::Accept(CBlock cBlock, bool fInit)
 	{
 		/** Lock Accepting Trust Keys to Mutex. **/
 		LOCK(cs);
@@ -561,9 +561,15 @@ namespace Core
 			CTrustKey cTrustKey(vKeys[0], cBlock.GetHash(), cBlock.vtx[0].GetHash(), cBlock.nTime);
 			mapTrustKeys[cKey] = cTrustKey;
 			
-			//cTrustKey.Print();
-			printf("CTrustPool::accept() : New Genesis Coinstake Transaction From Block %u\n", cBlock.nHeight);
-			printf("CTrustPool::ACCEPTED %s\n", cKey.ToString().substr(0, 20).c_str());
+			/** Dump the Trust Key To Console if not Initializing. **/
+			if(!fInit)
+				cTrustKey.Print();
+			
+			/** Only Debug when Not Initializing. **/
+			if(!fInit) {
+				printf("CTrustPool::accept() : New Genesis Coinstake Transaction From Block %u\n", cBlock.nHeight);
+				printf("CTrustPool::ACCEPTED %s\n", cKey.ToString().substr(0, 20).c_str());
+			}
 			
 			return true;
 		}
@@ -574,9 +580,15 @@ namespace Core
 			/** Add the new block to the Trust Key. **/
 			mapTrustKeys[cKey].hashPrevBlocks.push_back(cBlock.GetHash());
 			
-			//mapTrustKeys[cKey].Print();
-			printf("CTrustPool::accept() : New Trust Coinstake Transaction From Block %u\n", cBlock.nHeight);
-			printf("CTrustPool::ACCEPTED %s\n", cKey.ToString().substr(0, 20).c_str());
+			/** Dump the Trust Key to Console if not Initializing. **/
+			if(!fInit)
+				mapTrustKeys[cKey].Print();
+			
+			/** Only Debug when Not Initializing. **/
+			if(!fInit) {
+				printf("CTrustPool::accept() : New Trust Coinstake Transaction From Block %u\n", cBlock.nHeight);
+				printf("CTrustPool::ACCEPTED %s\n", cKey.ToString().substr(0, 20).c_str());
+			}
 			
 			return true;
 		}

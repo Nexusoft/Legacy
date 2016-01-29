@@ -224,7 +224,7 @@ namespace Core
 	uint1024 GetLastCheckpoint();
 	bool IsNewTimespan(CBlockIndex* pindex);
 	bool IsDescendant(CBlockIndex* pindex);
-	bool HardenCheckpoint(CBlockIndex* pcheckpoint);
+	bool HardenCheckpoint(CBlockIndex* pcheckpoint, bool fInit = false);
 	
 	
 	/** DIFFICULTY.CPP **/
@@ -242,9 +242,6 @@ namespace Core
 	bool ProcessMessage(Net::CNode* pfrom, std::string strCommand, CDataStream& vRecv);
 	bool ProcessMessages(Net::CNode* pfrom);
 	bool SendMessages(Net::CNode* pto, bool fSendTrickle);
-	
-	/** KERNAL **/
-	bool VerifyStakeSignatures(CTransaction txNew);
 	
 	
 	/** MINING.CPP **/
@@ -685,7 +682,7 @@ namespace Core
 		bool HasTrustKey(unsigned int nTime);
 		
 		bool Check(CBlock cBlock);
-		bool Accept(CBlock cBlock);
+		bool Accept(CBlock cBlock, bool fInit = false);
 		bool Remove(CBlock cBlock);
 		
 		bool Exists(uint576 cKey)    const { return mapTrustKeys.count(cKey); }

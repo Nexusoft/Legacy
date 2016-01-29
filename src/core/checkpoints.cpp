@@ -67,7 +67,7 @@ namespace Core
 	
 	/** Hardens the Pending Checkpoint on the Blockchain, determined by a new block creating a new Timespan.
 		The blockchain from genesis to new hardened checkpoint will then be fixed into place. **/
-	bool HardenCheckpoint(CBlockIndex* pcheckpoint)
+	bool HardenCheckpoint(CBlockIndex* pcheckpoint, bool fInit)
 	{
 			
 		/** Only Harden New Checkpoint if it Fits new Timestamp. **/
@@ -85,7 +85,10 @@ namespace Core
 
 		/** Update the Checkpoints into Memory. **/
 		mapCheckpoints[pcheckpoint->pprev->PendingCheckpoint.first] = pcheckpoint->pprev->PendingCheckpoint.second;
-		printg("===== Hardened Checkpoint %s Height = %u\n", 
+		
+		/** Dump the Checkpoint if not Initializing. **/
+		if(!fInit)
+			printg("===== Hardened Checkpoint %s Height = %u\n", 
 			pcheckpoint->pprev->PendingCheckpoint.second.ToString().substr(0, 20).c_str(),
 			pcheckpoint->pprev->PendingCheckpoint.first);
 			
