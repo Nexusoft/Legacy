@@ -21,6 +21,8 @@
 
 #ifndef WIN32
 #include <signal.h>
+#else
+#include <csignal>
 #endif
 
 using namespace std;
@@ -162,6 +164,12 @@ bool AppInit2(int argc, char* argv[])
     sigaction(SIGTERM, &sa, NULL);
     sigaction(SIGINT, &sa, NULL);
     sigaction(SIGHUP, &sa, NULL);
+#else
+    signal(SIGINT, HandleSIGTERM);
+    signal(SIGTERM, HandleSIGTERM);
+#ifdef SIGBREAK
+    signal(SIGBREAK, HandleSIGTERM);
+#endif
 #endif
 
 	

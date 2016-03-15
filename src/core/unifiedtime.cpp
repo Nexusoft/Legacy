@@ -28,37 +28,28 @@ vector<int> UNIFIED_TIME_DATA;
 vector<Net::CAddress> TIME_SEEDS;
 vector<Net::CAddress> SEED_NODES;
 
-
-/** Declarations for DNS Time Seed Nodes. **/
-const char* DNS_TimeSeeds[] = 
-{ 
-	"69.195.148.34", 
-	"69.195.148.42" 
-};
-
-/** Declarations for DNS Time Seed Nodes. **/
-const char* DNS_TimeSeeds_Testnet[] = 
-{
-	"204.27.62.226"
-};
-
-
 /** Declarations for the DNS Seed Nodes. **/
 const char* DNS_SeedNodes[] = 
 {
-	"69.195.149.114",
-	"204.27.62.242",
-	"204.27.62.234",
-	"204.27.62.226"
+	"node1.nexusoft.io",
+	"node2.nexusoft.io",
+	"node3.nexusoft.io",
+	"node4.nexusoft.io",
+	"node5.nexusoft.io",
+	"node6.nexusoft.io",
+	"node7.nexusoft.io",
+	"node8.nexusoft.io",
+	"node9.nexusoft.io"
 };
 
 /** Declarations for the DNS Seed Nodes. **/
 const char* DNS_SeedNodes_Testnet[] = 
 {
-	"69.195.149.114"
+	"test1.nexusoft.io"
 };
 
-
+/** Seed Nodes for Unified Time. **/
+vector<string> SEEDS;
 
 /** Baseline Maximum Values for Unified Time. **/
 int MAX_UNIFIED_DRIFT   = 20;
@@ -103,21 +94,16 @@ int GetUnifiedAverage()
 void ThreadTimeRegulator(void* parg)
 {
 	/** Compile the Seed Nodes into a set of Vectors. **/
-	TIME_SEEDS    = DNS_Lookup(fTestNet ? DNS_TimeSeeds_Testnet : DNS_TimeSeeds);
 	SEED_NODES    = DNS_Lookup(fTestNet ? DNS_SeedNodes_Testnet : DNS_SeedNodes);
-	
 	
 	/** Iterator to be used to ensure every time seed is giving an equal weight towards the Global Seeds. **/
 	int nIterator = 0;
 	
-	/** Track the Connection Attempts **/
-	int nAttempts = 0;
-	
 	/** Compile all the Seeds into one Vector. **/
 	printf("Compiling List...\n");
-	vector<string> SEEDS;
-	for(int nIndex = 0; nIndex < TIME_SEEDS.size(); nIndex++)
-		SEEDS.push_back(TIME_SEEDS[nIndex].ToStringIP());
+	
+	for(int nIndex = 0; nIndex < SEED_NODES.size(); nIndex++)
+		SEEDS.push_back(SEED_NODES[nIndex].ToStringIP());
 	
 	/** The Entry Client Loop for Core LLP. **/
 	string ADDRESS = "";
@@ -146,17 +132,8 @@ void ThreadTimeRegulator(void* parg)
 			{
 				printf("***** Core LLP: Failed To Connect To %s:%s\n", SERVER.IP.c_str(), SERVER.PORT.c_str());
 				
-				/** Only Sleep for 10 Seconds if there are more than 2 consecutive Failed Connections. **/
-				if(nAttempts > 1)
-					Sleep(10000);
-				
-				nAttempts++;
 				continue;
 			}
-			
-			
-			/** Reset the Connection Attempts. **/
-			nAttempts = 0;
 
 			
 			/** Use a CMajority to Find the Sample with the Most Weight. **/
@@ -281,9 +258,9 @@ void ThreadTimeRegulator(void* parg)
 vector<Net::CAddress> DNS_Lookup(const char* DNS_Seed[])
 {
 	vector<Net::CAddress> vNodes;
-    for (unsigned int seed = 0; seed < ARRAYLEN(DNS_Seed); seed++)
+    for (unsigned int seed = 0; seed < (fTestNet ? 1 : 9); seed++)
 	{
-		printf("Host: %s\n", DNS_Seed[seed]);
+		printf("%u Host: %s\n", seed, DNS_Seed[seed]);
         vector<Net::CNetAddr> vaddr;
         if (Net::LookupHost(DNS_Seed[seed], vaddr))
         {
@@ -291,6 +268,8 @@ vector<Net::CAddress> DNS_Lookup(const char* DNS_Seed[])
             {
                 Net::CAddress addr = Net::CAddress(Net::CService(ip, Net::GetDefaultPort()));
                 vNodes.push_back(addr);
+				
+				printf("DNS Seed: %s\n", addr.ToStringIP().c_str());
 				
 				Net::addrman.Add(addr, ip, true);
             }
