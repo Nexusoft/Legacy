@@ -16,6 +16,18 @@ CONFIG += no_include_pwd
 #    OPENSSL_INCLUDE_PATH and OPENSSL_LIB_PATH respectively
 
 
+BOOST_LIB_SUFFIX=-mgw49-mt-s-1_55
+BOOST_INCLUDE_PATH=C:/Deps/boost_1_55_0
+BOOST_LIB_PATH=C:/Deps/boost_1_55_0/stage/lib
+BDB_INCLUDE_PATH=C:/Deps/db-4.8.30.NC/build_unix
+BDB_LIB_PATH=C:/Deps/db-4.8.30.NC/build_unix
+OPENSSL_INCLUDE_PATH=C:/Deps/openssl-1.0.1h/include
+OPENSSL_LIB_PATH=C:/Deps/openssl-1.0.1h
+MINIUPNPC_INCLUDE_PATH=C:/Deps/
+MINIUPNPC_LIB_PATH=C:/Deps/miniupnpc
+QRENCODE_INCLUDE_PATH=C:/Deps/qrencode-3.4.3
+QRENCODE_LIB_PATH=C:/Deps/qrencode-3.4.3/.libs
+
 OBJECTS_DIR = build/obj
 MOC_DIR = build/moc
 UI_DIR = build/ui
