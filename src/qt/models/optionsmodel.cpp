@@ -10,7 +10,7 @@
 #include "../core/units.h"
 #include <QSettings>
 
-#include "../../start.h"
+#include "../../main.h"
 #include "../../wallet/walletdb.h"
 
 OptionsModel::OptionsModel(QObject *parent) :

@@ -11,10 +11,12 @@
 
 #include "../core/guiconstants.h"
 #include "../models/walletmodel.h"
+#include "../../wallet/wallet.h"
 
 #include <QMessageBox>
 #include <QPushButton>
 #include <QKeyEvent>
+#include <QCheckBox>
 
 AskPassphraseDialog::AskPassphraseDialog(Mode mode, QWidget *parent) :
     QDialog(parent),
@@ -39,16 +41,28 @@ AskPassphraseDialog::AskPassphraseDialog(Mode mode, QWidget *parent) :
         case Encrypt: // Ask passphrase x2
             ui->passLabel1->hide();
             ui->passEdit1->hide();
+			ui->mintOnly->hide();
+			ui->mintOnlyLabel->hide();
             ui->warningLabel->setText(tr("Enter the new passphrase to the wallet.<br/>Please use a passphrase of <b>10 or more random characters</b>, or <b>eight or more words</b>."));
             setWindowTitle(tr("Encrypt wallet"));
             break;
         case Unlock: // Ask passphrase
-            ui->warningLabel->setText(tr("This operation needs your wallet passphrase to unlock the wallet."));
+		case UnlockOrMint:
+            
             ui->passLabel2->hide();
             ui->passEdit2->hide();
             ui->passLabel3->hide();
             ui->passEdit3->hide();
-            setWindowTitle(tr("Unlock wallet"));
+			if(mode == UnlockOrMint) {
+				ui->warningLabel->setText(tr("Enter your Password to manually unlock your wallet (NOTE: Your wallet will remain unlocked until manually locked)"));
+				setWindowTitle(tr("Unlock Wallet"));
+			}
+			else {
+				ui->warningLabel->setText(tr("Please enter your Password to Continue this Operation"));
+				ui->mintOnly->hide();
+				ui->mintOnlyLabel->hide();
+				setWindowTitle(tr("Passphrase Required"));
+			}
             break;
         case Decrypt:   // Ask passphrase
             ui->warningLabel->setText(tr("This operation needs your wallet passphrase to decrypt the wallet."));
@@ -60,6 +74,8 @@ AskPassphraseDialog::AskPassphraseDialog(Mode mode, QWidget *parent) :
             break;
         case ChangePass: // Ask old passphrase + new passphrase x2
             setWindowTitle(tr("Change passphrase"));
+			ui->mintOnly->hide();
+			ui->mintOnlyLabel->hide();
             ui->warningLabel->setText(tr("Enter the old and new passphrase to the wallet."));
             break;
     }
@@ -139,6 +155,9 @@ void AskPassphraseDialog::accept()
         }
         } break;
     case Unlock:
+	case UnlockOrMint:
+		if(mode == UnlockOrMint)
+			Wallet::fWalletUnlockMintOnly = ui->mintOnly->isChecked();
         if(!model->setWalletLocked(false, oldpass))
         {
             QMessageBox::critical(this, tr("Wallet unlock failed"),
@@ -195,6 +214,7 @@ void AskPassphraseDialog::textChanged()
         break;
     case Unlock: // Old passphrase x1
     case Decrypt:
+	case UnlockOrMint:
         acceptable = !ui->passEdit1->text().isEmpty();
         break;
     case ChangePass: // Old passphrase x1, new passphrase x2

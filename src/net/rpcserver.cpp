@@ -6,7 +6,7 @@
   
 *******************************************************************************************/
 
-#include "../start.h"
+#include "../main.h"
 #include "../wallet/db.h"
 #include "../wallet/walletdb.h"
 #include "../util/ui_interface.h"

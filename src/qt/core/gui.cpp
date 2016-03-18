@@ -8,7 +8,7 @@
 
 
 #include "gui.h"
-#include "../../start.h"
+#include "../../main.h"
 #include "../models/transactiontablemodel.h"
 #include "../pages/addressbookpage.h"
 #include "../dialogs/sendcoinsdialog.h"
@@ -67,6 +67,8 @@ NexusGUI::NexusGUI(QWidget *parent):
     clientModel(0),
     walletModel(0),
     encryptWalletAction(0),
+	unlockWalletAction(0),
+	lockWalletAction(0),
     changePassphraseAction(0),
     aboutQtAction(0),
     trayIcon(0),
@@ -264,6 +266,12 @@ void NexusGUI::createActions()
     encryptWalletAction = new QAction(QIcon(":/icons/lock_closed"), tr("&Encrypt Wallet"), this);
     encryptWalletAction->setToolTip(tr("Encrypt or decrypt wallet"));
     encryptWalletAction->setCheckable(true);
+	unlockWalletAction = new QAction(QIcon(":/icons/lock_open"), tr("&Unlock Wallet"), this);
+    unlockWalletAction->setToolTip(tr("Unlock Wallet for Minting or Transactions"));
+	unlockWalletAction->setCheckable(true);
+	lockWalletAction = new QAction(QIcon(":/icons/lock_closed"), tr("&Lock Wallet"), this);
+    lockWalletAction->setToolTip(tr("Lock Wallet Manually"));
+	lockWalletAction->setCheckable(true);
     backupWalletAction = new QAction(QIcon(":/icons/filesave"), tr("&Backup Wallet"), this);
     backupWalletAction->setToolTip(tr("Backup wallet to another location"));
     changePassphraseAction = new QAction(QIcon(":/icons/key"), tr("&Change Passphrase"), this);
@@ -277,6 +285,8 @@ void NexusGUI::createActions()
     connect(aboutQtAction, SIGNAL(triggered()), qApp, SLOT(aboutQt()));
     connect(toggleHideAction, SIGNAL(triggered()), this, SLOT(toggleHidden()));
     connect(encryptWalletAction, SIGNAL(triggered(bool)), this, SLOT(encryptWallet(bool)));
+	connect(lockWalletAction, SIGNAL(triggered()), this, SLOT(lockWallet()));
+	connect(unlockWalletAction, SIGNAL(triggered()), this, SLOT(unlockWallet()));
     connect(backupWalletAction, SIGNAL(triggered()), this, SLOT(backupWallet()));
     connect(changePassphraseAction, SIGNAL(triggered()), this, SLOT(changePassphrase()));
 }
@@ -307,6 +317,8 @@ void NexusGUI::createMenuBar()
 
     QMenu *settings = appMenuBar->addMenu(tr("&Settings"));
     settings->addAction(encryptWalletAction);
+	settings->addAction(lockWalletAction);
+	settings->addAction(unlockWalletAction);
     settings->addAction(changePassphraseAction);
     settings->addSeparator();
     settings->addAction(optionsAction);
@@ -396,7 +408,7 @@ void NexusGUI::setWalletModel(WalletModel *walletModel)
                 this, SLOT(incomingTransaction(QModelIndex,int,int)));
 
         // Ask for passphrase if needed
-        connect(walletModel, SIGNAL(requireUnlock()), this, SLOT(unlockWallet()));
+        connect(walletModel, SIGNAL(requireUnlock()), this, SLOT(tempUnlockWallet()));
     }
 }
 
@@ -834,14 +846,19 @@ void NexusGUI::setEncryptionStatus(int status)
     case WalletModel::Unencrypted:
         labelEncryptionIcon->hide();
         encryptWalletAction->setChecked(false);
-        changePassphraseAction->setEnabled(false);
-        encryptWalletAction->setEnabled(true);
+        changePassphraseAction->setVisible(false);
+		lockWalletAction->setVisible(false);
+		unlockWalletAction->setVisible(false);
+        encryptWalletAction->setVisible(true);
         break;
     case WalletModel::Unlocked:
         labelEncryptionIcon->show();
         labelEncryptionIcon->setPixmap(QIcon(":/icons/lock_open").pixmap(STATUSBAR_ICONSIZE,STATUSBAR_ICONSIZE));
         labelEncryptionIcon->setToolTip(Wallet::fWalletUnlockMintOnly? tr("Wallet is <b>encrypted</b> and currently <b>unlocked for block minting only</b>") : tr("Wallet is <b>encrypted</b> and currently <b>unlocked</b>"));
-        encryptWalletAction->setChecked(true);
+        encryptWalletAction->setVisible(false);
+		lockWalletAction->setVisible(true);
+		//unlockWalletAction->setChecked(true);
+		unlockWalletAction->setVisible(false);
         changePassphraseAction->setEnabled(true);
         encryptWalletAction->setEnabled(false); // TODO: decrypt currently not supported
         break;
@@ -849,7 +866,11 @@ void NexusGUI::setEncryptionStatus(int status)
         labelEncryptionIcon->show();
         labelEncryptionIcon->setPixmap(QIcon(":/icons/lock_closed").pixmap(STATUSBAR_ICONSIZE,STATUSBAR_ICONSIZE));
         labelEncryptionIcon->setToolTip(tr("Wallet is <b>encrypted</b> and currently <b>locked</b>"));
-        encryptWalletAction->setChecked(true);
+        encryptWalletAction->setVisible(false);
+		lockWalletAction->setVisible(false);
+		//lockWalletAction->setChecked(true);
+		unlockWalletAction->setVisible(true);
+		unlockWalletAction->setChecked(false);
         changePassphraseAction->setEnabled(true);
         encryptWalletAction->setEnabled(false); // TODO: decrypt currently not supported
         break;
@@ -886,7 +907,29 @@ void NexusGUI::changePassphrase()
     dlg.exec();
 }
 
+void NexusGUI::lockWallet()
+{
+    if(!walletModel)
+        return;
+    // Unlock wallet when requested by wallet model
+    if(walletModel->getEncryptionStatus() == WalletModel::Unlocked)
+    {
+		Wallet::fWalletUnlockMintOnly = false;
+        walletModel->setWalletLocked(true, "");
+    }
+}
+
 void NexusGUI::unlockWallet()
+{
+    if(!walletModel)
+        return;
+
+    AskPassphraseDialog dlg(AskPassphraseDialog::UnlockOrMint, this);
+    dlg.setModel(walletModel);
+    dlg.exec();
+}
+
+void NexusGUI::tempUnlockWallet()
 {
     if(!walletModel)
         return;

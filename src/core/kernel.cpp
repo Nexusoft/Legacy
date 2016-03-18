@@ -12,7 +12,7 @@
 #include "unifiedtime.h"
 #include "../wallet/db.h"
 #include "../wallet/wallet.h"
-#include "../start.h" //for pwalletmain
+#include "../main.h" //for pwalletmain
 
 using namespace std;
 

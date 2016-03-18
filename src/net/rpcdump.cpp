@@ -6,7 +6,7 @@
   
 *******************************************************************************************/
 
-#include "../start.h" // for pwalletMain
+#include "../main.h" // for pwalletMain
 #include "../net/rpcserver.h"
 #include "../util/ui_interface.h"
 

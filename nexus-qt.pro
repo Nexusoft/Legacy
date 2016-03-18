@@ -121,7 +121,7 @@ HEADERS += src/qt/core/gui.h \
     src/wallet/db.h \
     src/wallet/walletdb.h \
     src/wallet/script.h \
-    src/start.h \
+    src/main.h \
 	src/LLP/coreserver.h \
 	src/LLP/server.h \
 	src/LLP/types.h \
@@ -182,7 +182,7 @@ SOURCES += src/core/block.cpp \
 	src/core/transaction.cpp \
 	src/core/mining.cpp \
 	src/core/checkpoints.cpp \
-    src/start_qt.cpp \
+    src/qt/main-qt.cpp \
 	src/qt/core/gui.cpp \
     src/qt/models/transactiontablemodel.cpp \
     src/qt/models/addresstablemodel.cpp \
@@ -245,7 +245,7 @@ SOURCES += src/core/block.cpp \
     src/qt/core/qtipcserver.cpp \
     src/qt/core/rpcconsole.cpp \
     src/core/kernel.cpp \
-	src/start.cpp \
+	src/main.cpp \
 	src/core/global.cpp
 
 RESOURCES += \

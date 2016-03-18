@@ -15,7 +15,7 @@
 #include <QListWidgetItem>
 #include <QMessageBox>
 
-#include "../../start.h"
+#include "../../main.h"
 #include "../../wallet/wallet.h"
 #include "../../util/util.h"
 

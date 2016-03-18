@@ -10,7 +10,7 @@
 
 #include <string>
 #include "../core/core.h"
-#include "../start.h"
+#include "../main.h"
 
 int ThreadSafeMessageBox(const std::string& message, const std::string& caption, int style)
 {

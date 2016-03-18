@@ -9,7 +9,7 @@
 #include "net.h"
 #include "addrman.h"
 
-#include "../start.h"
+#include "../main.h"
 #include "../util/strlcpy.h"
 #include "../util/ui_interface.h"
 #include "../wallet/db.h"

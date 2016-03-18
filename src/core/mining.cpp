@@ -6,7 +6,7 @@
   
 *******************************************************************************************/
 
-#include "../start.h"
+#include "../main.h"
 #include "unifiedtime.h"
 #include "../LLP/server.h"
 
@@ -435,7 +435,7 @@ namespace LLP
 				RESPONSE.LENGTH = RESPONSE.DATA.size();
 				
 				this->WritePacket(RESPONSE);
-				printf("%%%%%%%%%% Mining LLP: Sent Block %s\n\n", NEW_BLOCK->GetHash().ToString().c_str());
+				//printf("%%%%%%%%%% Mining LLP: Sent Block %s\n\n", NEW_BLOCK->GetHash().ToString().c_str());
 				
 				return true;
 			}

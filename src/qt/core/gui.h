@@ -94,6 +94,8 @@ private:
     QAction *toggleHideAction;
     QAction *exportAction;
     QAction *encryptWalletAction;
+	QAction *unlockWalletAction;
+	QAction *lockWalletAction;
     QAction *backupWalletAction;
     QAction *changePassphraseAction;
     QAction *aboutQtAction;
@@ -175,7 +177,11 @@ private slots:
     /** Change encrypted wallet passphrase */
     void changePassphrase();
     /** Ask for pass phrase to unlock wallet temporarily */
+    void tempUnlockWallet();
+	/** Ask for pass phrase to unlock wallet perminantly */
     void unlockWallet();
+	/** Lock Wallet after Unlocked Manually */
+    void lockWallet();
 
     /** Show window if hidden, unminimize when minimized */
     void showNormalIfMinimized();
