@@ -94,7 +94,7 @@ OBJS= \
     	build/crypter.o \
     	build/key.o \
     	build/db.o \
-    	build/start.o \
+    	build/main.o \
     	build/keystore.o \
     	build/debug.o \
 		build/difficulty.o \
