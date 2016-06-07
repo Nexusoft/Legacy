@@ -1664,8 +1664,8 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location filename="../core/strings.cpp" line="9"/>
-        <source>Specify configuration file (default: Nexus.conf)</source>
-        <translation>Määritä asetustiedosto (oletus: Nexus.conf)</translation>
+        <source>Specify configuration file (default: nexus.conf)</source>
+        <translation>Määritä asetustiedosto (oletus: nexus.conf)</translation>
     </message>
     <message>
         <location filename="../core/strings.cpp" line="10"/>

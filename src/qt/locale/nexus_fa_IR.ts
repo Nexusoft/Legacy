@@ -1650,7 +1650,7 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location filename="../core/strings.cpp" line="9"/>
-        <source>Specify configuration file (default: Nexus.conf)</source>
+        <source>Specify configuration file (default: nexus.conf)</source>
         <translation type="unfinished"/>
     </message>
     <message>

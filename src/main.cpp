@@ -208,7 +208,7 @@ bool AppInit2(int argc, char* argv[])
             "  Nexusd [options] help              \t\t  " + _("List commands") + "\n" +
             "  Nexusd [options] help <command>    \t\t  " + _("Get help for a command") + "\n" +
           _("Options:") + "\n" +
-            "  -conf=<file>     \t\t  " + _("Specify configuration file (default: Nexus.conf)") + "\n" +
+            "  -conf=<file>     \t\t  " + _("Specify configuration file (default: nexus.conf)") + "\n" +
             "  -pid=<file>      \t\t  " + _("Specify pid file (default: Nexusd.pid)") + "\n" +
             "  -gen             \t\t  " + _("Generate coins") + "\n" +
             "  -gen=0           \t\t  " + _("Don't generate coins") + "\n" +
