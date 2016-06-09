@@ -1669,8 +1669,8 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location filename="../core/strings.cpp" line="9"/>
-        <source>Specify configuration file (default: Nexus.conf)</source>
-        <translation>Вкажіть файл конфігурації (за промовчуванням: Nexus.conf)
+        <source>Specify configuration file (default: nexus.conf)</source>
+        <translation>Вкажіть файл конфігурації (за промовчуванням: nexus.conf)
 </translation>
     </message>
     <message>

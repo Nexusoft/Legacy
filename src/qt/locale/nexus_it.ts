@@ -1670,8 +1670,8 @@ p, li { white-space: pre-wrap; }⏎
     </message>
     <message>
         <location filename="../core/strings.cpp" line="9"/>
-        <source>Specify configuration file (default: Nexus.conf)</source>
-        <translation>Specifica il file di configurazione (di default: Nexus.conf)
+        <source>Specify configuration file (default: nexus.conf)</source>
+        <translation>Specifica il file di configurazione (di default: nexus.conf)
 </translation>
     </message>
     <message>
