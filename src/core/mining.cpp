@@ -392,7 +392,7 @@ namespace LLP
 				RESPONSE.DATA = uint2bytes64(nCoinbaseReward);
 				this->WritePacket(RESPONSE);
 				
-				printf("%%%%%%%%%% Mining LLP: Sent Coinbase Reward of %I64d\n", nCoinbaseReward);
+				printf("%%%%%%%%%% Mining LLP: Sent Coinbase Reward of %"PRIu64"\n", nCoinbaseReward);
 				
 				return true;
 			}
@@ -566,7 +566,7 @@ namespace Core
 	};
 	
 	/** Entry point for the Mining LLP. **/
-	void StartMiningLLP(){ MINING_LLP = new LLP::Server<LLP::MiningLLP>(fTestNet ? TESTNET_MINING_LLP_PORT : Nexus_MINING_LLP_PORT, 5, false, 0, 0, 60); }
+	void StartMiningLLP(){ MINING_LLP = new LLP::Server<LLP::MiningLLP>(fTestNet ? TESTNET_MINING_LLP_PORT : NEXUS_MINING_LLP_PORT, 5, false, 0, 0, 60); }
 	
 	
 	/** Entry Staking Function. **/
@@ -1058,7 +1058,7 @@ namespace Core
 			dTrustWeight = nTrustWeight;
 			dBlockWeight = nBlockWeight;
 				
-			printf("Stake Minter : Staking at Trust Weight %f | Block Weight %f | Coin Age %I64d | Trust Age %I64d | Block Age %I64d\n", nTrustWeight, nBlockWeight, nCoinAge, nTrustAge, nBlockAge);
+			printf("Stake Minter : Staking at Trust Weight %f | Block Weight %f | Coin Age %"PRIu64" | Trust Age %"PRIu64"| Block Age %"PRIu64"\n", nTrustWeight, nBlockWeight, nCoinAge, nTrustAge, nBlockAge);
 			CBlockIndex* pindex = pindexBest;
 			while(true)
 			{
@@ -1098,7 +1098,7 @@ namespace Core
 				hashTarget.SetCompact(pblock->nBits);
 				
 				if(pblock->nNonce % (unsigned int)((nTrustWeight + nBlockWeight) * 5) == 0 && fDebug)
-					printf("Stake Minter : Below Threshold %f Required %f Incrementing nNonce %I64d\n", nThreshold, nRequired, pblock->nNonce);
+					printf("Stake Minter : Below Threshold %f Required %f Incrementing nNonce %"PRIu64"\n", nThreshold, nRequired, pblock->nNonce);
 						
 				if (pblock->GetHash() < hashTarget.getuint1024())
 				{

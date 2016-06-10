@@ -1,10 +1,11 @@
 TEMPLATE = app
 TARGET = nexus-qt
 VERSION = 0.1.0.0
-INCLUDEPATH += src src/core src/hash src/json src/keys src/net src/qt src/util src/wallet src/qt
+INCLUDEPATH += src src/core src/hash src/json src/keys src/net src/qt src/util src/wallet
 DEFINES += QT_GUI BOOST_THREAD_USE_LIB BOOST_SPIRIT_THREADSAFE
 CONFIG += no_include_pwd
 CONFIG += warn_off
+
 
 # for boost 1.37, add -mt to the boost libraries 
 # use: qmake BOOST_LIB_SUFFIX=-mt
@@ -22,8 +23,15 @@ UI_DIR = build/ui
 
 # use: qmake "RELEASE=1"
 contains(RELEASE, 1) {
-    # Mac: compile for maximum compatibility (10.5, 32-bit)
-    macx:QMAKE_CXXFLAGS += -mmacosx-version-min=10.5 -arch i386 -isysroot /Developer/SDKs/MacOSX10.5.sdk
+    # Mac: compile for Yosemite and Above (10.10, 32-bit)
+    macx:QMAKE_CXXFLAGS += -O3 -mmacosx-version-min=10.10 -arch x86_64
+
+    #TODO compile qt with +framework and +universal option (-arch i386)
+
+    #-sysroot /Developer/SDKs/MacOSX10.10.sdk
+
+    #Static Configuration
+    CONFIG += STATIC
 
     !windows:!macx {
         # Linux: static link
@@ -81,20 +89,18 @@ contains(BITCOIN_NEED_QT_PLUGINS, 1) {
     # do not enable this on windows, as it will result in a non-working executable!
 }
 
-#To Compile the Keccak C Files
-QMAKE_EXT_CPP += .c
-
-QMAKE_CXXFLAGS += -D_FORTIFY_SOURCE=2
-QMAKE_CXXFLAGS += -fpermissive
+QMAKE_CXXFLAGS += -D_FORTIFY_SOURCE=2 -fpermissive
 
 QMAKE_CXXFLAGS_WARN_ON = -Wall -Wextra -Wformat -Wformat-security -Wno-invalid-offsetof -Wno-sign-compare -Wno-unused-parameter
-# this option unrecognized when building on OSX 10.6.8
 !macx {
     QMAKE_CXXFLAGS_WARN_ON += -fdiagnostics-show-option
+
+    #To Compile the Keccak C Files (For Linux and Windoze)
+    MAKE_EXT_CPP  += .c
 }
 
 # Input
-DEPENDPATH += src src/LLP src/core src/hash src/json src/net src/util src/qt src/wallet src/qt/core src/qt/dialogs src/qt/forms src/qt/models src/qt/pages src/qt/util src/qt/wallet
+DEPENDPATH += src src/LLP src/core src/hash src/json src/net src/util src/qt src/wallet src/qt/core src/qt/dialogs src/qt/forms src/qt/models src/qt/pages src/qt/res src/qt/util src/qt/wallet
 HEADERS += src/qt/core/gui.h \
     src/qt/models/transactiontablemodel.h \
     src/qt/models/addresstablemodel.h \
@@ -171,7 +177,7 @@ HEADERS += src/qt/core/gui.h \
     src/net/protocol.h \
 	src/core/version.h \
     src/qt/util/notificator.h \
-    src/qt/core/qtipcserver.h \
+    #src/qt/core/qtipcserver.h \
     src/util/allocators.h \
     src/util/ui_interface.h \
     src/qt/core/rpcconsole.h
@@ -316,13 +322,13 @@ isEmpty(BDB_INCLUDE_PATH) {
 }
 
 isEmpty(BOOST_LIB_PATH) {
-    macx:BOOST_LIB_PATH = /opt/local/lib
     BOOST_LIB_PATH=/usr/local/lib
+    macx:BOOST_LIB_PATH = /opt/local/lib
 }
 
 isEmpty(BOOST_INCLUDE_PATH) {
-    macx:BOOST_INCLUDE_PATH = /opt/local/include
     BOOST_INCLUDE_PATH=/usr/include/boost
+    macx:BOOST_INCLUDE_PATH = /opt/local/include
 }
 
 windows:LIBS += -lws2_32 -lshlwapi
@@ -345,11 +351,12 @@ windows:!contains(MINGW_THREAD_BUGFIX, 0) {
     LIBS += -lrt
 }
 
-macx:HEADERS += src/qt/macdockiconhandler.h
-macx:OBJECTIVE_SOURCES += src/qt/macdockiconhandler.mm
+macx:HEADERS += src/qt/util/macdockiconhandler.h
+macx:OBJECTIVE_SOURCES += src/qt/util/macdockiconhandler.mm
 macx:LIBS += -framework Foundation -framework ApplicationServices -framework AppKit
-macx:DEFINES += MAC_OSX MSG_NOSIGNAL=0
-macx:TARGET = "nexus-Qt"
+macx:DEFINES += MAC_OSX MSG_NOSIGNAL=0 Q_WS_MAC
+macx:ICON = src/qt/res/icons/nexus.ico
+macx:TARGET = "Nexus-Qt"
 
 # Set libraries and includes at end, to use platform-defined defaults if not overridden
 INCLUDEPATH += $$BOOST_INCLUDE_PATH $$BDB_INCLUDE_PATH $$OPENSSL_INCLUDE_PATH $$QRENCODE_INCLUDE_PATH

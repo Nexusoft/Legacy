@@ -28,7 +28,7 @@ QRCodeDialog::QRCodeDialog(const QString &addr, const QString &label, bool enabl
     ui->chkReqPayment->setVisible(enableReq);
     ui->lnReqAmount->setVisible(enableReq);
     ui->lblAmount->setVisible(enableReq);
-    ui->lblNiro->setVisible(enableReq);
+    ui->lblNexus->setVisible(enableReq);
 
     ui->lnLabel->setText(label);
 

@@ -87,7 +87,7 @@ bool parseNexusURI(const QUrl &uri, SendCoinsRecipient *out)
         {
             if(!i->second.isEmpty())
             {
-                if(!NexusUnits::parse(NexusUnits::Niro, i->second, &rv.amount))
+                if(!NexusUnits::parse(NexusUnits::Nexus, i->second, &rv.amount))
                 {
                     return false;
                 }

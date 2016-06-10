@@ -22,7 +22,7 @@ using namespace std;
 
 void ipcShutdown()
 {
-    message_queue::remove(Nexus_URI_QUEUE_NAME);
+    message_queue::remove(NEXUS_URI_QUEUE_NAME);
 }
 
 void ipcThread(void* parg)
@@ -66,7 +66,7 @@ void ipcInit()
     size_t nSize;
     unsigned int nPriority;
     try {
-        mq = new message_queue(open_or_create, Nexus_URI_QUEUE_NAME, 2, 256);
+        mq = new message_queue(open_or_create, NEXUS_URI_QUEUE_NAME, 2, 256);
 
         // Make sure we don't lose any Nexus: URIs
         for (int i = 0; i < 2; i++)
@@ -81,8 +81,8 @@ void ipcInit()
         }
 
         // Make sure only one Nexus instance is listening
-        message_queue::remove(Nexus_URI_QUEUE_NAME);
-        mq = new message_queue(open_or_create, Nexus_URI_QUEUE_NAME, 2, 256);
+        message_queue::remove(NEXUS_URI_QUEUE_NAME);
+        mq = new message_queue(open_or_create, NEXUS_URI_QUEUE_NAME, 2, 256);
     }
     catch (interprocess_exception &ex) {
         return;

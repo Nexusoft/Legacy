@@ -1,5 +1,5 @@
-#ifndef Nexus_LLP_CLIENT_H
-#define Nexus_LLP_CLIENT_H
+#ifndef NEXUS_LLP_CLIENT_H
+#define NEXUS_LLP_CLIENT_H
 
 #include "types.h"
 

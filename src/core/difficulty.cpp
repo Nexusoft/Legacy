@@ -93,7 +93,7 @@ namespace Core
 			nWeightedAverage += nTime;
 			
 			if(fDebug)
-				printf("GetWeightedTimes() : Time %I64d for Weight %i\n", (nTime / (nIndex * 3)), nIndex);
+				printf("GetWeightedTimes() : Time %"PRId64" for Weight %i\n", (nTime / (nIndex * 3)), nIndex);
 		}
 			
 		nWeightedAverage /= nIterator;
@@ -196,7 +196,7 @@ namespace Core
 			int64 nDays, nHours, nMinutes;
 			GetChainTimes(GetChainAge(pindexFirst->GetBlockTime()), nDays, nHours, nMinutes);
 			
-			printf("CHECK[POS] weighted time=%I64d actual time =%I64d[%f %%]\n\tchain time: [%I64d / %I64d]\n\tdifficulty: [%f to %f]\n\tPOS height: %I64d [AGE %I64d days, %I64d hours, %I64d minutes]\n\n", 
+			printf("CHECK[POS] weighted time=%"PRId64" actual time =%"PRId64"[%f %%]\n\tchain time: [%"PRId64" / %"PRId64"]\n\tdifficulty: [%f to %f]\n\tPOS height: %"PRId64" [AGE %"PRId64" days, %"PRId64" hours, %"PRId64" minutes]\n\n", 
 			nBlockTime, max(pindexFirst->GetBlockTime() - pindexLast->GetBlockTime(), (int64) 1), ((100.0 * nLowerBound) / nUpperBound), nBlockTarget, nBlockTime, GetDifficulty(pindexFirst->nBits, 0), GetDifficulty(bnNew.GetCompact(), 0), pindexFirst->nChannelHeight, nDays, nHours, nMinutes);
 		}
 		
@@ -229,7 +229,7 @@ namespace Core
 		
 		/** Chain Mod: Is a proportion to reflect outstanding released funds. Version 1 Deflates difficulty slightly
 			to allow more blocks through when blockchain has been slow, Version 2 Deflates Target Timespan to lower the minimum difficulty. 
-			This helps stimulate transaction processing while helping get the Niro production back on track **/
+			This helps stimulate transaction processing while helping get the Nexus production back on track **/
 		double nChainMod = GetFractionalSubsidy(GetChainAge(pindexFirst->GetBlockTime()), 0, ((pindex->nVersion >= 3) ? 40.0 : 20.0)) / (pindexFirst->nReleasedReserve[0] + 1);
 		nChainMod = min(nChainMod, 1.0);
 		nChainMod = max(nChainMod, (pindex->nVersion == 1) ? 0.75 : 0.5);
@@ -318,7 +318,7 @@ namespace Core
 			int64 nDays, nHours, nMinutes;
 			GetChainTimes(GetChainAge(pindexFirst->GetBlockTime()), nDays, nHours, nMinutes);
 			
-			printf("RETARGET[CPU] weighted time=%I64d actual time %I64d, [%f %%]\n\tchain time: [%I64d / %I64d]\n\treleased reward: %I64d [%f %%]\n\tdifficulty: [%f to %f]\n\tCPU height: %I64d [AGE %I64d days, %I64d hours, %I64d minutes]\n\n", 
+			printf("RETARGET[CPU] weighted time=%"PRId64" actual time %"PRId64", [%f %%]\n\tchain time: [%"PRId64" / %"PRId64"]\n\treleased reward: %"PRId64" [%f %%]\n\tdifficulty: [%f to %f]\n\tCPU height: %"PRId64" [AGE %"PRId64" days, %"PRId64" hours, %"PRId64" minutes]\n\n", 
 			nBlockTime, max(pindexFirst->GetBlockTime() - pindexLast->GetBlockTime(), (int64) 1), nMod * 100.0, nBlockTarget, nBlockTime, pindexFirst->nReleasedReserve[0] / COIN, 100.0 * nChainMod, GetDifficulty(pindexFirst->nBits, 1), GetDifficulty(nBits, 1), pindexFirst->nChannelHeight, nDays, nHours, nMinutes);
 		}
 		
@@ -440,7 +440,7 @@ namespace Core
 			int64 nDays, nHours, nMinutes;
 			GetChainTimes(GetChainAge(pindexFirst->GetBlockTime()), nDays, nHours, nMinutes);
 			
-			printf("RETARGET[GPU] weighted time=%I64d actual time %I64d [%f %%]\n\tchain time: [%I64d / %I64d]\n\treleased reward: %I64d [%f %%]\n\tdifficulty: [%f to %f]\n\tGPU height: %I64d [AGE %I64d days, %I64d hours, %I64d minutes]\n\n", 
+			printf("RETARGET[GPU] weighted time=%"PRId64" actual time %"PRId64" [%f %%]\n\tchain time: [%"PRId64" / %"PRId64"]\n\treleased reward: %"PRId64" [%f %%]\n\tdifficulty: [%f to %f]\n\tGPU height: %"PRId64" [AGE %"PRId64" days, %"PRId64" hours, %"PRId64" minutes]\n\n", 
 			nBlockTime, max(pindexFirst->GetBlockTime() - pindexLast->GetBlockTime(), (int64) 1), (100.0 * nLowerBound) / nUpperBound, nBlockTarget, nBlockTime, pindexFirst->nReleasedReserve[0] / COIN, 100.0 * nChainMod, GetDifficulty(pindexFirst->nBits, 2), GetDifficulty(bnNew.GetCompact(), 2), pindexFirst->nChannelHeight, nDays, nHours, nMinutes);
 		}
 		

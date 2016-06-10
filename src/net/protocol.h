@@ -18,9 +18,9 @@
 #include <string>
 #include "../hash/uint1024.h"
 
-#define Nexus_PORT  9323
-#define Nexus_CORE_LLP_PORT 9324
-#define Nexus_MINING_LLP_PORT 9325
+#define NEXUS_PORT  9323
+#define NEXUS_CORE_LLP_PORT 9324
+#define NEXUS_MINING_LLP_PORT 9325
 
 #define RPC_PORT     9336
 #define TESTNET_RPC_PORT 9336
@@ -37,7 +37,7 @@ namespace Net
 
 	static inline unsigned short GetDefaultPort(const bool testnet = fTestNet)
 	{
-		return testnet ? TESTNET_PORT : Nexus_PORT;
+		return testnet ? TESTNET_PORT : NEXUS_PORT;
 	}
 
 

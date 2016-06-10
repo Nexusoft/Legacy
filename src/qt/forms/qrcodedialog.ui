@@ -94,7 +94,7 @@
              </widget>
             </item>
             <item>
-             <widget class="QLabel" name="lblNiro">
+             <widget class="QLabel" name="lblNexus">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
                 <horstretch>0</horstretch>
@@ -102,7 +102,6 @@
                </sizepolicy>
               </property>
               <property name="text">
-               <string>Niro</string>
               </property>
               <property name="buddy">
                <cstring>lnReqAmount</cstring>

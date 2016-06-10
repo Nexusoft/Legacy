@@ -27,7 +27,7 @@ class TxViewDelegate : public QAbstractItemDelegate
 {
     Q_OBJECT
 public:
-    TxViewDelegate(): QAbstractItemDelegate(), unit(NexusUnits::Niro)
+    TxViewDelegate(): QAbstractItemDelegate(), unit(NexusUnits::Nexus)
     {
 
     }
@@ -149,24 +149,24 @@ void OverviewPage::setBalance(qint64 balance, qint64 stake, qint64 unconfirmedBa
 	currentImmatureBalance = immatureBalance;
 	
 	QString labelHeaderValue = "Balance:";
-	QString labelBalanceValue = NexusUnits::formatWithUnit(unit, balance);
+	QString labelBalanceValue = NexusUnits::format(unit, balance);
 	
 	if(stake > 0)
 	{
 		labelHeaderValue += "\n\nStake:";
-		labelBalanceValue += "\n\n" + NexusUnits::formatWithUnit(unit, stake);
+		labelBalanceValue += "\n\n" + NexusUnits::format(unit, stake);
 	}
 	
 	if(unconfirmedBalance > 0)
 	{
 		labelHeaderValue += "\n\nUnconfirmed:";
-		labelBalanceValue += "\n\n" + NexusUnits::formatWithUnit(unit, unconfirmedBalance);
+		labelBalanceValue += "\n\n" + NexusUnits::format(unit, unconfirmedBalance);
 	}
 	
 	if(immatureBalance > 0)
 	{
 		labelHeaderValue += "\n\nImmature:";
-		labelBalanceValue += "\n\n" + NexusUnits::formatWithUnit(unit, immatureBalance);
+		labelBalanceValue += "\n\n" + NexusUnits::format(unit, immatureBalance);
 	}
 	
 	ui->labelBalanceHeader->setText(labelHeaderValue + "\n");

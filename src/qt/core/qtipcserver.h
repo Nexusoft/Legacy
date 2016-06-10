@@ -6,7 +6,7 @@
   
 *******************************************************************************************/
 
-#define Nexus_URI_QUEUE_NAME "NexusURI"
+#define NEXUS_URI_QUEUE_NAME "NexusURI"
 
 void ipcInit();
 void ipcShutdown();

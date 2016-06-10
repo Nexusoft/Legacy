@@ -6,8 +6,8 @@
   
 *******************************************************************************************/
 
-#ifndef Nexus_KEY_H
-#define Nexus_KEY_H
+#ifndef NEXUS_KEY_H
+#define NEXUS_KEY_H
 
 #include <stdexcept>
 #include <vector>

@@ -6,8 +6,8 @@
   
 *******************************************************************************************/
 
-#ifndef Nexus_KEYSTORE_H
-#define Nexus_KEYSTORE_H
+#ifndef NEXUS_KEYSTORE_H
+#define NEXUS_KEYSTORE_H
 
 #include "crypter.h"
 #include "../util/util.h"

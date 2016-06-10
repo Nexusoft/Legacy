@@ -6,8 +6,8 @@
   
 *******************************************************************************************/
 
-#ifndef Nexus_WALLETDB_H
-#define Nexus_WALLETDB_H
+#ifndef NEXUS_WALLETDB_H
+#define NEXUS_WALLETDB_H
 
 #include "db.h"
 
@@ -184,4 +184,4 @@ namespace Wallet
 
 }
 
-#endif // Nexus_WALLETDB_H
+#endif // NEXUS_WALLETDB_H

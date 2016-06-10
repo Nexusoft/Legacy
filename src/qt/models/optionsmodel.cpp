@@ -24,7 +24,7 @@ void OptionsModel::Init()
     QSettings settings;
 
     // These are QT-only settings:
-    nDisplayUnit = settings.value("nDisplayUnit", NexusUnits::Niro).toInt();
+    nDisplayUnit = settings.value("nDisplayUnit", NexusUnits::Nexus).toInt();
     bDisplayAddresses = settings.value("bDisplayAddresses", false).toBool();
     fMinimizeToTray = settings.value("fMinimizeToTray", false).toBool();
     fMinimizeOnClose = settings.value("fMinimizeOnClose", false).toBool();

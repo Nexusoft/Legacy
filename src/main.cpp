@@ -208,7 +208,7 @@ bool AppInit2(int argc, char* argv[])
             "  Nexusd [options] help              \t\t  " + _("List commands") + "\n" +
             "  Nexusd [options] help <command>    \t\t  " + _("Get help for a command") + "\n" +
           _("Options:") + "\n" +
-            "  -conf=<file>     \t\t  " + _("Specify configuration file (default: nexus.conf)") + "\n" +
+            "  -conf=<file>     \t\t  " + _("Specify configuration file (default: Nexus.conf)") + "\n" +
             "  -pid=<file>      \t\t  " + _("Specify pid file (default: Nexusd.pid)") + "\n" +
             "  -gen             \t\t  " + _("Generate coins") + "\n" +
             "  -gen=0           \t\t  " + _("Don't generate coins") + "\n" +
@@ -348,7 +348,7 @@ bool AppInit2(int argc, char* argv[])
 
     InitMessage(_("Initializing Core LLP..."));
     printf("Initializing Core LLP...\n");
-	LLP_SERVER = new LLP::Server<LLP::CoreLLP>(fTestNet ? TESTNET_CORE_LLP_PORT : Nexus_CORE_LLP_PORT, 5, false, 1, 10, 10);
+	LLP_SERVER = new LLP::Server<LLP::CoreLLP>(fTestNet ? TESTNET_CORE_LLP_PORT : NEXUS_CORE_LLP_PORT, 5, false, 1, 10, 10);
 	
 
     InitMessage(_("Initializing Unified Time..."));
@@ -362,9 +362,6 @@ bool AppInit2(int argc, char* argv[])
 	/** Wait for Unified Time if First Start. **/
 	while(!fTimeUnified)
 		Sleep(10);
-		
-	
-
 	
     if (!fDebug)
         ShrinkDebugFile();
@@ -499,17 +496,6 @@ bool AppInit2(int argc, char* argv[])
         printf(" rescan      %15"PRI64d"ms\n", GetTimeMillis() - nStart);
     }
 	
-	/*
-	int nMismatchSpent;
-	int64 nBalanceInQuestion;
-	pwalletMain->FixSpentCoins(nMismatchSpent, nBalanceInQuestion);
-	if (nMismatchSpent == 0)
-		printf("Wallet Check Passed..\n");
-	else
-	{
-		printf("Found Mismatched Coins %i Changing Balance %I64d\n", nMismatchSpent, nBalanceInQuestion);
-	}
-	*/
 
     InitMessage(_("Done loading"));
     printf("Done loading\n");
@@ -569,7 +555,7 @@ bool AppInit2(int argc, char* argv[])
         Net::addrProxy = Net::CService(mapArgs["-proxy"], 9050);
         if (!Net::addrProxy.IsValid())
         {
-            ThreadSafeMessageBox(_("Invalid -proxy address"), _("Nirocoin"), wxOK | wxMODAL);
+            ThreadSafeMessageBox(_("Invalid -proxy address"), _("Nexus"), wxOK | wxMODAL);
             return false;
         }
     }

@@ -6,17 +6,21 @@
   
 *******************************************************************************************/
 
-#ifndef Nexus_UINT1024_H
-#define Nexus_UINT1024_H
+#ifndef NEXUS_UINT1024_H
+#define NEXUS_UINT1024_H
 
 #include <limits.h>
 #include <stdio.h>
 #include <string.h>
 #include <string>
 #include <vector>
+#include <stdint.h>
 
-typedef long long  int64;
-typedef unsigned long long  uint64;
+ typedef int64_t int64;
+ typedef uint64_t uint64;
+ 
+//typedef long long  int64;
+//typedef unsigned long long  uint64;
 
 
 /** Base class without constructors for uint256, uint512, uint576, uint1024.

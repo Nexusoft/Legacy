@@ -345,7 +345,7 @@ void RPCConsole::SetCoinSupply(unsigned int nSupply, unsigned int nIdealSupply)
 	QString supply;
 	supply.sprintf("%u", nSupply);
 
-	ui->coinSupply->setText(supply + " Niro");
+	ui->coinSupply->setText(supply);
 }
 	
 
@@ -355,7 +355,7 @@ void RPCConsole::SetPrimeInfo(double nDiff, unsigned int nReserves, unsigned int
 	difficulty.sprintf("%f", nDiff);
 	
 	QString reserves;
-	reserves.sprintf("%u Niro [%f Niro Reward]", nReserves, nRewards);
+	reserves.sprintf("%u [%f Reward]", nReserves, nRewards);
 	
 	QString height;
 	height.sprintf("[%u]", nHeight);
@@ -372,7 +372,7 @@ void RPCConsole::SetHashInfo(double nDiff, unsigned int nReserves, unsigned int 
 	difficulty.sprintf("%f", nDiff);
 	
 	QString reserves;
-	reserves.sprintf("%u [%f Niro Reward]", nReserves, nRewards);
+	reserves.sprintf("%u [%f Reward]", nReserves, nRewards);
 	
 	QString height;
 	height.sprintf("[%u]", nHeight);

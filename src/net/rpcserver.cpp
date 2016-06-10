@@ -328,7 +328,7 @@ namespace Net
 		if (fHelp || params.size() != 0)
 			throw runtime_error(
 				"getsupplyrate\n"
-				"Returns an object containing current NIRO production rates in set time intervals.\n"
+				"Returns an object containing current Nexus production rates in set time intervals.\n"
 				"Time Frequency is in base 13 month, 28 day totalling 364 days.\n"
 				"This is to prevent error from Gregorian Figures.");
 				

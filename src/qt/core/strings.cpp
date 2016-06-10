@@ -13,7 +13,7 @@
 #else
 #define UNUSED
 #endif
-static const char UNUSED *Nexus_strings[] = {QT_TRANSLATE_NOOP("Nexus-core", ""
+static const char UNUSED *NEXUS_strings[] = {QT_TRANSLATE_NOOP("Nexus-core", ""
 "Unable to bind to port %d on this computer.  Nexus is probably already "
 "running."),
 QT_TRANSLATE_NOOP("Nexus-core", "Warning: Disk space is low  "),
@@ -23,7 +23,7 @@ QT_TRANSLATE_NOOP("Nexus-core", "Send command to -server or Nexusd"),
 QT_TRANSLATE_NOOP("Nexus-core", "List commands"),
 QT_TRANSLATE_NOOP("Nexus-core", "Get help for a command"),
 QT_TRANSLATE_NOOP("Nexus-core", "Options:"),
-QT_TRANSLATE_NOOP("Nexus-core", "Specify configuration file (default: nexus.conf)"),
+QT_TRANSLATE_NOOP("Nexus-core", "Specify configuration file (default: Nexus.conf)"),
 QT_TRANSLATE_NOOP("Nexus-core", "Specify pid file (default: Nexusd.pid)"),
 QT_TRANSLATE_NOOP("Nexus-core", "Generate coins"),
 QT_TRANSLATE_NOOP("Nexus-core", "Don't generate coins"),

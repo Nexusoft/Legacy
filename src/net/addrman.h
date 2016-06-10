@@ -6,8 +6,8 @@
   
 *******************************************************************************************/
 
-#ifndef _Nexus_ADDRMAN
-#define _Nexus_ADDRMAN 1
+#ifndef _NEXUS_ADDRMAN
+#define _NEXUS_ADDRMAN 1
 
 #include "netbase.h"
 #include "protocol.h"

@@ -25,9 +25,9 @@ public:
      */
     enum Unit
     {
-        Niro,
-        mNiro,
-        uNiro
+        Nexus,
+        mNexus,
+        uNexus
     };
 
     //! @name Static API

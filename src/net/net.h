@@ -6,8 +6,8 @@
   
 *******************************************************************************************/
 
-#ifndef Nexus_NET_H
-#define Nexus_NET_H
+#ifndef NEXUS_NET_H
+#define NEXUS_NET_H
 
 #include <deque>
 #include <boost/array.hpp>

@@ -36,7 +36,7 @@ namespace Core
 	const int64 MIN_TX_FEE = CENT;
 	const int64 MIN_RELAY_TX_FEE = CENT;
 	
-	/** Maximum Coins that can be Sent in 1 Transaction is 1 Million Niro. **/
+	/** Maximum Coins that can be Sent in 1 Transaction is 1 Million Nexus. **/
 	const int64 MAX_TXOUT_AMOUNT = 1000000 * COIN;
 	
 	
@@ -45,7 +45,7 @@ namespace Core
 	
 	
 	/** Nexus New Supply Matures in 100 Blocks. **/
-	const int COINBASE_MATURITY_NIRO = 100;
+	const int COINBASE_MATURITY = 100;
 	
 	
 	/** TODO: Remove this Threshold. **/
@@ -201,7 +201,7 @@ namespace Core
 	CBigNum bnProofOfWorkStart[] = { CBigNum(~uint1024(0) >> 7), CBigNum(25000000), CBigNum(~uint1024(0) >> 22) };
 	
 	
-	int nCoinbaseMaturity = COINBASE_MATURITY_NIRO;
+	int nCoinbaseMaturity = COINBASE_MATURITY;
 	CBlockIndex* pindexGenesisBlock = NULL;
 	unsigned int nBestHeight = 0;
 	CBigNum bnBestChainTrust = 0;

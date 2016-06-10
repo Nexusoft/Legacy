@@ -5,8 +5,8 @@
  [Learn and Create] Viz. http://www.opensource.org/licenses/mit-license.php
   
 *******************************************************************************************/
-#ifndef Nexus_UNIFIED_TIME_H
-#define Nexus_UNIFIED_TIME_H
+#ifndef NEXUS_UNIFIED_TIME_H
+#define NEXUS_UNIFIED_TIME_H
 
 #include <vector>
 #include <time.h>

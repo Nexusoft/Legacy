@@ -6,8 +6,8 @@
   
 *******************************************************************************************/
 
-#ifndef Nexus_BASE58_H
-#define Nexus_BASE58_H
+#ifndef NEXUS_BASE58_H
+#define NEXUS_BASE58_H
 
 #include <string>
 #include <vector>

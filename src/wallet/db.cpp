@@ -667,7 +667,7 @@ namespace Wallet
 							
 						Core::mapAddressTransactions[cAddress.GetHash256()] += block.vtx[nTx].vout[nOut].nValue;
 							
-						//printf("%s Credited %f Niro | Balance : %f Niro\n", cAddress.ToString().c_str(), (double)block.vtx[nTx].vout[nOut].nValue / COIN, (double)Core::mapAddressTransactions[cAddress.GetHash256()] / COIN);
+						//printf("%s Credited %f Nexus | Balance : %f Nexus\n", cAddress.ToString().c_str(), (double)block.vtx[nTx].vout[nOut].nValue / COIN, (double)Core::mapAddressTransactions[cAddress.GetHash256()] / COIN);
 					}
 					
 					if(!block.vtx[nTx].IsCoinBase())
@@ -689,7 +689,7 @@ namespace Wallet
 							
 							Core::mapAddressTransactions[cAddress.GetHash256()] -= tx.vout[txin.prevout.n].nValue;
 							
-							//printf("%s Debited %f Niro | Balance : %f Niro\n", cAddress.ToString().c_str(), (double)tx.vout[txin.prevout.n].nValue / COIN, (double)Core::mapAddressTransactions[cAddress.GetHash256()] / COIN);
+							//printf("%s Debited %f Nexus | Balance : %f Nexus\n", cAddress.ToString().c_str(), (double)tx.vout[txin.prevout.n].nValue / COIN, (double)Core::mapAddressTransactions[cAddress.GetHash256()] / COIN);
 						}
 					}
 				}

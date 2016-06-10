@@ -6,8 +6,8 @@
   
 *******************************************************************************************/
 
-#ifndef Nexus_VERSION_H
-#define Nexus_VERSION_H
+#ifndef NEXUS_VERSION_H
+#define NEXUS_VERSION_H
 
 #include <string>
 

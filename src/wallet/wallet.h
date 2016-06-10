@@ -6,8 +6,8 @@
   
 *******************************************************************************************/
 
-#ifndef Nexus_WALLET_H
-#define Nexus_WALLET_H
+#ifndef NEXUS_WALLET_H
+#define NEXUS_WALLET_H
 
 #include "../core/core.h"
 

@@ -370,7 +370,7 @@
           </font>
          </property>
          <property name="text">
-          <string>Coin Supply</string>
+          <string>Distribution</string>
          </property>
         </widget>
        </item>
@@ -383,7 +383,7 @@
           </font>
          </property>
          <property name="text">
-          <string>The Total Niro in Circulation [% is Global Niro Inflation]</string>
+          <string>Total Nexus in Circulation</string>
          </property>
         </widget>
        </item>
@@ -392,7 +392,7 @@
 	   <item row="18" column="0">
         <widget class="QLabel" name="label_n18">
          <property name="text">
-          <string>Total Supply to Date</string>
+          <string>Total to Date</string>
          </property>
         </widget>
        </item>

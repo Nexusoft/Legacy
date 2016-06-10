@@ -17,11 +17,7 @@ namespace Core
 {
 	/** Hardened Checkpoints. **/
 	std::map<unsigned int, uint1024> mapCheckpoints;
-	unsigned int CHECKPOINT_TIMESPAN = 60, LAST_CHECKPOINT_HEIGHT = 0;
-	
-	
-	/** Return the Most Recent Hardened Checkpoint Hash. **/
-	uint1024 GetLastCheckpoint(){ return mapCheckpoints[LAST_CHECKPOINT_HEIGHT]; }
+	unsigned int CHECKPOINT_TIMESPAN = 60, MAX_CHECKPOINTS_SEARCH= 3;
 	
 	
 	/** Check Checkpoint Timespan. **/
@@ -44,8 +40,7 @@ namespace Core
 			return true;
 			
 		/** Ensure that the block is made after last hardened Checkpoint. **/
-		if(pindex->nHeight <= LAST_CHECKPOINT_HEIGHT)
-			return false;
+		unsigned int nTotalCheckpoints = 0;
 			
 		/** Check The Block Hash **/
 		while(pindex && pindex->pprev)
@@ -55,7 +50,10 @@ namespace Core
 				if(pindex->pprev->GetBlockHash() == mapCheckpoints[pindex->pprev->nHeight])
 					return true;
 				
-				return false;
+				if(nTotalCheckpoints >= MAX_CHECKPOINTS_SEARCH)
+					return false;
+
+				nTotalCheckpoints ++;
 			}
 			
 			pindex = pindex->pprev;
@@ -77,23 +75,18 @@ namespace Core
 		
 		/** Only Harden a New Checkpoint if it isn't already hardened. **/
 		if(mapCheckpoints.count(pcheckpoint->pprev->PendingCheckpoint.first))
-		{
-			printf("DUPLICATE CHECKPOINT HARDEN\n");
-			
 			return true;
-		}
+
 
 		/** Update the Checkpoints into Memory. **/
 		mapCheckpoints[pcheckpoint->pprev->PendingCheckpoint.first] = pcheckpoint->pprev->PendingCheckpoint.second;
 		
+
 		/** Dump the Checkpoint if not Initializing. **/
 		if(!fInit)
 			printg("===== Hardened Checkpoint %s Height = %u\n", 
 			pcheckpoint->pprev->PendingCheckpoint.second.ToString().substr(0, 20).c_str(),
 			pcheckpoint->pprev->PendingCheckpoint.first);
-			
-		/** Update the Best Height for Checkpoint. **/
-		LAST_CHECKPOINT_HEIGHT = pcheckpoint->pprev->PendingCheckpoint.first;
 		
 		return true;
 	}

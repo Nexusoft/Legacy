@@ -32,7 +32,7 @@
 #include "../../wallet/wallet.h"
 
 #ifdef Q_WS_MAC
-#include "macdockiconhandler.h"
+#include "../util/macdockiconhandler.h"
 #endif
 
 #include <QApplication>
@@ -368,6 +368,15 @@ void NexusGUI::setClientModel(ClientModel *clientModel)
                 trayIcon->setIcon(QIcon(":/icons/toolbar_testnet"));
             }
         }
+        else 
+        {
+
+#ifndef Q_WS_MAC
+            setWindowIcon(QIcon(":icons/Nexus"));
+#else
+            MacDockIconHandler::instance()->setIcon(QIcon(":icons/Nexus"));
+#endif
+        }
 
         // Keep up to date with client
         setNumConnections(clientModel->getNumConnections());
@@ -696,7 +705,7 @@ void NexusGUI::askFee(qint64 nFeeRequired, bool *payFee)
         tr("This transaction is over the size limit.  You can still send it for a fee of %1, "
           "which goes to the nodes that process your transaction and helps to support the network.  "
           "Do you want to pay the fee?").arg(
-                NexusUnits::formatWithUnit(NexusUnits::Niro, nFeeRequired));
+                NexusUnits::formatWithUnit(NexusUnits::Nexus, nFeeRequired));
     QMessageBox::StandardButton retval = QMessageBox::question(
           this, tr("Sending..."), strMessage,
           QMessageBox::Yes|QMessageBox::Cancel, QMessageBox::Yes);

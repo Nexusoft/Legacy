@@ -120,24 +120,24 @@ namespace Core
 	}
 
 
-	/** Releases Niro into Blockchain for Miners to Create. **/
+	/** Releases Nexus into Blockchain for Miners to Create. **/
 	int64 ReleaseRewards(int nTimespan, int nStart, int nType)
 	{
 		int64 nSubsidy = 0;
 		for(int nMinutes = nStart; nMinutes < (nStart + nTimespan); nMinutes++)
 			nSubsidy += GetSubsidy(nMinutes, nType);
 		
-		//printf("Reserve %i: %f Niro | Timespan: %i - %i Minutes\n", nType, (double)nSubsidy / COIN, nStart, (nStart + nTimespan));
+		//printf("Reserve %i: %f Nexus | Timespan: %i - %i Minutes\n", nType, (double)nSubsidy / COIN, nStart, (nStart + nTimespan));
 		return nSubsidy;
 	}
 	
 	
-	/** Releases Niro into Blockchain [2% of Money Supply] for POS Minting. **/
+	/** Releases Nexus into Blockchain [2% of Money Supply] for POS Minting. **/
 	int64 ReleaseInflation(int nTimespan, int nStart)
 	{
 		int64 nSubsidy = GetInflation(nTimespan, CompoundSubsidy(nStart));
 		
-		printf("Inflation: %f Niro | Timespan %i - %i Minutes\n", (double)nSubsidy / COIN, nStart, (nStart + nTimespan));
+		printf("Inflation: %f Nexus | Timespan %i - %i Minutes\n", (double)nSubsidy / COIN, nStart, (nStart + nTimespan));
 		return nSubsidy;
 	}
 	

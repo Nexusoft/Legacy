@@ -5,12 +5,22 @@
  [Learn and Create] Viz. http://www.opensource.org/licenses/mit-license.php
   
 *******************************************************************************************/
-#ifndef Nexus_TEMPLATES_H
-#define Nexus_TEMPLATES_H
+#ifndef NEXUS_TEMPLATES_H
+#define NEXUS_TEMPLATES_H
 
 #include "uint1024.h"
 #include "skein.h"
+
+/** Ensure the c function names are not treated as mangled for cross platform support (Issue on OSX) **/
+#if defined(__cplusplus)
+extern "C" {
+#endif
+
 #include "KeccakHash.h"
+	
+#if defined(__cplusplus)
+}
+#endif
 
 /** Hashing template for Checksums **/
 template<typename T1>

@@ -8,6 +8,7 @@
 
 #include "unifiedtime.h"
 #include "../LLP/client.h"
+#include <inttypes.h>
 
 
 using namespace std;
@@ -107,7 +108,7 @@ void ThreadTimeRegulator(void* parg)
 	
 	/** The Entry Client Loop for Core LLP. **/
 	string ADDRESS = "";
-	LLP::CoreOutbound SERVER("", strprintf("%u", (fTestNet ? TESTNET_CORE_LLP_PORT : Nexus_CORE_LLP_PORT)));
+	LLP::CoreOutbound SERVER("", strprintf("%u", (fTestNet ? TESTNET_CORE_LLP_PORT : NEXUS_CORE_LLP_PORT)));
 	loop
 	{
 		try
@@ -225,7 +226,7 @@ void ThreadTimeRegulator(void* parg)
 				DB.WriteTimeData(UNIFIED_AVERAGE_OFFSET);
 				DB.Close();
 				
-				printf("***** %i Iterator | %i Offset | %i Current | %I64d\n", UNIFIED_MOVING_ITERATOR, nSamples.Majority(), UNIFIED_AVERAGE_OFFSET, GetUnifiedTimestamp());
+				printf("***** %i Iterator | %i Offset | %i Current | %"PRId64"\n", UNIFIED_MOVING_ITERATOR, nSamples.Majority(), UNIFIED_AVERAGE_OFFSET, GetUnifiedTimestamp());
 				
 				
 				/** Regulate the Clock while Waiting, and Break if the Clock Changes. **/
@@ -241,7 +242,7 @@ void ThreadTimeRegulator(void* parg)
 						UNIFIED_TIME_DATA.clear();
 						UNIFIED_AVERAGE_OFFSET -= nElapsed;
 						
-						printf("***** LLP Clock Regulator: Time Changed by %I64d Seconds. New Offset %i\n", nElapsed, UNIFIED_AVERAGE_OFFSET);
+						printf("***** LLP Clock Regulator: Time Changed by %"PRId64" Seconds. New Offset %i\n", nElapsed, UNIFIED_AVERAGE_OFFSET);
 						
 						break;
 					}

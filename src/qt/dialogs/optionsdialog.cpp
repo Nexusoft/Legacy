@@ -37,7 +37,7 @@ public:
 
     void setMapper(MonitoredDataMapper *mapper);
 private:
-    QCheckBox *Nexus_at_startup;
+    QCheckBox *nexus_at_startup;
 #ifndef Q_WS_MAC
     QCheckBox *minimize_to_tray;
 #endif
@@ -177,9 +177,9 @@ MainOptionsPage::MainOptionsPage(QWidget *parent):
 {
     QVBoxLayout *layout = new QVBoxLayout();
 
-    Nexus_at_startup = new QCheckBox(tr("&Start Nexus on window system startup"));
-    Nexus_at_startup->setToolTip(tr("Automatically start Nexus after the computer is turned on"));
-    layout->addWidget(Nexus_at_startup);
+    nexus_at_startup = new QCheckBox(tr("&Start Nexus on window system startup"));
+    nexus_at_startup->setToolTip(tr("Automatically start Nexus after the computer is turned on"));
+    layout->addWidget(nexus_at_startup);
 
 #ifndef Q_WS_MAC
     minimize_to_tray = new QCheckBox(tr("&Minimize to the tray instead of the taskbar"));
@@ -257,7 +257,7 @@ MainOptionsPage::MainOptionsPage(QWidget *parent):
 void MainOptionsPage::setMapper(MonitoredDataMapper *mapper)
 {
     // Map model to widgets
-    mapper->addMapping(Nexus_at_startup, OptionsModel::StartAtStartup);
+    mapper->addMapping(nexus_at_startup, OptionsModel::StartAtStartup);
 #ifndef Q_WS_MAC
     mapper->addMapping(minimize_to_tray, OptionsModel::MinimizeToTray);
 #endif

@@ -284,7 +284,7 @@ namespace Wallet
 					CWalletTx& wtx = (*mi).second;
 					if (!wtx.IsSpent(txin.prevout.n) && IsMine(wtx.vout[txin.prevout.n]))
 					{
-						printf("WalletUpdateSpent found spent coin %s Niro %s\n", FormatMoney(wtx.GetCredit()).c_str(), wtx.GetHash().ToString().c_str());
+						printf("WalletUpdateSpent found spent coin %s Nexus %s\n", FormatMoney(wtx.GetCredit()).c_str(), wtx.GetHash().ToString().c_str());
 						wtx.MarkSpent(txin.prevout.n);
 						wtx.WriteToDisk();
 						vWalletUpdated.push_back(txin.prevout.hash);
@@ -738,7 +738,7 @@ namespace Wallet
 					}
 					if (fUpdated)
 					{
-						printf("ReacceptWalletTransactions found spent coin %s Niro %s\n", FormatMoney(wtx.GetCredit()).c_str(), wtx.GetHash().ToString().c_str());
+						printf("ReacceptWalletTransactions found spent coin %s Nexus %s\n", FormatMoney(wtx.GetCredit()).c_str(), wtx.GetHash().ToString().c_str());
 						wtx.MarkDirty();
 						wtx.WriteToDisk();
 					}
@@ -1591,7 +1591,7 @@ namespace Wallet
 			{
 				if (IsMine(pcoin->vout[n]) && pcoin->IsSpent(n) && (txindex.vSpent.size() <= n || txindex.vSpent[n].IsNull()))
 				{
-					printf("FixSpentCoins found lost coin %s Niro %s[%d], %s\n",
+					printf("FixSpentCoins found lost coin %s Nexus %s[%d], %s\n",
 						FormatMoney(pcoin->vout[n].nValue).c_str(), pcoin->GetHash().ToString().c_str(), n, fCheckOnly? "repair not attempted" : "repairing");
 					nMismatchFound++;
 					nBalanceInQuestion += pcoin->vout[n].nValue;
@@ -1603,7 +1603,7 @@ namespace Wallet
 				}
 				else if (IsMine(pcoin->vout[n]) && !pcoin->IsSpent(n) && (txindex.vSpent.size() > n && !txindex.vSpent[n].IsNull()))
 				{
-					printf("FixSpentCoins found spent coin %s Niro %s[%d], %s\n",
+					printf("FixSpentCoins found spent coin %s Nexus %s[%d], %s\n",
 						FormatMoney(pcoin->vout[n].nValue).c_str(), pcoin->GetHash().ToString().c_str(), n, fCheckOnly? "repair not attempted" : "repairing");
 					nMismatchFound++;
 					nBalanceInQuestion += pcoin->vout[n].nValue;

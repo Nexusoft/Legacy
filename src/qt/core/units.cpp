@@ -19,9 +19,9 @@ NexusUnits::NexusUnits(QObject *parent):
 QList<NexusUnits::Unit> NexusUnits::availableUnits()
 {
     QList<NexusUnits::Unit> unitlist;
-    unitlist.append(Niro);
-    unitlist.append(mNiro);
-    unitlist.append(uNiro);
+    unitlist.append(Nexus);
+    unitlist.append(mNexus);
+    unitlist.append(uNexus);
     return unitlist;
 }
 
@@ -29,9 +29,9 @@ bool NexusUnits::valid(int unit)
 {
     switch(unit)
     {
-    case Niro:
-    case mNiro:
-    case uNiro:
+    case Nexus:
+    case mNexus:
+    case uNexus:
         return true;
     default:
         return false;
@@ -42,9 +42,9 @@ QString NexusUnits::name(int unit)
 {
     switch(unit)
     {
-    case Niro: return QString("Niro");
-    case mNiro: return QString("mNiro");
-    case uNiro: return QString::fromUtf8("μNiro");
+    case Nexus: return QString("NXS");
+    case mNexus: return QString("mNXS");
+    case uNexus: return QString::fromUtf8("μNXS");
     default: return QString("???");
     }
 }
@@ -53,9 +53,9 @@ QString NexusUnits::description(int unit)
 {
     switch(unit)
     {
-    case Niro: return QString("Nexus");
-    case mNiro: return QString("Milli-Nexus (1 / 1,000)");
-    case uNiro: return QString("Micro-Nexus (1 / 1,000,000)");
+    case Nexus: return QString("Nexus");
+    case mNexus: return QString("Milli-Nexus (1 / 1,000)");
+    case uNexus: return QString("Micro-Nexus (1 / 1,000,000)");
     default: return QString("???");
     }
 }
@@ -64,9 +64,9 @@ qint64 NexusUnits::factor(int unit)
 {
     switch(unit)
     {
-    case Niro:  return 1000000;
-    case mNiro: return 1000;
-    case uNiro: return 1;
+    case Nexus:  return 1000000;
+    case mNexus: return 1000;
+    case uNexus: return 1;
     default:   return 1000000;
     }
 }
@@ -75,9 +75,9 @@ int NexusUnits::amountDigits(int unit)
 {
     switch(unit)
     {
-    case Niro: return 10; // 21,000,000 (# digits, without commas)
-    case mNiro: return 13; // 21,000,000,000
-    case uNiro: return 16; // 21,000,000,000,000
+    case Nexus: return 10; // 21,000,000 (# digits, without commas)
+    case mNexus: return 13; // 21,000,000,000
+    case uNexus: return 16; // 21,000,000,000,000
     default: return 0;
     }
 }
@@ -86,9 +86,9 @@ int NexusUnits::decimals(int unit)
 {
     switch(unit)
     {
-    case Niro: return 6;
-    case mNiro: return 3;
-    case uNiro: return 0;
+    case Nexus: return 6;
+    case mNexus: return 3;
+    case uNexus: return 0;
     default: return 0;
     }
 }

@@ -6,8 +6,8 @@
   
 *******************************************************************************************/
 
-#ifndef _Nexus_COMPAT_H
-#define _Nexus_COMPAT_H 1
+#ifndef _NEXUS_COMPAT_H
+#define _NEXUS_COMPAT_H 1
 
 #ifdef WIN32
 #define _WIN32_WINNT 0x0501

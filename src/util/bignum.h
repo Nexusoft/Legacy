@@ -6,8 +6,8 @@
   
 *******************************************************************************************/
 
-#ifndef Nexus_BIGNUM_H
-#define Nexus_BIGNUM_H
+#ifndef NEXUS_BIGNUM_H
+#define NEXUS_BIGNUM_H
 
 #include <stdexcept>
 #include <vector>

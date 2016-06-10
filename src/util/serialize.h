@@ -6,8 +6,8 @@
   
 *******************************************************************************************/
 
-#ifndef Nexus_SERIALIZE_H
-#define Nexus_SERIALIZE_H
+#ifndef NEXUS_SERIALIZE_H
+#define NEXUS_SERIALIZE_H
 
 #include <string>
 #include <vector>
@@ -17,6 +17,7 @@
 #include <limits>
 #include <cstring>
 #include <cstdio>
+#include <stdint.h>
 
 #include <boost/type_traits/is_fundamental.hpp>
 #include <boost/tuple/tuple.hpp>
@@ -26,8 +27,13 @@
 #include "../util/allocators.h"
 #include "../core/version.h"
 
-typedef long long  int64;
-typedef unsigned long long  uint64;
+
+ typedef int64_t int64;
+ typedef uint64_t uint64;
+ 
+//typedef long long  int64;
+//typedef unsigned long long  uint64;
+
 
 namespace Wallet { class CScript; }
 
@@ -818,6 +824,7 @@ public:
     iterator insert(iterator it, const char& x=char()) { return vch.insert(it, x); }
     void insert(iterator it, size_type n, const char& x) { vch.insert(it, n, x); }
 
+
     void insert(iterator it, const_iterator first, const_iterator last)
     {
         if (it == vch.begin() + nReadPos && last - first <= nReadPos)
@@ -830,6 +837,8 @@ public:
             vch.insert(it, first, last);
     }
 
+/** Fix for MaxOSX Compatability for XCode and Deployment 10.10. **/
+#if !defined(MAC_OSX) 
     void insert(iterator it, std::vector<char>::const_iterator first, std::vector<char>::const_iterator last)
     {
         if (it == vch.begin() + nReadPos && last - first <= nReadPos)
@@ -841,6 +850,7 @@ public:
         else
             vch.insert(it, first, last);
     }
+#endif
 
 #if !defined(_MSC_VER) || _MSC_VER >= 1300
     void insert(iterator it, const char* first, const char* last)

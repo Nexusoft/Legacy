@@ -110,7 +110,7 @@
        <item>
         <widget class="QLabel" name="labelBalance">
          <property name="text">
-          <string>123.456 Niro</string>
+          <string>123.456</string>
          </property>
          <property name="textInteractionFlags">
           <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>

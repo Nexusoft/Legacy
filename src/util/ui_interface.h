@@ -6,8 +6,8 @@
   
 *******************************************************************************************/
 
-#ifndef Nexus_UI_INTERFACE_H
-#define Nexus_UI_INTERFACE_H
+#ifndef NEXUS_UI_INTERFACE_H
+#define NEXUS_UI_INTERFACE_H
 
 #include <string>
 #include "util.h" // for int64

@@ -6,8 +6,8 @@
   
 *******************************************************************************************/
 
-#ifndef Nexus_ALLOCATORS_H
-#define Nexus_ALLOCATORS_H
+#ifndef NEXUS_ALLOCATORS_H
+#define NEXUS_ALLOCATORS_H
 
 #include <string.h>
 #include <string>

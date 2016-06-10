@@ -6,8 +6,8 @@
   
 *******************************************************************************************/
 
-#ifndef Nexus_MRUSET_H
-#define Nexus_MRUSET_H
+#ifndef NEXUS_MRUSET_H
+#define NEXUS_MRUSET_H
 
 #include <set>
 #include <deque>

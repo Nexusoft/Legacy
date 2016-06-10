@@ -6,8 +6,8 @@
   
 *******************************************************************************************/
 
-#ifndef Nexus_UTIL_H
-#define Nexus_UTIL_H
+#ifndef NEXUS_UTIL_H
+#define NEXUS_UTIL_H
 
 #include "../hash/templates.h"
 
@@ -21,6 +21,7 @@ typedef int pid_t; /* define for windows compatiblity */
 #include <map>
 #include <vector>
 #include <string>
+#include <stdint.h>
 
 #include <boost/thread.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
@@ -38,8 +39,13 @@ typedef int pid_t; /* define for windows compatiblity */
 
 #include "../net/netbase.h"
 
-typedef long long  int64;
-typedef unsigned long long  uint64;
+
+ typedef int64_t int64;
+ typedef uint64_t uint64;
+ 
+//typedef long long  int64;
+//typedef unsigned long long  uint64;
+
 
 static const int64 COIN = 1000000;
 static const int64 CENT = 10000;

@@ -6,8 +6,8 @@
   
 *******************************************************************************************/
 
-#ifndef Nexus_DB_H
-#define Nexus_DB_H
+#ifndef NEXUS_DB_H
+#define NEXUS_DB_H
 
 #include "../core/core.h"
 
@@ -340,4 +340,4 @@ namespace Wallet
 	bool LoadAddresses();
 
 }
-#endif // Nexus_DB_H
+#endif // NEXUS_DB_H

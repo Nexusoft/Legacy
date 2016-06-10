@@ -14,8 +14,8 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
  
-#ifndef Nexus_STRLCPY_H
-#define Nexus_STRLCPY_H
+#ifndef NEXUS_STRLCPY_H
+#define NEXUS_STRLCPY_H
 
 #include <stdlib.h>
 #include <string.h>

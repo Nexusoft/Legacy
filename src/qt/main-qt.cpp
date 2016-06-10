@@ -26,8 +26,8 @@
 
 #include <boost/interprocess/ipc/message_queue.hpp>
 
-#if defined(Nexus_NEED_QT_PLUGINS) && !defined(_Nexus_QT_PLUGINS_INCLUDED)
-#define _Nexus_QT_PLUGINS_INCLUDED
+#if defined(NEXUS_NEED_QT_PLUGINS) && !defined(_NEXUS_QT_PLUGINS_INCLUDED)
+#define _NEXUS_QT_PLUGINS_INCLUDED
 #define __INSURE__
 #include <QtPlugin>
 Q_IMPORT_PLUGIN(qcncodecs)
@@ -136,9 +136,10 @@ static void handleRunawayException(std::exception *e)
 #ifdef WIN32
 #define strncasecmp strnicmp
 #endif
-#ifndef Nexus_QT_TEST
+#ifndef NEXUS_QT_TEST
 int main(int argc, char *argv[])
 {
+
 #if !defined(MAC_OSX) && !defined(WIN32)
 // TODO: implement qtipcserver.cpp for Mac and Windows
 
@@ -149,7 +150,7 @@ int main(int argc, char *argv[])
         {
             const char *strURI = argv[i];
             try {
-                boost::interprocess::message_queue mq(boost::interprocess::open_only, Nexus_URI_QUEUE_NAME);
+                boost::interprocess::message_queue mq(boost::interprocess::open_only, NEXUS_URI_QUEUE_NAME);
                 if(mq.try_send(strURI, strlen(strURI), 0))
                     exit(0);
                 else
@@ -161,7 +162,7 @@ int main(int argc, char *argv[])
         }
     }
 #endif
-
+    
     // Internal string conversion is all UTF-8
     QTextCodec::setCodecForTr(QTextCodec::codecForName("UTF-8"));
     QTextCodec::setCodecForCStrings(QTextCodec::codecForTr());
@@ -200,7 +201,7 @@ int main(int argc, char *argv[])
     // Application identification (must be set before OptionsModel is initialized,
     // as it is used to locate QSettings)
     app.setOrganizationName("Nexus");
-    app.setOrganizationDomain("nexusniro.com");
+    app.setOrganizationDomain("nexusoft.io");
     if(GetBoolArg("-testnet", false)) // Separate UI settings for testnet
         app.setApplicationName("Nexus-Qt-testnet");
     else
@@ -284,7 +285,7 @@ int main(int argc, char *argv[])
                     {
                         const char *strURI = argv[i];
                         try {
-                            boost::interprocess::message_queue mq(boost::interprocess::open_only, Nexus_URI_QUEUE_NAME);
+                            boost::interprocess::message_queue mq(boost::interprocess::open_only, NEXUS_URI_QUEUE_NAME);
                             mq.try_send(strURI, strlen(strURI), 0);
                         }
                         catch (boost::interprocess::interprocess_exception &ex) {
@@ -315,4 +316,4 @@ int main(int argc, char *argv[])
     }
     return 0;
 }
-#endif // Nexus_QT_TEST
+#endif // NEXUS_QT_TEST

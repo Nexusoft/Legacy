@@ -99,7 +99,7 @@ void SendCoinsDialog::on_sendButton_clicked()
     QStringList formatted;
     foreach(const SendCoinsRecipient &rcp, recipients)
     {
-        formatted.append(tr("<b>%1</b> to %2 (%3)").arg(NexusUnits::formatWithUnit(NexusUnits::Niro, rcp.amount), Qt::escape(rcp.label), rcp.address));
+        formatted.append(tr("<b>%1</b> to %2 (%3)").arg(NexusUnits::formatWithUnit(NexusUnits::Nexus, rcp.amount), Qt::escape(rcp.label), rcp.address));
     }
 
     fNewRecipientAllowed = false;
@@ -144,7 +144,7 @@ void SendCoinsDialog::on_sendButton_clicked()
     case WalletModel::AmountWithFeeExceedsBalance:
         QMessageBox::warning(this, tr("Send Coins"),
             tr("Total exceeds your balance when the %1 transaction fee is included").
-            arg(NexusUnits::formatWithUnit(NexusUnits::Niro, sendstatus.fee)),
+            arg(NexusUnits::formatWithUnit(NexusUnits::Nexus, sendstatus.fee)),
             QMessageBox::Ok, QMessageBox::Ok);
         break;
     case WalletModel::DuplicateAddress:

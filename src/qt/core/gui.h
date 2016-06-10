@@ -6,8 +6,8 @@
   
 *******************************************************************************************/
 
-#ifndef Nexus_GUI_H
-#define Nexus_GUI_H
+#ifndef NEXUS_GUI_H
+#define NEXUS_GUI_H
 
 #include <QMainWindow>
 #include <QSystemTrayIcon>

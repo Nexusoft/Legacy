@@ -1,9 +1,10 @@
-#ifndef Nexus_CORE_SERVER_H
-#define Nexus_CORE_SERVER_H
+#ifndef NEXUS_CORE_SERVER_H
+#define NEXUS_CORE_SERVER_H
 
 #include "server.h"
 #include "../core/unifiedtime.h"
 #include "../util/util.h"
+#include <inttypes.h>
 
 namespace LLP
 {
@@ -56,7 +57,7 @@ namespace LLP
 				RESPONSE.LENGTH = 4;
 				RESPONSE.DATA   = int2bytes(nOffset);
 				
-				printf("***** Core LLP: Sent Offset %i | %u.%u.%u.%u | Unified %I64d\n", nOffset, ADDRESS[0], ADDRESS[1], ADDRESS[2], ADDRESS[3], GetUnifiedTimestamp());
+				printf("***** Core LLP: Sent Offset %i | %u.%u.%u.%u | Unified %"PRId64"\n", nOffset, ADDRESS[0], ADDRESS[1], ADDRESS[2], ADDRESS[3], GetUnifiedTimestamp());
 				this->WritePacket(RESPONSE);
 				return true;
 			}
@@ -67,7 +68,7 @@ namespace LLP
 				RESPONSE.HEADER = TIME_DATA;
 				RESPONSE.LENGTH = 4;
 				RESPONSE.DATA = uint2bytes((unsigned int)GetUnifiedTimestamp());
-				printf("***** Core LLP: Sent Time Sample %I64d to %u.%u.%u.%u\n", GetUnifiedTimestamp(), ADDRESS[0], ADDRESS[1], ADDRESS[2], ADDRESS[3]);
+				printf("***** Core LLP: Sent Time Sample %"PRId64" to %u.%u.%u.%u\n", GetUnifiedTimestamp(), ADDRESS[0], ADDRESS[1], ADDRESS[2], ADDRESS[3]);
 				
 				this->WritePacket(RESPONSE);
 				return true;

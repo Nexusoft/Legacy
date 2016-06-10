@@ -6,8 +6,8 @@
   
 *******************************************************************************************/
 
-#ifndef Nexus_CORE_H
-#define Nexus_CORE_H
+#ifndef NEXUS_CORE_H
+#define NEXUS_CORE_H
 
 #include "../util/bignum.h"
 #include "../net/net.h"
@@ -24,6 +24,7 @@ static const int fHaveUPnP = false;
 #endif
 
 #include <list>
+#include <inttypes.h>
 
 class CDataStream;
 
@@ -94,7 +95,7 @@ namespace Core
 	extern const int64 MIN_RELAY_TX_FEE;
 	extern const int64 MAX_TXOUT_AMOUNT;
 	extern const int64 MIN_TXOUT_AMOUNT;
-	extern const int COINBASE_MATURITY_Niro;
+	extern const int COINBASE_MATURITY;
 	extern const int MODIFIER_INTERVAL_RATIO;
 	extern const int LOCKTIME_THRESHOLD;
 	extern const int STAKE_TARGET_SPACING;
@@ -663,7 +664,7 @@ namespace Core
 			uint576 cKey;
 			cKey.SetBytes(vchPubKey);
 			
-			printf("CTrustKey(Hash = %s, Key = %s, Genesis = %s, Tx = %s, Time = %u, Age = %I64d, BlockAge = %I64d, Expired = %s)\n", GetHash().ToString().c_str(), cKey.ToString().c_str(), hashGenesisBlock.ToString().c_str(), hashGenesisTx.ToString().c_str(), nGenesisTime, Age(GetUnifiedTimestamp()), BlockAge(GetUnifiedTimestamp()), Expired(GetUnifiedTimestamp()) ? "TRUE" : "FALSE");
+			printf("CTrustKey(Hash = %s, Key = %s, Genesis = %s, Tx = %s, Time = %u, Age = %"PRIu64", BlockAge = %"PRIu64", Expired = %s)\n", GetHash().ToString().c_str(), cKey.ToString().c_str(), hashGenesisBlock.ToString().c_str(), hashGenesisTx.ToString().c_str(), nGenesisTime, Age(GetUnifiedTimestamp()), BlockAge(GetUnifiedTimestamp()), Expired(GetUnifiedTimestamp()) ? "TRUE" : "FALSE");
 		}
 	};
 	
@@ -1480,7 +1481,7 @@ namespace Core
 
 		void print() const
 		{
-			printf("CBlock(hash=%s, ver=%d, hashPrevBlock=%s, hashMerkleRoot=%s, nTime=%u, nBits=%08x, nChannel = %u, nHeight = %u, nNonce=%I64d, vtx=%d, vchBlockSig=%s)\n",
+			printf("CBlock(hash=%s, ver=%d, hashPrevBlock=%s, hashMerkleRoot=%s, nTime=%u, nBits=%08x, nChannel = %u, nHeight = %u, nNonce=%"PRIu64", vtx=%d, vchBlockSig=%s)\n",
 				GetHash().ToString().substr(0,20).c_str(),
 				nVersion,
 				hashPrevBlock.ToString().substr(0,20).c_str(),

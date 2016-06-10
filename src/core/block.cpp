@@ -191,7 +191,7 @@ namespace Core
 		// track money supply and mint amount info
 		pindex->nMint = nValueOut - nValueIn;
 		pindex->nMoneySupply = (pindex->pprev ? pindex->pprev->nMoneySupply : 0) + nValueOut - nValueIn;
-		printf("Generated %f Niro\n", (double) pindex->nMint / COIN);
+		printf("Generated %f Nexus\n", (double) pindex->nMint / COIN);
 		if (!txdb.WriteBlockIndex(CDiskBlockIndex(pindex)))
 			return error("Connect() : WriteBlockIndex for pindex failed");
 
@@ -395,7 +395,7 @@ namespace Core
 							
 				mapAddressTransactions[cAddress.GetHash256()] += (uint64) vtx[nTx].vout[nOut].nValue;
 						
-				printg("%s Credited %f Niro | Balance : %f Niro\n", cAddress.ToString().c_str(), (double)vtx[nTx].vout[nOut].nValue / COIN, (double)mapAddressTransactions[cAddress.GetHash256()] / COIN);
+				printg("%s Credited %f Nexus | Balance : %f Nexus\n", cAddress.ToString().c_str(), (double)vtx[nTx].vout[nOut].nValue / COIN, (double)mapAddressTransactions[cAddress.GetHash256()] / COIN);
 			}
 					
 			if(!vtx[nTx].IsCoinBase())
@@ -423,7 +423,7 @@ namespace Core
 					else
 						mapAddressTransactions[cAddress.GetHash256()] -= (uint64) tx.vout[txin.prevout.n].nValue;
 					
-					printg("%s Debited %f Niro | Balance : %f Niro\n", cAddress.ToString().c_str(), (double)tx.vout[txin.prevout.n].nValue / COIN, (double)mapAddressTransactions[cAddress.GetHash256()] / COIN);
+					printg("%s Debited %f Nexus | Balance : %f Nexus\n", cAddress.ToString().c_str(), (double)tx.vout[txin.prevout.n].nValue / COIN, (double)mapAddressTransactions[cAddress.GetHash256()] / COIN);
 				}
 			}
 		}
@@ -485,7 +485,7 @@ namespace Core
 					return error("AddToBlockIndex() : Coinbase Transaction too Large. Out of Reserve Limits");
 				
 				pindexNew->nReleasedReserve[nType] =  nReserve - pindexNew->nCoinbaseRewards[nType];
-				printg("Reserve Balance %i | %f Niro | Released %f\n", nType, pindexNew->nReleasedReserve[nType] / 1000000.0, (nReserve - pindexPrev->nReleasedReserve[nType]) / 1000000.0 );
+				printg("Reserve Balance %i | %f Nexus | Released %f\n", nType, pindexNew->nReleasedReserve[nType] / 1000000.0, (nReserve - pindexPrev->nReleasedReserve[nType]) / 1000000.0 );
 			}
 			else
 				pindexNew->nReleasedReserve[nType] = 0;
@@ -628,37 +628,37 @@ namespace Core
 			
 		/** Check the Current Channel Time-Lock. **/
 		if (nHeight > 0 && GetBlockTime() < (fTestNet ? CHANNEL_TESTNET_TIMELOCK[GetChannel()] : CHANNEL_NETWORK_TIMELOCK[GetChannel()]))
-			return error("CheckBlock() : Block Created before Channel Time-Lock. Channel Opens in %I64d Seconds", (fTestNet ? CHANNEL_TESTNET_TIMELOCK[GetChannel()] : CHANNEL_NETWORK_TIMELOCK[GetChannel()]) - GetUnifiedTimestamp());
+			return error("CheckBlock() : Block Created before Channel Time-Lock. Channel Opens in %"PRId64" Seconds", (fTestNet ? CHANNEL_TESTNET_TIMELOCK[GetChannel()] : CHANNEL_NETWORK_TIMELOCK[GetChannel()]) - GetUnifiedTimestamp());
 			
 			
 		/** Check the Version 1 Block Time-Lock. **/	
 		if (nHeight > 0 && nVersion == 1 && GetBlockTime() > (fTestNet ? TESTNET_VERSION2_TIMELOCK : NETWORK_VERSION2_TIMELOCK))
-			return error("CheckBlock() : Version 1 Blocks have been Obsolete for %I64d Seconds", (GetUnifiedTimestamp() - (fTestNet ? TESTNET_VERSION2_TIMELOCK : NETWORK_VERSION2_TIMELOCK)));
+			return error("CheckBlock() : Version 1 Blocks have been Obsolete for %"PRId64" Seconds", (GetUnifiedTimestamp() - (fTestNet ? TESTNET_VERSION2_TIMELOCK : NETWORK_VERSION2_TIMELOCK)));
 			
 			
 		/** Check the Version 2 Block Time-Lock. **/
 		if (nHeight > 0 && nVersion >= 2 && GetBlockTime() <= (fTestNet ? TESTNET_VERSION2_TIMELOCK : NETWORK_VERSION2_TIMELOCK))
-			return error("CheckBlock() : Version 2 Blocks are not Accepted for %I64d Seconds\n", (GetUnifiedTimestamp() - (fTestNet ? TESTNET_VERSION2_TIMELOCK : NETWORK_VERSION2_TIMELOCK)));
+			return error("CheckBlock() : Version 2 Blocks are not Accepted for %"PRId64" Seconds\n", (GetUnifiedTimestamp() - (fTestNet ? TESTNET_VERSION2_TIMELOCK : NETWORK_VERSION2_TIMELOCK)));
 
 			
 		/** Check the Version 3 Block Time-Lock. **/
 		if (nHeight > 0 && nVersion == 2 && GetBlockTime() > (fTestNet ? TESTNET_VERSION3_TIMELOCK : NETWORK_VERSION3_TIMELOCK))
-			return error("CheckBlock() : Version 2 Blocks have been Obsolete for %I64d Seconds\n", (GetUnifiedTimestamp() - (fTestNet ? TESTNET_VERSION3_TIMELOCK : NETWORK_VERSION3_TIMELOCK)));	
+			return error("CheckBlock() : Version 2 Blocks have been Obsolete for %"PRId64" Seconds\n", (GetUnifiedTimestamp() - (fTestNet ? TESTNET_VERSION3_TIMELOCK : NETWORK_VERSION3_TIMELOCK)));	
 			
 			
 		/** Check the Version 3 Block Time-Lock. **/
 		if (nHeight > 0 && nVersion >= 3 && GetBlockTime() <= (fTestNet ? TESTNET_VERSION3_TIMELOCK : NETWORK_VERSION3_TIMELOCK))
-			return error("CheckBlock() : Version 3 Blocks are not Accepted for %I64d Seconds\n", (GetUnifiedTimestamp() - (fTestNet ? TESTNET_VERSION3_TIMELOCK : NETWORK_VERSION3_TIMELOCK)));	
+			return error("CheckBlock() : Version 3 Blocks are not Accepted for %"PRId64" Seconds\n", (GetUnifiedTimestamp() - (fTestNet ? TESTNET_VERSION3_TIMELOCK : NETWORK_VERSION3_TIMELOCK)));	
 			
 			
 		/** Check the Version 4 Block Time-Lock. Allow Version 3 Blocks for 1 Hour after Time Lock. **/
 		if (nHeight > 0 && nVersion == 3 && (GetBlockTime() - 3600) > (fTestNet ? TESTNET_VERSION4_TIMELOCK : NETWORK_VERSION4_TIMELOCK))
-			return error("CheckBlock() : Version 3 Blocks have been Obsolete for %I64d Seconds\n", (GetUnifiedTimestamp() - (fTestNet ? TESTNET_VERSION4_TIMELOCK : NETWORK_VERSION4_TIMELOCK)));	
+			return error("CheckBlock() : Version 3 Blocks have been Obsolete for %"PRId64" Seconds\n", (GetUnifiedTimestamp() - (fTestNet ? TESTNET_VERSION4_TIMELOCK : NETWORK_VERSION4_TIMELOCK)));	
 			
 			
 		/** Check the Version 4 Block Time-Lock. **/
 		if (nHeight > 0 && nVersion >= 4 && GetBlockTime() <= (fTestNet ? TESTNET_VERSION4_TIMELOCK : NETWORK_VERSION4_TIMELOCK))
-			return error("CheckBlock() : Version 4 Blocks are not Accepted for %I64d Seconds\n", (GetUnifiedTimestamp() - (fTestNet ? TESTNET_VERSION4_TIMELOCK : NETWORK_VERSION4_TIMELOCK)));	
+			return error("CheckBlock() : Version 4 Blocks are not Accepted for %"PRId64" Seconds\n", (GetUnifiedTimestamp() - (fTestNet ? TESTNET_VERSION4_TIMELOCK : NETWORK_VERSION4_TIMELOCK)));	
 			
 			
 		/** Check the Required Mining Outputs. **/
@@ -787,7 +787,7 @@ namespace Core
 			
 		/** Check That Block Timestamp is not before previous block. **/
 		if (GetBlockTime() <= pindexPrev->GetBlockTime())
-			return error("AcceptBlock() : block's timestamp too early Block: %I64d Prev: %I64d", GetBlockTime(), pindexPrev->GetBlockTime());
+			return error("AcceptBlock() : block's timestamp too early Block: %"PRId64" Prev: %"PRId64"", GetBlockTime(), pindexPrev->GetBlockTime());
 			
 		
 		if (GetBlockTime() > GetUnifiedTimestamp() + MAX_UNIFIED_DRIFT)
@@ -806,15 +806,15 @@ namespace Core
 					
 			/** Check that the Mining Reward Matches the Coinbase Calculations. **/
 			if (nMiningReward != GetCoinbaseReward(pindexPrev, GetChannel(), 0))
-				return error("AcceptBlock() : miner reward mismatch %I64d : %I64d", nMiningReward, GetCoinbaseReward(pindexPrev, GetChannel(), 0));
+				return error("AcceptBlock() : miner reward mismatch %"PRId64" : %"PRId64"", nMiningReward, GetCoinbaseReward(pindexPrev, GetChannel(), 0));
 					
 			/** Check that the Exchange Reward Matches the Coinbase Calculations. **/
 			if (vtx[0].vout[nSize - 2].nValue != GetCoinbaseReward(pindexPrev, GetChannel(), 1))
-				return error("AcceptBlock() : exchange reward mismatch %I64d : %I64d\n", vtx[0].vout[1].nValue, GetCoinbaseReward(pindexPrev, GetChannel(), 1));
+				return error("AcceptBlock() : exchange reward mismatch %"PRId64" : %"PRId64"\n", vtx[0].vout[1].nValue, GetCoinbaseReward(pindexPrev, GetChannel(), 1));
 						
 			/** Check that the Developer Reward Matches the Coinbase Calculations. **/
 			if (vtx[0].vout[nSize - 1].nValue != GetCoinbaseReward(pindexPrev, GetChannel(), 2))
-				return error("AcceptBlock() : developer reward mismatch %I64d : %I64d\n", vtx[0].vout[2].nValue, GetCoinbaseReward(pindexPrev, GetChannel(), 2));
+				return error("AcceptBlock() : developer reward mismatch %"PRId64" : %"PRId64"\n", vtx[0].vout[2].nValue, GetCoinbaseReward(pindexPrev, GetChannel(), 2));
 					
 		}
 		
@@ -1084,34 +1084,17 @@ namespace Core
 			block.nBits    = bnProofOfWorkLimit[2].GetCompact();
 			block.nNonce   = fTestNet ? 122999499 : 2196828850;
 
-
-			printf("%s\n", block.GetHash().ToString().c_str());
-			printf("%s\n", hashGenesisBlock.ToString().c_str());
-			printf("%s\n", block.hashMerkleRoot.ToString().c_str());
 			assert(block.hashMerkleRoot == uint512("0x8a971e1cec5455809241a3f345618a32dc8cb3583e03de27e6fe1bb4dfa210c413b7e6e15f233e938674a309df5a49db362feedbf96f93fb1c6bfeaa93bd1986"));
 			
 			CBigNum target;
 			target.SetCompact(block.nBits);
-			
-			while(true)
-			{
-				if(block.GetHash() < target.getuint1024())
-					break;
-					
-				if(block.nNonce % 30000 == 0)
-					printf("nNonce: %I64d hash: %s\n", block.nNonce, block.GetHash().ToString().substr(0, 45).c_str());
-					
-				block.nNonce ++;
-			}
-			
-			printf("genesis hash: %s\n", block.GetHash().ToString().c_str());
 			block.print();
 			
-			printf("Checking Hash...\n");
-			assert(block.GetHash() == hashGenesisBlock);
+			if(block.GetHash() != hashGenesisBlock)
+				return error("LoadBlockIndex() : genesis hash does not match");
 			
-			printf("Checking Block...\n");
-			assert(block.CheckBlock());
+			if(!block.CheckBlock())
+				return error("LoadBlockIndex() : genesis block check failed");
 
 			
 			/** Write the New Genesis to Disk. **/

@@ -6,8 +6,8 @@
   
 *******************************************************************************************/
 
-#ifndef H_Nexus_SCRIPT
-#define H_Nexus_SCRIPT
+#ifndef H_NEXUS_SCRIPT
+#define H_NEXUS_SCRIPT
 
 #include "base58.h"
 

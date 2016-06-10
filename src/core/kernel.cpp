@@ -179,7 +179,7 @@ namespace Core
 		double nThreshold = ((nTime - vtx[0].nTime) * 100.0) / nNonce;
 		double nRequired  = ((50.0 - nTrustWeight - nBlockWeight) * MAX_STAKE_WEIGHT) / std::min((int64)MAX_STAKE_WEIGHT, vtx[0].vout[0].nValue);
 		if(nThreshold < nRequired)
-			return error("CBlock::VerifyStake() : Coinstake / nNonce threshold too low %f Required %f. Energy efficiency limits Reached Coin Age %I64d | Trust Age %I64d | Block Age %I64d", nThreshold, nRequired, nCoinAge, nTrustAge, nBlockAge);
+			return error("CBlock::VerifyStake() : Coinstake / nNonce threshold too low %f Required %f. Energy efficiency limits Reached Coin Age %"PRIu64" | Trust Age %"PRIu64" | Block Age %"PRIu64, nThreshold, nRequired, nCoinAge, nTrustAge, nBlockAge);
 			
 			
 		/** H] Check the Block Hash with Weighted Hash to Target. **/
@@ -194,9 +194,9 @@ namespace Core
 		{
 			printf("CBlock::VerifyStake() : Stake Hash  %s\n", GetHash().ToString().substr(0, 20).c_str());
 			printf("CBlock::VerifyStake() : Target Hash %s\n", hashTarget.ToString().substr(0, 20).c_str());
-			printf("CBlock::VerifyStake() : Coin Age %I64d Trust Age %I64d Block Age %I64d\n", nCoinAge, nTrustAge, nBlockAge);
+			printf("CBlock::VerifyStake() : Coin Age %"PRIu64" Trust Age %"PRIu64" Block Age %"PRIu64"\n", nCoinAge, nTrustAge, nBlockAge);
 			printf("CBlock::VerifyStake() : Trust Weight %f Block Weight %f\n", nTrustWeight, nBlockWeight);
-			printf("CBlock::VerifyStake() : Threshold %f Required %f Time %u nNonce %I64d\n", nThreshold, nRequired, (unsigned int)(nTime - vtx[0].nTime), nNonce);
+			printf("CBlock::VerifyStake() : Threshold %f Required %f Time %u nNonce %"PRIu64"\n", nThreshold, nRequired, (unsigned int)(nTime - vtx[0].nTime), nNonce);
 		}
 
 		return true;
@@ -295,7 +295,7 @@ namespace Core
 			
 			if(fDebug)
 			{
-				printf("CTransaction::GetCoinstakeInterest() : Staking input from Block %u with age of %I64d, Rate %f, and value %f\n", block.nHeight, nCoinAge, nInterestRate, (double)nValue / COIN);
+				printf("CTransaction::GetCoinstakeInterest() : Staking input from Block %u with age of %"PRId64", Rate %f, and value %f\n", block.nHeight, nCoinAge, nInterestRate, (double)nValue / COIN);
 				
 				if(txPrev.IsCoinStake())
 					printf("CTransaction::GetCoinstakeInterest() : Using Previous Coin Stake Transaction for Block %u ++++++++++++++++++++++++++\n", block.nHeight);
@@ -308,7 +308,7 @@ namespace Core
 		
 		nAverageAge /= (vin.size() - 1);
 		
-		printf("CTransaction::GetCoinstakeInterest() : Total Niro to Stake %f Generating %f Niro from Average Age of %u Seconds at %f %% Variable Interest\n", (double)nTotalCoins / COIN, (double)nInterest / COIN, (unsigned int)nAverageAge, nInterestRate * 100.0);
+		printf("CTransaction::GetCoinstakeInterest() : Total Nexus to Stake %f Generating %f Nexus from Average Age of %u Seconds at %f %% Variable Interest\n", (double)nTotalCoins / COIN, (double)nInterest / COIN, (unsigned int)nAverageAge, nInterestRate * 100.0);
 		
 		return true;
 	}

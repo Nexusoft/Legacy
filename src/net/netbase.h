@@ -6,8 +6,8 @@
   
 *******************************************************************************************/
 
-#ifndef Nexus_NETBASE_H
-#define Nexus_NETBASE_H
+#ifndef NEXUS_NETBASE_H
+#define NEXUS_NETBASE_H
 
 #include <string>
 #include <vector>
