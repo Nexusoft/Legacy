@@ -1644,8 +1644,8 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location filename="../core/strings.cpp" line="5"/>
-        <source>Send command to -server or Nexusd</source>
-        <translation>שלח פקודה ל -server או Nexusd</translation>
+        <source>Send command to -server or Nexus</source>
+        <translation>שלח פקודה ל -server או Nexus</translation>
     </message>
     <message>
         <location filename="../core/strings.cpp" line="6"/>
@@ -1669,8 +1669,8 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location filename="../core/strings.cpp" line="10"/>
-        <source>Specify pid file (default: Nexusd.pid)</source>
-        <translation>ציין קובץ pid (ברירת מחדל: Nexusd.pid)</translation>
+        <source>Specify pid file (default: Nexus.pid)</source>
+        <translation>ציין קובץ pid (ברירת מחדל: Nexus.pid)</translation>
     </message>
     <message>
         <location filename="../core/strings.cpp" line="11"/>

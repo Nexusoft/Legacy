@@ -84,7 +84,7 @@ void Shutdown(void* parg)
         printf("Nexus exiting\n\n");
         fExit = true;
 #ifndef QT_GUI
-        // ensure non UI client get's exited here, but let Bitcoin-Qt reach return 0; in bitcoin.cpp
+        // ensure non UI client get's exited here, but let Nexus-Qt reach return 0; in bitcoin.cpp
         exit(0);
 #endif
     }
@@ -172,22 +172,9 @@ bool AppInit2(int argc, char* argv[])
 #endif
 #endif
 
-	
-	
-	#if !defined(QT_GUI)
-	#ifndef WIN32
-	if(copyDir(GetDefaultDataDir("coinshield"), GetDefaultDataDir()))
-		printf("Migrated Data Directory Automatically.....\n");
-	#else
-	if(copyDir(GetDefaultDataDir("Coinshield"), GetDefaultDataDir()))
-		printf("Migrated Data Directory Automatically.....\n");
-	#endif
-	#endif
-
     //
     // Parameters
     //
-    // If Qt is used, parameters/bitcoin.conf are parsed in qt/bitcoin.cpp's main()
 #if !defined(QT_GUI)
     ParseParameters(argc, argv);
     if (!boost::filesystem::is_directory(GetDataDir(false)))
@@ -203,13 +190,13 @@ bool AppInit2(int argc, char* argv[])
         string strUsage = string() +
           _("Nexus version") + " " + FormatFullVersion() + "\n\n" +
           _("Usage:") + "\t\t\t\t\t\t\t\t\t\t\n" +
-            "  Nexusd [options]                   \t  " + "\n" +
-            "  Nexusd [options] <command> [params]\t  " + _("Send command to -server or Nexusd") + "\n" +
-            "  Nexusd [options] help              \t\t  " + _("List commands") + "\n" +
-            "  Nexusd [options] help <command>    \t\t  " + _("Get help for a command") + "\n" +
+            "  Nexus [options]                   \t  " + "\n" +
+            "  Nexus [options] <command> [params]\t  " + _("Send command to -server or Nexus") + "\n" +
+            "  Nexus [options] help              \t\t  " + _("List commands") + "\n" +
+            "  Nexus [options] help <command>    \t\t  " + _("Get help for a command") + "\n" +
           _("Options:") + "\n" +
             "  -conf=<file>     \t\t  " + _("Specify configuration file (default: nexus.conf)") + "\n" +
-            "  -pid=<file>      \t\t  " + _("Specify pid file (default: Nexusd.pid)") + "\n" +
+            "  -pid=<file>      \t\t  " + _("Specify pid file (default: Nexus.pid)") + "\n" +
             "  -gen             \t\t  " + _("Generate coins") + "\n" +
             "  -gen=0           \t\t  " + _("Don't generate coins") + "\n" +
             "  -min             \t\t  " + _("Start minimized") + "\n" +
@@ -268,7 +255,7 @@ bool AppInit2(int argc, char* argv[])
             "  -checklevel=<n>  \t\t  " + _("How thorough the block verification is (0-6, default: 1)") + "\n";
 
         strUsage += string() +
-            _("\nSSL options: (see the Bitcoin Wiki for SSL setup instructions)") + "\n" +
+            _("\nSSL options: (see the Nexus Wiki for SSL setup instructions)") + "\n" +
             "  -rpcssl                                \t  " + _("Use OpenSSL (https) for JSON-RPC connections") + "\n" +
             "  -rpcsslcertificatechainfile=<file.cert>\t  " + _("Server certificate file (default: server.cert)") + "\n" +
             "  -rpcsslprivatekeyfile=<file.pem>       \t  " + _("Server private key (default: server.pem)") + "\n" +
@@ -516,7 +503,7 @@ bool AppInit2(int argc, char* argv[])
     // Add wallet transactions that aren't already in a block to mapTransactions
     pwalletMain->ReacceptWalletTransactions();
 
-    // Note: Bitcoin-QT stores several settings in the wallet, so we want
+    // Note: Nexus-QT stores several settings in the wallet, so we want
     // to load the wallet BEFORE parsing command-line arguments, so
     // the command-line/bitcoin.conf settings override GUI setting.
     if (mapArgs.count("-timeout"))

@@ -1645,8 +1645,8 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location filename="../core/strings.cpp" line="5"/>
-        <source>Send command to -server or Nexusd</source>
-        <translation>Envoyer une commande à -server ou à Nexusd</translation>
+        <source>Send command to -server or Nexus</source>
+        <translation>Envoyer une commande à -server ou à Nexus</translation>
     </message>
     <message>
         <location filename="../core/strings.cpp" line="6"/>
@@ -1670,8 +1670,8 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location filename="../core/strings.cpp" line="10"/>
-        <source>Specify pid file (default: Nexusd.pid)</source>
-        <translation>Spécifier le fichier pid (par défaut : Nexusd.pid)</translation>
+        <source>Specify pid file (default: Nexus.pid)</source>
+        <translation>Spécifier le fichier pid (par défaut : Nexus.pid)</translation>
     </message>
     <message>
         <location filename="../core/strings.cpp" line="11"/>

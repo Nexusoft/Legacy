@@ -694,7 +694,7 @@ namespace Net
 				"getreceivedbyaddress <Nexusaddress> [minconf=1]\n"
 				"Returns the total amount received by <Nexusaddress> in transactions with at least [minconf] confirmations.");
 
-		// Bitcoin address
+		// Nexus address
 		Wallet::NexusAddress address = Wallet::NexusAddress(params[0].get_str());
 		Wallet::CScript scriptPubKey;
 		if (!address.IsValid())
@@ -2366,7 +2366,7 @@ namespace Net
 	}
 
 	//
-	// JSON-RPC protocol.  Bitcoin speaks version 1.0 for maximum compatibility,
+	// JSON-RPC protocol.  Nexus speaks version 1.0 for maximum compatibility,
 	// but uses JSON-RPC 1.1/2.0 standards for parts of the 1.0 standard that were
 	// unspecified (HTTP errors and contents of 'error').
 	//
@@ -2503,7 +2503,7 @@ namespace Net
 		{
 			unsigned char rand_pwd[32];
 			RAND_bytes(rand_pwd, 32);
-			string strWhatAmI = "To use Nexusd";
+			string strWhatAmI = "To use Nexus";
 			if (mapArgs.count("-server"))
 				strWhatAmI = strprintf(_("To use the %s option"), "\"-server\"");
 			else if (mapArgs.count("-daemon"))

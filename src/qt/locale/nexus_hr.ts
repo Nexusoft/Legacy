@@ -1639,8 +1639,8 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location filename="../core/strings.cpp" line="5"/>
-        <source>Send command to -server or Nexusd</source>
-        <translation>Pošalji komandu usluzi -server ili Nexusd</translation>
+        <source>Send command to -server or Nexus</source>
+        <translation>Pošalji komandu usluzi -server ili Nexus</translation>
     </message>
     <message>
         <location filename="../core/strings.cpp" line="6"/>
@@ -1664,7 +1664,7 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location filename="../core/strings.cpp" line="10"/>
-        <source>Specify pid file (default: Nexusd.pid)</source>
+        <source>Specify pid file (default: Nexus.pid)</source>
         <translation>Odredi proces ID datoteku (ugrađeni izbor: Nexus.pid)</translation>
     </message>
     <message>

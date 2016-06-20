@@ -37,7 +37,7 @@ namespace Net
 	};
 
 	/**
-	 * Bitcoin RPC command dispatcher.
+	 * Nexus RPC command dispatcher.
 	 */
 	class CRPCTable
 	{

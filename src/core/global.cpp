@@ -26,7 +26,7 @@ namespace Core
 	const unsigned int TESTNET_BLOCK_CURRENT_VERSION = 4;
 	
 	
-	/** Nexus Max Block size is 2 MB. This is to stay consistent with Bitcoin's 1 MB limit with 256 bit hashes, where Nexus Transactions are 512 bit. **/
+	/** Nexus Max Block size is 2 MB. This is to stay consistent with Nexus's 1 MB limit with 256 bit hashes, where Nexus Transactions are 512 bit. **/
 	const unsigned int MAX_BLOCK_SIZE = 2000000;
 	const unsigned int MAX_BLOCK_SIZE_GEN = MAX_BLOCK_SIZE/2;
 	const unsigned int MAX_BLOCK_SIGOPS = MAX_BLOCK_SIZE/50;

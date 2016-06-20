@@ -1646,7 +1646,7 @@ p, li { white-space: pre-wrap; }⏎
     </message>
     <message>
         <location filename="../core/strings.cpp" line="5"/>
-        <source>Send command to -server or Nexusd</source>
+        <source>Send command to -server or Nexus</source>
         <translation>ارسال فرمان به سرور یا باتکویین</translation>
     </message>
     <message>
@@ -1671,8 +1671,8 @@ p, li { white-space: pre-wrap; }⏎
     </message>
     <message>
         <location filename="../core/strings.cpp" line="10"/>
-        <source>Specify pid file (default: Nexusd.pid)</source>
-        <translation>(Nexusd.pidپیش فرض : ) فایل پید خاص</translation>
+        <source>Specify pid file (default: Nexus.pid)</source>
+        <translation>(Nexus.pidپیش فرض : ) فایل پید خاص</translation>
     </message>
     <message>
         <location filename="../core/strings.cpp" line="11"/>
