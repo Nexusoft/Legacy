@@ -16,11 +16,14 @@
 #include <vector>
 #include <stdint.h>
 
- typedef int64_t int64;
- typedef uint64_t uint64;
- 
-//typedef long long  int64;
-//typedef unsigned long long  uint64;
+/** Linux Specific Work Around (For Now). **/
+#if defined(MAC_OSX) || defined(WIN32)
+typedef int64_t int64;
+typedef uint64_t uint64;
+#else
+typedef long long  int64;
+typedef unsigned long long  uint64;
+#endif
 
 
 /** Base class without constructors for uint256, uint512, uint576, uint1024.

@@ -75,8 +75,8 @@ namespace LLP
 		{
 			for(;;)
 			{
-				/** Keep data threads at 1000 FPS Maximum. **/
-				Sleep(1);
+				/** Keep data threads at 100 FPS Maximum. **/
+				Sleep(10);
 				
 				/** Check all connections for data and packets. **/
 				int nSize = CONNECTIONS.size();
@@ -257,8 +257,8 @@ namespace LLP
 			//printf("LLP Server Listening on Port %u\n", PORT);
 			for(;;)
 			{
-				/** Limit listener to allow maximum of 200 new connections per second. **/
-				Sleep(5);
+				/** Limit listener to allow maximum of 100 new connections per second. **/
+				Sleep(10);
 				
 				try
 				{

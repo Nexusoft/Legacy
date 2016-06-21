@@ -40,11 +40,14 @@ typedef int pid_t; /* define for windows compatiblity */
 #include "../net/netbase.h"
 
 
- typedef int64_t int64;
- typedef uint64_t uint64;
- 
-//typedef long long  int64;
-//typedef unsigned long long  uint64;
+/** Linux Specific Work Around (For Now). **/
+#if defined(MAC_OSX) || defined(WIN32)
+typedef int64_t int64;
+typedef uint64_t uint64;
+#else
+typedef long long  int64;
+typedef unsigned long long  uint64;
+#endif
 
 
 static const int64 COIN = 1000000;
