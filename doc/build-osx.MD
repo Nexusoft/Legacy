@@ -9,6 +9,7 @@ Using MacPorts (or HomeBrew, but these instructions will assume MacPorts), insta
     sudo port install qrencode +universal
 
 Install QT (Ensure to use +framework for deployment)
+
     sudo port install qt4-mac +framework +universal
 
 **Important**: The makefile and QT project file assume a build for a 32-bit target for maximum compatibility. Edit /opt/local/etc/macports/macports.conf and uncomment "build_arch i386". It is possible to have a second 32-bit install just for these builds.
