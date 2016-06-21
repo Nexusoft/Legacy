@@ -15,6 +15,7 @@
 
 #ifdef WIN32
 #include <io.h> /* for _commit */
+#define __STDC_FORMAT_MACROS 1
 #endif
 
 #ifdef USE_UPNP

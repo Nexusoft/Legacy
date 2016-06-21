@@ -6,6 +6,19 @@ DEFINES += QT_GUI BOOST_THREAD_USE_LIB BOOST_SPIRIT_THREADSAFE
 CONFIG += no_include_pwd
 CONFIG += warn_off
 
+#Manually Link to Windoze Library Locations
+windows:BOOST_LIB_SUFFIX=-mgw49-mt-s-1_55
+windows:BOOST_INCLUDE_PATH=C:/Deps/boost_1_55_0
+windows:BOOST_LIB_PATH=C:/Deps/boost_1_55_0/stage/lib
+windows:BDB_INCLUDE_PATH=C:/Deps/db-4.8.30.NC/build_unix
+windows:BDB_LIB_PATH=C:/Deps/db-4.8.30.NC/build_unix
+windows:OPENSSL_INCLUDE_PATH=C:/Deps/openssl-1.0.1p/include
+windows:OPENSSL_LIB_PATH=C:/Deps/openssl-1.0.1p
+windows:MINIUPNPC_INCLUDE_PATH=C:/Deps/
+windows:MINIUPNPC_LIB_PATH=C:/Deps/miniupnpc
+windows:QRENCODE_INCLUDE_PATH=C:/Deps/qrencode-3.4.3
+windows:QRENCODE_LIB_PATH=C:/Deps/qrencode-3.4.3/.libs
+
 
 # for boost 1.37, add -mt to the boost libraries 
 # use: qmake BOOST_LIB_SUFFIX=-mt
@@ -32,6 +45,10 @@ contains(RELEASE, 1) {
 
     #Static Configuration
     CONFIG += STATIC
+	
+	windows:QMAKE_LFLAGS += -Wl,--dynamicbase -Wl,--nxcompat
+	windows:QMAKE_LFLAGS += -Wl,--large-address-aware -static
+	windows:QMAKE_LFLAGS += -static-libgcc -static-libstdc++
 
     !windows:!macx {
         # Linux: static link
