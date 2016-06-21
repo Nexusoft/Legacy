@@ -177,15 +177,6 @@ int main(int argc, char *argv[])
         splash.setAutoFillBackground(true);
         splashref = &splash;
     }
-    
-    InitMessage(_("Migrating Directories..."));
-    #ifndef WIN32
-    if(copyDir(GetDefaultDataDir("coinshield"), GetDefaultDataDir()))
-        printf("Migrated Data Directory Automatically.....\n");
-    #else
-    if(copyDir(GetDefaultDataDir("Coinshield"), GetDefaultDataDir()))
-        printf("Migrated Data Directory Automatically.....\n");
-    #endif
 
     // Command-line options take precedence:
     ParseParameters(argc, argv);
@@ -203,9 +194,9 @@ int main(int argc, char *argv[])
     app.setOrganizationName("Nexus");
     app.setOrganizationDomain("nexusoft.io");
     if(GetBoolArg("-testnet", false)) // Separate UI settings for testnet
-        app.setApplicationName("Nexus-Qt-testnet");
+        app.setApplicationName("Nexus-testnet");
     else
-        app.setApplicationName("Nexus-Qt");
+        app.setApplicationName("Nexus");
 
     // ... then GUI settings:
     OptionsModel optionsModel;

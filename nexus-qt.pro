@@ -346,7 +346,7 @@ windows:!contains(MINGW_THREAD_BUGFIX, 0) {
     QMAKE_LIBS_QT_ENTRY = -lmingwthrd $$QMAKE_LIBS_QT_ENTRY
 }
 
-!windows:!mac {
+!windows:!macx {
     DEFINES += LINUX
     LIBS += -lrt
 }
@@ -355,7 +355,8 @@ macx:HEADERS += src/qt/util/macdockiconhandler.h
 macx:OBJECTIVE_SOURCES += src/qt/util/macdockiconhandler.mm
 macx:LIBS += -framework Foundation -framework ApplicationServices -framework AppKit
 macx:DEFINES += MAC_OSX MSG_NOSIGNAL=0 Q_WS_MAC
-macx:ICON = src/qt/res/icons/nexus.ico
+macx:ICON = src/qt/res/icons/nexus.icns
+macx:RC_ICONS = src/qt/res/icons/nexus.icns
 macx:TARGET = "Nexus-Qt"
 
 # Set libraries and includes at end, to use platform-defined defaults if not overridden
