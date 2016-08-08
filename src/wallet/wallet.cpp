@@ -902,6 +902,38 @@ namespace Wallet
 		}
 		return nTotal;
 	}
+	
+	// populate vCoins with vector of spendable (age, (value, (transaction, output_number))) outputs
+	void CWallet::AvailableCoins(unsigned int nSpendTime, vector<COutput>& vCoins, bool fOnlyConfirmed) const
+	{
+		vCoins.clear();
+
+		{
+			LOCK(cs_wallet);
+			for (map<uint512, CWalletTx>::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
+			{
+				const CWalletTx* pcoin = &(*it).second;
+
+				if (!pcoin->IsFinal())
+					continue;
+
+				if (fOnlyConfirmed && !pcoin->IsConfirmed())
+					continue;
+
+				if ((pcoin->IsCoinBase() || pcoin->IsCoinStake()) && pcoin->GetBlocksToMaturity() > 0)
+					continue;
+
+				for (int i = 0; i < pcoin->vout.size(); i++)
+				{
+					if (pcoin->nTime > nSpendTime)
+						continue;  // ppcoin: timestamp must not exceed spend time
+
+					if (!(pcoin->IsSpent(i)) && IsMine(pcoin->vout[i]) && pcoin->vout[i].nValue > 0)
+						vCoins.push_back(COutput(pcoin, i, pcoin->GetDepthInMainChain()));
+				}
+			}
+		}
+	}
 
 
 	bool CWallet::SelectCoinsMinConf(int64 nTargetValue, unsigned int nSpendTime, int nConfMine, int nConfTheirs, set<pair<const CWalletTx*,unsigned int> >& setCoinsRet, int64& nValueRet) const

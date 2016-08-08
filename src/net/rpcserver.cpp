@@ -2102,7 +2102,8 @@ namespace Net
 		}
 		return result;
 	}
-
+	
+	
 	// Nexus: make a public-private key pair
 	Value makekeypair(const Array& params, bool fHelp)
 	{
@@ -2133,6 +2134,80 @@ namespace Net
 		result.push_back(Pair("PublicKey", HexStr(key.GetPubKey())));
 		return result;
 	}
+	
+	Value listunspent(const Array& params, bool fHelp)
+	{
+		if (fHelp || params.size() > 3)
+			throw runtime_error(
+				"listunspent [minconf=1] [maxconf=9999999]  [\"address\",...]\n"
+				"Returns array of unspent transaction outputs\n"
+				"with between minconf and maxconf (inclusive) confirmations.\n"
+				"Optionally filtered to only include txouts paid to specified addresses.\n"
+				"Results are an array of Objects, each of which has:\n"
+				"{txid, vout, scriptPubKey, amount, confirmations}");
+
+		int nMinDepth = 1;
+		if (params.size() > 0)
+			nMinDepth = params[0].get_int();
+
+		int nMaxDepth = 9999999;
+		if (params.size() > 1)
+			nMaxDepth = params[1].get_int();
+
+		set<Wallet::NexusAddress> setAddress;
+		if (params.size() > 2)
+		{
+			Array inputs = params[2].get_array();
+			BOOST_FOREACH(Value& input, inputs)
+			{
+				Wallet::NexusAddress address(input.get_str());
+				if (!address.IsValid())
+					throw JSONRPCError(-5, string("Invalid Nexus address: ")+input.get_str());
+				if (setAddress.count(address))
+					throw JSONRPCError(-8, string("Invalid parameter, duplicated address: ")+input.get_str());
+			   setAddress.insert(address);
+			}
+		}
+
+		Array results;
+		vector<Wallet::COutput> vecOutputs;
+		pwalletMain->AvailableCoins((unsigned int)GetUnifiedTimestamp(), vecOutputs, false);
+		BOOST_FOREACH(const Wallet::COutput& out, vecOutputs)
+		{
+			if (out.nDepth < nMinDepth || out.nDepth > nMaxDepth)
+				continue;
+
+			if(setAddress.size())
+			{
+				Wallet::NexusAddress address;
+				if(!ExtractAddress(out.tx->vout[out.i].scriptPubKey, address))
+					continue;
+
+				if (!setAddress.count(address))
+					continue;
+			}
+
+			int64 nValue = out.tx->vout[out.i].nValue;
+			const Wallet::CScript& pk = out.tx->vout[out.i].scriptPubKey;
+			Wallet::NexusAddress address;
+			Object entry;
+			entry.push_back(Pair("txid", out.tx->GetHash().GetHex()));
+			entry.push_back(Pair("vout", out.i));
+			if (Wallet::ExtractAddress(pk, address))
+			{
+				entry.push_back(Pair("address", address.ToString()));
+				if (pwalletMain->mapAddressBook.count(address))
+					entry.push_back(Pair("account", pwalletMain->mapAddressBook[address]));
+			}
+			entry.push_back(Pair("scriptPubKey", HexStr(pk.begin(), pk.end())));
+			entry.push_back(Pair("amount",ValueFromAmount(nValue)));
+			entry.push_back(Pair("confirmations",out.nDepth));
+			results.push_back(entry);
+		}
+
+		return results;
+	}
+
 
 	//
 	// Call Table
@@ -2162,6 +2237,7 @@ namespace Net
 		{ "getreceivedbyaccount",   &getreceivedbyaccount,   false },
 		{ "listreceivedbyaddress",  &listreceivedbyaddress,  false },
 		{ "listreceivedbyaccount",  &listreceivedbyaccount,  false },
+		{ "listunspent",            &listunspent,            false },
 		{ "backupwallet",           &backupwallet,           true },
 		{ "keypoolrefill",          &keypoolrefill,          true },
 		{ "walletpassphrase",       &walletpassphrase,       true },
@@ -2185,6 +2261,7 @@ namespace Net
 		{ "signmessage",            &signmessage,            false },
 		{ "verifymessage",          &verifymessage,          false },
 		{ "listaccounts",           &listaccounts,           false },
+		{ "listunspent",            &listunspent,             false },
 		{ "settxfee",               &settxfee,               false },
 		{ "listsinceblock",         &listsinceblock,         false },
 		{ "dumpprivkey",            &dumpprivkey,            false },

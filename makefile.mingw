@@ -6,7 +6,6 @@
 # 
 ############################################################################################
 
-USE_UPNP=1
 
 INCLUDEPATHS= \
  -I"$(CURDIR)" \
@@ -20,12 +19,12 @@ INCLUDEPATHS= \
  -I"$(CURDIR)\src\wallet" \
  -I"C:\Deps\boost_1_57_0" \
  -I"C:\Deps\db-4.8.30.NC\build_unix" \
- -I"C:\Deps\openssl-1.0.1p\include"
+ -I"C:\Deps\openssl-1.0.1l\include"
 
 LIBPATHS= \
  -L"C:\Deps\boost_1_57_0\stage\lib" \
  -L"C:\Deps\db-4.8.30.NC\build_unix" \
- -L"C:\Deps\openssl-1.0.1p"
+ -L"C:\Deps\openssl-1.0.1l"
 
 LIBS= \
  -l boost_system-mgw49-mt-s-1_57 \
@@ -103,7 +102,7 @@ build/%.o: ./src/hash/%.cpp $(HEADERS)
 	g++ -c $(CFLAGS) -o $@ $<
 	
 build/%.o: ./src/hash/%.c $(HEADERS)
-	g++ -c $(CFLAGS) -fpermissive -o $@ $<
+	gcc -c $(CFLAGS) -fpermissive -o $@ $<
 	
 build/%.o: ./src/keys/%.cpp $(HEADERS)
 	g++ -c $(CFLAGS) -o $@ $<

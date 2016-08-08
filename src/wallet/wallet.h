@@ -22,6 +22,7 @@ namespace Wallet
 	class CWalletTx;
 	class CReserveKey;
 	class CWalletDB;
+	class COutput;
 
 	/** (client) version numbers for particular wallet features.  */
 	enum WalletFeature
@@ -152,6 +153,7 @@ namespace Wallet
 		int64 GetUnconfirmedBalance() const;
 		int64 GetStake() const;
 		int64 GetNewMint() const;
+		void AvailableCoins(unsigned int nSpendTime, std::vector<COutput>& vCoins, bool fOnlyConfirmed) const;
 		bool CreateTransaction(const std::vector<std::pair<CScript, int64> >& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, int64& nFeeRet);
 		bool CreateTransaction(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew, CReserveKey& reservekey, int64& nFeeRet);
 		bool AddCoinstakeInputs(Core::CTransaction& txNew);
@@ -650,6 +652,34 @@ namespace Wallet
 			READWRITE(nTimeExpires);
 			READWRITE(strComment);
 		)
+	};
+	
+	
+	
+	/** Class to determine the value and depth of a specific transaction.
+		Used for the Available Coins Method located in Wallet.cpp mainly.
+		To be used for further purpose in the future. **/
+	class COutput
+	{
+	public:
+		const CWalletTx *tx;
+		int i;
+		int nDepth;
+
+		COutput(const CWalletTx *txIn, int iIn, int nDepthIn)
+		{
+			tx = txIn; i = iIn; nDepth = nDepthIn;
+		}
+
+		std::string ToString() const
+		{
+			return strprintf("COutput(%s, %d, %d) [%s]", tx->GetHash().ToString().substr(0,10).c_str(), i, nDepth, FormatMoney(tx->vout[i].nValue).c_str());
+		}
+
+		void print() const
+		{
+			printf("%s\n", ToString().c_str());
+		}
 	};
 
 
