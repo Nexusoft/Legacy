@@ -2,6 +2,11 @@
 
 Nexus is a Decentralized Network to host a Currency Token using Block Chain Technology. It's purpose is to provide solutions to real world issues in Bitcoin, World Economies, or the Internet. It solves many issues in Block Chain speed and security to maintain the safest and most secure digital currency to date.
 
+<h2>This Current v0.2.0.4 Release contains:</h4>
++ RPC Command Updates
++ GUI Updates to Increase Stability
++ Updates to the Wallet for increased Reliability
+
 <h2>This Current v0.2.0.2 Release contains:</h2>
 + GUI Updates<br>
 + Database Optimization<br>
