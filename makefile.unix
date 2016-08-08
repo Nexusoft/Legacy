@@ -207,9 +207,7 @@ nexus: $(OBJS:obj/%=build/%)
 clean:
 	-rm -f nexus
 	-rm -f build/*.o
-	-rm -f obj-test/*.o
-	-rm -f obj/*.P
-	-rm -f obj-test/*.P
+	-rm -f build/*.P
 	-rm -f src/build.h
 
 FORCE:
