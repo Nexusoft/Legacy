@@ -53,6 +53,9 @@ namespace Net
 
 	extern Value dumpprivkey(const Array& params, bool fHelp);
 	extern Value importprivkey(const Array& params, bool fHelp);
+	extern Value exportkeys(const Array& params, bool fHelp);
+	extern Value rescan(const Array& params, bool fHelp);
+	
 
 	Object JSONRPCError(int code, const string& message)
 	{
@@ -2135,6 +2138,62 @@ namespace Net
 		return result;
 	}
 	
+	/** TODO: Account balance based on unspent outputs in the core.
+		This will be good to determine the actual balance based on the registry of the current addresses
+		Associated with the specific accounts. This needs to be fixed properly so thaat the wallet accounting
+		is done properly.
+		
+		Second TODO: While at this the wallet core code needs to be reworked in orcder to mitigate the issue of
+		having a large number of transactions in the actual memory map which can slow the entire process down.
+	Value getunspent(const Array& params, bool fHelp)
+	{
+		if (fHelp || params.size() > 1)
+			throw runtime_error(
+				"getunspent [address]\n"
+				"Returns the total amount of unspent Nexus for given address\n"
+				"This is a more accurate command than Get Balance.\n");
+
+		if(paramse.size() > 0)
+			Wallet::NexusAddress address(params[0].get_str());
+
+		Array results;
+		vector<Wallet::COutput> vecOutputs;
+		pwalletMain->AvailableCoins((unsigned int)GetUnifiedTimestamp(), vecOutputs, false);
+		BOOST_FOREACH(const Wallet::COutput& out, vecOutputs)
+		{
+			if(setAddress.size())
+			{
+				Wallet::NexusAddress address;
+				if(!ExtractAddress(out.tx->vout[out.i].scriptPubKey, address))
+					continue;
+
+				if (!setAddress.count(address))
+					continue;
+			}
+
+			int64 nValue = out.tx->vout[out.i].nValue;
+			const Wallet::CScript& pk = out.tx->vout[out.i].scriptPubKey;
+			Wallet::NexusAddress address;
+			Object entry;
+			entry.push_back(Pair("txid", out.tx->GetHash().GetHex()));
+			entry.push_back(Pair("vout", out.i));
+			if (Wallet::ExtractAddress(pk, address))
+			{
+				entry.push_back(Pair("address", address.ToString()));
+				if (pwalletMain->mapAddressBook.count(address))
+					entry.push_back(Pair("account", pwalletMain->mapAddressBook[address]));
+			}
+			entry.push_back(Pair("scriptPubKey", HexStr(pk.begin(), pk.end())));
+			entry.push_back(Pair("amount",ValueFromAmount(nValue)));
+			entry.push_back(Pair("confirmations",out.nDepth));
+			results.push_back(entry);
+		}
+
+		return results;
+	}
+	
+	**/
+	
 	Value listunspent(const Array& params, bool fHelp)
 	{
 		if (fHelp || params.size() > 3)
@@ -2238,6 +2297,8 @@ namespace Net
 		{ "listreceivedbyaddress",  &listreceivedbyaddress,  false },
 		{ "listreceivedbyaccount",  &listreceivedbyaccount,  false },
 		{ "listunspent",            &listunspent,            false },
+		{ "exportkeys",             &exportkeys,             false },
+		{ "rescan",                 &rescan,                 false },
 		{ "backupwallet",           &backupwallet,           true },
 		{ "keypoolrefill",          &keypoolrefill,          true },
 		{ "walletpassphrase",       &walletpassphrase,       true },

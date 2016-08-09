@@ -934,6 +934,48 @@ namespace Wallet
 			}
 		}
 	}
+	
+	/** Get the available addresses that have a balance associated with a wallet. **/
+	bool CWallet::AvailableAddresses(unsigned int nSpendTime, map<NexusAddress, int64>& mapAddresses, bool fOnlyConfirmed) const
+	{
+		mapAddresses.clear();
+		{
+			LOCK(cs_wallet);
+			for (map<uint512, CWalletTx>::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
+			{
+				const CWalletTx* pcoin = &(*it).second;
+
+				if (!pcoin->IsFinal())
+					continue;
+
+				if (fOnlyConfirmed && !pcoin->IsConfirmed())
+					continue;
+
+				if (fOnlyConfirmed && pcoin->GetBlocksToMaturity() > 0)
+					continue;
+
+				for (int i = 0; i < pcoin->vout.size(); i++)
+				{
+					if (pcoin->nTime > nSpendTime)
+						continue;  // ppcoin: timestamp must not exceed spend time
+					
+					if (!(pcoin->IsSpent(i)) && IsMine(pcoin->vout[i]) && pcoin->vout[i].nValue > 0) {
+						NexusAddress cAddress;
+						if(!ExtractAddress(pcoin->vout[i].scriptPubKey, cAddress) || !cAddress.IsValid())
+							return false;
+						
+						if(mapAddresses.count(cAddress))
+							mapAddresses[cAddress] = pcoin->vout[i].nValue;
+						else
+							mapAddresses[cAddress] += pcoin->vout[i].nValue;
+
+					}
+				}
+			}
+		}
+		
+		return true;
+	}
 
 
 	bool CWallet::SelectCoinsMinConf(int64 nTargetValue, unsigned int nSpendTime, int nConfMine, int nConfTheirs, set<pair<const CWalletTx*,unsigned int> >& setCoinsRet, int64& nValueRet) const

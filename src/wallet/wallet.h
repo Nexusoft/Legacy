@@ -153,7 +153,10 @@ namespace Wallet
 		int64 GetUnconfirmedBalance() const;
 		int64 GetStake() const;
 		int64 GetNewMint() const;
+		
 		void AvailableCoins(unsigned int nSpendTime, std::vector<COutput>& vCoins, bool fOnlyConfirmed) const;
+		bool AvailableAddresses(unsigned int nSpendTime, std::map<NexusAddress, int64>& mapAddresses, bool fOnlyConfirmed = false) const;
+		
 		bool CreateTransaction(const std::vector<std::pair<CScript, int64> >& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, int64& nFeeRet);
 		bool CreateTransaction(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew, CReserveKey& reservekey, int64& nFeeRet);
 		bool AddCoinstakeInputs(Core::CTransaction& txNew);
