@@ -53,7 +53,9 @@ namespace Net
 
 	extern Value dumpprivkey(const Array& params, bool fHelp);
 	extern Value importprivkey(const Array& params, bool fHelp);
+	
 	extern Value exportkeys(const Array& params, bool fHelp);
+	extern Value importkeys(const Array& params, bool fHelp);
 	extern Value rescan(const Array& params, bool fHelp);
 	
 
@@ -1190,7 +1192,7 @@ namespace Net
 		{
 			string msg = "addmultisigaddress <nrequired> <'[\"key\",\"key\"]'> [account]\n"
 				"Add a nrequired-to-sign multisignature address to the wallet\"\n"
-				"each key is a bitcoin address or hex-encoded public key\n"
+				"each key is a nexus address or hex-encoded public key\n"
 				"If [account] is specified, assign address to [account].";
 			throw runtime_error(msg);
 		}
@@ -2266,6 +2268,25 @@ namespace Net
 
 		return results;
 	}
+	
+	
+	
+	Value getrawmempool(const Array& params, bool fHelp)
+	{
+		if (fHelp || params.size() != 0)
+			throw runtime_error(
+				"getrawmempool\n"
+				"Returns all transaction ids in memory pool.");
+
+		vector<uint512> vtxid;
+		Core::mempool.queryHashes(vtxid);
+
+		Array a;
+		BOOST_FOREACH(const uint512& hash, vtxid)
+			a.push_back(hash.ToString());
+
+		return a;
+	}
 
 
 	//
@@ -2298,6 +2319,7 @@ namespace Net
 		{ "listreceivedbyaccount",  &listreceivedbyaccount,  false },
 		{ "listunspent",            &listunspent,            false },
 		{ "exportkeys",             &exportkeys,             false },
+		{ "importkeys",             &importkeys,             false },
 		{ "rescan",                 &rescan,                 false },
 		{ "backupwallet",           &backupwallet,           true },
 		{ "keypoolrefill",          &keypoolrefill,          true },
@@ -2322,15 +2344,15 @@ namespace Net
 		{ "signmessage",            &signmessage,            false },
 		{ "verifymessage",          &verifymessage,          false },
 		{ "listaccounts",           &listaccounts,           false },
-		{ "listunspent",            &listunspent,             false },
+		{ "listunspent",            &listunspent,            false },
 		{ "settxfee",               &settxfee,               false },
 		{ "listsinceblock",         &listsinceblock,         false },
 		{ "dumpprivkey",            &dumpprivkey,            false },
 		{ "importprivkey",          &importprivkey,          false },
-		{ "reservebalance",         &reservebalance,         false},
-		{ "checkwallet",            &checkwallet,            false},
-		{ "repairwallet",           &repairwallet,           false},
-		{ "makekeypair",            &makekeypair,            false},
+		{ "reservebalance",         &reservebalance,         false },
+		{ "checkwallet",            &checkwallet,            false },
+		{ "repairwallet",           &repairwallet,           false },
+		{ "makekeypair",            &makekeypair,            false }
 	};
 
 	CRPCTable::CRPCTable()

@@ -35,7 +35,7 @@ extern int UNIFIED_AVERAGE_OFFSET;
 
 /** Vector to Contain list of Unified Time Offset from Time Seeds, Seed Nodes, and Peers. **/
 extern std::vector<int> UNIFIED_TIME_DATA;
-extern std::vector<Net::CAddress> TIME_SEEDS;
+
 extern std::vector<Net::CAddress> SEED_NODES;
 extern std::vector<Net::CAddress> TRUSTED_NODES;
 

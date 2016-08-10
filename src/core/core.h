@@ -259,14 +259,14 @@ namespace Core
 	
 	/** RELEASE.CPP **/
 	int64 GetSubsidy(int nMinutes, int nType);
-																int64 CompoundSubsidy(int nMinutes, int nInterval);
-																int64 CompoundSubsidy(int nMinutes);
-																int64 GetMoneySupply(CBlockIndex* pindex);
-																int64 GetChainAge(int64 nTime);
-																int64 GetFractionalSubsidy(int nMinutes, int nType, double nFraction);
-																int64 GetCoinbaseReward(const CBlockIndex* pindex, int nChannel, int nType);
-																int64 ReleaseRewards(int nTimespan, int nStart, int nType);
-																int64 GetReleasedReserve(const CBlockIndex* pindex, int nChannel, int nType);
+	int64 CompoundSubsidy(int nMinutes, int nInterval);
+	int64 CompoundSubsidy(int nMinutes);
+	int64 GetMoneySupply(CBlockIndex* pindex);
+	int64 GetChainAge(int64 nTime);
+	int64 GetFractionalSubsidy(int nMinutes, int nType, double nFraction);
+	int64 GetCoinbaseReward(const CBlockIndex* pindex, int nChannel, int nType);
+	int64 ReleaseRewards(int nTimespan, int nStart, int nType);
+	int64 GetReleasedReserve(const CBlockIndex* pindex, int nChannel, int nType);
 	bool  ReleaseAvailable(const CBlockIndex* pindex, int nChannel);
 
 	
@@ -284,6 +284,7 @@ namespace Core
 	bool AddOrphanTx(const CDataStream& vMsg);
 	void EraseOrphanTx(uint512 hash);
 	unsigned int LimitOrphanTxSize(unsigned int nMaxOrphans);
+	bool GetTransaction(const uint512 &hash, CTransaction &tx, uint1024 &hashBlock);
 
 
 	
@@ -1950,6 +1951,7 @@ namespace Core
 					bool fCheckInputs, bool* pfMissingInputs);
 		bool addUnchecked(CTransaction &tx);
 		bool remove(CTransaction &tx);
+		void queryHashes(std::vector<uint512>& vtxid);
 
 		unsigned long size()
 		{

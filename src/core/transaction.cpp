@@ -21,6 +21,16 @@ using namespace boost;
 namespace Core
 {
 	
+	void CTxMemPool::queryHashes(std::vector<uint512>& vtxid)
+	{
+		vtxid.clear();
+
+		LOCK(cs);
+		vtxid.reserve(mapTx.size());
+		for (map<uint512, CTransaction>::iterator mi = mapTx.begin(); mi != mapTx.end(); ++mi)
+			vtxid.push_back((*mi).first);
+	}
+
 	
 	bool AddOrphanTx(const CDataStream& vMsg)
 	{

@@ -72,7 +72,7 @@ namespace Net
 		if (!fGood) throw JSONRPCError(-5,"Invalid private key");
 		if (pwalletMain->IsLocked())
 			throw JSONRPCError(-13, "Error: Please enter the wallet passphrase with walletpassphrase first.");
-		if (Wallet::fWalletUnlockMintOnly) // Nexus: no importprivkey in mint-only mode
+		if (Wallet::fWalletUnlockMintOnly)
 			throw JSONRPCError(-102, "Wallet is unlocked for minting only.");
 
 		Wallet::CKey key;
@@ -118,6 +118,65 @@ namespace Net
 		return Wallet::NexusSecret(vchSecret, fCompressed).ToString();
 	}
 	
+	/** Import List of Private Keys amd if they import properly or fail with their own code int he output sequenc **/
+	Value importkeys(const Array& params, bool fHelp)
+	{
+		if (fHelp || params.size() < 1)
+			throw runtime_error(
+				"importkeys\n"
+				"The account and keypair need to \n"
+				"You need to list the imported keys in a JSON array of {[account],[privatekey]}\n");
+			
+			/** Make sure the Wallet is Unlocked fully before proceeding. **/
+			if (pwalletMain->IsLocked())
+				throw JSONRPCError(-13, "Error: Please enter the wallet passphrase with walletpassphrase first.");
+			if (Wallet::fWalletUnlockMintOnly)
+				throw JSONRPCError(-102, "Wallet is unlocked for minting only.");
+				
+			/** Establish the JSON Object from the Parameters. **/
+			Object entry = params[0].get_obj();
+			
+			/** Establish a return value JSON object for Error Reporting. **/
+			Object response;
+			
+			/** Import the Keys one by One. **/
+			for(int nIndex = 0; nIndex < entry.size(); nIndex++) {
+
+				Wallet::NexusSecret vchSecret;
+				if(!vchSecret.SetString(entry[nIndex].value_.get_str())){
+					response.push_back(Pair(entry[nIndex].name_, "Code -5 Invalid Key"));
+					
+					continue;
+				}
+
+				Wallet::CKey key;
+				bool fCompressed;
+				Wallet::CSecret secret = vchSecret.GetSecret(fCompressed);
+				key.SetSecret(secret, fCompressed);
+				Wallet::NexusAddress vchAddress = Wallet::NexusAddress(key.GetPubKey());
+
+				{
+					LOCK2(Core::cs_main, pwalletMain->cs_wallet);
+
+					pwalletMain->MarkDirty();
+					pwalletMain->SetAddressBookName(vchAddress, entry[nIndex].name_);
+
+					if (!pwalletMain->AddKey(key))
+					{
+						response.push_back(Pair(entry[nIndex].name_, "Code -4 Error Adding to Wallet"));
+						
+						continue;
+					}
+				}
+			
+				response.push_back(Pair(entry[nIndex].name_, "Successfully Imported"));
+			}
+
+			MainFrameRepaint();
+
+			return response;		
+	}
+	
 	/** Export the private keys of the current UTXO values.
 		This will allow the importing and exporting of private keys much easier. **/
 	Value exportkeys(const Array& params, bool fHelp)
@@ -153,7 +212,7 @@ namespace Net
 			/** Extract the account name from the address book. **/
 			string strAccount;
 			if(!pwalletMain->mapAddressBook.count(it->first))
-				strAccount = "";
+				strAccount = "Default";
 			else
 				strAccount = pwalletMain->mapAddressBook[it->first];
 			

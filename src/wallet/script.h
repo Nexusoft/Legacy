@@ -566,7 +566,9 @@ namespace Wallet
 	bool ExtractAddresses(const CScript& scriptPubKey, TransactionType& typeRet, std::vector<NexusAddress>& addressRet, int& nRequiredRet);
 	bool SignSignature(const CKeyStore& keystore, const Core::CTransaction& txFrom, Core::CTransaction& txTo, unsigned int nIn, int nHashType=SIGHASH_ALL);
 	bool VerifySignature(const Core::CTransaction& txFrom, const Core::CTransaction& txTo, unsigned int nIn, int nHashType);
-
+	bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const Core::CTransaction& txTo, unsigned int nIn, int nHashType);
+	
+	CScript CombineSignatures(CScript scriptPubKey, const Core::CTransaction& txTo, unsigned int nIn, const CScript& scriptSig1, const CScript& scriptSig2);
 }
 
 #endif

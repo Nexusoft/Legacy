@@ -26,7 +26,6 @@ int UNIFIED_MOVING_ITERATOR = 0;
 
 /** Unified Time Declarations **/
 vector<int> UNIFIED_TIME_DATA;
-vector<Net::CAddress> TIME_SEEDS;
 vector<Net::CAddress> SEED_NODES;
 
 /** Declarations for the DNS Seed Nodes. **/
@@ -40,7 +39,24 @@ const char* DNS_SeedNodes[] =
 	"node6.nexusoft.io",
 	"node7.nexusoft.io",
 	"node8.nexusoft.io",
-	"node9.nexusoft.io"
+	"node9.nexusoft.io",
+	"node10.nexusoft.io",
+	"node11.nexusoft.io",
+	"node12.nexusoft.io",
+	"node13.nexusoft.io",
+	"node1.nexusearth.com",
+	"node2.nexusearth.com",
+	"node3.nexusearth.com",
+	"node4.nexusearth.com",
+	"node5.nexusearth.com",
+	"node6.nexusearth.com",
+	"node7.nexusearth.com",
+	"node8.nexusearth.com",
+	"node9.nexusearth.com",
+	"node10.nexusearth.com",
+	"node11.nexusearth.com",
+	"node12.nexusearth.com",
+	"node13.nexusearth.com"
 };
 
 /** Declarations for the DNS Seed Nodes. **/
@@ -146,7 +162,7 @@ void ThreadTimeRegulator(void* parg)
 				
 				
 			/** Read the Samples from the Server. **/
-			while(SERVER.Connected() && !SERVER.Errors() && !SERVER.Timeout(3))
+			while(SERVER.Connected() && !SERVER.Errors() && !SERVER.Timeout(5))
 			{
 				Sleep(1);
 			
@@ -259,7 +275,7 @@ void ThreadTimeRegulator(void* parg)
 vector<Net::CAddress> DNS_Lookup(const char* DNS_Seed[])
 {
 	vector<Net::CAddress> vNodes;
-    for (unsigned int seed = 0; seed < (fTestNet ? 1 : 9); seed++)
+    for (unsigned int seed = 0; seed < (fTestNet ? 1 : 26); seed++)
 	{
 		printf("%u Host: %s\n", seed, DNS_Seed[seed]);
         vector<Net::CNetAddr> vaddr;

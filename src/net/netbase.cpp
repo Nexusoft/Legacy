@@ -22,7 +22,7 @@ namespace Net
 	// Settings
 	int fUseProxy = false;
 	CService addrProxy("127.0.0.1",9050);
-	int nConnectTimeout = 5000;
+	int nConnectTimeout = 30000;
 
 
 	static const unsigned char pchIPv4[12] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff };
