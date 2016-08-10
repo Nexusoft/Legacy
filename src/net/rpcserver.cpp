@@ -2972,7 +2972,7 @@ namespace Net
 			params[1] = v.get_obj();
 		}
 		
-		if (strMethod == "importkeys"             && n > 1)
+		if (strMethod == "importkeys"             && n > 0)
 		{
 			string s = params[0].get_str();
 			Value v;
