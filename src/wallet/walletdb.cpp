@@ -167,7 +167,7 @@ namespace Wallet
 				{
 					uint512 hash;
 					ssKey >> hash;
-					CWalletTx& wtx;
+					CWalletTx& wtx = pwallet->mapWallet[hash];
 					ssValue >> wtx;
 
 					if (wtx.GetHash() != hash) {
@@ -178,7 +178,6 @@ namespace Wallet
 						continue;
 					}
 					
-					pwallet->mapWallet[hash];
 					wtx.BindWallet(pwallet);
 
 					// Undo serialize changes in 31600
