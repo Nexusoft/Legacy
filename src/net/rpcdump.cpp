@@ -52,7 +52,6 @@ namespace Net
 				"Rescans the database for relevant wallet transactions.");
 				
 		pwalletMain->ScanForWalletTransactions(Core::pindexGenesisBlock, true);
-		pwalletMain->ReacceptWalletTransactions();
 	}
 
 	Value importprivkey(const Array& params, bool fHelp)

@@ -501,7 +501,7 @@ bool AppInit2(int argc, char* argv[])
     }
 
     // Add wallet transactions that aren't already in a block to mapTransactions
-    pwalletMain->ReacceptWalletTransactions();
+    //pwalletMain->ReacceptWalletTransactions();
 
     // Note: Nexus-QT stores several settings in the wallet, so we want
     // to load the wallet BEFORE parsing command-line arguments, so
