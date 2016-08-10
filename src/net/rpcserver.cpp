@@ -2971,6 +2971,16 @@ namespace Net
 				throw runtime_error("type mismatch");
 			params[1] = v.get_obj();
 		}
+		
+		if (strMethod == "importkeys"             && n > 1)
+		{
+			string s = params[0].get_str();
+			Value v;
+			if (!read_string(s, v) || v.type() != obj_type)
+				throw runtime_error("type mismatch");
+			params[0] = v.get_obj();
+		}
+		
 		if (strMethod == "sendmany"                && n > 2) ConvertTo<boost::int64_t>(params[2]);
 		if (strMethod == "reservebalance"          && n > 0) ConvertTo<bool>(params[0]);
 		if (strMethod == "reservebalance"          && n > 1) ConvertTo<double>(params[1]);

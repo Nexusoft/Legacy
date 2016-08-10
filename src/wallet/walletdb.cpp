@@ -167,12 +167,19 @@ namespace Wallet
 				{
 					uint512 hash;
 					ssKey >> hash;
-					CWalletTx& wtx = pwallet->mapWallet[hash];
+					CWalletTx& wtx;
 					ssValue >> wtx;
-					wtx.BindWallet(pwallet);
 
-					if (wtx.GetHash() != hash)
-						printf("Error in wallet.dat, hash mismatch\n");
+					if (wtx.GetHash() != hash) {
+						printf("Error in wallet.dat, hash mismatch. Removing Transaction from wallet map. Run the rescan command to restore.\n");
+						
+						pwallet->mapWallet.erase(hash);
+						
+						continue;
+					}
+					
+					pwallet->mapWallet[hash];
+					wtx.BindWallet(pwallet);
 
 					// Undo serialize changes in 31600
 					if (31404 <= wtx.fTimeReceivedIsTxTime && wtx.fTimeReceivedIsTxTime <= 31703)
