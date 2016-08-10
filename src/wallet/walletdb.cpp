@@ -117,6 +117,8 @@ namespace Wallet
 		pwallet->vchDefaultKey.clear();
 		int nFileVersion = 0;
 		vector<uint512> vWalletUpgrade;
+		vector<uint512> vWalletRemove;
+		
 		bool fIsEncrypted = false;
 
 		//// todo: shouldn't we catch exceptions and try to recover and continue?
@@ -169,16 +171,17 @@ namespace Wallet
 					ssKey >> hash;
 					CWalletTx& wtx = pwallet->mapWallet[hash];
 					ssValue >> wtx;
-
-					if (wtx.GetHash() != hash) {
+					
+					if(GetBoolArg("-walletclean", false)) {
+						vWalletRemove.push_back(hash);
+					}
+					else if (wtx.GetHash() != hash) {
 						printf("Error in wallet.dat, hash mismatch. Removing Transaction from wallet map. Run the rescan command to restore.\n");
 						
-						pwallet->mapWallet.erase(hash);
-						
-						continue;
+						vWalletRemove.push_back(hash);
 					}
-					
-					wtx.BindWallet(pwallet);
+					else
+						wtx.BindWallet(pwallet);
 
 					// Undo serialize changes in 31600
 					if (31404 <= wtx.fTimeReceivedIsTxTime && wtx.fTimeReceivedIsTxTime <= 31703)
@@ -323,6 +326,16 @@ namespace Wallet
 
 		BOOST_FOREACH(uint512 hash, vWalletUpgrade)
 			WriteTx(hash, pwallet->mapWallet[hash]);
+			
+			
+		if(vWalletRemove.size() > 0) {
+			BOOST_FOREACH(uint512 hash, vWalletRemove) {
+				EraseTx(hash);
+				pwallet->mapWallet.erase(hash);
+				
+				printf("Erasing Transaction at hash %s\n", hash.ToString().c_str());
+			}
+		}
 
 		printf("nFileVersion = %d\n", nFileVersion);
 
