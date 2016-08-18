@@ -186,6 +186,18 @@ inline std::string bytes2string(std::vector<unsigned char> BYTES)
 	return STRING;
 }
 
+	/** IP Filtering Definitions
+		IP's are Filtered By Ports.
+		Format is IP and PORT. **/
+bool CheckPermissions(std::string strAddress)
+{
+	const std::vector<std::string>& vAllow = mapMultiArgs["-llpallowip"];
+	for(int nIndex = 0; nIndex < vAllow.size(); nIndex++)
+		if (WildcardMatch(strAddress, vAllow[nIndex]))
+			return true;
+	return false;
+}
+
 
 #ifdef WIN32
 #define MSG_NOSIGNAL        0

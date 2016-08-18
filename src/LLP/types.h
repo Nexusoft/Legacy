@@ -37,18 +37,6 @@ namespace LLP
 	typedef boost::system::error_code                            Error_t;
 	typedef boost::mutex                                         Mutex_t;
 	
-	/** IP Filtering Definitions
-		IP's are Filtered By Ports.
-		Format is IP and PORT. **/
-	bool CheckPermissions(std::string strAddress)
-	{
-		const std::vector<std::string>& vAllow = mapMultiArgs["-llpallowip"];
-		for(int nIndex = 0; nIndex < vAllow.size(); nIndex++)
-			if (WildcardMatch(strAddress, vAllow[nIndex]))
-				return true;
-		return false;
-	}
-	
 	
 	/** Sleep for a duration in Milliseconds. **/
 	inline void Sleep(unsigned int nTime){ boost::this_thread::sleep(boost::posix_time::milliseconds(nTime)); }
