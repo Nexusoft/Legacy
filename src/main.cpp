@@ -333,10 +333,11 @@ bool AppInit2(int argc, char* argv[])
     }
 #endif
 
-    InitMessage(_("Initializing Core LLP..."));
-    printf("Initializing Core LLP...\n");
-	LLP_SERVER = new LLP::Server<LLP::CoreLLP>(fTestNet ? TESTNET_CORE_LLP_PORT : NEXUS_CORE_LLP_PORT, 5, false, 1, 10, 10);
-	
+	if(GetBoolArg("-unified", false)) {
+		InitMessage(_("Initializing Core LLP..."));
+		printf("Initializing Core LLP...\n");
+		LLP_SERVER = new LLP::Server<LLP::CoreLLP>(fTestNet ? TESTNET_CORE_LLP_PORT : NEXUS_CORE_LLP_PORT, 5, false, 1, 10, 10);
+	}
 
     InitMessage(_("Initializing Unified Time..."));
     printf("Initializing Unified Time...\n");
@@ -604,6 +605,8 @@ bool AppInit2(int argc, char* argv[])
         }
     }
 	
+	/** Add in the Allowed IP's for Mining LLP. **/
+	
 
     //
     // Start the node
@@ -625,7 +628,9 @@ bool AppInit2(int argc, char* argv[])
 		printf("%%%%%%%%%%%%%%%%% Daemon Staking Thread Initialized...\n");
 	}
 #endif
-	Core::StartMiningLLP();
+
+	if(GetBoolArg("-mining", false))
+		Core::StartMiningLLP();
 	
     if (fServer)
         CreateThread(Net::ThreadRPCServer, NULL);
