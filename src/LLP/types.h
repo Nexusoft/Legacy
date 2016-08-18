@@ -43,8 +43,8 @@ namespace LLP
 	bool CheckPermissions(std::string strAddress)
 	{
 		const std::vector<std::string>& vAllow = mapMultiArgs["-llpallowip"];
-		BOOST_FOREACH(std::string strAllow, vAllow)
-			if (WildcardMatch(strAddress, strAllow))
+		for(int nIndex = 0; nIndex < vAllow.size(); nIndex++)
+			if (WildcardMatch(strAddress, vAllow[nIndex]))
 				return true;
 		return false;
 	}
