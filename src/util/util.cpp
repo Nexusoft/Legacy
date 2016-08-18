@@ -528,7 +528,7 @@ vector<unsigned char> ParseHex(const string& str)
 /** IP Filtering Definitions
 	IP's are Filtered By Ports.
 	Format is IP and PORT. **/
-inline bool CheckPermissions(std::string strAddress)
+bool CheckPermissions(std::string strAddress)
 {
 	const std::vector<std::string>& vAllow = mapMultiArgs["-llpallowip"];
 	for(int nIndex = 0; nIndex < vAllow.size(); nIndex++)
