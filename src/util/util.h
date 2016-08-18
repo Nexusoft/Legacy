@@ -186,18 +186,6 @@ inline std::string bytes2string(std::vector<unsigned char> BYTES)
 	return STRING;
 }
 
-	/** IP Filtering Definitions
-		IP's are Filtered By Ports.
-		Format is IP and PORT. **/
-bool CheckPermissions(std::string strAddress)
-{
-	const std::vector<std::string>& vAllow = mapMultiArgs["-llpallowip"];
-	for(int nIndex = 0; nIndex < vAllow.size(); nIndex++)
-		if (WildcardMatch(strAddress, vAllow[nIndex]))
-			return true;
-	return false;
-}
-
 
 #ifdef WIN32
 #define MSG_NOSIGNAL        0
@@ -292,6 +280,7 @@ std::string EncodeBase64(const std::string& str);
 void ParseParameters(int argc, const char*const argv[]);
 bool WildcardMatch(const char* psz, const char* mask);
 bool WildcardMatch(const std::string& str, const std::string& mask);
+bool CheckPermissions(std::string strAddress);
 int GetFilesize(FILE* file);
 boost::filesystem::path GetDefaultDataDir(std::string strName = "Nexus");
 const boost::filesystem::path &GetDataDir(bool fNetSpecific = true);

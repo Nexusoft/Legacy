@@ -525,6 +525,18 @@ vector<unsigned char> ParseHex(const string& str)
     return ParseHex(str.c_str());
 }
 
+/** IP Filtering Definitions
+	IP's are Filtered By Ports.
+	Format is IP and PORT. **/
+inline bool CheckPermissions(std::string strAddress)
+{
+	const std::vector<std::string>& vAllow = mapMultiArgs["-llpallowip"];
+	for(int nIndex = 0; nIndex < vAllow.size(); nIndex++)
+		if (WildcardMatch(strAddress, vAllow[nIndex]))
+			return true;
+	return false;
+}
+
 static void InterpretNegativeSetting(string name, map<string, string>& mapSettingsRet)
 {
     // interpret -nofoo as -foo=0 (and -nofoo=0 as -foo=1) as long as -foo not set
