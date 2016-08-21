@@ -272,16 +272,17 @@ namespace LLP
 					sscanf(SOCKET->remote_endpoint().address().to_string().c_str(), "%u.%u.%u.%u", &BYTES[0], &BYTES[1], &BYTES[2], &BYTES[3]);
 					unsigned int ADDRESS = (BYTES[0] << 24) + (BYTES[1] << 16) + (BYTES[2] << 8) + BYTES[3];
 					
-					printf("##### New LLP Connection Request from %u.%u.%u.%u to Port %u\n", BYTES[0], BYTES[1], BYTES[2], BYTES[3], PORT);
 					{ //LOCK(DDOS_MUTEX);
 						if(!DDOS_MAP.count(ADDRESS))
 							DDOS_MAP[ADDRESS] = new DDOS_Filter(30);
 							
 						/** DDOS Operations: Only executed when DDOS is enabled. **/
-						if(fDDOS && DDOS_MAP[ADDRESS]->Banned() || !CheckPermissions(strprintf("%u.%u.%u.%u:%u",BYTES[0], BYTES[1], BYTES[2], BYTES[3], PORT)))
+						if((fDDOS && DDOS_MAP[ADDRESS]->Banned()) || !CheckPermissions(strprintf("%u.%u.%u.%u:%u",BYTES[0], BYTES[1], BYTES[2], BYTES[3], PORT)))
 						{
 							SOCKET -> shutdown(boost::asio::ip::tcp::socket::shutdown_both, ERROR_HANDLE);
 							SOCKET -> close();
+							
+							printf("##### BLOCKED: LLP Connection Request from %u.%u.%u.%u to Port %u\n", BYTES[0], BYTES[1], BYTES[2], BYTES[3], PORT);
 								
 							continue;
 						}

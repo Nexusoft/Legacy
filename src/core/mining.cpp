@@ -193,7 +193,60 @@ namespace LLP
 		{
 			/** Handle any DDOS Packet Filters. **/
 			if(EVENT == EVENT_HEADER)
-				return;
+			{
+				if(fDDOS)
+				{
+					Packet PACKET   = this->INCOMING;
+					if(PACKET.HEADER == BLOCK_DATA)
+						DDOS->Ban();
+					
+					if(PACKET.HEADER == SUBMIT_BLOCK && PACKET.LENGTH > 72)
+						DDOS->Ban();
+					
+					if(PACKET.HEADER == BLOCK_HEIGHT)
+						DDOS->Ban();
+			
+					if(PACKET.HEADER == SET_CHANNEL && PACKET.LENGTH > 4)
+						DDOS->Ban();
+					
+					if(PACKET.HEADER == BLOCK_REWARD)
+						DDOS->Ban();
+					
+					if(PACKET.HEADER == SET_COINBASE && PACKET.LENGTH > 20 * 1024)
+						DDOS->Ban();
+					
+					if(PACKET.HEADER == GOOD_BLOCK)
+						DDOS->Ban();
+					
+					if(PACKET.HEADER == ORPHAN_BLOCK)
+						DDOS->Ban();
+					
+					if(PACKET.HEADER == CHECK_BLOCK && PACKET.LENGTH > 128)
+						DDOS->Ban();
+					
+					if(PACKET.HEADER == SUBSCRIBE && PACKET.LENGTH > 4)
+						DDOS->Ban();
+					
+					if(PACKET.HEADER == BLOCK_ACCEPTED)
+						DDOS->Ban();
+					
+					if(PACKET.HEADER == BLOCK_REJECTED)
+						DDOS->Ban();
+					
+					if(PACKET.HEADER == COINBASE_SET)
+						DDOS->Ban();
+					
+					if(PACKET.HEADER == COINBASE_FAIL)
+						DDOS->Ban();
+					
+					if(PACKET.HEADER == NEW_ROUND)
+						DDOS->Ban();
+					
+					if(PACKET.HEADER == OLD_ROUND)
+						DDOS->Ban();
+					
+				}
+			}
 			
 			
 			/** Handle for a Packet Data Read. **/
@@ -309,7 +362,7 @@ namespace LLP
 					
 					pCoinbaseTx = pCoinbase;
 					//pCoinbaseTx->Print();
-					printf("%%%%%%%%%% Mining LLP: Coinbase Tx Set: %s. Clearing Maps.\n", pCoinbaseTx->IsValid() ? "TRUE" : "FALSE");
+					//printf("%%%%%%%%%% Mining LLP: Coinbase Tx Set: %s. Clearing Maps.\n", pCoinbaseTx->IsValid() ? "TRUE" : "FALSE");
 				}
 				
 				return true;
@@ -392,7 +445,7 @@ namespace LLP
 				RESPONSE.DATA = uint2bytes64(nCoinbaseReward);
 				this->WritePacket(RESPONSE);
 				
-				printf("%%%%%%%%%% Mining LLP: Sent Coinbase Reward of %"PRIu64"\n", nCoinbaseReward);
+				//printf("%%%%%%%%%% Mining LLP: Sent Coinbase Reward of %"PRIu64"\n", nCoinbaseReward);
 				
 				return true;
 			}
@@ -566,7 +619,7 @@ namespace Core
 	};
 	
 	/** Entry point for the Mining LLP. **/
-	void StartMiningLLP(){ MINING_LLP = new LLP::Server<LLP::MiningLLP>(fTestNet ? TESTNET_MINING_LLP_PORT : NEXUS_MINING_LLP_PORT, 5, false, 0, 0, 60); }
+	void StartMiningLLP() { MINING_LLP = new LLP::Server<LLP::MiningLLP>(fTestNet ? TESTNET_MINING_LLP_PORT : NEXUS_MINING_LLP_PORT, GetArg("-mining_threads", 10), true, GetArg("-mining_cscore", 5), GetArg("-mining_rscore", 50), GetArg("-mining_timout", 60)); }
 	
 	
 	/** Entry Staking Function. **/

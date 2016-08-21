@@ -39,7 +39,52 @@ namespace LLP
 		{ ADDRESS = parse_ip(SOCKET_IN->remote_endpoint().address().to_string()); }
 		
 		/** Handle Event Inheritance. **/
-		void Event(unsigned char EVENT, unsigned int LENGTH = 0){ }
+		void Event(unsigned char EVENT, unsigned int LENGTH = 0)
+		{
+			/** Handle any DDOS Packet Filters. **/
+			if(EVENT == EVENT_HEADER)
+			{
+				if(fDDOS)
+				{
+					Packet PACKET   = this->INCOMING;
+					
+					if(PACKET.HEADER == TIME_DATA)
+						DDOS->Ban();
+					
+					if(PACKET.HEADER == ADDRESS_DATA)
+						DDOS->Ban();
+					
+					if(PACKET.HEADER == TIME_OFFSET)
+						DDOS->Ban();
+					
+					if(PACKET.HEADER == GET_OFFSET && PACKET.LENGTH > 4)
+						DDOS->Ban();
+					
+					if(DDOS->Banned())
+						return;
+					
+				}
+			}
+			
+			
+			/** Handle for a Packet Data Read. **/
+			if(EVENT == EVENT_PACKET)
+				return;
+			
+			
+			/** On Generic Event, Broadcast new block if flagged. **/
+			if(EVENT == EVENT_GENERIC)
+				return;
+			
+			/** On Connect Event, Assign the Proper Daemon Handle. **/
+			if(EVENT == EVENT_CONNECT)
+				return;
+			
+			/** On Disconnect Event, Reduce the Connection Count for Daemon **/
+			if(EVENT == EVENT_DISCONNECT)
+				return;
+		
+		}
 		
 		/** This function is necessary for a template LLP server. It handles your 
 			custom messaging system, and how to interpret it from raw packets. **/

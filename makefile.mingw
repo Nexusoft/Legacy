@@ -20,12 +20,12 @@ INCLUDEPATHS= \
  -I"$(CURDIR)\src\wallet" \
  -I"C:\Deps\boost_1_57_0" \
  -I"C:\Deps\db-4.8.30.NC\build_unix" \
- -I"C:\Deps\openssl-1.0.1p\include"
+ -I"C:\Deps\openssl-1.0.1l\include"
 
 LIBPATHS= \
  -L"C:\Deps\boost_1_57_0\stage\lib" \
  -L"C:\Deps\db-4.8.30.NC\build_unix" \
- -L"C:\Deps\openssl-1.0.1p"
+ -L"C:\Deps\openssl-1.0.1l"
 
 LIBS= \
  -l boost_system-mgw49-mt-s-1_57 \
@@ -41,8 +41,8 @@ DEBUGFLAGS=-g
 CFLAGS=-mthreads -static -static-libgcc -static-libstdc++ -O2 -w -Wno-invalid-offsetof -Wformat $(DEBUGFLAGS) $(DEFS) $(INCLUDEPATHS)
 
 ifdef USE_UPNP
- INCLUDEPATHS += -I"C:/Deps/"
- LIBPATHS += -L"C:/Deps/miniupnpc"
+ INCLUDEPATHS += -I"C:\Deps\miniupnpc"
+ LIBPATHS += -L"C:\Deps\miniupnpc"
  LIBS += -l miniupnpc -l iphlpapi
  DEFS += -DSTATICLIB -DUSE_UPNP=$(USE_UPNP)
 endif
