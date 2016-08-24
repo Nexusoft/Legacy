@@ -41,7 +41,7 @@ DEBUGFLAGS=-g
 CFLAGS=-mthreads -static -static-libgcc -static-libstdc++ -O2 -w -Wno-invalid-offsetof -Wformat $(DEBUGFLAGS) $(DEFS) $(INCLUDEPATHS)
 
 ifdef USE_UPNP
- INCLUDEPATHS += -I"C:\Deps\miniupnpc"
+ INCLUDEPATHS += -I"C:\Deps"
  LIBPATHS += -L"C:\Deps\miniupnpc"
  LIBS += -l miniupnpc -l iphlpapi
  DEFS += -DSTATICLIB -DUSE_UPNP=$(USE_UPNP)

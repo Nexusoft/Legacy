@@ -203,18 +203,6 @@ void ThreadTimeRegulator(void* parg)
 			}
 			
 			
-			/** If the Unified Clock Changes past Max Drift, Reset Unified Moving Average.
-				Removed for now - TODO: Find Better Solution to Clock Auto Re-Syncing with Microsoft Time Server for Windoze Machines
-			if(nSamples.Majority() > (UNIFIED_AVERAGE_OFFSET + MAX_UNIFIED_DRIFT) ||
-			   nSamples.Majority() < (UNIFIED_AVERAGE_OFFSET - MAX_UNIFIED_DRIFT) )
-			{
-			
-			   printf("***** Unified Clock Changed by Maximum Drift. Resetting Samples...\n");
-			   UNIFIED_TIME_DATA.clear();
-			}
-			**/
-			
-			
 			/** If the Moving Average is filled with samples, continue iterating to keep it moving. **/
 			if(UNIFIED_TIME_DATA.size() >= MAX_UNIFIED_SAMPLES)
 			{
