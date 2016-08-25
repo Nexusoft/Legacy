@@ -13,6 +13,8 @@
 #include "../net/net.h"
 #include "../wallet/script.h"
 
+#include "../LLD/sector.h"
+
 #ifdef WIN32
 #include <io.h> /* for _commit */
 #define __STDC_FORMAT_MACROS 1
@@ -110,6 +112,12 @@ namespace Core
 	extern const std::string strMessageMagic;
 	
 	
+	/** Lower Level Databases. 
+		TODO: Break the Database out of Memory and Keep Keychain only.
+		Keychain is the only Database Registry that should exist. **/
+	extern LLD::SectorDatabase* BlockIndexDB;
+	
+	
 	/** The current block versions to reject any attempts to manipulate Version. **/
 	extern const unsigned int NETWORK_BLOCK_CURRENT_VERSION;
 	extern const unsigned int TESTNET_BLOCK_CURRENT_VERSION;
@@ -128,9 +136,9 @@ namespace Core
 	/** BigNum Global Externals **/
 	extern CBigNum bnProofOfWorkLimit[];
 	extern CBigNum bnProofOfWorkStart[];
-	extern CBigNum bnBestChainTrust;
-	extern CBigNum bnBestInvalidTrust;
-
+	
+	/** Chain Trust **/
+	extern uint64 nBestChainTrust;
 	
 	/** Standard Library Global Externals **/
 	extern std::map<uint1024, CBlock*> mapOrphanBlocks;
@@ -1537,12 +1545,12 @@ namespace Core
 		unsigned int nFile;
 		unsigned int nBlockPos;
 		
-		CBigNum bnChainTrust; // Nexus: trust score of block chain
-		int64 nMint;
-		int64 nMoneySupply;
-		int64 nChannelHeight;
-		int64 nReleasedReserve[4];
-		int64 nCoinbaseRewards[3];
+		uint64 nChainTrust; // Nexus: trust score of block chain
+		int64  nMint;
+		int64  nMoneySupply;
+		int64  nChannelHeight;
+		int64  nReleasedReserve[4];
+		int64  nCoinbaseRewards[3];
 		
 				
 		/** Used to store the pending Checkpoint in Blockchain. 
@@ -1580,7 +1588,7 @@ namespace Core
 			nFile = 0;
 			nBlockPos = 0;
 			
-			bnChainTrust = 0;
+			nChainTrust = 0;
 			nMint = 0;
 			nMoneySupply = 0;
 			nFlags = 0;
@@ -1606,7 +1614,7 @@ namespace Core
 			pnext = NULL;
 			nFile = nFileIn;
 			nBlockPos = nBlockPosIn;
-			bnChainTrust = 0;
+			nChainTrust = 0;
 			nMint = 0;
 			nMoneySupply = 0;
 			nStakeModifier = 0;
@@ -1668,7 +1676,7 @@ namespace Core
 			return (int64)nTime;
 		}
 
-		CBigNum GetBlockTrust() const
+		uint64 GetBlockTrust() const
 		{
 				
 			/** Give higher block trust if last block was of different channel **/
@@ -1756,13 +1764,33 @@ namespace Core
 			if (!(nType & SER_GETHASH))
 				READWRITE(nVersion);
 
-			READWRITE(hashNext);
-			READWRITE(nFile);
-			READWRITE(nBlockPos);
-			READWRITE(nMint);
-			READWRITE(nMoneySupply);
-			READWRITE(nFlags);
-			READWRITE(nStakeModifier);
+			if (!(nType & SER_LLD)) 
+			{
+				READWRITE(hashNext);
+				READWRITE(nFile);
+				READWRITE(nBlockPos);
+				READWRITE(nMint);
+				READWRITE(nMoneySupply);
+				READWRITE(nFlags);
+				READWRITE(nStakeModifier);
+			}
+			else
+			{
+				READWRITE(hashNext);
+				READWRITE(nFile);
+				READWRITE(nBlockPos);
+				READWRITE(nMoneySupply);
+				READWRITE(nChannelHeight);
+				READWRITE(nChainTrust);
+				
+				READWRITE(nCoinbaseRewards[0]);
+				READWRITE(nCoinbaseRewards[1]);
+				READWRITE(nCoinbaseRewards[2]);
+				
+				READWRITE(nReleasedReserve[0]);
+				READWRITE(nReleasedReserve[1]);
+				READWRITE(nReleasedReserve[2]);
+			}
 
 			// block header
 			READWRITE(this->nVersion);

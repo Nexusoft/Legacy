@@ -3,3 +3,6 @@
 *.P
 *.bat
 *.exe
+*.Debug
+*.Release
+*

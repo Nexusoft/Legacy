@@ -66,6 +66,10 @@ namespace Core
 	
 	/** Set the Maximum Output Value of Coinstake Transaction. **/
 	const uint64 MAX_STAKE_WEIGHT = 1000 * COIN;
+	
+	
+	/** Sector Block Index DB. **/
+	LLD::SectorDatabase* BlockIndexDB = new LLD::SectorDatabase("blockindex");
 
 	
 	
@@ -204,8 +208,8 @@ namespace Core
 	int nCoinbaseMaturity = COINBASE_MATURITY;
 	CBlockIndex* pindexGenesisBlock = NULL;
 	unsigned int nBestHeight = 0;
-	CBigNum bnBestChainTrust = 0;
-	CBigNum bnBestInvalidTrust = 0;
+	
+	uint64 nBestChainTrust = 0;
 	uint1024 hashBestChain = 0;
 	CBlockIndex* pindexBest = NULL;
 	int64 nTimeBestReceived = 0;

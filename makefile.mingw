@@ -15,6 +15,7 @@ INCLUDEPATHS= \
  -I"$(CURDIR)\src\hash" \
  -I"$(CURDIR)\src\json" \
  -I"$(CURDIR)\src\LLP" \
+ -I"$(CURDIR)\src\LLD" \
  -I"$(CURDIR)\src\net" \
  -I"$(CURDIR)\src\util" \
  -I"$(CURDIR)\src\wallet" \

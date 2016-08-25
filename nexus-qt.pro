@@ -44,7 +44,7 @@ contains(RELEASE, 1) {
     #-sysroot /Developer/SDKs/MacOSX10.10.sdk
 
     #Static Configuration
-    CONFIG += STATIC
+    windows:CONFIG += STATIC
 	
 	windows:QMAKE_LFLAGS += -Wl,--dynamicbase -Wl,--nxcompat
 	windows:QMAKE_LFLAGS += -Wl,--large-address-aware -static

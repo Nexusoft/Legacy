@@ -301,8 +301,6 @@ namespace Wallet
 		bool EraseBlockIndex(uint1024 hash);
 		bool ReadHashBestChain(uint1024& hashBestChain);
 		bool WriteHashBestChain(uint1024 hashBestChain);
-		bool ReadBestInvalidTrust(CBigNum& bnBestInvalidTrust);
-		bool WriteBestInvalidTrust(CBigNum bnBestInvalidTrust);
 		bool ReadCheckpointPubKey(std::string& strPubKey);
 		bool WriteCheckpointPubKey(const std::string& strPubKey);
 		bool LoadBlockIndex();

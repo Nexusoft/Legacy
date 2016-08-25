@@ -106,7 +106,7 @@ namespace Core
 		{
 			CDiskBlockIndex blockindexPrev(pindex->pprev);
 			blockindexPrev.hashNext = 0;
-			if (!txdb.WriteBlockIndex(blockindexPrev))
+			if (!Core::BlockIndexDB->Write(pindex->pprev->nHeight, blockindexPrev))
 				return error("DisconnectBlock() : WriteBlockIndex failed");
 		}
 
@@ -192,7 +192,7 @@ namespace Core
 		pindex->nMint = nValueOut - nValueIn;
 		pindex->nMoneySupply = (pindex->pprev ? pindex->pprev->nMoneySupply : 0) + nValueOut - nValueIn;
 		printf("Generated %f Nexus\n", (double) pindex->nMint / COIN);
-		if (!txdb.WriteBlockIndex(CDiskBlockIndex(pindex)))
+		if (!Core::BlockIndexDB->Write(pindex->nHeight, CDiskBlockIndex(pindex)))
 			return error("Connect() : WriteBlockIndex for pindex failed");
 
 		// Write queued txindex changes
@@ -213,7 +213,7 @@ namespace Core
 		{
 			CDiskBlockIndex blockindexPrev(pindex->pprev);
 			blockindexPrev.hashNext = pindex->GetBlockHash();
-			if (!txdb.WriteBlockIndex(blockindexPrev))
+			if (!Core::BlockIndexDB->Write(pindex->pprev->nHeight, blockindexPrev))
 				return error("ConnectBlock() : WriteBlockIndex for blockindexPrev failed");
 		}
 
@@ -379,10 +379,10 @@ namespace Core
 		hashBestChain = hash;
 		pindexBest = pindexNew;
 		nBestHeight = pindexBest->nHeight;
-		bnBestChainTrust = pindexNew->bnChainTrust;
+		nBestChainTrust = pindexNew->nChainTrust;
 		nTimeBestReceived = GetUnifiedTimestamp();
 		
-		printf("SetBestChain: new best=%s  height=%d  trust=%s  moneysupply=%s\n", hashBestChain.ToString().substr(0,20).c_str(), nBestHeight, bnBestChainTrust.ToString().c_str(), FormatMoney(pindexBest->nMoneySupply).c_str());
+		printf("SetBestChain: new best=%s  height=%d  trust=%"PRIu64"  moneysupply=%s\n", hashBestChain.ToString().substr(0,20).c_str(), nBestHeight, nBestChainTrust, FormatMoney(pindexBest->nMoneySupply).c_str());
 		
 		/** Grab the transactions for the block and set the address balances. **/
 		for(int nTx = 0; nTx < vtx.size(); nTx++)
@@ -464,7 +464,7 @@ namespace Core
 		
 		
 		/** Compute the Chain Trust **/
-		pindexNew->bnChainTrust = (pindexNew->pprev ? pindexNew->pprev->bnChainTrust : 0) + pindexNew->GetBlockTrust();
+		pindexNew->nChainTrust = (pindexNew->pprev ? pindexNew->pprev->nChainTrust : 0) + pindexNew->GetBlockTrust();
 		
 		
 		/** Compute the Channel Height. **/
@@ -515,12 +515,12 @@ namespace Core
 		Wallet::CTxDB txdb;
 		if (!txdb.TxnBegin())
 			return false;
-		txdb.WriteBlockIndex(CDiskBlockIndex(pindexNew));
+		Core::BlockIndexDB->Write(pindexNew->nHeight, CDiskBlockIndex(pindexNew));
 		if (!txdb.TxnCommit())
 			return false;
 
 		/** Set the Best chain if Highest Trust. **/
-		if (pindexNew->bnChainTrust > bnBestChainTrust)
+		if (pindexNew->nChainTrust > nBestChainTrust)
 			if (!SetBestChain(txdb, pindexNew))
 				return false;
 
