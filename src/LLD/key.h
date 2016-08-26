@@ -139,8 +139,6 @@ namespace LLD
 		{
 			MUTEX_LOCK(KEY_MUTEX);
 			
-			printf("[DATABASE] Loading %s Keychain....\n", strDatabaseName.c_str());
-			
 			/** Open the Stream to Read from the File Stream. **/
 			std::fstream fIncoming(strLocation.c_str(), std::ios::in | std::ios::binary);
 			if(!fIncoming)
@@ -200,7 +198,6 @@ namespace LLD
 					fIncoming.seekg(nPosition + cKey.Size() + 11, std::ios::beg);
 			}
 			
-			printf("[DATABASE] Done Loading...\n");
 			fIncoming.close();
 		}
 		
