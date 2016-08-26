@@ -12,6 +12,8 @@
 #include "../wallet/db.h"
 #include "../util/ui_interface.h"
 
+#include "../LLD/sector.h"
+
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
@@ -106,7 +108,8 @@ namespace Core
 		{
 			CDiskBlockIndex blockindexPrev(pindex->pprev);
 			blockindexPrev.hashNext = 0;
-			if (!Core::BlockIndexDB->Write(pindex->pprev->nHeight, blockindexPrev))
+			LLD::SectorDatabase IndexDB("blockindex", "blockindex");
+			if (!IndexDB.Write(pindex->pprev->nHeight, blockindexPrev))
 				return error("DisconnectBlock() : WriteBlockIndex failed");
 		}
 
@@ -192,7 +195,9 @@ namespace Core
 		pindex->nMint = nValueOut - nValueIn;
 		pindex->nMoneySupply = (pindex->pprev ? pindex->pprev->nMoneySupply : 0) + nValueOut - nValueIn;
 		printf("Generated %f Nexus\n", (double) pindex->nMint / COIN);
-		if (!Core::BlockIndexDB->Write(pindex->nHeight, CDiskBlockIndex(pindex)))
+		
+		LLD::SectorDatabase IndexDB("blockindex", "blockindex");
+		if (!IndexDB.Write(pindex->nHeight, CDiskBlockIndex(pindex)))
 			return error("Connect() : WriteBlockIndex for pindex failed");
 
 		// Write queued txindex changes
@@ -213,7 +218,9 @@ namespace Core
 		{
 			CDiskBlockIndex blockindexPrev(pindex->pprev);
 			blockindexPrev.hashNext = pindex->GetBlockHash();
-			if (!Core::BlockIndexDB->Write(pindex->pprev->nHeight, blockindexPrev))
+			
+			LLD::SectorDatabase IndexDB("blockindex", "blockindex");
+			if (!IndexDB.Write(pindex->pprev->nHeight, blockindexPrev))
 				return error("ConnectBlock() : WriteBlockIndex for blockindexPrev failed");
 		}
 
@@ -515,7 +522,9 @@ namespace Core
 		Wallet::CTxDB txdb;
 		if (!txdb.TxnBegin())
 			return false;
-		Core::BlockIndexDB->Write(pindexNew->nHeight, CDiskBlockIndex(pindexNew));
+			
+		LLD::SectorDatabase IndexDB("blockindex", "blockindex");
+		IndexDB.Write(pindexNew->nHeight, CDiskBlockIndex(pindexNew));
 		if (!txdb.TxnCommit())
 			return false;
 

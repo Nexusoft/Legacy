@@ -68,11 +68,6 @@ namespace Core
 	const uint64 MAX_STAKE_WEIGHT = 1000 * COIN;
 	
 	
-	/** Sector Block Index DB. **/
-	LLD::SectorDatabase* BlockIndexDB = new LLD::SectorDatabase("blockindex");
-
-	
-	
 	/** Time - Lock for the Nexus Network Launch. Allowed Binary Distribution before Time-Lock but no Mining until after Time-Lock. **/
 	const unsigned int NEXUS_TESTNET_TIMELOCK  = 1421250000;   //--- Nexus Testnet Activation:        1/14/2015 08:38:00 GMT - 6
 	const unsigned int NEXUS_NETWORK_TIMELOCK  = 1411510800;   //--- Nexus Network Launch:           09/23/2014 16:20:00 GMT - 6

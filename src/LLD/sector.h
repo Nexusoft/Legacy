@@ -1,7 +1,7 @@
 #ifndef LOWER_LEVEL_LIBRARY_LLD_SECTOR
 #define LOWER_LEVEL_LIBRARY_LLD_SECTOR
 
-#include "key.h"
+#include "keychain.h"
 
 /** Lower Level Database Name Space. **/
 namespace LLD
@@ -51,26 +51,29 @@ namespace LLD
 			Contains Key and Cache Databases. **/
 		std::string strBaseLocation;
 		
+		/** Keychain Registry:
+			The nameof the Keychain Registry. **/
+		std::string strKeychainRegistry;
+		
 		/** Memory Structure to Track the Database Sizes. **/
 		std::vector<unsigned int> vDatabaseSizes;
-		
-		/** Link to the Keys Database. **/
-		KeyDatabase* SectorKeys;
 		
 		/** Read only Flag for Sectors. **/
 		bool fReadOnly = false;
 	public:
 		/** The Database Constructor. To determine file location and the Bytes per Record. **/
-		SectorDatabase(std::string strName, const char* pszMode="r+")
+		SectorDatabase(std::string strName, std::string strKeychain, const char* pszMode="r+")
 		{
-			
+			strKeychainRegistry = strKeychain;
 			strBaseLocation = GetDefaultDataDir().string() + "\\datachain\\"; 
 			strBaseName = strName;
 			
 			/** Read only flag when instantiating new database. **/
 			fReadOnly = (!strchr(pszMode, '+') && !strchr(pszMode, 'w'));
+			
+			Initialize();
 		}
-		~SectorDatabase() { delete SectorKeys; }
+		~SectorDatabase() { }
 		
 		/** Initialize Sector Database. **/
 		void Initialize() 
@@ -90,11 +93,6 @@ namespace LLD
 				
 				printf("[DATABASE] Creating New Sector Database.\n");
 			}
-			
-			/** Assign a Sector Keys File Database in the keychain folder for key indexing on disk. 
-				TODO:: Break Sector Database as Subset of a DB class that holds the Sector Keys. **/
-			SectorKeys = new KeyDatabase(GetDefaultDataDir().string() + "//keychain//", strBaseName);
-			SectorKeys->Initialize();
 		}
 		
 		template<typename Key, typename Type>
@@ -151,11 +149,11 @@ namespace LLD
 			MUTEX_LOCK(SECTOR_MUTEX);
 			
 			/** Read a Record from Binary Data. **/
-			if(SectorKeys->HasKey(vKey))
+			if(GetKeychain(strKeychainRegistry)->HasKey(vKey))
 			{
 				/** Read the Sector Key from Keychain. **/
 				SectorKey cKey;
-				if(!SectorKeys->Get(vKey, cKey))
+				if(!GetKeychain(strKeychainRegistry)->Get(vKey, cKey))
 					return false;
 				
 				/** Open the Stream to Read the data from Sector on File. **/
@@ -184,7 +182,7 @@ namespace LLD
 			MUTEX_LOCK(SECTOR_MUTEX);
 			
 			/** Write Header if First Update. **/
-			if(!SectorKeys->HasKey(vKey))
+			if(!GetKeychain(strKeychainRegistry)->HasKey(vKey))
 			{
 				/** TODO:: Assign a Sector File based on Database Sizes. **/
 				unsigned short nSectorFile = 0;
@@ -207,13 +205,13 @@ namespace LLD
 				SectorKey cKey(READY, vKey, nSectorFile, nStart, vData.size()); 
 				
 				/** Assign the Key to Keychain. **/
-				SectorKeys->Put(cKey);
+				GetKeychain(strKeychainRegistry)->Put(cKey);
 			}
 			else
 			{
 				/** Get the Sector Key from the Keychain. **/
 				SectorKey cKey;
-				if(!SectorKeys->Get(vKey, cKey))
+				if(!GetKeychain(strKeychainRegistry)->Get(vKey, cKey))
 					return false;
 					
 				/** Open the Stream to Read the data from Sector on File. **/

@@ -88,7 +88,8 @@ OBJS= \
 	build/message.o \
 	build/mining.o \
 	build/transaction.o \
-	build/global.o
+	build/global.o \
+	build/keychain.o
 
 
 
@@ -110,6 +111,9 @@ build/%.o: ./src/keys/%.cpp $(HEADERS)
 	g++ -c $(CFLAGS) -o $@ $<
 	
 build/%.o: ./src/LLP/%.cpp $(HEADERS)
+	g++ -c $(CFLAGS) -o $@ $<
+	
+build/%.o: ./src/LLD/%.cpp $(HEADERS)
 	g++ -c $(CFLAGS) -o $@ $<
 	
 build/%.o: ./src/net/%.cpp $(HEADERS)

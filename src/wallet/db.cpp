@@ -13,6 +13,8 @@
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 
+#include "../LLD/sector.h"
+
 #ifndef WIN32
 #include "sys/stat.h"
 #endif
@@ -530,10 +532,11 @@ namespace Wallet
 	bool CTxDB::LoadBlockIndex()
 	{
 		unsigned int nHeight = 0;
+		LLD::SectorDatabase IndexDB("blockindex", "blockindex");
 		while(!fRequestShutdown)
 		{
 			Core::CDiskBlockIndex diskindex;
-			if(!Core::BlockIndexDB->Read(nHeight, diskindex))
+			if(!IndexDB.Read(nHeight, diskindex))
 				break;
 			
 			Core::CBlockIndex* pindexNew = InsertBlockIndex(diskindex.GetBlockHash());

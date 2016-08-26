@@ -13,8 +13,6 @@
 #include "../net/net.h"
 #include "../wallet/script.h"
 
-#include "../LLD/sector.h"
-
 #ifdef WIN32
 #include <io.h> /* for _commit */
 #define __STDC_FORMAT_MACROS 1
@@ -110,12 +108,6 @@ namespace Core
 	extern const uint1024 hashGenesisBlockOfficial;
 	extern const uint1024 hashGenesisBlockTestNet;
 	extern const std::string strMessageMagic;
-	
-	
-	/** Lower Level Databases. 
-		TODO: Break the Database out of Memory and Keep Keychain only.
-		Keychain is the only Database Registry that should exist. **/
-	extern LLD::SectorDatabase* BlockIndexDB;
 	
 	
 	/** The current block versions to reject any attempts to manipulate Version. **/
