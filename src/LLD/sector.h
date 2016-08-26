@@ -78,8 +78,6 @@ namespace LLD
 		/** Initialize Sector Database. **/
 		void Initialize() 
 		{
-			printf("[DATABASE] Initializing Sector Database.\n");
-			
 			/** Create the Sector Database Directories. **/
 			boost::filesystem::path dir(strBaseLocation);
 			boost::filesystem::create_directory(dir);
@@ -90,8 +88,6 @@ namespace LLD
 			if(!fIncoming) {
 				std::ofstream cStream(strprintf("%s%s%u.dat", strBaseLocation.c_str(), strBaseName.c_str(), 0).c_str(), std::ios::binary);
 				cStream.close();
-				
-				printf("[DATABASE] Creating New Sector Database.\n");
 			}
 		}
 		
