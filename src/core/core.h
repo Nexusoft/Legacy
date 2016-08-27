@@ -53,6 +53,9 @@ namespace Wallet
 /** Holds the Servers and Clients for the LLP Protocols. The two LLP's in Nexus are the Core LLP and the Mining LLP. **/
 namespace LLP { class Coinbase; }
 
+/** Index Database of the LLD. **/
+namespace LLD { class CIndexDB; }
+
 
 /** Core Namespace: This namespace contains all the core level functions. 
     This is the middle layer in which the other two namespaces will communicate with.
@@ -206,6 +209,7 @@ namespace Core
 	FILE* OpenBlockFile(unsigned int nFile, unsigned int nBlockPos, const char* pszMode);
 	FILE* AppendBlockFile(unsigned int& nFileRet);
 	bool LoadBlockIndex(bool fAllowNew = true);
+	bool CheckBlockIndex(uint1024 hashBlock);
 	
 	
 	/** DISPATCH.CPP **/
@@ -240,7 +244,7 @@ namespace Core
 	
 	/** MESSAGE.CPP **/
 	std::string GetWarnings(std::string strFor);
-	bool AlreadyHave(Wallet::CTxDB& txdb, const Net::CInv& inv);
+	bool AlreadyHave(LLD::CIndexDB& indexdb, const Net::CInv& inv);
 	bool ProcessMessage(Net::CNode* pfrom, std::string strCommand, CDataStream& vRecv);
 	bool ProcessMessages(Net::CNode* pfrom);
 	bool SendMessages(Net::CNode* pto, bool fSendTrickle);
@@ -602,6 +606,7 @@ namespace Core
 		/** The Public Key associated with Trust Key. **/
 		std::vector<unsigned char> vchPubKey;
 		
+		unsigned int nVersion;
 		uint1024  hashGenesisBlock;
 		uint512   hashGenesisTx;
 		unsigned int nGenesisTime;
@@ -609,22 +614,34 @@ namespace Core
 		/** Previous Blocks Vector to store list of blocks of this Trust Key. **/
 		mutable std::vector<uint1024> hashPrevBlocks;
 		
-		
 		CTrustKey() { SetNull(); }
 		CTrustKey(std::vector<unsigned char> vchPubKeyIn, uint1024 hashBlockIn, uint512 hashTxIn, unsigned int nTimeIn)
 		{
 			SetNull();
 			
+			nVersion               = 1;
 			vchPubKey              = vchPubKeyIn;
 			hashGenesisBlock       = hashBlockIn;
 			hashGenesisTx          = hashTxIn;
 			nGenesisTime           = nTimeIn;
 		}
 		
+		IMPLEMENT_SERIALIZE
+		(
+			READWRITE(this->nVersion);
+			nVersion = this->nVersion;
+			
+			READWRITE(vchPubKey);
+			READWRITE(hashGenesisBlock);
+			READWRITE(hashGenesisTx);
+			READWRITE(nGenesisTime);
+		)
+		
 		
 		/** Set the Data structure to Null. **/
 		void SetNull() 
 		{ 
+			nVersion             = 1;
 			hashGenesisBlock     = 0;
 			hashGenesisTx        = 0;
 			nGenesisTime         = 0;
@@ -1061,14 +1078,14 @@ namespace Core
 		}
 
 
-		bool GetCoinstakeInterest(Wallet::CTxDB& txdb, int64& nInterest) const;
-		bool GetCoinstakeAge(Wallet::CTxDB& txdb, uint64& nAge) const;
+		bool GetCoinstakeInterest(LLD::CIndexDB& txdb, int64& nInterest) const;
+		bool GetCoinstakeAge(LLD::CIndexDB& txdb, uint64& nAge) const;
 
 		
-		bool ReadFromDisk(Wallet::CTxDB& txdb, COutPoint prevout, CTxIndex& txindexRet);
-		bool ReadFromDisk(Wallet::CTxDB& txdb, COutPoint prevout);
+		bool ReadFromDisk(LLD::CIndexDB& indexdb, COutPoint prevout, CTxIndex& txindexRet);
+		bool ReadFromDisk(LLD::CIndexDB& indexdb, COutPoint prevout);
 		bool ReadFromDisk(COutPoint prevout);
-		bool DisconnectInputs(Wallet::CTxDB& txdb);
+		bool DisconnectInputs(LLD::CIndexDB& indexdb);
 
 		/** Fetch from memory and/or disk. inputsRet keys are transaction hashes.
 
@@ -1080,7 +1097,7 @@ namespace Core
 		 @param[out] fInvalid	returns true if transaction is invalid
 		 @return	Returns true if all inputs are in txdb or mapTestPool
 		 */
-		bool FetchInputs(Wallet::CTxDB& txdb, const std::map<uint512, CTxIndex>& mapTestPool,
+		bool FetchInputs(LLD::CIndexDB& indexdb, const std::map<uint512, CTxIndex>& mapTestPool,
 						 bool fBlock, bool fMiner, MapPrevTx& inputsRet, bool& fInvalid);
 
 		/** Sanity check previous transactions, then, if all checks succeed,
@@ -1095,12 +1112,12 @@ namespace Core
 			@param[in] fStrictPayToScriptHash	true if fully validating p2sh transactions
 			@return Returns true if all checks succeed
 		 */
-		bool ConnectInputs(Wallet::CTxDB& txdb, MapPrevTx inputs,
+		bool ConnectInputs(LLD::CIndexDB& indexdb, MapPrevTx inputs,
 						   std::map<uint512, CTxIndex>& mapTestPool, const CDiskTxPos& posThisTx,
 						   const CBlockIndex* pindexBlock, bool fBlock, bool fMiner);
 		bool ClientConnectInputs();
 		bool CheckTransaction() const;
-		bool AcceptToMemoryPool(Wallet::CTxDB& txdb, bool fCheckInputs=true, bool* pfMissingInputs=NULL);
+		bool AcceptToMemoryPool(LLD::CIndexDB& indexdb, bool fCheckInputs=true, bool* pfMissingInputs=NULL);
 	
 
 	protected:
@@ -1153,7 +1170,7 @@ namespace Core
 		int GetDepthInMainChain() const { CBlockIndex *pindexRet; return GetDepthInMainChain(pindexRet); }
 		bool IsInMainChain() const { return GetDepthInMainChain() > 0; }
 		int GetBlocksToMaturity() const;
-		bool AcceptToMemoryPool(Wallet::CTxDB& txdb, bool fCheckInputs=true);
+		bool AcceptToMemoryPool(LLD::CIndexDB& indexdb, bool fCheckInputs=true);
 		bool AcceptToMemoryPool();
 	};
 
@@ -1503,10 +1520,10 @@ namespace Core
 		}
 
 
-		bool DisconnectBlock(Wallet::CTxDB& txdb, CBlockIndex* pindex);
-		bool ConnectBlock(Wallet::CTxDB& txdb, CBlockIndex* pindex);
+		bool DisconnectBlock(LLD::CIndexDB& indexdb, CBlockIndex* pindex);
+		bool ConnectBlock(LLD::CIndexDB& indexdb, CBlockIndex* pindex);
 		bool ReadFromDisk(const CBlockIndex* pindex, bool fReadTransactions=true);
-		bool SetBestChain(Wallet::CTxDB& txdb, CBlockIndex* pindexNew);
+		bool SetBestChain(LLD::CIndexDB& indexdb, CBlockIndex* pindexNew);
 		bool AddToBlockIndex(unsigned int nFile, unsigned int nBlockPos);
 		bool CheckBlock() const;
 		
@@ -1771,6 +1788,7 @@ namespace Core
 				READWRITE(hashNext);
 				READWRITE(nFile);
 				READWRITE(nBlockPos);
+				READWRITE(nMint);
 				READWRITE(nMoneySupply);
 				READWRITE(nChannelHeight);
 				READWRITE(nChainTrust);
@@ -1778,10 +1796,11 @@ namespace Core
 				READWRITE(nCoinbaseRewards[0]);
 				READWRITE(nCoinbaseRewards[1]);
 				READWRITE(nCoinbaseRewards[2]);
-				
 				READWRITE(nReleasedReserve[0]);
 				READWRITE(nReleasedReserve[1]);
 				READWRITE(nReleasedReserve[2]);
+				
+				//READWRITE(PendingCheckpoint);
 			}
 
 			// block header
@@ -1967,7 +1986,7 @@ namespace Core
 		std::map<uint512, CTransaction> mapTx;
 		std::map<COutPoint, CInPoint> mapNextTx;
 
-		bool accept(Wallet::CTxDB& txdb, CTransaction &tx,
+		bool accept(LLD::CIndexDB& indexdb, CTransaction &tx,
 					bool fCheckInputs, bool* pfMissingInputs);
 		bool addUnchecked(CTransaction &tx);
 		bool remove(CTransaction &tx);

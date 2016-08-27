@@ -89,7 +89,8 @@ OBJS= \
 	build/mining.o \
 	build/transaction.o \
 	build/global.o \
-	build/keychain.o
+	build/keychain.o \
+	build/index.o
 
 
 

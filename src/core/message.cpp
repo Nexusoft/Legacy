@@ -11,6 +11,8 @@
 #include "../wallet/db.h"
 #include "../util/ui_interface.h"
 
+#include "../LLD/index.h"
+
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
@@ -65,7 +67,7 @@ namespace Core
 	//
 
 
-	bool AlreadyHave(Wallet::CTxDB& txdb, const Net::CInv& inv)
+	bool AlreadyHave(LLD::CIndexDB& indexdb, const Net::CInv& inv)
 	{
 		switch (inv.type)
 		{
@@ -78,7 +80,7 @@ namespace Core
 				}
 			return txInMap ||
 				   mapOrphanTransactions.count(inv.hash.getuint512()) ||
-				   txdb.ContainsTx(inv.hash.getuint512());
+				   indexdb.ContainsTx(inv.hash.getuint512());
 			}
 
 		case Net::MSG_BLOCK:
@@ -299,7 +301,7 @@ namespace Core
 					break;
 				}
 			}
-			Wallet::CTxDB txdb("r");
+			LLD::CIndexDB indexdb("r");
 			for (unsigned int nInv = 0; nInv < vInv.size(); nInv++)
 			{
 				const Net::CInv &inv = vInv[nInv];
@@ -308,7 +310,7 @@ namespace Core
 					return true;
 				pfrom->AddInventoryKnown(inv);
 
-				bool fAlreadyHave = AlreadyHave(txdb, inv);
+				bool fAlreadyHave = AlreadyHave(indexdb, inv);
 				if (fDebug)
 					printg("  got inventory: %s  %s\n", inv.ToString().c_str(), fAlreadyHave ? "have" : "new");
 
@@ -476,7 +478,7 @@ namespace Core
 			vector<uint512> vWorkQueue;
 			vector<uint512> vEraseQueue;
 			CDataStream vMsg(vRecv);
-			Wallet::CTxDB txdb("r");
+			LLD::CIndexDB indexdb("r");
 			CTransaction tx;
 			vRecv >> tx;
 
@@ -484,7 +486,7 @@ namespace Core
 			pfrom->AddInventoryKnown(inv);
 
 			bool fMissingInputs = false;
-			if (tx.AcceptToMemoryPool(txdb, true, &fMissingInputs))
+			if (tx.AcceptToMemoryPool(indexdb, true, &fMissingInputs))
 			{
 				SyncWithWallets(tx, NULL, true);
 				RelayMessage(inv, vMsg);
@@ -506,7 +508,7 @@ namespace Core
 						Net::CInv inv(Net::MSG_TX, tx.GetHash());
 						bool fMissingInputs2 = false;
 
-						if (tx.AcceptToMemoryPool(txdb, true, &fMissingInputs2))
+						if (tx.AcceptToMemoryPool(indexdb, true, &fMissingInputs2))
 						{
 							printf("   accepted orphan tx %s\n", inv.hash.ToString().substr(0,10).c_str());
 							SyncWithWallets(tx, NULL, true);
@@ -863,11 +865,11 @@ namespace Core
 			//
 			vector<Net::CInv> vGetData;
 			int64 nNow = GetUnifiedTimestamp() * 1000000;
-			Wallet::CTxDB txdb("r");
+			LLD::CIndexDB CIndexDB("r");
 			while (!pto->mapAskFor.empty() && (*pto->mapAskFor.begin()).first <= nNow)
 			{
 				const Net::CInv& inv = (*pto->mapAskFor.begin()).second;
-				if (!AlreadyHave(txdb, inv))
+				if (!AlreadyHave(CIndexDB, inv))
 				{
 					printf("sending getdata: %s\n", inv.ToString().c_str());
 					vGetData.push_back(inv);

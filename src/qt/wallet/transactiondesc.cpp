@@ -232,13 +232,14 @@ QString TransactionDesc::toHTML(Wallet::CWallet *wallet, Wallet::CWalletTx &wtx)
         strHTML += QString("<b>") + tr("Transaction ID:") + "</b> " + wtx.GetHash().ToString().c_str() + "<br>";
 
         if (wtx.IsCoinBase())
-            strHTML += QString("<br>") + tr("Generated coins must wait 120 blocks before they can be spent.  When you generated this block, it was broadcast to the network to be added to the block chain.  If it fails to get into the chain, it will change to \"not accepted\" and not be spendable.  This may occasionally happen if another node generates a block within a few seconds of yours.") + "<br>";
+            strHTML += QString("<br>") + tr("Generated Nexus must wait 120 blocks before they can be spent.  When you generated this block, it was broadcast to the network to be added to the block chain.  If it fails to get into the chain, it will change to \"not accepted\" and not be spendable.  This may occasionally happen if another node generates a block within a few seconds of yours.") + "<br>";
         if (wtx.IsCoinStake())
-            strHTML += QString("<br>") + tr("Staked coins must wait 120 blocks before they can return to balance and be spent.  When you generated this proof-of-stake block, it was broadcast to the network to be added to the block chain.  If it fails to get into the chain, it will change to \"not accepted\" and not be a valid stake.  This may occasionally happen if another node generates a proof-of-stake block within a few seconds of yours.") + "<br>";
+            strHTML += QString("<br>") + tr("Staked Nexus must wait 120 blocks before they can return to balance and be spent.  When you generated this proof-of-stake block, it was broadcast to the network to be added to the block chain.  If it fails to get into the chain, it will change to \"not accepted\" and not be a valid stake.  This may occasionally happen if another node generates a proof-of-stake block within a few seconds of yours.") + "<br>";
 
         //
         // Debug view
         //
+		
         if (fDebug)
         {
             strHTML += "<hr><br>Debug information<br><br>";
@@ -252,7 +253,7 @@ QString TransactionDesc::toHTML(Wallet::CWallet *wallet, Wallet::CWalletTx &wtx)
             strHTML += "<br><b>Transaction:</b><br>";
             strHTML += GUIUtil::HtmlEscape(wtx.ToString(), true);
 
-            Wallet::CTxDB txdb("r"); // To fetch source txouts
+            LLD::CIndexDB indexdb("r"); // To fetch source txouts
 
             strHTML += "<br><b>Inputs:</b>";
             strHTML += "<ul>";
@@ -264,7 +265,7 @@ QString TransactionDesc::toHTML(Wallet::CWallet *wallet, Wallet::CWalletTx &wtx)
                     Core::COutPoint prevout = txin.prevout;
 
                     Core::CTransaction prev;
-                    if(txdb.ReadDiskTx(prevout.hash, prev))
+                    if(indexdb.ReadDiskTx(prevout.hash, prev))
                     {
                         if (prevout.n < prev.vout.size())
                         {

@@ -14,6 +14,8 @@
 #include "rpcserver.h"
 #include "net.h"
 
+#include "../LLD/index.h"
+
 #undef printf
 #include <boost/asio.hpp>
 #include <boost/filesystem.hpp>
@@ -845,16 +847,14 @@ namespace Net
 		Core::CTxIndex txindex;
 		Core::CTransaction cTransaction;
 		
-		Wallet::CTxDB txdb("cr");
-		if(!txdb.ReadTxIndex(hash, txindex))
+		LLD::CIndexDB indexdb("cr");
+		if(!indexdb.ReadTxIndex(hash, txindex))
 		{
-			txdb.Close();
 			throw JSONRPCError(-5, "Invalid transaction id");
 		}
 		
 		if(!cTransaction.ReadFromDisk(txindex.pos))
 		{
-			txdb.Close();
 			throw JSONRPCError(-5, "Failed to Read Transaction");
 		}
 		
@@ -880,8 +880,6 @@ namespace Net
 			Wallet::NexusAddress cAddress;
 			if(!Wallet::ExtractAddress(txout.scriptPubKey, cAddress))
 			{
-				txdb.Close();
-				
 				throw JSONRPCError(-5, "Unable to Extract Output Address");
 			}
 				
@@ -896,16 +894,13 @@ namespace Net
 				Core::CTransaction tx;
 				Core::CTxIndex txind;
 				
-				if(!txdb.ReadTxIndex(txin.prevout.hash, txind))
+				if(!indexdb.ReadTxIndex(txin.prevout.hash, txind))
 				{
-					txdb.Close();
-					
 					throw JSONRPCError(-5, "Invalid transaction id");
 				}
 			
 				if(!tx.ReadFromDisk(txind.pos))
 				{
-					txdb.Close();
 					
 					throw JSONRPCError(-5, "Failed to Read Transaction");
 				}
@@ -913,7 +908,6 @@ namespace Net
 				Wallet::NexusAddress cAddress;
 				if(!Wallet::ExtractAddress(tx.vout[txin.prevout.n].scriptPubKey, cAddress))
 				{
-					txdb.Close();
 					
 					throw JSONRPCError(-5, "Unable to Extract Input Address");
 				}
@@ -925,8 +919,6 @@ namespace Net
 		}
 		
 		entry.push_back(Pair("outputs", txoutputs));
-		
-		txdb.Close();
 		
 		return entry;
 	}

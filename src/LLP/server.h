@@ -76,12 +76,14 @@ namespace LLP
 			for(;;)
 			{
 				/** Keep data threads at 100 FPS Maximum. **/
-				Sleep(10);
+				Sleep(5);
 				
 				/** Check all connections for data and packets. **/
 				int nSize = CONNECTIONS.size();
 				for(int nIndex = 0; nIndex < nSize; nIndex++)
 				{
+					Sleep(5);
+					
 					try
 					{
 						

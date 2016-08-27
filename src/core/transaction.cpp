@@ -11,6 +11,8 @@
 #include "../wallet/db.h"
 #include "../util/ui_interface.h"
 
+#include "../LLD/index.h"
+
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
@@ -109,10 +111,10 @@ namespace Core
 	// CTransaction and CTxIndex
 	//
 
-	bool CTransaction::ReadFromDisk(Wallet::CTxDB& txdb, COutPoint prevout, CTxIndex& txindexRet)
+	bool CTransaction::ReadFromDisk(LLD::CIndexDB& indexdb, COutPoint prevout, CTxIndex& txindexRet)
 	{
 		SetNull();
-		if (!txdb.ReadTxIndex(prevout.hash, txindexRet))
+		if (!indexdb.ReadTxIndex(prevout.hash, txindexRet))
 			return false;
 		if (!ReadFromDisk(txindexRet.pos))
 			return false;
@@ -124,17 +126,17 @@ namespace Core
 		return true;
 	}
 
-	bool CTransaction::ReadFromDisk(Wallet::CTxDB& txdb, COutPoint prevout)
+	bool CTransaction::ReadFromDisk(LLD::CIndexDB& indexdb, COutPoint prevout)
 	{
 		CTxIndex txindex;
-		return ReadFromDisk(txdb, prevout, txindex);
+		return ReadFromDisk(indexdb, prevout, txindex);
 	}
 
 	bool CTransaction::ReadFromDisk(COutPoint prevout)
 	{
-		Wallet::CTxDB txdb("r");
+		LLD::CIndexDB indexdb("r");
 		CTxIndex txindex;
-		return ReadFromDisk(txdb, prevout, txindex);
+		return ReadFromDisk(indexdb, prevout, txindex);
 	}
 
 	bool CTransaction::IsStandard() const
@@ -254,7 +256,7 @@ namespace Core
 			{
 				// Load the block this tx is in
 				CTxIndex txindex;
-				if (!Wallet::CTxDB("r").ReadTxIndex(GetHash(), txindex))
+				if (!LLD::CIndexDB("r").ReadTxIndex(GetHash(), txindex))
 					return 0;
 				if (!blockTmp.ReadFromDisk(txindex.pos.nFile, txindex.pos.nBlockPos))
 					return 0;
@@ -355,7 +357,7 @@ namespace Core
 		return true;
 	}
 
-	bool CTxMemPool::accept(Wallet::CTxDB& txdb, CTransaction &tx, bool fCheckInputs,
+	bool CTxMemPool::accept(LLD::CIndexDB& indexdb, CTransaction &tx, bool fCheckInputs,
 							bool* pfMissingInputs)
 	{
 		if (pfMissingInputs)
@@ -388,7 +390,7 @@ namespace Core
 				return false;
 		}
 		if (fCheckInputs)
-			if (txdb.ContainsTx(hash))
+			if (indexdb.ContainsTx(hash))
 				return false;
 
 		// Check for conflicts with in-memory transactions
@@ -424,7 +426,7 @@ namespace Core
 			MapPrevTx mapInputs;
 			map<uint512, CTxIndex> mapUnused;
 			bool fInvalid = false;
-			if (!tx.FetchInputs(txdb, mapUnused, false, false, mapInputs, fInvalid))
+			if (!tx.FetchInputs(indexdb, mapUnused, false, false, mapInputs, fInvalid))
 			{
 				if (fInvalid)
 					return error("CTxMemPool::accept() : FetchInputs found invalid tx %s", hash.ToString().substr(0,10).c_str());
@@ -475,7 +477,7 @@ namespace Core
 
 			// Check against previous transactions
 			// This is done last to help prevent CPU exhaustion denial-of-service attacks.
-			if (!tx.ConnectInputs(txdb, mapInputs, mapUnused, CDiskTxPos(1,1,1), pindexBest, false, false))
+			if (!tx.ConnectInputs(indexdb, mapInputs, mapUnused, CDiskTxPos(1,1,1), pindexBest, false, false))
 			{
 				return error("CTxMemPool::accept() : ConnectInputs failed %s", hash.ToString().substr(0,10).c_str());
 			}
@@ -501,9 +503,9 @@ namespace Core
 		return true;
 	}
 
-	bool CTransaction::AcceptToMemoryPool(Wallet::CTxDB& txdb, bool fCheckInputs, bool* pfMissingInputs)
+	bool CTransaction::AcceptToMemoryPool(LLD::CIndexDB& indexdb, bool fCheckInputs, bool* pfMissingInputs)
 	{
-		return mempool.accept(txdb, *this, fCheckInputs, pfMissingInputs);
+		return mempool.accept(indexdb, *this, fCheckInputs, pfMissingInputs);
 	}
 
 	bool CTxMemPool::addUnchecked(CTransaction &tx)
@@ -579,24 +581,24 @@ namespace Core
 	}
 
 
-	bool CMerkleTx::AcceptToMemoryPool(Wallet::CTxDB& txdb, bool fCheckInputs)
+	bool CMerkleTx::AcceptToMemoryPool(LLD::CIndexDB& indexdb, bool fCheckInputs)
 	{
 		if (Net::fClient)
 		{
 			if (!IsInMainChain() && !ClientConnectInputs())
 				return false;
-			return CTransaction::AcceptToMemoryPool(txdb, false);
+			return CTransaction::AcceptToMemoryPool(indexdb, false);
 		}
 		else
 		{
-			return CTransaction::AcceptToMemoryPool(txdb, fCheckInputs);
+			return CTransaction::AcceptToMemoryPool(indexdb, fCheckInputs);
 		}
 	}
 
 	bool CMerkleTx::AcceptToMemoryPool()
 	{
-		Wallet::CTxDB txdb("r");
-		return AcceptToMemoryPool(txdb);
+		LLD::CIndexDB indexdb("r");
+		return AcceptToMemoryPool(indexdb);
 	}
 
 	int CTxIndex::GetDepthInMainChain() const
@@ -634,7 +636,7 @@ namespace Core
 
 
 
-	bool CTransaction::DisconnectInputs(Wallet::CTxDB& txdb)
+	bool CTransaction::DisconnectInputs(LLD::CIndexDB& indexdb)
 	{
 		// Relinquish previous transactions' spent pointers
 		if (!IsCoinBase())
@@ -646,7 +648,7 @@ namespace Core
 
 				// Get prev txindex from disk
 				CTxIndex txindex;
-				if (!txdb.ReadTxIndex(prevout.hash, txindex))
+				if (!indexdb.ReadTxIndex(prevout.hash, txindex))
 					return error("DisconnectInputs() : ReadTxIndex failed");
 
 				if (prevout.n >= txindex.vSpent.size())
@@ -656,7 +658,7 @@ namespace Core
 				txindex.vSpent[prevout.n].SetNull();
 
 				// Write back
-				if (!txdb.UpdateTxIndex(prevout.hash, txindex))
+				if (!indexdb.UpdateTxIndex(prevout.hash, txindex))
 					return error("DisconnectInputs() : UpdateTxIndex failed");
 			}
 		}
@@ -665,13 +667,13 @@ namespace Core
 		// This can fail if a duplicate of this transaction was in a chain that got
 		// reorganized away. This is only possible if this transaction was completely
 		// spent, so erasing it would be a no-op anway.
-		txdb.EraseTxIndex(*this);
+		indexdb.EraseTxIndex(*this);
 
 		return true;
 	}
 
 
-	bool CTransaction::FetchInputs(Wallet::CTxDB& txdb, const map<uint512, CTxIndex>& mapTestPool,
+	bool CTransaction::FetchInputs(LLD::CIndexDB& indexdb, const map<uint512, CTxIndex>& mapTestPool,
 								   bool fBlock, bool fMiner, MapPrevTx& inputsRet, bool& fInvalid)
 	{
 		// FetchInputs can return false either because we just haven't seen some inputs
@@ -700,7 +702,7 @@ namespace Core
 			else
 			{
 				// Read txindex from txdb
-				fFound = txdb.ReadTxIndex(prevout.hash, txindex);
+				fFound = indexdb.ReadTxIndex(prevout.hash, txindex);
 			}
 			if (!fFound && (fBlock || fMiner))
 				return fMiner ? false : error("FetchInputs() : %s prev tx %s index entry not found", GetHash().ToString().substr(0,10).c_str(),  prevout.hash.ToString().substr(0,10).c_str());
@@ -787,7 +789,7 @@ namespace Core
 		return nSigOps;
 	}
 
-	bool CTransaction::ConnectInputs(Wallet::CTxDB& txdb, MapPrevTx inputs,
+	bool CTransaction::ConnectInputs(LLD::CIndexDB& indexdb, MapPrevTx inputs,
 									 map<uint512, CTxIndex>& mapTestPool, const CDiskTxPos& posThisTx,
 									 const CBlockIndex* pindexBlock, bool fBlock, bool fMiner)
 	{
@@ -860,7 +862,7 @@ namespace Core
 			if (IsCoinStake())
 			{
 				int64 nInterest;
-				GetCoinstakeInterest(txdb, nInterest);
+				GetCoinstakeInterest(indexdb, nInterest);
 				
 				printf("ConnectInputs() : %f Value Out, %f Interest, %f Expected\n", (double)vout[0].nValue / COIN, (double)nInterest / COIN, (double)(nInterest + nValueIn) / COIN);
 				if (vout[0].nValue != (nInterest + nValueIn))
@@ -914,7 +916,7 @@ namespace Core
 
 }
 
-bool Wallet::CWalletTx::AcceptWalletTransaction(Wallet::CTxDB& txdb, bool fCheckInputs)
+bool Wallet::CWalletTx::AcceptWalletTransaction(LLD::CIndexDB& indexdb, bool fCheckInputs)
 {
 
 	{
@@ -925,19 +927,19 @@ bool Wallet::CWalletTx::AcceptWalletTransaction(Wallet::CTxDB& txdb, bool fCheck
 			if (!(tx.IsCoinBase() || tx.IsCoinStake()))
 			{
 				uint512 hash = tx.GetHash();
-				if (!Core::mempool.exists(hash) && !txdb.ContainsTx(hash))
-					tx.AcceptToMemoryPool(txdb, fCheckInputs);
+				if (!Core::mempool.exists(hash) && !indexdb.ContainsTx(hash))
+					tx.AcceptToMemoryPool(indexdb, fCheckInputs);
 			}
 		}
-		return AcceptToMemoryPool(txdb, fCheckInputs);
+		return AcceptToMemoryPool(indexdb, fCheckInputs);
 	}
 	return false;
 }
 
 bool Wallet::CWalletTx::AcceptWalletTransaction()
 {
-	Wallet::CTxDB txdb("r");
-	return AcceptWalletTransaction(txdb);
+	LLD::CIndexDB indexdb("r");
+	return AcceptWalletTransaction(indexdb);
 }
 
 

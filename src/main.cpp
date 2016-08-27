@@ -334,14 +334,18 @@ bool AppInit2(int argc, char* argv[])
     }
 #endif
 
+    printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
+    printf("Nexus version %s (%s)\n", FormatFullVersion().c_str(), CLIENT_DATE.c_str());
+    printf("Default data directory %s\n", GetDefaultDataDir().string().c_str());
+
+	InitMessage(_("Initializing LLD Keychains..."));
+	LLD::RegisterKeychain("blkindex", "blkindex");
+	
 	if(GetBoolArg("-unified", false)) {
 		InitMessage(_("Initializing Core LLP..."));
 		printf("Initializing Core LLP...\n");
 		LLP_SERVER = new LLP::Server<LLP::CoreLLP>(fTestNet ? TESTNET_CORE_LLP_PORT : NEXUS_CORE_LLP_PORT, 5, true, 1, 1, 1);
 	}
-	
-	InitMessage(_("Initializing LLD Keychains..."));
-	LLD::RegisterKeychain("blockindex", "blockindex");
 
     InitMessage(_("Initializing Unified Time..."));
     printf("Initializing Unified Time...\n");
@@ -357,10 +361,6 @@ bool AppInit2(int argc, char* argv[])
 	
     if (!fDebug)
         ShrinkDebugFile();
-		
-    printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
-    printf("Nexus version %s (%s)\n", FormatFullVersion().c_str(), CLIENT_DATE.c_str());
-    printf("Default data directory %s\n", GetDefaultDataDir().string().c_str());
 	
     /** Locks to the Local Database. This will keep another process from using the Nexus Databases. **/
     boost::filesystem::path pathLockFile = GetDataDir() / ".lock";

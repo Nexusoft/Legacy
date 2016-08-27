@@ -13,6 +13,8 @@
 #include "../wallet/db.h"
 #include "../util/ui_interface.h"
 
+#include "../LLD/index.h"
+
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
@@ -775,7 +777,7 @@ namespace Core
 		int64 nFees = 0;
 		{
 			LOCK2(cs_main, mempool.cs);
-			Wallet::CTxDB txdb("r");
+			LLD::CIndexDB indexdb("r");
 
 			// Priority order to process transactions
 			list<COrphan> vOrphan; // list memory doesn't move
@@ -799,7 +801,7 @@ namespace Core
 					// Read prev transaction
 					CTransaction txPrev;
 					CTxIndex txindex;
-					if (!txPrev.ReadFromDisk(txdb, txin.prevout, txindex))
+					if (!txPrev.ReadFromDisk(indexdb, txin.prevout, txindex))
 					{
 						// Has to wait for dependencies
 						if (!porphan)
@@ -892,7 +894,7 @@ namespace Core
 				map<uint512, CTxIndex> mapTestPoolTmp(mapTestPool);
 				MapPrevTx mapInputs;
 				bool fInvalid;
-				if (!tx.FetchInputs(txdb, mapTestPoolTmp, false, true, mapInputs, fInvalid))
+				if (!tx.FetchInputs(indexdb, mapTestPoolTmp, false, true, mapInputs, fInvalid))
 				{
 					if(fDebug)
 						printf("AddTransactions() : Failed to get Inputs %s\n", tx.GetHash().ToString().substr(0, 10).c_str());
@@ -921,7 +923,7 @@ namespace Core
 					continue;
 				}
 
-				if (!tx.ConnectInputs(txdb, mapInputs, mapTestPoolTmp, CDiskTxPos(1,1,1), pindexPrev, false, true))
+				if (!tx.ConnectInputs(indexdb, mapInputs, mapTestPoolTmp, CDiskTxPos(1,1,1), pindexPrev, false, true))
 				{
 					if(fDebug)
 						printf("AddTransactions() : Failed to Connect Inputs %s\n", tx.GetHash().ToString().substr(0, 10).c_str());
@@ -1093,15 +1095,13 @@ namespace Core
 			else
 			{
 				/** Calculate the Average Coinstake Age. **/
-				Wallet::CTxDB txdb("r");
-				if(!pblock->vtx[0].GetCoinstakeAge(txdb, nCoinAge))
+				LLD::CIndexDB indexdb("r");
+				if(!pblock->vtx[0].GetCoinstakeAge(indexdb, nCoinAge))
 				{
-					txdb.Close();
 					error("Stake Minter : Failed to Get Coinstake Age.");
 					
 					continue;
 				}
-				txdb.Close();
 				
 				/** Trust Weight For Genesis Transaction Reaches Maximum at 90 day Limit. **/
 				nTrustWeight = min(17.5, (((16.5 * log(((2.0 * nCoinAge) / (60 * 60 * 24 * 28 * 3)) + 1.0)) / log(3))) + 1.0);

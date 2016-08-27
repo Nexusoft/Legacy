@@ -303,7 +303,7 @@ namespace Wallet
 		bool WriteHashBestChain(uint1024 hashBestChain);
 		bool ReadCheckpointPubKey(std::string& strPubKey);
 		bool WriteCheckpointPubKey(const std::string& strPubKey);
-		bool LoadBlockIndex();
+		bool MigrateToLLD();
 	};
 
 

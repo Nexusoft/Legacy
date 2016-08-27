@@ -11,6 +11,8 @@
 #include "crypter.h"
 #include "../util/ui_interface.h"
 
+#include "../LLD/index.h"
+
 using namespace std;
 
 namespace Wallet
@@ -601,7 +603,7 @@ namespace Wallet
 		}
 	}
 
-	void CWalletTx::AddSupportingTransactions(CTxDB& txdb)
+	void CWalletTx::AddSupportingTransactions(LLD::CIndexDB& indexdb)
 	{
 		vtxPrev.clear();
 
@@ -612,7 +614,7 @@ namespace Wallet
 			BOOST_FOREACH(const Core::CTxIn& txin, vin)
 				vWorkQueue.push_back(txin.prevout.hash);
 
-			// This critsect is OK because txdb is already open
+			// This critsect is OK because indexdb is already open
 			{
 				LOCK(pwallet->cs_wallet);
 				map<uint512, const CMerkleTx*> mapWalletPrev;
@@ -636,9 +638,9 @@ namespace Wallet
 					{
 						tx = *mapWalletPrev[hash];
 					}
-					else if (!Net::fClient && txdb.ReadDiskTx(hash, tx))
+					else if (!Net::fClient && indexdb.ReadDiskTx(hash, tx))
 					{
-						;
+					
 					}
 					else
 					{
@@ -702,7 +704,7 @@ namespace Wallet
 
 	void CWallet::ReacceptWalletTransactions()
 	{
-		CTxDB txdb("r");
+		LLD::CIndexDB indexdb("r");
 		bool fRepeat = true;
 		while (fRepeat)
 		{
@@ -717,7 +719,7 @@ namespace Wallet
 
 				Core::CTxIndex txindex;
 				bool fUpdated = false;
-				if (txdb.ReadTxIndex(wtx.GetHash(), txindex))
+				if (indexdb.ReadTxIndex(wtx.GetHash(), txindex))
 				{
 					// Update fSpent if a tx got spent somewhere else by a copy of wallet.dat
 					if (txindex.vSpent.size() != wtx.vout.size())
@@ -747,7 +749,7 @@ namespace Wallet
 				{
 					// Reaccept any txes of ours that aren't already in a block
 					if (!(wtx.IsCoinBase() || wtx.IsCoinStake()))
-						wtx.AcceptWalletTransaction(txdb, false);
+						wtx.AcceptWalletTransaction(indexdb, false);
 				}
 			}
 			if (!vMissingTx.empty())
@@ -759,21 +761,21 @@ namespace Wallet
 		}
 	}
 
-	void CWalletTx::RelayWalletTransaction(CTxDB& txdb)
+	void CWalletTx::RelayWalletTransaction(LLD::CIndexDB& indexdb)
 	{
 		BOOST_FOREACH(const Core::CMerkleTx& tx, vtxPrev)
 		{
 			if (!(tx.IsCoinBase() || tx.IsCoinStake()))
 			{
 				uint512 hash = tx.GetHash();
-				if (!txdb.ContainsTx(hash))
+				if (!indexdb.ContainsTx(hash))
 					RelayMessage(Net::CInv(Net::MSG_TX, hash), (Core::CTransaction)tx);
 			}
 		}
 		if (!(IsCoinBase() || IsCoinStake()))
 		{
 			uint512 hash = GetHash();
-			if (!txdb.ContainsTx(hash))
+			if (!indexdb.ContainsTx(hash))
 			{
 				printf("Relaying wtx %s\n", hash.ToString().substr(0,10).c_str());
 				RelayMessage(Net::CInv(Net::MSG_TX, hash), (Core::CTransaction)*this);
@@ -783,8 +785,8 @@ namespace Wallet
 
 	void CWalletTx::RelayWalletTransaction()
 	{
-	   CTxDB txdb("r");
-	   RelayWalletTransaction(txdb);
+	   LLD::CIndexDB indexdb("r");
+	   RelayWalletTransaction(indexdb);
 	}
 
 	void CWallet::ResendWalletTransactions()
@@ -807,7 +809,7 @@ namespace Wallet
 
 		// Rebroadcast any of our txes that aren't in a block yet
 		printf("ResendWalletTransactions()\n");
-		CTxDB txdb("r");
+		LLD::CIndexDB indexdb("r");
 		{
 			LOCK(cs_wallet);
 			// Sort them in chronological order
@@ -824,7 +826,7 @@ namespace Wallet
 			{
 				CWalletTx& wtx = *item.second;
 				if (wtx.CheckTransaction())
-					wtx.RelayWalletTransaction(txdb);
+					wtx.RelayWalletTransaction(indexdb);
 				else
 					printf("ResendWalletTransactions() : CheckTransaction failed for transaction %s\n", wtx.GetHash().ToString().c_str());
 			}
@@ -1157,8 +1159,8 @@ namespace Wallet
 		{
 			LOCK2(Core::cs_main, cs_wallet);
 			
-			// txdb must be opened before the mapWallet lock
-			CTxDB txdb("r");
+			// indexdb must be opened before the mapWallet lock
+			LLD::CIndexDB indexdb("r");
 			{
 				nFeeRet = Core::nTransactionFee;
 				loop
@@ -1260,7 +1262,7 @@ namespace Wallet
 					}
 
 					// Fill vtxPrev by copying from previous transactions vtxPrev
-					wtxNew.AddSupportingTransactions(txdb);
+					wtxNew.AddSupportingTransactions(indexdb);
 					wtxNew.fTimeReceivedIsTxTime = true;
 
 					break;
@@ -1654,12 +1656,12 @@ namespace Wallet
 		for (map<uint512, CWalletTx>::iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
 			vCoins.push_back(&(*it).second);
 
-		CTxDB txdb("r");
+		LLD::CIndexDB indexdb("r");
 		BOOST_FOREACH(CWalletTx* pcoin, vCoins)
 		{
 			// Find the corresponding transaction index
 			Core::CTxIndex txindex;
-			if (!txdb.ReadTxIndex(pcoin->GetHash(), txindex))
+			if (!indexdb.ReadTxIndex(pcoin->GetHash(), txindex))
 				continue;
 			for (int n=0; n < pcoin->vout.size(); n++)
 			{

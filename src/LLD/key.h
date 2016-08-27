@@ -305,6 +305,27 @@ namespace LLD
 			
 			return true;
 		}
+		
+		/** Simple Erase for now, not efficient in Data Usage of HD but quick to get erase function working. **/
+		bool Erase(const std::vector<unsigned char> vKey)
+		{
+			/** Get the Sector Key. **/
+			SectorKey cKey;
+			if(!Get(vKey, cKey))
+				return error("SectorDatabase:Erase() : Failed to Get the Sector Key.");
+			
+			/** Set the Key State to Empty. **/
+			cKey.nState = EMPTY;
+			
+			/** Write the Key Back into Database. **/
+			if(!Put(cKey))
+				return error("SectorDatabase:Erase() : Failed to Rewrite Sector Key.");
+				
+			/** Remove the Sector Key from the Memory Map. **/
+			mapKeys.erase(vKey);
+			
+			return true;
+		}
 	};
 }
 

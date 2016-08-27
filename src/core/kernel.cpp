@@ -14,6 +14,8 @@
 #include "../wallet/wallet.h"
 #include "../main.h" //for pwalletmain
 
+#include "../LLD/index.h"
+
 using namespace std;
 
 /** Locate the Add Coinstake Inputs Method Here for access. **/
@@ -44,14 +46,14 @@ namespace Wallet
 		vector<const CWalletTx*> vInputs;
 		txNew.vout[0].nValue = 0;
 			
-		CTxDB txdb("r");
+		LLD::CIndexDB indexdb("r");
 		BOOST_FOREACH(PAIRTYPE(const CWalletTx*, unsigned int) pcoin, setCoins)
 		{
 			if(txNew.vout[0].nValue > Core::MAX_STAKE_WEIGHT || txNew.vout[0].nValue > nBalance - nReserveBalance)
 				break;
 			
 			Core::CTxIndex txindex;
-			if (!txdb.ReadTxIndex(pcoin.first->GetHash(), txindex))
+			if (!indexdb.ReadTxIndex(pcoin.first->GetHash(), txindex))
 				continue;
 			
 			/** Get the Block where the Transaction Originates from. **/
@@ -74,12 +76,8 @@ namespace Wallet
 			
 		/** Set the Interest for the Coinstake Transaction. **/
 		int64 nInterest;
-		if(!txNew.GetCoinstakeInterest(txdb, nInterest))
-		{
-			txdb.Close();
-			
+		if(!txNew.GetCoinstakeInterest(indexdb, nInterest))
 			return error("AddCoinstakeInputs() : Failed to Get Interest");
-		}
 		
 		txNew.vout[0].nValue += nInterest;
 			
@@ -90,8 +88,6 @@ namespace Wallet
 				return error("AddCoinstakeInputs() : Unable to sign Coinstake Transaction Input.");
 
 		}
-		
-		txdb.Close();
 		
 		return true;
 	}
@@ -163,13 +159,11 @@ namespace Core
 				return error("CBlock::VerifyStake() : Cannot Include Transactions with Genesis Transaction");
 				
 			/** Calculate the Average Coinstake Age. **/
-			Wallet::CTxDB txdb("r");
-			if(!vtx[0].GetCoinstakeAge(txdb, nCoinAge))
+			LLD::CIndexDB indexdb("r");
+			if(!vtx[0].GetCoinstakeAge(indexdb, nCoinAge))
 			{
-				txdb.Close();
 				return error("CBlock::VerifyStake() : Failed to Get Coinstake Age.");
 			}
-			txdb.Close();
 			
 			/** Trust Weight For Genesis Transaction Reaches Maximum at 90 day Limit. **/
 			nTrustWeight = min(17.5, (((16.5 * log(((2.0 * nCoinAge) / (60 * 60 * 24 * 28 * 3)) + 1.0)) / log(3))) + 1.0);
@@ -204,7 +198,7 @@ namespace Core
 	
 	
 	/** Calculate the Age of the current Coinstake. Age is determined by average time from previous transactions. **/
-	bool CTransaction::GetCoinstakeAge(Wallet::CTxDB& txdb, uint64& nAge) const
+	bool CTransaction::GetCoinstakeAge(LLD::CIndexDB& indexdb, uint64& nAge) const
 	{
 		/** Output figure to show the amount of coins being staked at their interest rates. **/
 		nAge = 0;
@@ -220,7 +214,7 @@ namespace Core
 			CTxIndex txindex;
 			
 			/** Ignore Outputs that are not in the Main Chain. **/
-			if (!txPrev.ReadFromDisk(txdb, vin[nIndex].prevout, txindex))
+			if (!txPrev.ReadFromDisk(indexdb, vin[nIndex].prevout, txindex))
 				return error("GetCoinstakeAge() : Invalid Previous Transaction");
 
 			/** Read the Previous Transaction's Block from Disk. **/
@@ -242,7 +236,7 @@ namespace Core
 	
 	
 	/** Obtains the proper compounded interest from given Coin Stake Transaction. **/
-	bool CTransaction::GetCoinstakeInterest(Wallet::CTxDB& txdb, int64& nInterest) const
+	bool CTransaction::GetCoinstakeInterest(LLD::CIndexDB& indexdb, int64& nInterest) const
 	{
 		/** Check that the transaction is Coinstake. **/
 		if(!IsCoinStake())
@@ -277,7 +271,7 @@ namespace Core
 			CTxIndex txindex;
 			
 			/** Ignore Outputs that are not in the Main Chain. **/
-			if (!txPrev.ReadFromDisk(txdb, vin[nIndex].prevout, txindex))
+			if (!txPrev.ReadFromDisk(indexdb, vin[nIndex].prevout, txindex))
 				return error("CTransaction::GetCoinstakeInterest() : Invalid Previous Transaction");
 
 			/** Read the Previous Transaction's Block from Disk. **/

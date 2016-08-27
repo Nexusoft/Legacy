@@ -619,12 +619,12 @@ namespace Wallet
 		int64 GetTxTime() const;
 		int GetRequestCount() const;
 
-		void AddSupportingTransactions(CTxDB& txdb);
+		void AddSupportingTransactions(LLD::CIndexDB& indexdb);
 
-		bool AcceptWalletTransaction(CTxDB& txdb, bool fCheckInputs=true);
+		bool AcceptWalletTransaction(LLD::CIndexDB& indexdb, bool fCheckInputs=true);
 		bool AcceptWalletTransaction();
 
-		void RelayWalletTransaction(CTxDB& txdb);
+		void RelayWalletTransaction(LLD::CIndexDB& indexdb);
 		void RelayWalletTransaction();
 	};
 

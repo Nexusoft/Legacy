@@ -31,6 +31,26 @@ namespace LLD
 		ability to use free space that becomes available upon an erase of a
 		record. Use this Database purely for fixed size structures. Overflow
 		attempts will trigger an error code.
+		
+		TODO:: Add Transactions for Database
+		
+		TransactionStart();
+		TransactionCommit();
+		TransactionAbort();
+		
+		A. Use a Memory map of Keys and Value Pairs to start Transaction.
+		B. Use previous memory map to keep the original Keys and Value pairs.
+		
+		C. Once Transaction is Commited, iterate the memory map and write each one to disk.
+		D. If there is any error in the writing across these, original key and value pairs needs to be rewritten.
+		
+		TransactionStart() -> Erase both Memory maps.
+		TransactionCommit() -> Do the Writing. Erase map on success.
+		TransactionAbort() -> Erase both Memeory maps.
+		
+		
+		TODO:: Add in the Database File Searching from Sector Keys. Allow Multiple Files.
+		
 	**/
 	class SectorDatabase
 	{
@@ -76,7 +96,7 @@ namespace LLD
 		~SectorDatabase() { }
 		
 		/** Initialize Sector Database. **/
-		void Initialize() 
+		void Initialize()
 		{
 			/** Create the Sector Database Directories. **/
 			boost::filesystem::path dir(strBaseLocation);
@@ -89,6 +109,42 @@ namespace LLD
 				std::ofstream cStream(strprintf("%s%s%u.dat", strBaseLocation.c_str(), strBaseName.c_str(), 0).c_str(), std::ios::binary);
 				cStream.close();
 			}
+		}
+		
+		template<typename Key>
+		bool Exists(const Key& key)
+		{
+			/** Serialize Key into Bytes. **/
+			CDataStream ssKey(SER_LLD, DATABASE_VERSION);
+			ssKey.reserve(GetSerializeSize(key, SER_LLD, DATABASE_VERSION));
+			ssKey << key;
+			std::vector<unsigned char> vKey(ssKey.begin(), ssKey.end());
+			
+			/** Read a Record from Binary Data. **/
+			KeyDatabase* SectorKeys = GetKeychain(strKeychainRegistry);
+			if(!SectorKeys)
+				return error("Exists() : Sector Keys not Registered for Name %s\n", strKeychainRegistry.c_str());
+			
+			/** Return the Key existance in the Keychain Database. **/
+			return SectorKeys->HasKey(vKey);
+		}
+		
+		template<typename Key>
+		bool Erase(const Key& key)
+		{
+			/** Serialize Key into Bytes. **/
+			CDataStream ssKey(SER_LLD, DATABASE_VERSION);
+			ssKey.reserve(GetSerializeSize(key, SER_LLD, DATABASE_VERSION));
+			ssKey << key;
+			std::vector<unsigned char> vKey(ssKey.begin(), ssKey.end());
+			
+			/** Read a Record from Binary Data. **/
+			KeyDatabase* SectorKeys = GetKeychain(strKeychainRegistry);
+			if(!SectorKeys)
+				return error("Erase() : Sector Keys not Registered for Name %s\n", strKeychainRegistry.c_str());
+			
+			/** Return the Key existance in the Keychain Database. **/
+			return SectorKeys->Erase(vKey);
 		}
 		
 		template<typename Key, typename Type>
@@ -145,11 +201,15 @@ namespace LLD
 			MUTEX_LOCK(SECTOR_MUTEX);
 			
 			/** Read a Record from Binary Data. **/
-			if(GetKeychain(strKeychainRegistry)->HasKey(vKey))
-			{
+			KeyDatabase* SectorKeys = GetKeychain(strKeychainRegistry);
+			if(!SectorKeys)
+				return error("Get() : Sector Keys not Registered for Name %s\n", strKeychainRegistry.c_str());
+			
+			if(SectorKeys->HasKey(vKey))
+			{	
 				/** Read the Sector Key from Keychain. **/
 				SectorKey cKey;
-				if(!GetKeychain(strKeychainRegistry)->Get(vKey, cKey))
+				if(!SectorKeys->Get(vKey, cKey))
 					return false;
 				
 				/** Open the Stream to Read the data from Sector on File. **/
@@ -177,8 +237,12 @@ namespace LLD
 		{
 			MUTEX_LOCK(SECTOR_MUTEX);
 			
+			KeyDatabase* SectorKeys = GetKeychain(strKeychainRegistry);
+			if(!SectorKeys)
+				return error("Put() : Sector Keys not Registered for Name %s\n", strKeychainRegistry.c_str());
+			
 			/** Write Header if First Update. **/
-			if(!GetKeychain(strKeychainRegistry)->HasKey(vKey))
+			if(!SectorKeys->HasKey(vKey))
 			{
 				/** TODO:: Assign a Sector File based on Database Sizes. **/
 				unsigned short nSectorFile = 0;
@@ -201,13 +265,13 @@ namespace LLD
 				SectorKey cKey(READY, vKey, nSectorFile, nStart, vData.size()); 
 				
 				/** Assign the Key to Keychain. **/
-				GetKeychain(strKeychainRegistry)->Put(cKey);
+				SectorKeys->Put(cKey);
 			}
 			else
 			{
 				/** Get the Sector Key from the Keychain. **/
 				SectorKey cKey;
-				if(!GetKeychain(strKeychainRegistry)->Get(vKey, cKey))
+				if(!SectorKeys->Get(vKey, cKey))
 					return false;
 					
 				/** Open the Stream to Read the data from Sector on File. **/

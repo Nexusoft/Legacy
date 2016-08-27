@@ -12,7 +12,7 @@
 #include "../wallet/db.h"
 #include "../util/ui_interface.h"
 
-#include "../LLD/sector.h"
+#include "../LLD/index.h"
 
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/filesystem.hpp>
@@ -95,11 +95,11 @@ namespace Core
 	void CBlock::UpdateTime() { nTime = std::max(mapBlockIndex[hashPrevBlock]->GetBlockTime() + 1, GetUnifiedTimestamp()); }
 
 	
-	bool CBlock::DisconnectBlock(Wallet::CTxDB& txdb, CBlockIndex* pindex)
+	bool CBlock::DisconnectBlock(LLD::CIndexDB& indexdb, CBlockIndex* pindex)
 	{
 		// Disconnect in reverse order
 		for (int i = vtx.size() - 1; i >= 0; i--)
-			if (!vtx[i].DisconnectInputs(txdb))
+			if (!vtx[i].DisconnectInputs(indexdb))
 				return false;
 
 		// Update block index on disk without changing it in memory.
@@ -108,8 +108,7 @@ namespace Core
 		{
 			CDiskBlockIndex blockindexPrev(pindex->pprev);
 			blockindexPrev.hashNext = 0;
-			LLD::SectorDatabase IndexDB("blockindex", "blockindex");
-			if (!IndexDB.Write(pindex->pprev->nHeight, blockindexPrev))
+			if (!indexdb.WriteBlockIndex(blockindexPrev))
 				return error("DisconnectBlock() : WriteBlockIndex failed");
 		}
 
@@ -121,7 +120,7 @@ namespace Core
 	}
 
 	
-	bool CBlock::ConnectBlock(Wallet::CTxDB& txdb, CBlockIndex* pindex)
+	bool CBlock::ConnectBlock(LLD::CIndexDB& indexdb, CBlockIndex* pindex)
 	{
 
 		// Do not allow blocks that contain transactions which 'overwrite' older transactions,
@@ -132,7 +131,7 @@ namespace Core
 		BOOST_FOREACH(CTransaction& tx, vtx)
 		{
 			CTxIndex txindexOld;
-			if (txdb.ReadTxIndex(tx.GetHash(), txindexOld))
+			if (indexdb.ReadTxIndex(tx.GetHash(), txindexOld))
 			{
 				BOOST_FOREACH(CDiskTxPos &pos, txindexOld.vSpent)
 					if (pos.IsNull())
@@ -164,7 +163,7 @@ namespace Core
 			else
 			{
 				bool fInvalid;
-				if (!tx.FetchInputs(txdb, mapQueuedChanges, true, false, mapInputs, fInvalid))
+				if (!tx.FetchInputs(indexdb, mapQueuedChanges, true, false, mapInputs, fInvalid))
 					return false;
 					
 				printf("ConnectBlock() : Got Inputs %u\n", nIterator);
@@ -183,7 +182,7 @@ namespace Core
 				nValueIn += nTxValueIn;
 				nValueOut += nTxValueOut;
 				
-				if (!tx.ConnectInputs(txdb, mapInputs, mapQueuedChanges, posThisTx, pindex, true, false))
+				if (!tx.ConnectInputs(indexdb, mapInputs, mapQueuedChanges, posThisTx, pindex, true, false))
 					return false;
 			}
 
@@ -196,14 +195,13 @@ namespace Core
 		pindex->nMoneySupply = (pindex->pprev ? pindex->pprev->nMoneySupply : 0) + nValueOut - nValueIn;
 		printf("Generated %f Nexus\n", (double) pindex->nMint / COIN);
 		
-		LLD::SectorDatabase IndexDB("blockindex", "blockindex");
-		if (!IndexDB.Write(pindex->nHeight, CDiskBlockIndex(pindex)))
+		if (!indexdb.WriteBlockIndex(CDiskBlockIndex(pindex)))
 			return error("Connect() : WriteBlockIndex for pindex failed");
 
 		// Write queued txindex changes
 		for (map<uint512, CTxIndex>::iterator mi = mapQueuedChanges.begin(); mi != mapQueuedChanges.end(); ++mi)
 		{
-			if (!txdb.UpdateTxIndex((*mi).first, (*mi).second))
+			if (!indexdb.UpdateTxIndex((*mi).first, (*mi).second))
 				return error("ConnectBlock() : UpdateTxIndex failed");
 		}
 
@@ -219,8 +217,7 @@ namespace Core
 			CDiskBlockIndex blockindexPrev(pindex->pprev);
 			blockindexPrev.hashNext = pindex->GetBlockHash();
 			
-			LLD::SectorDatabase IndexDB("blockindex", "blockindex");
-			if (!IndexDB.Write(pindex->pprev->nHeight, blockindexPrev))
+			if (!indexdb.WriteBlockIndex(blockindexPrev))
 				return error("ConnectBlock() : WriteBlockIndex for blockindexPrev failed");
 		}
 
@@ -241,18 +238,12 @@ namespace Core
 	}
 
 	
-	bool CBlock::SetBestChain(Wallet::CTxDB& txdb, CBlockIndex* pindexNew)
+	bool CBlock::SetBestChain(LLD::CIndexDB& indexdb, CBlockIndex* pindexNew)
 	{
 		uint1024 hash = GetHash();
-
-		if (!txdb.TxnBegin())
-			return error("CBlock::SetBestChain() : TxnBegin failed");
-
 		if (pindexGenesisBlock == NULL && hash == hashGenesisBlock)
 		{
-			txdb.WriteHashBestChain(hash);
-			if (!txdb.TxnCommit())
-				return error("CBlock::SetBestChain() : TxnCommit failed");
+			indexdb.WriteHashBestChain(hash);
 			pindexGenesisBlock = pindexNew;
 		}
 		else
@@ -298,7 +289,7 @@ namespace Core
 				CBlock block;
 				if (!block.ReadFromDisk(pindex))
 					return error("CBlock::SetBestChain() : ReadFromDisk for disconnect failed");
-				if (!block.DisconnectBlock(txdb, pindex))
+				if (!block.DisconnectBlock(indexdb, pindex))
 					return error("CBlock::SetBestChain() : DisconnectBlock %s failed", pindex->GetBlockHash().ToString().substr(0,20).c_str());
 					
 				/** Remove Transactions from Current Trust Keys **/
@@ -324,9 +315,8 @@ namespace Core
 				if (!block.ReadFromDisk(pindex))
 					return error("CBlock::SetBestChain() : ReadFromDisk for connect failed");
 
-				if (!block.ConnectBlock(txdb, pindex))
+				if (!block.ConnectBlock(indexdb, pindex))
 				{
-					txdb.TxnAbort();
 					return error("CBlock::SetBestChain() : ConnectBlock %s failed", pindex->GetBlockHash().ToString().substr(0,20).c_str());
 				}
 				
@@ -343,11 +333,8 @@ namespace Core
 			}
 			
 			
-			if (!txdb.WriteHashBestChain(pindexNew->GetBlockHash()))
+			if (!indexdb.WriteHashBestChain(pindexNew->GetBlockHash()))
 				return error("CBlock::SetBestChain() : WriteHashBestChain failed");
-
-			if (!txdb.TxnCommit())
-				return error("CBlock::SetBestChain() : TxnCommit failed");
 
 			
 			/** Disconnect Shorter Branch in Memory. **/
@@ -363,7 +350,7 @@ namespace Core
 
 
 			BOOST_FOREACH(CTransaction& tx, vResurrect)
-				tx.AcceptToMemoryPool(txdb, false);
+				tx.AcceptToMemoryPool(indexdb, false);
 				
 
 			BOOST_FOREACH(CTransaction& tx, vDelete)
@@ -415,7 +402,7 @@ namespace Core
 					CTransaction tx;
 					CTxIndex txind;
 							
-					if(!txdb.ReadTxIndex(txin.prevout.hash, txind))
+					if(!indexdb.ReadTxIndex(txin.prevout.hash, txind))
 						continue;
 								
 					if(!tx.ReadFromDisk(txind.pos))
@@ -519,21 +506,13 @@ namespace Core
 
 
 		/** Write the new Block to Disk. **/
-		Wallet::CTxDB txdb;
-		if (!txdb.TxnBegin())
-			return false;
-			
-		LLD::SectorDatabase IndexDB("blockindex", "blockindex");
-		IndexDB.Write(pindexNew->nHeight, CDiskBlockIndex(pindexNew));
-		if (!txdb.TxnCommit())
-			return false;
+		LLD::CIndexDB indexdb("r+");
+		indexdb.WriteBlockIndex(CDiskBlockIndex(pindexNew));
 
 		/** Set the Best chain if Highest Trust. **/
 		if (pindexNew->nChainTrust > nBestChainTrust)
-			if (!SetBestChain(txdb, pindexNew))
+			if (!SetBestChain(indexdb, pindexNew))
 				return false;
-
-		txdb.Close();
 
 		if (pindexNew == pindexBest)
 		{
@@ -1058,17 +1037,20 @@ namespace Core
 
 		printf("%s Network: genesis=0x%s nBitsLimit=0x%08x nBitsInitial=0x%08x nCoinbaseMaturity=%d\n",
 			   fTestNet? "Test" : "Nexus", hashGenesisBlock.ToString().substr(0, 20).c_str(), bnProofOfWorkLimit[0].GetCompact(), bnProofOfWorkStart[0].GetCompact(), nCoinbaseMaturity);
-
+		
+		/*
+		{
+			Wallet::CTxDB txdb("cr");
+			txdb.MigrateToLLD();
+			txdb.Close();
+			
+			indexdb.LoadBlockIndex();
+		}
+		*/
 		
 		/** Initialize Block Index Database. **/
-		Wallet::CTxDB txdb("cr");
-		if (!txdb.LoadBlockIndex())
-			return false;
-		txdb.Close();
-
-
-		/** Create the Genesis Block. **/
-		if (mapBlockIndex.empty())
+		LLD::CIndexDB indexdb("cr");
+		if (!indexdb.LoadBlockIndex())
 		{
 			if (!fAllowNew)
 				return false;
@@ -1117,8 +1099,17 @@ namespace Core
 
 		return true;
 	}
-
-
+	
+	/** Useful to let the Map Block Index not need to be loaded fully.
+		If a block index is ever needed it can be read from the LLD. 
+		This lets us have load times of a few seconds 
+		
+		TODO:: Complete this **/
+	bool CheckBlockIndex(uint1024 hashBlock)
+	{
+		
+		return true;
+	}
 }
 
 
