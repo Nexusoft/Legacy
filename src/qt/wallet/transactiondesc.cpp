@@ -14,6 +14,8 @@
 #include "../../core/core.h"
 #include "../../wallet/wallet.h"
 #include "../../wallet/db.h"
+
+#include "../../LLD/index.h"
 #include "../../util/ui_interface.h"
 
 #include <QString>
