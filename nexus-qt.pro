@@ -1,7 +1,7 @@
 TEMPLATE = app
 TARGET = nexus-qt
 VERSION = 0.1.0.0
-INCLUDEPATH += src src/core src/hash src/json src/keys src/net src/qt src/util src/wallet
+INCLUDEPATH += src src/core src/hash src/json src/keys src/net src/qt src/util src/wallet src/LLD src/LLP
 DEFINES += QT_GUI BOOST_THREAD_USE_LIB BOOST_SPIRIT_THREADSAFE
 CONFIG += no_include_pwd
 CONFIG += warn_off
@@ -117,7 +117,7 @@ QMAKE_CXXFLAGS_WARN_ON = -Wall -Wextra -Wformat -Wformat-security -Wno-invalid-o
 }
 
 # Input
-DEPENDPATH += src src/LLP src/core src/hash src/json src/net src/util src/qt src/wallet src/qt/core src/qt/dialogs src/qt/forms src/qt/models src/qt/pages src/qt/res src/qt/util src/qt/wallet
+DEPENDPATH += src src/LLP sr/LLD src/core src/hash src/json src/net src/util src/qt src/wallet src/qt/core src/qt/dialogs src/qt/forms src/qt/models src/qt/pages src/qt/res src/qt/util src/qt/wallet
 HEADERS += src/qt/core/gui.h \
     src/qt/models/transactiontablemodel.h \
     src/qt/models/addresstablemodel.h \
@@ -148,6 +148,10 @@ HEADERS += src/qt/core/gui.h \
 	src/LLP/coreserver.h \
 	src/LLP/server.h \
 	src/LLP/types.h \
+	src/LLD/index.h \
+	src/LLD/keychain.h \
+	src/LLD/key.h \
+	src/LLD/sector.h \
     src/util/mruset.h \
     src/hash/brg_endian.h \
     src/hash/brg_types.h \
@@ -269,7 +273,9 @@ SOURCES += src/core/block.cpp \
     src/qt/core/rpcconsole.cpp \
     src/core/kernel.cpp \
 	src/main.cpp \
-	src/core/global.cpp
+	src/core/global.cpp \
+	src/LLD/keychain.cpp \
+	src/LLD/index.cpp
 
 RESOURCES += \
     src/qt/nexus.qrc
