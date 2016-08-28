@@ -6,6 +6,36 @@
 /** Lower Level Database Name Space. **/
 namespace LLD
 {
+	
+	/** Transactino Class to hold the data that is stored in Binary. **/
+	class SectorTransaction
+	{
+	public:
+		/** Only let one operation happen on the transaction at one time. **/
+		boost::mutex TX_MUTEX;
+		
+		/** New Data to be Added. **/
+		std::map< std::vector<unsigned char>, std::vector<unsigned char> > mapTransactions;
+		
+		/** Original Data that is retained when new one is added. **/
+		std::map< std::vector<unsigned char>, std::vector<unsigned char> > mapOriginalData;
+		
+		/** Basic Constructor. **/
+		SectorTransaction(){ mapTransactions.clear(); mapOriginalData.clear(); }
+		
+		/** Add a new Transaction to the Memory Map. **/
+		bool AddTransaction(std::vector<unsigned char> vKey, std::vector<unsigned char> vData,
+							std::vector<unsigned char> vOriginalData)
+		{
+			MUTEX_LOCK(TX_MUTEX);
+			
+			mapTransactions[vKey] = vData;
+			mapOriginalData[vKey] = vOriginalData;
+			
+			return true;
+		}
+		
+	};
 
 	/** Base Template Class for a Sector Database. 
 		Processes main Lower Level Disk Communications.
@@ -80,6 +110,9 @@ namespace LLD
 		
 		/** Read only Flag for Sectors. **/
 		bool fReadOnly = false;
+		
+		/** Class to handle Transaction Data. **/
+		SectorTransaction* pTransaction;
 	public:
 		/** The Database Constructor. To determine file location and the Bytes per Record. **/
 		SectorDatabase(std::string strName, std::string strKeychain, const char* pszMode="r+")
@@ -109,6 +142,8 @@ namespace LLD
 				std::ofstream cStream(strprintf("%s%s%u.dat", strBaseLocation.c_str(), strBaseName.c_str(), 0).c_str(), std::ios::binary);
 				cStream.close();
 			}
+			
+			pTransaction = NULL;
 		}
 		
 		template<typename Key>
@@ -250,6 +285,12 @@ namespace LLD
 				/** Open the Stream to Read the data from Sector on File. **/
 				std::fstream fStream(strprintf("%s%s%u.dat", strBaseLocation.c_str(), strBaseName.c_str(), nSectorFile).c_str(), std::ios::in | std::ios::out | std::ios::binary);
 				
+				/** Create a new Sector Key. **/
+				SectorKey cKey(WRITE, vKey, nSectorFile, 0, vData.size()); 
+				
+				/** Assign the Key to Keychain. **/
+				SectorKeys->Put(cKey);
+				
 				/** If it is a New Sector, Assign a Binary Position. 
 					TODO: Track Sector Database File Sizes. **/
 				unsigned int nBegin = fStream.tellg();
@@ -261,8 +302,10 @@ namespace LLD
 				fStream.write((char*) &vData[0], vData.size());
 				fStream.close();
 				
-				/** Create a new Sector Key. **/
-				SectorKey cKey(READY, vKey, nSectorFile, nStart, vData.size()); 
+				/** Assign New Data to the Sector Key. **/
+				cKey.nState       = READY;
+				cKey.nSectorSize  = vData.size();
+				cKey.nSectorStart = nStart;
 				
 				/** Assign the Key to Keychain. **/
 				SectorKeys->Put(cKey);
@@ -271,8 +314,11 @@ namespace LLD
 			{
 				/** Get the Sector Key from the Keychain. **/
 				SectorKey cKey;
-				if(!SectorKeys->Get(vKey, cKey))
+				if(!SectorKeys->Get(vKey, cKey)) {
+					SectorKeys->Erase(vKey);
+					
 					return false;
+				}
 					
 				/** Open the Stream to Read the data from Sector on File. **/
 				std::fstream fStream(strprintf("%s%s%u.dat", strBaseLocation.c_str(), strBaseName.c_str(), cKey.nSectorFile).c_str(), std::ios::in | std::ios::out | std::ios::binary);
@@ -282,13 +328,20 @@ namespace LLD
 				fStream.seekp(cKey.nSectorStart, std::ios::beg);
 				if(vData.size() > cKey.nSectorSize){
 					fStream.close();
-					printf("ERROR PUT (TOO LARGE) NO TRUNCATING ALLOWED:%s\n", HexStr(vData.begin(), vData.end()).c_str());
+					printf("ERROR PUT (TOO LARGE) NO TRUNCATING ALLOWED (Old %u :: New %u):%s\n", cKey.nSectorSize, vData.size(), HexStr(vData.begin(), vData.end()).c_str());
 					
 					return false;
 				}
 				
+				/** Assign the Writing State for Sector. **/
+				cKey.nState = WRITE;
+				SectorKeys->Put(cKey);
+				
 				fStream.write((char*) &vData[0], vData.size());
 				fStream.close();
+				
+				cKey.nState = READY;
+				SectorKeys->Put(cKey);
 			}
 			
 			//printf("SECTOR PUT:%s\n", HexStr(vData.begin(), vData.end()).c_str());

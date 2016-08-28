@@ -114,6 +114,7 @@ namespace LLD
 		Core::CBlockIndex* pindexNew = new Core::CBlockIndex();
 		if (!pindexNew)
 			throw runtime_error("LoadBlockIndex() : new Core::CBlockIndex failed");
+		
 		mi = Core::mapBlockIndex.insert(make_pair(hash, pindexNew)).first;
 		pindexNew->phashBlock = &((*mi).first);
 
@@ -131,7 +132,15 @@ namespace LLD
 		{
 			Core::CDiskBlockIndex diskindex;
 			if(!Read(make_pair(string("blockindex"), hashBlock), diskindex))
+			{
+				printf("Failed to Read Block %s Height %u\n", hashBlock.ToString().substr(0, 20).c_str(), diskindex.nHeight);
+				
+				Core::mapBlockIndex.erase(hashBlock);
 				break;
+			}
+			else
+				printf("Read Block %s\n", hashBlock.ToString().substr(0, 20).c_str());
+			
 			
 			Core::CBlockIndex* pindexNew = InsertBlockIndex(diskindex.GetBlockHash());
 			pindexNew->pprev          = InsertBlockIndex(diskindex.hashPrev);
@@ -183,22 +192,31 @@ namespace LLD
 				break;
 			}
 			
+			Core::pindexBest  = pindexNew;
 			hashBlock = diskindex.hashNext;
 		}
 		
-		if(!Core::mapBlockIndex.count(Core::hashBestChain))
-			return error("Best Block Hash Not in Block Index.");
-			
-		Core::pindexBest  = Core::mapBlockIndex[Core::hashBestChain];
 		Core::nBestHeight = Core::pindexBest->nHeight;
 		Core::nBestChainTrust = Core::pindexBest->nChainTrust;
+		Core::hashBestChain   = Core::pindexBest->GetBlockHash();
 		
-		printf("[DATABASE] Indexes Loaded. Height %u\n", Core::nBestHeight);
+		printf("[DATABASE] Indexes Loaded. Height %u Hash %s\n", Core::nBestHeight, Core::pindexBest->GetBlockHash().ToString().substr(0, 20).c_str());
 		
+		/** Double Check for Future Forked Blocks. **/
+		while(Core::pindexBest->pnext) {
+			Core::mapBlockIndex.erase(Core::pindexBest->pnext->GetBlockHash());
+			//Erase(make_pair(string("blockindex"), Core::pindexBest->pnext->GetBlockHash()));
+			
+			printf("[DATABASE] Destorying Pointer for %s\n", Core::pindexBest->pnext->GetBlockHash().ToString().substr(0, 20).c_str());
+			Core::pindexBest = Core::pindexBest->pnext;
+		}
+		
+		Core::pindexBest = Core::mapBlockIndex[Core::hashBestChain];
+		Core::pindexBest->pnext = NULL;
 
 		/** Verify the Blocks in the Best Chain To Last Checkpoint. **/
-		int nCheckLevel = GetArg("-checklevel", 1);
-		int nCheckDepth = GetArg( "-checkblocks", 0);
+		int nCheckLevel = GetArg("-checklevel", 5);
+		int nCheckDepth = GetArg( "-checkblocks", 100);
 		//if (nCheckDepth == 0)
 		//	nCheckDepth = 1000000000;
 			
@@ -231,10 +249,11 @@ namespace LLD
 				mapBlockPos[pos] = pindex;
 				BOOST_FOREACH(const Core::CTransaction &tx, block.vtx)
 				{
-					uint512 hashTx = tx.GetHash();
+					uint512 hashTx = tx.GetHash(); 
 					Core::CTxIndex txindex;
 					if (ReadTxIndex(hashTx, txindex))
 					{
+					
 						// check level 3: checker transaction hashes
 						if (nCheckLevel>2 || pindex->nFile != txindex.pos.nFile || pindex->nBlockPos != txindex.pos.nBlockPos)
 						{

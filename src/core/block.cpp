@@ -128,16 +128,25 @@ namespace Core
 		// If such overwrites are allowed, coinbases and transactions depending upon those
 		// can be duplicated to remove the ability to spend the first instance -- even after
 		// being sent to another address.
+		
+		/** NOT TO WORRY ABOUT FOR NOW
+			Adding more security when ACID compliant transactions are complete.
+			Better DAta Retention in light of a corrupted Sector
 		BOOST_FOREACH(CTransaction& tx, vtx)
 		{
 			CTxIndex txindexOld;
-			if (indexdb.ReadTxIndex(tx.GetHash(), txindexOld))
+			if (indexdb.ReadTxIndex(tx.GetHash(), txindexOld) && !tx.IsCoinBase())
 			{
 				BOOST_FOREACH(CDiskTxPos &pos, txindexOld.vSpent)
-					if (pos.IsNull())
-						return false;
+					if (pos.IsNull()){
+						
+						
+						return error("ConnectBlock() : Transaction Disk Index is Null %s", tx.GetHash().ToString().c_str());
+					}
+						
 			}
 		}
+		**/
 
 		//// issue here: it doesn't know the version
 		unsigned int nTxPos = pindex->nBlockPos + ::GetSerializeSize(CBlock(), SER_DISK, DATABASE_VERSION) - (2 * GetSizeOfCompactSize(0)) + GetSizeOfCompactSize(vtx.size());
@@ -164,7 +173,7 @@ namespace Core
 			{
 				bool fInvalid;
 				if (!tx.FetchInputs(indexdb, mapQueuedChanges, true, false, mapInputs, fInvalid))
-					return false;
+					return error("ConnectBlock() : Failed to Connect Inputs.");
 					
 				printf("ConnectBlock() : Got Inputs %u\n", nIterator);
 
@@ -183,7 +192,7 @@ namespace Core
 				nValueOut += nTxValueOut;
 				
 				if (!tx.ConnectInputs(indexdb, mapInputs, mapQueuedChanges, posThisTx, pindex, true, false))
-					return false;
+					return error("ConnectBlock() : Failed to Connect Inputs...");
 			}
 
 			nIterator++;
@@ -317,7 +326,7 @@ namespace Core
 
 				if (!block.ConnectBlock(indexdb, pindex))
 				{
-					return error("CBlock::SetBestChain() : ConnectBlock %s failed", pindex->GetBlockHash().ToString().substr(0,20).c_str());
+					return error("CBlock::SetBestChain() : ConnectBlock %s Height %u failed", pindex->GetBlockHash().ToString().substr(0,20).c_str(), pindex->nHeight);
 				}
 				
 				/** Add Transaction to Current Trust Keys **/
@@ -872,7 +881,7 @@ namespace Core
 			mapOrphanBlocksByPrev.insert(make_pair(pblock2->hashPrevBlock, pblock2));
 			
 			/** Simple Catch until I finish Checkpoint Syncing. **/
-			pfrom->PushGetBlocks(pindexBest, GetOrphanRoot(pblock2));
+			pfrom->PushGetBlocks(pindexBest, 0);
 
 			// Ask this guy to fill in what we're missing
 			if (pfrom)

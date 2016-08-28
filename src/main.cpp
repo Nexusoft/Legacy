@@ -646,7 +646,7 @@ bool AppInit2(int argc, char* argv[])
 #endif
 
 #if !defined(QT_GUI)
-    while (1)
+    while (!fShutdown)
         Sleep(5000);
 #endif
 

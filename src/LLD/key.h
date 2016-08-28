@@ -43,6 +43,16 @@ namespace LLD
 		unsigned short   		   nSectorSize;
 		unsigned int   			   nSectorStart;
 		
+		/** Checksum of Original Data to ensure no database corrupted sectors. 
+			TODO: Consider the Original Data from a checksum.
+			When transactions implemented have transactions stored in a sector Database.
+			Ensure Original keychain and new keychain are stored on disk.
+			If there is failure here before it is commited to the main database it will only
+			corrupt the database backups. This will ensure the core database never gets corrupted.
+			On startup ensure that the checksums match to ensure that the database was not stopped
+			in the middle of a write. **/
+		uint64 nChecksum;
+		
 		/** Serialization Macro. **/
 		IMPLEMENT_SERIALIZE
 		(
@@ -54,6 +64,7 @@ namespace LLD
 				READWRITE(nSectorFile);
 				READWRITE(nSectorSize);
 				READWRITE(nSectorStart);
+				//READWRITE(nChecksum);
 			}
 		)
 		
@@ -95,7 +106,7 @@ namespace LLD
 		
 		/** Caching Flag
 			TODO: Expand the Caching System. **/
-		bool fMemoryCaching = true;
+		bool fMemoryCaching = false;
 		
 		/** Caching Size.
 			TODO: Make this a variable actually enforced. **/
@@ -187,11 +198,11 @@ namespace LLD
 					mapKeys[vKey] = nPosition;
 					
 					/** Set the Memory Cache. **/
-					if(fMemoryCaching)
-						mapKeysCache[vKey] = cKey;
+					//if(fMemoryCaching)
+					//	mapKeysCache[vKey] = cKey;
 					
 					/** Debug Output of Sector Key Information. **/
-					//printf("KeyDB::Load() : State: %u Length: %u Location: %u Key: %s\n", cKey.nState, cKey.nLength, mapKeys[vKey], HexStr(vKey.begin(), vKey.end()).c_str());
+					printf("KeyDB::Load() : State: %u Length: %u Location: %u Key: %s\n", cKey.nState, cKey.nLength, mapKeys[vKey], HexStr(vKey.begin(), vKey.end()).c_str());
 				}
 				else
 					/** Move the Cursor to the Next Record. **/
@@ -201,73 +212,10 @@ namespace LLD
 			fIncoming.close();
 		}
 		
-		/** Get a Record from the Database with Given Key. **/
-		bool Get(const std::vector<unsigned char> vKey, SectorKey& cKey)
-		{
-			MUTEX_LOCK(KEY_MUTEX);
-			
-			/** Cache Handler. **/
-			if(mapKeysCache.count(vKey) && fMemoryCaching)
-			{
-				cKey = mapKeysCache[vKey];
-				cKey.vKey = vKey;
-				
-				return true;
-			}
-			
-			/** Read a Record from Binary Data. **/
-			if(mapKeys.count(vKey))
-			{
-				/** Open the Stream Object. **/
-				std::fstream fStream(strLocation.c_str(), std::ios::in | std::ios::binary);
-
-				/** Seek to the Sector Position on Disk. **/
-				fStream.seekg(mapKeys[vKey], std::ios::beg);
-			
-				/** Read the State and Size of Sector Header. **/
-				std::vector<unsigned char> vData(11, 0);
-				fStream.read((char*) &vData[0], 11);
-				
-				/** De-serialize the Header. **/
-				CDataStream ssHeader(vData, SER_LLD, DATABASE_VERSION);
-				ssHeader >> cKey;
-				
-				/** Skip Empty Sectors for Now. (TODO: Expand to Reads / Writes) **/
-				if(!cKey.Empty()) {
-				
-					/** Read the Key Data. **/
-					std::vector<unsigned char> vKeyIn(cKey.nLength, 0);
-					fStream.read((char*) &vKeyIn[0], vKeyIn.size());
-					fStream.close();
-					
-					/** Check the Keys Match Properly. **/
-					if(vKeyIn != vKey)
-						return error("Key Mistmatch: DB:: %s  MEM %s\n", HexStr(vKeyIn.begin(), vKeyIn.end()).c_str(), HexStr(vKey.begin(), vKey.end()).c_str());
-					
-					/** Assign Key to Sector. **/
-					cKey.vKey = vKeyIn;
-					
-					/** Debug Output of Sector Key Information. **/
-					//printf("KEY::Get(): State: %u Length: %u Location: %u Sector File: %u Sector Size: %u Sector Start: %u\n Key: %s\n", cKey.nState, cKey.nLength, mapKeys[cKey.vKey], cKey.nSectorFile, cKey.nSectorSize, cKey.nSectorStart, HexStr(cKey.vKey.begin(), cKey.vKey.end()).c_str());
-						
-					return true;
-				}
-				
-				/** Close the Stream. **/
-				fStream.close();
-			}
-			
-			return false;
-		}
-		
 		/** Add / Update A Record in the Database **/
 		bool Put(SectorKey cKey) const
 		{
 			MUTEX_LOCK(KEY_MUTEX);
-			
-			/** Check Key Validity **/
-			if(cKey.Empty())
-				return false;
 			
 			/** Establish the Outgoing Stream. **/
 			std::fstream fStream(strLocation.c_str(), std::ios::in | std::ios::out | std::ios::binary);
@@ -301,7 +249,7 @@ namespace LLD
 			fStream.close();
 				
 			/** Debug Output of Sector Key Information. **/
-			//printf("KEY::Put(): State: %u Length: %u Location: %u Sector File: %u Sector Size: %u Sector Start: %u\n Key: %s\n", cKey.nState, cKey.nLength, mapKeys[cKey.vKey], cKey.nSectorFile, cKey.nSectorSize, cKey.nSectorStart, HexStr(cKey.vKey.begin(), cKey.vKey.end()).c_str());
+			printf("KEY::Put(): State: %s Length: %u Location: %u Sector File: %u Sector Size: %u Sector Start: %u\n Key: %s\n", cKey.nState == READY ? "Valid" : "Invalid", cKey.nLength, mapKeys[cKey.vKey], cKey.nSectorFile, cKey.nSectorSize, cKey.nSectorStart, HexStr(cKey.vKey.begin(), cKey.vKey.end()).c_str());
 			
 			return true;
 		}
@@ -309,22 +257,85 @@ namespace LLD
 		/** Simple Erase for now, not efficient in Data Usage of HD but quick to get erase function working. **/
 		bool Erase(const std::vector<unsigned char> vKey)
 		{
-			/** Get the Sector Key. **/
-			SectorKey cKey;
-			if(!Get(vKey, cKey))
-				return error("SectorDatabase:Erase() : Failed to Get the Sector Key.");
+			/** Check for the Key. **/
+			if(!mapKeys.count(vKey))
+				return error("Key Erase() : Key doesn't Exist");
 			
-			/** Set the Key State to Empty. **/
-			cKey.nState = EMPTY;
+			/** Establish the Outgoing Stream. **/
+			std::fstream fStream(strLocation.c_str(), std::ios::in | std::ios::out | std::ios::binary);
+			fStream.seekp(mapKeys[vKey], std::ios::beg);
 			
-			/** Write the Key Back into Database. **/
-			if(!Put(cKey))
-				return error("SectorDatabase:Erase() : Failed to Rewrite Sector Key.");
+			/** Establish the Sector State as Empty. **/
+			std::vector<unsigned char> vData(1, EMPTY);
+			fStream.write((char*) &vData[0], vData.size());
+			fStream.close();
 				
 			/** Remove the Sector Key from the Memory Map. **/
 			mapKeys.erase(vKey);
 			
 			return true;
+		}
+		
+		/** Get a Record from the Database with Given Key. **/
+		bool Get(const std::vector<unsigned char> vKey, SectorKey& cKey)
+		{
+			MUTEX_LOCK(KEY_MUTEX);
+			
+			/** Cache Handler. **/
+			if(mapKeysCache.count(vKey) && fMemoryCaching)
+			{
+				cKey = mapKeysCache[vKey];
+				cKey.vKey = vKey;
+				
+				return true;
+			}
+			
+			/** Read a Record from Binary Data. **/
+			if(mapKeys.count(vKey))
+			{
+				/** Open the Stream Object. **/
+				std::fstream fStream(strLocation.c_str(), std::ios::in | std::ios::binary);
+
+				/** Seek to the Sector Position on Disk. **/
+				fStream.seekg(mapKeys[vKey], std::ios::beg);
+			
+				/** Read the State and Size of Sector Header. **/
+				std::vector<unsigned char> vData(11, 0);
+				fStream.read((char*) &vData[0], 11);
+				
+				/** De-serialize the Header. **/
+				CDataStream ssHeader(vData, SER_LLD, DATABASE_VERSION);
+				ssHeader >> cKey;
+				
+				/** Debug Output of Sector Key Information. **/
+				printf("KEY::Get(): State: %s Length: %u Location: %u Sector File: %u Sector Size: %u Sector Start: %u\n Key: %s\n", cKey.nState == READY ? "Valid" : "Invalid", cKey.nLength, mapKeys[cKey.vKey], cKey.nSectorFile, cKey.nSectorSize, cKey.nSectorStart, HexStr(cKey.vKey.begin(), cKey.vKey.end()).c_str());
+						
+				
+				/** Skip Empty Sectors for Now. (TODO: Expand to Reads / Writes) **/
+				if(cKey.nState == READY) {
+				
+					/** Read the Key Data. **/
+					std::vector<unsigned char> vKeyIn(cKey.nLength, 0);
+					fStream.read((char*) &vKeyIn[0], vKeyIn.size());
+					fStream.close();
+					
+					/** Check the Keys Match Properly. **/
+					if(vKeyIn != vKey)
+						return error("Key Mistmatch: DB:: %s  MEM %s\n", HexStr(vKeyIn.begin(), vKeyIn.end()).c_str(), HexStr(vKey.begin(), vKey.end()).c_str());
+					
+					/** Assign Key to Sector. **/
+					cKey.vKey = vKeyIn;
+					
+					return true;
+				}
+				else
+					Erase(vKey);
+				
+				/** Close the Stream. **/
+				fStream.close();
+			}
+			
+			return false;
 		}
 	};
 }
