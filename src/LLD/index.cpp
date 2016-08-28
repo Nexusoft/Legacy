@@ -138,8 +138,6 @@ namespace LLD
 				Core::mapBlockIndex.erase(hashBlock);
 				break;
 			}
-			else
-				printf("Read Block %s\n", hashBlock.ToString().substr(0, 20).c_str());
 			
 			
 			Core::CBlockIndex* pindexNew = InsertBlockIndex(diskindex.GetBlockHash());
