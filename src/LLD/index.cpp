@@ -200,7 +200,15 @@ namespace LLD
 		
 		printf("[DATABASE] Indexes Loaded. Height %u Hash %s\n", Core::nBestHeight, Core::pindexBest->GetBlockHash().ToString().substr(0, 20).c_str());
 		
-		/** Double Check for Future Forked Blocks. **/
+		/** Double Check for Future Forked Blocks. 
+		
+		If Block is Corrupted, restore from backup file with Transactions.
+		This is the best way to ensure block integrity.
+		
+		A Transaction is also required for the block index and transaction indexes to be updated properly in sequence.
+		If A Block Index Update Operation Fails and is corrupted, so should every other transaction Index.
+		
+		**/
 		while(Core::pindexBest->pnext) {
 			Core::mapBlockIndex.erase(Core::pindexBest->pnext->GetBlockHash());
 			//Erase(make_pair(string("blockindex"), Core::pindexBest->pnext->GetBlockHash()));
