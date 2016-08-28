@@ -841,7 +841,7 @@ namespace Core
 				// This doesn't trigger the DoS code on purpose; if it did, it would make it easier
 				// for an attacker to attempt to split the network.
 				if (!txindex.vSpent[prevout.n].IsNull())
-					return fMiner ? false : error("ConnectInputs() : %s prev tx already used at %s", GetHash().ToString().substr(0,10).c_str(), txindex.vSpent[prevout.n].ToString().c_str());
+					return error("ConnectInputs() : %s prev tx already used at %s", GetHash().ToString().substr(0,10).c_str(), txindex.vSpent[prevout.n].ToString().c_str());
 					
 				// Skip ECDSA signature verification when connecting blocks (fBlock=true)
 				// before the last blockchain checkpoint. This is safe because block merkle hashes are

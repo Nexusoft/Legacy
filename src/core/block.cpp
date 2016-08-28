@@ -128,10 +128,6 @@ namespace Core
 		// If such overwrites are allowed, coinbases and transactions depending upon those
 		// can be duplicated to remove the ability to spend the first instance -- even after
 		// being sent to another address.
-		
-		/** NOT TO WORRY ABOUT FOR NOW
-			Adding more security when ACID compliant transactions are complete.
-			Better DAta Retention in light of a corrupted Sector
 		BOOST_FOREACH(CTransaction& tx, vtx)
 		{
 			CTxIndex txindexOld;
@@ -146,7 +142,6 @@ namespace Core
 						
 			}
 		}
-		**/
 
 		//// issue here: it doesn't know the version
 		unsigned int nTxPos = pindex->nBlockPos + ::GetSerializeSize(CBlock(), SER_DISK, DATABASE_VERSION) - (2 * GetSizeOfCompactSize(0)) + GetSizeOfCompactSize(vtx.size());
