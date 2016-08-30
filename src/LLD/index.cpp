@@ -186,11 +186,11 @@ namespace LLD
 			if(hashBlock == Core::hashGenesisBlock)
 				Core::pindexGenesisBlock = pindexNew;
 				
+			Core::pindexBest  = pindexNew;
 			if(hashBlock == Core::hashBestChain) {
 				break;
 			}
 			
-			Core::pindexBest  = pindexNew;
 			hashBlock = diskindex.hashNext;
 		}
 		
@@ -221,8 +221,8 @@ namespace LLD
 		Core::pindexBest->pnext = NULL;
 
 		/** Verify the Blocks in the Best Chain To Last Checkpoint. **/
-		int nCheckLevel = GetArg("-checklevel", 5);
-		int nCheckDepth = GetArg( "-checkblocks", 100);
+		int nCheckLevel = GetArg("-checklevel", 1);
+		int nCheckDepth = GetArg( "-checkblocks", 5);
 		//if (nCheckDepth == 0)
 		//	nCheckDepth = 1000000000;
 			

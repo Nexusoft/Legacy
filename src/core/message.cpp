@@ -314,8 +314,8 @@ namespace Core
 				pfrom->AddInventoryKnown(inv);
 
 				bool fAlreadyHave = AlreadyHave(indexdb, inv);
-				if (fDebug)
-					printg("  got inventory: %s  %s\n", inv.ToString().c_str(), fAlreadyHave ? "have" : "new");
+				if(GetArg("-verbose", 0) >= 2)
+					printf("  got inventory: %s  %s\n", inv.ToString().c_str(), fAlreadyHave ? "have" : "new");
 
 				if (!fAlreadyHave)
 					pfrom->AskFor(inv);
@@ -351,7 +351,9 @@ namespace Core
 			{
 				if (fShutdown)
 					return true;
-				printg("received getdata for: %s\n", inv.ToString().c_str());
+					
+				if(GetArg("-verbose", 0) >= 2)
+					printf("received getdata for: %s\n", inv.ToString().c_str());
 
 				if (inv.type == Net::MSG_BLOCK)
 				{

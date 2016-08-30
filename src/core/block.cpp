@@ -390,7 +390,8 @@ namespace Core
 							
 				mapAddressTransactions[cAddress.GetHash256()] += (uint64) vtx[nTx].vout[nOut].nValue;
 						
-				printg("%s Credited %f Nexus | Balance : %f Nexus\n", cAddress.ToString().c_str(), (double)vtx[nTx].vout[nOut].nValue / COIN, (double)mapAddressTransactions[cAddress.GetHash256()] / COIN);
+				if(GetArg("-verbose", 0) >= 2)
+					printf("%s Credited %f Nexus | Balance : %f Nexus\n", cAddress.ToString().c_str(), (double)vtx[nTx].vout[nOut].nValue / COIN, (double)mapAddressTransactions[cAddress.GetHash256()] / COIN);
 			}
 					
 			if(!vtx[nTx].IsCoinBase())
@@ -418,7 +419,8 @@ namespace Core
 					else
 						mapAddressTransactions[cAddress.GetHash256()] -= (uint64) tx.vout[txin.prevout.n].nValue;
 					
-					printg("%s Debited %f Nexus | Balance : %f Nexus\n", cAddress.ToString().c_str(), (double)tx.vout[txin.prevout.n].nValue / COIN, (double)mapAddressTransactions[cAddress.GetHash256()] / COIN);
+					if(GetArg("-verbose", 0) >= 2)
+						printf("%s Debited %f Nexus | Balance : %f Nexus\n", cAddress.ToString().c_str(), (double)tx.vout[txin.prevout.n].nValue / COIN, (double)mapAddressTransactions[cAddress.GetHash256()] / COIN);
 				}
 			}
 		}
@@ -480,7 +482,9 @@ namespace Core
 					return error("AddToBlockIndex() : Coinbase Transaction too Large. Out of Reserve Limits");
 				
 				pindexNew->nReleasedReserve[nType] =  nReserve - pindexNew->nCoinbaseRewards[nType];
-				printg("Reserve Balance %i | %f Nexus | Released %f\n", nType, pindexNew->nReleasedReserve[nType] / 1000000.0, (nReserve - pindexPrev->nReleasedReserve[nType]) / 1000000.0 );
+				
+				if(GetArg("-verbose", 0) >= 2)
+					printf("Reserve Balance %i | %f Nexus | Released %f\n", nType, pindexNew->nReleasedReserve[nType] / 1000000.0, (nReserve - pindexPrev->nReleasedReserve[nType]) / 1000000.0 );
 			}
 			else
 				pindexNew->nReleasedReserve[nType] = 0;
@@ -491,14 +495,18 @@ namespace Core
 		if(!pindexNew->pprev || HardenCheckpoint(pindexNew))
 		{
 			pindexNew->PendingCheckpoint = make_pair(pindexNew->nHeight, pindexNew->GetBlockHash());
-			printg("===== New Pending Checkpoint Hash = %s Height = %u\n", pindexNew->PendingCheckpoint.second.ToString().substr(0, 15).c_str(), pindexNew->nHeight);
+			
+			if(GetArg("-verbose", 0) >= 2)
+				printf("===== New Pending Checkpoint Hash = %s Height = %u\n", pindexNew->PendingCheckpoint.second.ToString().substr(0, 15).c_str(), pindexNew->nHeight);
 		}
 		else
 		{
 			pindexNew->PendingCheckpoint = pindexNew->pprev->PendingCheckpoint;
 			
 			unsigned int nAge = pindexNew->pprev->GetBlockTime() - mapBlockIndex[pindexNew->PendingCheckpoint.second]->GetBlockTime();
-			printg("===== Pending Checkpoint Age = %u Hash = %s Height = %u\n", nAge, pindexNew->PendingCheckpoint.second.ToString().substr(0, 15).c_str(), pindexNew->PendingCheckpoint.first);
+			
+			if(GetArg("-verbose", 0) >= 2)
+				printg("===== Pending Checkpoint Age = %u Hash = %s Height = %u\n", nAge, pindexNew->PendingCheckpoint.second.ToString().substr(0, 15).c_str(), pindexNew->PendingCheckpoint.first);
 		}									 
 
 		/** Add to the MapBlockIndex **/

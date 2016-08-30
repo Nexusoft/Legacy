@@ -376,7 +376,7 @@ bool error(const char *format, ...)
         buffer[limit-1] = 0;
     }
 	
-    printd("ERROR: %s\n", buffer);
+    printf("ERROR: %s\n", buffer);
     return false;
 }
 
