@@ -184,7 +184,7 @@ namespace Core
 		if(GetHash() > hashTarget)
 			return error("CBlock::VerifyStake() : Proof of Stake Hash not meeting Target.");
 			
-		if(fDebug)
+		if(GetArg("-verbose", 0) >= 2)
 		{
 			printf("CBlock::VerifyStake() : Stake Hash  %s\n", GetHash().ToString().substr(0, 20).c_str());
 			printf("CBlock::VerifyStake() : Target Hash %s\n", hashTarget.ToString().substr(0, 20).c_str());
@@ -287,7 +287,7 @@ namespace Core
 			nTotalCoins += nValue;
 			nAverageAge += nCoinAge;
 			
-			if(fDebug)
+			if(GetArg("-verbose", 0) >= 2)
 			{
 				printf("CTransaction::GetCoinstakeInterest() : Staking input from Block %u with age of %"PRId64", Rate %f, and value %f\n", block.nHeight, nCoinAge, nInterestRate, (double)nValue / COIN);
 				
@@ -302,7 +302,8 @@ namespace Core
 		
 		nAverageAge /= (vin.size() - 1);
 		
-		printf("CTransaction::GetCoinstakeInterest() : Total Nexus to Stake %f Generating %f Nexus from Average Age of %u Seconds at %f %% Variable Interest\n", (double)nTotalCoins / COIN, (double)nInterest / COIN, (unsigned int)nAverageAge, nInterestRate * 100.0);
+		if(GetArg("-verbose", 0) >= 2)
+			printf("CTransaction::GetCoinstakeInterest() : Total Nexus to Stake %f Generating %f Nexus from Average Age of %u Seconds at %f %% Variable Interest\n", (double)nTotalCoins / COIN, (double)nInterest / COIN, (unsigned int)nAverageAge, nInterestRate * 100.0);
 		
 		return true;
 	}
@@ -357,7 +358,9 @@ namespace Core
 				cKey.SetBytes(i->second.vchPubKey);
 					
 				/** Assigned Extracted Key to Trust Pool. **/
-				printf("CTrustPool::HasTrustKey() : New Trust Key Extracted %s\n", cKey.ToString().substr(0, 20).c_str());
+				if(GetArg("-verbose", 2) >= 0)
+					printf("CTrustPool::HasTrustKey() : New Trust Key Extracted %s\n", cKey.ToString().substr(0, 20).c_str());
+				
 				vchTrustKey = i->second.vchPubKey;
 				
 				/** Set the Interest Rate from Key. **/
@@ -494,12 +497,14 @@ namespace Core
 		if(cBlock.vtx[0].IsGenesis())
 		{
 			/** Only Remove Trust Key from Map if Key Exists. **/
-			if(!mapTrustKeys.count(cKey))
+			if(!mapTrustKeys.count(cKey) && GetArg("-verbose", 0) >= 0)
 				return error("CTrustPool::Remove() : Key %s Doesn't Exist in Trust Pool\n", cKey.ToString().substr(0, 20).c_str());
 				
 			/** Remove the Trust Key from the Trust Pool. **/
 			mapTrustKeys.erase(cKey);
-			printf("CTrustPool::Remove() : Removed Genesis Trust Key %s From Trust Pool\n", cKey.ToString().substr(0, 20).c_str());
+			
+			if(GetArg("-verbose", 0) >= 2)
+				printf("CTrustPool::Remove() : Removed Genesis Trust Key %s From Trust Pool\n", cKey.ToString().substr(0, 20).c_str());
 				
 			return true;
 		}
@@ -556,11 +561,11 @@ namespace Core
 			mapTrustKeys[cKey] = cTrustKey;
 			
 			/** Dump the Trust Key To Console if not Initializing. **/
-			if(!fInit)
+			if(!fInit && GetArg("-verbose", 0) >= 2)
 				cTrustKey.Print();
 			
 			/** Only Debug when Not Initializing. **/
-			if(!fInit) {
+			if(GetArg("-verbose", 0) >= 1 && !fInit) {
 				printf("CTrustPool::accept() : New Genesis Coinstake Transaction From Block %u\n", cBlock.nHeight);
 				printf("CTrustPool::ACCEPTED %s\n", cKey.ToString().substr(0, 20).c_str());
 			}
@@ -575,11 +580,11 @@ namespace Core
 			mapTrustKeys[cKey].hashPrevBlocks.push_back(cBlock.GetHash());
 			
 			/** Dump the Trust Key to Console if not Initializing. **/
-			if(!fInit)
+			if(!fInit && GetArg("-verbose", 0) >= 2)
 				mapTrustKeys[cKey].Print();
 			
 			/** Only Debug when Not Initializing. **/
-			if(!fInit) {
+			if(!fInit && GetArg("-verbose", 0) >= 1) {
 				printf("CTrustPool::accept() : New Trust Coinstake Transaction From Block %u\n", cBlock.nHeight);
 				printf("CTrustPool::ACCEPTED %s\n", cKey.ToString().substr(0, 20).c_str());
 			}

@@ -44,6 +44,26 @@ inline uint64 SK64(const T1 pbegin, const T1 pend)
 }
 
 /** Hashing template for Address Generation **/
+inline uint64 SK64(const std::vector<unsigned char>& vch)
+{
+	static unsigned char pblank[1];
+	
+    uint64 skein;
+	Skein_256_Ctxt_t ctx;
+	Skein_256_Init(&ctx, 64);
+	Skein_256_Update(&ctx, (unsigned char *)&vch[0], vch.size());
+	Skein_256_Final(&ctx, (unsigned char *)&skein);
+	
+    uint64 keccak;
+	Keccak_HashInstance ctx_keccak;
+	Keccak_HashInitialize(&ctx_keccak, 1344, 256, 64, 0x06);
+	Keccak_HashUpdate(&ctx_keccak, (unsigned char *)&skein, 64);
+	Keccak_HashFinal(&ctx_keccak, (unsigned char *)&keccak);
+	
+	return keccak;
+}
+
+/** Hashing template for Address Generation **/
 inline uint256 SK256(const std::vector<unsigned char>& vch)
 {
 	static unsigned char pblank[1];

@@ -98,7 +98,7 @@ namespace Core
 	{
 		static map<Net::CService, vector<unsigned char> > mapReuseKey;
 		RandAddSeedPerfmon();
-		if (fDebug) {
+		if(GetArg("-verbose", 0) >= 3) {
 			printf("%s ", DateTimeStrFormat(GetUnifiedTimestamp()).c_str());
 			printf("received: %s (%d bytes)\n", strCommand.c_str(), vRecv.size());
 		}
@@ -128,9 +128,9 @@ namespace Core
 			vRecv >> pfrom->nVersion >> pfrom->nServices >> nTime >> addrMe;
 			if (pfrom->nVersion < MIN_PROTO_VERSION)
 			{
-				// Since February 20, 2012, the protocol is initiated at version 209,
-				// and earlier versions are no longer supported
-				printf("partner %s using obsolete version %i; disconnecting\n", pfrom->addr.ToString().c_str(), pfrom->nVersion);
+				if(GetArg("-verbose", 0) >= 1)
+					printf("partner %s using obsolete version %i; disconnecting\n", pfrom->addr.ToString().c_str(), pfrom->nVersion);
+				
 				pfrom->fDisconnect = true;
 				return false;
 			}
@@ -147,7 +147,9 @@ namespace Core
 			// Disconnect if we connected to ourself
 			if (nNonce == Net::nLocalHostNonce && nNonce > 1)
 			{
-				printf("connected to self at %s, disconnecting\n", pfrom->addr.ToString().c_str());
+				if(GetArg("-verbose", 0) >= 1)
+					printf("connected to self at %s, disconnecting\n", pfrom->addr.ToString().c_str());
+				
 				pfrom->fDisconnect = true;
 				return true;
 			}
@@ -201,8 +203,9 @@ namespace Core
 			}
 
 			pfrom->fSuccessfullyConnected = true;
-
-			printf("version message: version %d, blocks=%d\n", pfrom->nVersion, pfrom->nStartingHeight);
+			
+			if(GetArg("-verbose", 0) >= 1)
+				printf("version message: version %d, blocks=%d\n", pfrom->nVersion, pfrom->nStartingHeight);
 
 			cPeerBlockCounts.Add(pfrom->nStartingHeight);
 		}
@@ -324,7 +327,7 @@ namespace Core
 					// this situation and push another getblocks to continue.
 					std::vector<Net::CInv> vGetData(1,inv);
 					pfrom->PushGetBlocks(mapBlockIndex[inv.hash], uint1024(0));
-					if (fDebug)
+					if(GetArg("-verbose", 0) >= 2)
 						printf("force request: %s\n", inv.ToString().c_str());
 				}
 
@@ -409,12 +412,17 @@ namespace Core
 				pindex = pindex->pnext;
 			int nLimit = 1000 + locator.GetDistanceBack();
 			unsigned int nBytes = 0;
-			printg("getblocks %d to %s limit %d\n", (pindex ? pindex->nHeight : -1), hashStop.ToString().substr(0,20).c_str(), nLimit);
+			
+			if(GetArg("-verbose", 0) >= 2)
+				printf("getblocks %d to %s limit %d\n", (pindex ? pindex->nHeight : -1), hashStop.ToString().substr(0,20).c_str(), nLimit);
+			
 			for (; pindex; pindex = pindex->pnext)
 			{
 				if (pindex->GetBlockHash() == hashStop)
 				{
-					printf("  getblocks stopping at %d %s (%u bytes)\n", pindex->nHeight, pindex->GetBlockHash().ToString().substr(0,20).c_str(), nBytes);
+					if(GetArg("-verbose", 0) >= 2)
+						printf("  getblocks stopping at %d %s (%u bytes)\n", pindex->nHeight, pindex->GetBlockHash().ToString().substr(0,20).c_str(), nBytes);
+					
 					// Nexus: tell downloading node about the latest block if it's
 					// without risk being rejected due to stake connection check
 					if (hashStop != hashBestChain)
@@ -429,7 +437,9 @@ namespace Core
 				{
 					// When this block is requested, we'll send an inv that'll make them
 					// getblocks the next batch of inventory.
-					printf("  getblocks stopping at limit %d %s (%u bytes)\n", pindex->nHeight, pindex->GetBlockHash().ToString().substr(0,20).c_str(), nBytes);
+					if(GetArg("-verbose", 0) >= 2)
+						printf("  getblocks stopping at limit %d %s (%u bytes)\n", pindex->nHeight, pindex->GetBlockHash().ToString().substr(0,20).c_str(), nBytes);
+					
 					pfrom->hashContinue = pindex->GetBlockHash();
 					break;
 				}
@@ -462,7 +472,10 @@ namespace Core
 
 			vector<CBlock> vHeaders;
 			int nLimit = 2000;
-			printf("getheaders %d to %s\n", (pindex ? pindex->nHeight : -1), hashStop.ToString().substr(0,20).c_str());
+			
+			if(GetArg("-verbose", 0) >= 2)
+				printf("getheaders %d to %s\n", (pindex ? pindex->nHeight : -1), hashStop.ToString().substr(0,20).c_str());
+			
 			for (; pindex; pindex = pindex->pnext)
 			{
 				vHeaders.push_back(pindex->GetBlockHeader());
@@ -510,7 +523,9 @@ namespace Core
 
 						if (tx.AcceptToMemoryPool(indexdb, true, &fMissingInputs2))
 						{
-							printf("   accepted orphan tx %s\n", inv.hash.ToString().substr(0,10).c_str());
+							if(GetArg("-verbose", 1) >= 0)
+								printf("   accepted orphan tx %s\n", inv.hash.ToString().substr(0,10).c_str());
+							
 							SyncWithWallets(tx, NULL, true);
 							RelayMessage(inv, vMsg);
 							Net::mapAlreadyAskedFor.erase(inv);
@@ -521,7 +536,9 @@ namespace Core
 						{
 							// invalid orphan
 							vEraseQueue.push_back(inv.hash.getuint512());
-							printf("   removed invalid orphan tx %s\n", inv.hash.ToString().substr(0,10).c_str());
+							
+							if(GetArg("-verbose", 0) >= 1)
+								printf("   removed invalid orphan tx %s\n", inv.hash.ToString().substr(0,10).c_str());
 						}
 					}
 				}
@@ -547,9 +564,10 @@ namespace Core
 			CBlock block;
 			vRecv >> block;
 
-			printf("received block %s\n", block.GetHash().ToString().substr(0,20).c_str());
+			if(GetArg("-verbose", 0) >= 2)
+				printf("received block %s\n", block.GetHash().ToString().substr(0,20).c_str());
 			
-			//if(!IsInitialBlockDownload())
+			if(GetArg("-verbose", 0) >= 1)
 				block.print();
 
 			Net::CInv inv(Net::MSG_BLOCK, block.GetHash());
@@ -624,7 +642,7 @@ namespace Core
 		unsigned char pchMessageStart[4];
 		Net::GetMessageStart(pchMessageStart);
 		static int64 nTimeLastPrintMessageStart = 0;
-		if (fDebug && GetBoolArg("-printmessagestart") && nTimeLastPrintMessageStart + 30 < GetUnifiedTimestamp())
+		if (GetArg("-verbose", 0) >= 2 && nTimeLastPrintMessageStart + 30 < GetUnifiedTimestamp())
 		{
 			string strMessageStart((const char *)pchMessageStart, sizeof(pchMessageStart));
 			vector<unsigned char> vchMessageStart(strMessageStart.begin(), strMessageStart.end());
@@ -871,7 +889,9 @@ namespace Core
 				const Net::CInv& inv = (*pto->mapAskFor.begin()).second;
 				if (!AlreadyHave(CIndexDB, inv))
 				{
-					printf("sending getdata: %s\n", inv.ToString().c_str());
+					if(GetArg("-verbose", 0) >= 2)
+						printf("sending getdata: %s\n", inv.ToString().c_str());
+					
 					vGetData.push_back(inv);
 					if (vGetData.size() >= 1000)
 					{

@@ -7,10 +7,15 @@
 namespace LLD
 {
 	
+	
 	/** Transactino Class to hold the data that is stored in Binary. **/
 	class SectorTransaction
 	{
 	public:
+	
+		/** The hash for the Transaction to be saved under. **/
+		uint64 TransactionID;
+		
 		/** Only let one operation happen on the transaction at one time. **/
 		boost::mutex TX_MUTEX;
 		
@@ -20,8 +25,11 @@ namespace LLD
 		/** Original Data that is retained when new one is added. **/
 		std::map< std::vector<unsigned char>, std::vector<unsigned char> > mapOriginalData;
 		
+		/** Vector to hold the keys of transactions to be erased. **/
+		std::map< std::vector<unsigned char>, unsigned int > mapEraseData;
+		
 		/** Basic Constructor. **/
-		SectorTransaction(){ mapTransactions.clear(); mapOriginalData.clear(); }
+		SectorTransaction(){ }
 		
 		/** Add a new Transaction to the Memory Map. **/
 		bool AddTransaction(std::vector<unsigned char> vKey, std::vector<unsigned char> vData,
@@ -29,8 +37,26 @@ namespace LLD
 		{
 			MUTEX_LOCK(TX_MUTEX);
 			
+			if(mapEraseData.count(vKey))
+				return false;
+			
 			mapTransactions[vKey] = vData;
-			mapOriginalData[vKey] = vOriginalData;
+			//mapOriginalData[vKey] = vOriginalData;
+			
+			return true;
+		}
+		
+		/** Function to Erase a Key from the Keychain. **/
+		bool EraseTransaction(std::vector<unsigned char> vKey)
+		{
+			MUTEX_LOCK(TX_MUTEX);
+			
+			mapEraseData[vKey] = 0;
+			if(mapTransactions.count(vKey))
+				mapTransactions.erase(vKey);
+			
+			if(mapOriginalData.count(vKey))
+				mapOriginalData.erase(vKey);
 			
 			return true;
 		}
@@ -173,6 +199,12 @@ namespace LLD
 			ssKey << key;
 			std::vector<unsigned char> vKey(ssKey.begin(), ssKey.end());
 			
+			if(pTransaction){
+				pTransaction->EraseTransaction(vKey);
+				
+				return true;
+			}
+		
 			/** Read a Record from Binary Data. **/
 			KeyDatabase* SectorKeys = GetKeychain(strKeychainRegistry);
 			if(!SectorKeys)
@@ -227,6 +259,17 @@ namespace LLD
 			std::vector<unsigned char> vData(ssValue.begin(), ssValue.end());
 
 			/** Commit to the Database. **/
+			if(pTransaction)
+			{
+				if(fDebug)
+					printf("Write() : Adding Transaction to Sector Chains.\n");
+				
+				std::vector<unsigned char> vOriginalData;
+				//Get(vKey, vOriginalData);
+				
+				return pTransaction->AddTransaction(vKey, vData, vOriginalData);
+			}
+			
 			return Put(vKey, vData);
 		}
 		
@@ -258,7 +301,13 @@ namespace LLD
 				fStream.read((char*) &vData[0], vData.size());
 				fStream.close();
 				
-				//printf("SECTOR GET:%s\n", HexStr(vData.begin(), vData.end()).c_str());
+				/** Check the Data Integrity of the Sector by comparing the Checksums. **/
+				uint64 nChecksum = SK64(vData);
+				if(cKey.nChecksum != nChecksum)
+					return error("Sector Get() : Checksums don't match data. Corrupted Sector.");
+				
+				if(GetArg("-verbose", 0) >= 3)
+					printf("SECTOR GET:%s\n", HexStr(vData.begin(), vData.end()).c_str());
 				
 				return true;
 			}
@@ -307,6 +356,9 @@ namespace LLD
 				cKey.nSectorSize  = vData.size();
 				cKey.nSectorStart = nStart;
 				
+				/** Check the Data Integrity of the Sector by comparing the Checksums. **/
+				cKey.nChecksum    = SK64(vData);
+				
 				/** Assign the Key to Keychain. **/
 				SectorKeys->Put(cKey);
 			}
@@ -340,11 +392,186 @@ namespace LLD
 				fStream.write((char*) &vData[0], vData.size());
 				fStream.close();
 				
-				cKey.nState = READY;
+				cKey.nState    = READY;
+				cKey.nChecksum = SK64(vData);
+				
 				SectorKeys->Put(cKey);
 			}
 			
-			//printf("SECTOR PUT:%s\n", HexStr(vData.begin(), vData.end()).c_str());
+			if(GetArg("-verbose", 0) >= 3)
+				printf("SECTOR PUT:%s\n", HexStr(vData.begin(), vData.end()).c_str());
+			
+			return true;
+		}
+		
+		/** Start a New Database Transaction. 
+			This will put all the database changes into pending state.
+			If any of the database updates fail in procewss it will roll the database back to its previous state. **/
+		void TransactionStart()
+		{
+			/** Delete a previous database transaction pointer if applicable. **/
+			if(pTransaction)
+				delete pTransaction;
+			
+			/** Create the new Database Transaction Object. **/
+			pTransaction = new SectorTransaction();
+			
+			if(GetArg("-verbose", 0) >= 4)
+				printf("TransactionStart() : New Sector Transaction Started.\n");
+		}
+		
+		/** Abort the current transaction that is pending in the transaction chain. **/
+		void TransactionAbort()
+		{
+			/** Delete the previous transaction pointer if applicable. **/
+			if(pTransaction)
+				delete pTransaction;
+			
+			/** Set the transaction pointer to null also acting like a flag **/
+			pTransaction = NULL;
+		}
+		
+		/** Return the database state back to its original state before transactions are commited. **/
+		bool RollbackTransactions()
+		{
+				/** Iterate the original data memory map to reset the database to its previous state. **/
+			for(typename std::map< std::vector<unsigned char>, std::vector<unsigned char> >::iterator nIterator = pTransaction->mapOriginalData.begin(); nIterator != pTransaction->mapOriginalData.end(); nIterator++ )
+				if(!Put(nIterator->first, nIterator->second))
+					return false;
+				
+			return true;
+		}
+		
+		/** Commit the Data in the Transaction Object to the Database Disk.
+			TODO: Handle the Transaction Rollbacks with a new Transaction Keychain and Sector Database. 
+			Make it temporary and named after the unique identity of the sector database. 
+			Fingerprint is SK64 hash of unified time and the sector database name along with some other data 
+			To be determined... **/
+		bool TransactionCommit()
+		{
+			MUTEX_LOCK(SECTOR_MUTEX);
+			
+			if(GetArg("-verbose", 0) >= 4)
+				printf("TransactionCommit() : Commiting Transactin to Datachain.\n");
+			
+			/** Check that there is a valid transaction to apply to the database. **/
+			if(!pTransaction)
+				return error("TransactionCommit() : No Transaction data to Commit.");
+			
+			/** Get the Keychain from the Sector Database. **/
+			KeyDatabase* SectorKeys = GetKeychain(strKeychainRegistry);
+			if(!SectorKeys)
+				return error("TransactionCommit() : Sector Keys not Registered for Name %s\n", strKeychainRegistry.c_str());
+			
+			/** Habdle setting the sector key flags so the database knows if the transaction was completed properly. **/
+			if(GetArg("-verbose", 0) >= 4)
+				printf("TransactionCommit() : Commiting Keys to Keychain.\n");
+			
+			for(typename std::map< std::vector<unsigned char>, std::vector<unsigned char> >::iterator nIterator = pTransaction->mapTransactions.begin(); nIterator != pTransaction->mapTransactions.end(); nIterator++ )
+			{
+				SectorKey cKey;
+				if(SectorKeys->HasKey(nIterator->first)) {
+					if(!SectorKeys->Get(nIterator->first, cKey))
+						return error("CommitTransaction() : Couldn't get the Active Sector Key.");
+					
+					cKey.nState = TRANSACTION;
+					SectorKeys->Put(cKey);
+				}
+			}
+			
+			
+			/** Commit the Sector Data to the Database. **/
+			if(GetArg("-verbose", 0) >= 4)
+				printf("TransactionCommit() : Commit Data to Datachain Sector Database.\n");
+			
+			for(typename std::map< std::vector<unsigned char>, std::vector<unsigned char> >::iterator nIterator = pTransaction->mapTransactions.begin(); nIterator != pTransaction->mapTransactions.end(); nIterator++ )
+			{
+				/** Declare the Key and Data for easier reference. **/
+				std::vector<unsigned char> vKey  = nIterator->first;
+				std::vector<unsigned char> vData = nIterator->second;
+				
+				/** Write Header if First Update. **/
+				if(!SectorKeys->HasKey(vKey))
+				{
+					/** TODO:: Assign a Sector File based on Database Sizes. **/
+					unsigned short nSectorFile = 0;
+					
+					/** Open the Stream to Read the data from Sector on File. **/
+					std::fstream fStream(strprintf("%s%s%u.dat", strBaseLocation.c_str(), strBaseName.c_str(), nSectorFile).c_str(), std::ios::in | std::ios::out | std::ios::binary);
+					
+					/** Create a new Sector Key. **/
+					SectorKey cKey(TRANSACTION, vKey, nSectorFile, 0, vData.size());
+					
+					/** If it is a New Sector, Assign a Binary Position. 
+						TODO: Track Sector Database File Sizes. **/
+					unsigned int nBegin = fStream.tellg();
+					fStream.seekg (0, std::ios::end);
+					
+					/** Find the Binary Starting Location. **/
+					unsigned int nStart = (unsigned int) fStream.tellg() - nBegin;
+					
+					/** Assign the Key to Keychain. **/
+					cKey.nSectorStart = nStart;
+					SectorKeys->Put(cKey);
+					
+					/** Write the Data to the Sector. **/
+					fStream.seekp(nStart, std::ios::beg);
+					fStream.write((char*) &vData[0], vData.size());
+					fStream.close();
+				}
+				else
+				{
+					/** Get the Sector Key from the Keychain. **/
+					SectorKey cKey;
+					if(!SectorKeys->Get(vKey, cKey)) {
+						SectorKeys->Erase(vKey);
+						
+						return false;
+					}
+						
+					/** Open the Stream to Read the data from Sector on File. **/
+					std::fstream fStream(strprintf("%s%s%u.dat", strBaseLocation.c_str(), strBaseName.c_str(), cKey.nSectorFile).c_str(), std::ios::in | std::ios::out | std::ios::binary);
+					
+					/** Locate the Sector Data from Sector Key. 
+						TODO: Make Paging more Efficient in Keys by breaking data into different locations in Database. **/
+					fStream.seekp(cKey.nSectorStart, std::ios::beg);
+					if(vData.size() > cKey.nSectorSize){
+						fStream.close();
+						printf("ERROR PUT (TOO LARGE) NO TRUNCATING ALLOWED (Old %u :: New %u):%s\n", cKey.nSectorSize, vData.size(), HexStr(vData.begin(), vData.end()).c_str());
+						
+						return false;
+					}
+					
+					/** Assign the Writing State for Sector. **/
+					fStream.write((char*) &vData[0], vData.size());
+					fStream.close();
+				}
+			}
+			
+			/** Update the Keychain with Checksums and READY Flag letting sectors know they were written successfully. **/
+			if(GetArg("-verbose", 0) >= 4)
+				printf("TransactionCommit() : Commiting Key Valid States to Keychain.\n");
+			
+			for(typename std::map< std::vector<unsigned char>, std::vector<unsigned char> >::iterator nIterator = pTransaction->mapTransactions.begin(); nIterator != pTransaction->mapTransactions.end(); nIterator++ )
+			{
+				/** Assign the Writing State for Sector. **/
+				SectorKey cKey;
+				if(!SectorKeys->Get(nIterator->first, cKey))
+					return error("CommitTransaction() : Failed to Get Key from Keychain.");
+				
+				/** Set the Sector states back to Active. **/
+				cKey.nState    = READY;
+				cKey.nChecksum = SK64(nIterator->second);
+				
+				/** Commit the Keys to Keychain Database. **/
+				if(!SectorKeys->Put(cKey))
+					return error("CommitTransaction() : Failed to Commit Key to Keychain.");
+			}
+			
+			/** Clean up the Sector Transaction Key. 
+				TODO: Delete the Sector and Keychain for Current Transaction Commit ID. **/
+			delete pTransaction;
+			pTransaction = NULL;
 			
 			return true;
 		}

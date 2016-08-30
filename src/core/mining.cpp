@@ -171,7 +171,9 @@ namespace LLP
 		{
 			for(map<uint512, Core::CBlock*>::iterator IT = MAP_BLOCKS.begin(); IT != MAP_BLOCKS.end(); ++ IT)
 			{
-				printf("%%%%%%%%%% Mining LLP: Deleting Block %s\n", IT->second->hashMerkleRoot.ToString().substr(0, 10).c_str());
+				if(GetArg("-verbose", 0) >= 2)
+					printf("%%%%%%%%%% Mining LLP: Deleting Block %s\n", IT->second->hashMerkleRoot.ToString().substr(0, 10).c_str());
+				
 				delete IT->second;
 			}
 				
@@ -188,7 +190,9 @@ namespace LLP
 			pCoinbaseTx = NULL;
 			
 			MAP_BLOCKS.clear();
-			printf("%%%%%%%%%% Mining LLP: New Block, Clearing Blocks Map.\n");
+			
+			if(GetArg("-verbose", 0) >= 2)
+				printf("%%%%%%%%%% Mining LLP: New Block, Clearing Blocks Map.\n");
 		}
 		
 		void Event(unsigned char EVENT, unsigned int LENGTH = 0)
@@ -292,7 +296,9 @@ namespace LLP
 						RESPONSE.LENGTH = RESPONSE.DATA.size();
 						
 						this->WritePacket(RESPONSE);
-						printf("%%%%%%%%%% Mining LLP: Sent Block %s to Worker.\n\n", NEW_BLOCK->GetHash().ToString().c_str());
+						
+						if(GetArg("-verbose", 0) >= 2)
+							printf("%%%%%%%%%% Mining LLP: Sent Block %s to Worker.\n\n", NEW_BLOCK->GetHash().ToString().c_str());
 					}
 				}
 				
@@ -330,7 +336,8 @@ namespace LLP
 				if(nChannel == 0)
 					return false; 
 				
-				printf("%%%%%%%%%% Mining LLP: Channel Set %u\n", nChannel); 
+				if(GetArg("-verbose", 0) >= 2)
+					printf("%%%%%%%%%% Mining LLP: Channel Set %u\n", nChannel); 
 				
 				return true; 
 			}
@@ -351,10 +358,8 @@ namespace LLP
 					RESPONSE.HEADER = COINBASE_FAIL;
 					this->WritePacket(RESPONSE);
 					
-					//pCoinbaseTx = NULL;
-					
-					printf("%%%%%%%%%% Mining LLP: Invalid Coinbase Tx\n") ;
-					//pCoinbase->Print();
+					if(GetArg("-verbose", 0) >= 2)
+						printf("%%%%%%%%%% Mining LLP: Invalid Coinbase Tx\n") ;
 				}
 				else
 				{
@@ -363,8 +368,6 @@ namespace LLP
 					this->WritePacket(RESPONSE);
 					
 					pCoinbaseTx = pCoinbase;
-					//pCoinbaseTx->Print();
-					//printf("%%%%%%%%%% Mining LLP: Coinbase Tx Set: %s. Clearing Maps.\n", pCoinbaseTx->IsValid() ? "TRUE" : "FALSE");
 				}
 				
 				return true;
@@ -447,7 +450,8 @@ namespace LLP
 				RESPONSE.DATA = uint2bytes64(nCoinbaseReward);
 				this->WritePacket(RESPONSE);
 				
-				//printf("%%%%%%%%%% Mining LLP: Sent Coinbase Reward of %"PRIu64"\n", nCoinbaseReward);
+				if(GetArg("-verbose", 0) >= 2)
+					printf("%%%%%%%%%% Mining LLP: Sent Coinbase Reward of %"PRIu64"\n", nCoinbaseReward);
 				
 				return true;
 			}
@@ -461,7 +465,8 @@ namespace LLP
 				if(nSubscribed == 0)
 					return false; 
 				
-				printf("%%%%%%%%%% Mining LLP: Subscribed to %u Blocks\n", nSubscribed); 
+				if(GetArg("-verbose", 0) >= 2)
+					printf("%%%%%%%%%% Mining LLP: Subscribed to %u Blocks\n", nSubscribed); 
 				
 				return true; 
 			}
@@ -475,12 +480,11 @@ namespace LLP
 				
 				if(!NEW_BLOCK)
 				{
-					printf("%%%%%%%%%% Mining LLP: Rejected Block Request. Incorrect Coinbase Tx.\n");
+					if(GetArg("-verbose", 0) >= 2)
+						printf("%%%%%%%%%% Mining LLP: Rejected Block Request. Incorrect Coinbase Tx.\n");
+					
 					return true;
 				}
-				
-				//NEW_BLOCK->Print();
-				
 				MAP_BLOCKS[NEW_BLOCK->hashMerkleRoot] = NEW_BLOCK;
 					
 				/** Construct a response packet by serializing the Block. **/
@@ -490,7 +494,6 @@ namespace LLP
 				RESPONSE.LENGTH = RESPONSE.DATA.size();
 				
 				this->WritePacket(RESPONSE);
-				//printf("%%%%%%%%%% Mining LLP: Sent Block %s\n\n", NEW_BLOCK->GetHash().ToString().c_str());
 				
 				return true;
 			}
@@ -512,7 +515,8 @@ namespace LLP
 					
 					this->WritePacket(RESPONSE);
 					
-					printf("%%%%%%%%%% Mining LLP: Block Not Found %s\n", hashMerkleRoot.ToString().substr(0, 20).c_str());
+					if(GetArg("-verbose", 0) >= 2)
+						printf("%%%%%%%%%% Mining LLP: Block Not Found %s\n", hashMerkleRoot.ToString().substr(0, 20).c_str());
 					return true;
 				}
 				
@@ -524,7 +528,9 @@ namespace LLP
 				Packet RESPONSE;
 				if(NEW_BLOCK->SignBlock(*pwalletMain) && Core::CheckWork(NEW_BLOCK, *pwalletMain, *pMiningKey))
 				{
-					printf("%%%%%%%%%% Mining LLP: Created New Block %s\n", NEW_BLOCK->hashMerkleRoot.ToString().substr(0, 10).c_str());
+					if(GetArg("-verbose", 0) >= 2)
+						printf("%%%%%%%%%% Mining LLP: Created New Block %s\n", NEW_BLOCK->hashMerkleRoot.ToString().substr(0, 10).c_str());
+					
 					RESPONSE.HEADER = BLOCK_ACCEPTED;
 					
 					ClearMap();
@@ -788,7 +794,7 @@ namespace Core
 				CTransaction& tx = (*mi).second;
 				if (tx.IsCoinBase() || tx.IsCoinStake() || !tx.IsFinal())
 				{
-					if(fDebug)
+					if(GetArg("-verbose", 0) >= 2)
 						printf("AddTransactions() : Transaction Is Coinbase/Coinstake or Not Final %s\n", tx.GetHash().ToString().substr(0, 10).c_str());
 						
 					continue;
@@ -823,7 +829,7 @@ namespace Core
 
 					dPriority += (double) nValueIn * nConf;
 
-					if (fDebug && GetBoolArg("-printpriority"))
+					if(GetArg("-verbose", 0) >= 2)
 						printf("priority     nValueIn=%-12"PRI64d" nConf=%-5d dPriority=%-20.1f\n", nValueIn, nConf, dPriority);
 				}
 
@@ -835,7 +841,7 @@ namespace Core
 				else
 					mapPriority.insert(make_pair(-dPriority, &(*mi).second));
 
-				if (fDebug && GetBoolArg("-printpriority"))
+				if(GetArg("-verbose", 0) >= 2)
 				{
 					printf("priority %-20.1f %s\n%s", dPriority, tx.GetHash().ToString().substr(0,10).c_str(), tx.ToString().c_str());
 					if (porphan)
@@ -858,7 +864,7 @@ namespace Core
 				unsigned int nTxSize = ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION);
 				if (nBlockSize + nTxSize >= MAX_BLOCK_SIZE_GEN)
 				{
-					if(fDebug)
+					if(GetArg("-verbose", 0) >= 2)
 						printf("AddTransactions() : Block Size Limits Reached on Transaction %s\n", tx.GetHash().ToString().substr(0, 10).c_str());
 						
 					continue;
@@ -868,7 +874,7 @@ namespace Core
 				unsigned int nTxSigOps = tx.GetLegacySigOpCount();
 				if (nBlockSigOps + nTxSigOps >= MAX_BLOCK_SIGOPS)
 				{
-					if(fDebug)
+					if(GetArg("-verbose", 0) >= 2)
 						printf("AddTransactions() : Too Many Legacy Signature Operations %s\n", tx.GetHash().ToString().substr(0, 10).c_str());
 						
 					continue;
@@ -878,7 +884,7 @@ namespace Core
 				// Timestamp limit
 				if (tx.nTime > GetUnifiedTimestamp() + MAX_UNIFIED_DRIFT)
 				{
-					if(fDebug)
+					if(GetArg("-verbose", 0) >= 2)
 						printf("AddTransactions() : Transaction Time Too Far in Future %s\n", tx.GetHash().ToString().substr(0, 10).c_str());
 						
 					continue;
@@ -896,7 +902,7 @@ namespace Core
 				bool fInvalid;
 				if (!tx.FetchInputs(indexdb, mapTestPoolTmp, false, true, mapInputs, fInvalid))
 				{
-					if(fDebug)
+					if(GetArg("-verbose", 0) >= 2)
 						printf("AddTransactions() : Failed to get Inputs %s\n", tx.GetHash().ToString().substr(0, 10).c_str());
 						
 					vRemove.push_back(tx);
@@ -906,7 +912,7 @@ namespace Core
 				int64 nTxFees = tx.GetValueIn(mapInputs) - tx.GetValueOut();
 				if (nTxFees < nMinFee)
 				{
-					if(fDebug)
+					if(GetArg("-verbose", 0) >= 2)
 						printf("AddTransactions() : Not Enough Fees %s\n", tx.GetHash().ToString().substr(0, 10).c_str());
 						
 					vRemove.push_back(tx);
@@ -916,7 +922,7 @@ namespace Core
 				nTxSigOps += tx.TotalSigOps(mapInputs);
 				if (nBlockSigOps + nTxSigOps >= MAX_BLOCK_SIGOPS)
 				{
-					if(fDebug)
+					if(GetArg("-verbose", 0) >= 2)
 						printf("AddTransactions() : Too many P2SH Signature Operations %s\n", tx.GetHash().ToString().substr(0, 10).c_str());
 						
 					vRemove.push_back(tx);
@@ -925,7 +931,7 @@ namespace Core
 
 				if (!tx.ConnectInputs(indexdb, mapInputs, mapTestPoolTmp, CDiskTxPos(1,1,1), pindexPrev, false, true))
 				{
-					if(fDebug)
+					if(GetArg("-verbose", 0) >= 2)
 						printf("AddTransactions() : Failed to Connect Inputs %s\n", tx.GetHash().ToString().substr(0, 10).c_str());
 						
 					vRemove.push_back(tx);
@@ -962,7 +968,7 @@ namespace Core
 
 			nLastBlockTx = nBlockTx;
 			nLastBlockSize = nBlockSize;
-			if (fDebug && GetBoolArg("-printpriority"))
+			if(GetArg("-verbose", 0) >= 2)
 				printf("AddTransactions(): total size %lu\n", nBlockSize);
 
 		}
@@ -985,9 +991,11 @@ namespace Core
 		
 		if(pblock->GetChannel() > 0 && !pblock->VerifyWork())
 			return error("Nexus Miner : proof of work not meeting target.");
-			
-		printf("Nexus Miner: new %s block found\n", GetChannelName(pblock->GetChannel()).c_str());
-		printf("  hash: %s  \n", hash.ToString().substr(0, 30).c_str());
+		
+		if(GetArg("-verbose", 0) >= 1){		
+			printf("Nexus Miner: new %s block found\n", GetChannelName(pblock->GetChannel()).c_str());
+			printf("  hash: %s  \n", hash.ToString().substr(0, 30).c_str());
+		}
 		
 		if(pblock->GetChannel() == 1)
 			printf("  prime cluster verified of size %f\n", GetDifficulty(nBits, 1));
@@ -1054,7 +1062,9 @@ namespace Core
 			if(!pblock)
 				continue;
 			
-			printf("Stake Minter : Created New Block %s\n", pblock->GetHash().ToString().substr(0, 20).c_str());
+			if(GetArg("-verbose", 0) >= 2)
+				printf("Stake Minter : Created New Block %s\n", pblock->GetHash().ToString().substr(0, 20).c_str());
+			
 			pblock->UpdateTime();
 			
 			
@@ -1062,14 +1072,17 @@ namespace Core
 			Wallet::TransactionType keyType;
 			if (!Wallet::Solver(pblock->vtx[0].vout[0].scriptPubKey, keyType, vKeys))
 			{
-				error("Stake Minter : Failed To Solve Trust Key Script.");
+				if(GetArg("-verbose", 0) >= 2)
+					error("Stake Minter : Failed To Solve Trust Key Script.");
+				
 				continue;
 			}
 
 			/** Ensure the Key is Public Key. No Pay Hash or Script Hash for Trust Keys. **/
 			if (keyType != Wallet::TX_PUBKEY)
 			{
-				error("Stake Minter : Trust Key must be of Public Key Type Created from Keypool.");
+				if(GetArg("-verbose", 0) >= 2)
+					error("Stake Minter : Trust Key must be of Public Key Type Created from Keypool.");
 				
 				continue;
 			}
@@ -1098,7 +1111,8 @@ namespace Core
 				LLD::CIndexDB indexdb("r");
 				if(!pblock->vtx[0].GetCoinstakeAge(indexdb, nCoinAge))
 				{
-					error("Stake Minter : Failed to Get Coinstake Age.");
+					if(GetArg("-verbose", 0) >= 2)
+						error("Stake Minter : Failed to Get Coinstake Age.");
 					
 					continue;
 				}
@@ -1110,8 +1124,10 @@ namespace Core
 			/** Set the Reporting Variables for the Qt. **/
 			dTrustWeight = nTrustWeight;
 			dBlockWeight = nBlockWeight;
-				
-			printf("Stake Minter : Staking at Trust Weight %f | Block Weight %f | Coin Age %"PRIu64" | Trust Age %"PRIu64"| Block Age %"PRIu64"\n", nTrustWeight, nBlockWeight, nCoinAge, nTrustAge, nBlockAge);
+			
+			if(GetArg("-verbose", 0) >= 1)			
+				printf("Stake Minter : Staking at Trust Weight %f | Block Weight %f | Coin Age %"PRIu64" | Trust Age %"PRIu64"| Block Age %"PRIu64"\n", nTrustWeight, nBlockWeight, nCoinAge, nTrustAge, nBlockAge);
+			
 			CBlockIndex* pindex = pindexBest;
 			while(true)
 			{
@@ -1128,7 +1144,9 @@ namespace Core
 				
 				if(pindex->GetBlockHash() != pindexBest->GetBlockHash())
 				{
-					printf("Stake Minter : New Best Block\n");
+					if(GetArg("-verbose", 0) >= 2)
+						printf("Stake Minter : New Best Block\n");
+					
 					break;
 				}
 				
@@ -1150,34 +1168,42 @@ namespace Core
 				CBigNum hashTarget;
 				hashTarget.SetCompact(pblock->nBits);
 				
-				if(pblock->nNonce % (unsigned int)((nTrustWeight + nBlockWeight) * 5) == 0 && fDebug)
+				if(pblock->nNonce % (unsigned int)((nTrustWeight + nBlockWeight) * 5) == 0 && GetArg("-verbose", 0) >= 2)
 					printf("Stake Minter : Below Threshold %f Required %f Incrementing nNonce %"PRIu64"\n", nThreshold, nRequired, pblock->nNonce);
 						
 				if (pblock->GetHash() < hashTarget.getuint1024())
 				{
 					
 					/** Sign the new Proof of Stake Block. **/
-					printf("Stake Minter : Found New Block Hash %s\n", pblock->GetHash().ToString().substr(0, 20).c_str());
+					if(GetArg("-verbose", 0) >= 1)
+						printf("Stake Minter : Found New Block Hash %s\n", pblock->GetHash().ToString().substr(0, 20).c_str());
+					
 					if (!pblock->SignBlock(*pwalletMain))
-					{
-						printf("Stake Minter : Could Not Sign Proof of Stake Block.");
+					{	
+						if(GetArg("-verbose", 0) >= 1)
+							printf("Stake Minter : Could Not Sign Proof of Stake Block.");
+						
 						break;
 					}
 					
 					if(!cTrustPool.Check(*pblock))
 					{
-						error("Stake Minter : Check Trust Key Failed...");
+						if(GetArg("-verbose", 0) >= 1)
+							error("Stake Minter : Check Trust Key Failed...");
+						
 						break;
 					}
 					
 					if (!pblock->CheckBlock())
 					{
-						error("Stake Minter : Check Block Failed...");
+						if(GetArg("-verbose", 0) >= 1)
+							error("Stake Minter : Check Block Failed...");
+						
 						break;
 					}
 					
-					//printf("Stake Minter : proof-of-stake block found %s\n", pblock->GetHash().ToString().c_str());
-					pblock->print();
+					if(GetArg("-verbose", 0) >= 1)
+						pblock->print();
 					
 					SetThreadPriority(THREAD_PRIORITY_NORMAL);
 					CheckWork(pblock, *pwalletMain, reservekey);

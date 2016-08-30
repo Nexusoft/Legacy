@@ -131,7 +131,7 @@ namespace Core
 		BOOST_FOREACH(CTransaction& tx, vtx)
 		{
 			CTxIndex txindexOld;
-			if (indexdb.ReadTxIndex(tx.GetHash(), txindexOld) && !tx.IsCoinBase())
+			if (indexdb.ReadTxIndex(tx.GetHash(), txindexOld))
 			{
 				BOOST_FOREACH(CDiskTxPos &pos, txindexOld.vSpent)
 					if (pos.IsNull()){
@@ -169,8 +169,6 @@ namespace Core
 				bool fInvalid;
 				if (!tx.FetchInputs(indexdb, mapQueuedChanges, true, false, mapInputs, fInvalid))
 					return error("ConnectBlock() : Failed to Connect Inputs.");
-					
-				printf("ConnectBlock() : Got Inputs %u\n", nIterator);
 
 
 				// Add in sigops done by pay-to-script-hash inputs;
@@ -197,7 +195,9 @@ namespace Core
 		// track money supply and mint amount info
 		pindex->nMint = nValueOut - nValueIn;
 		pindex->nMoneySupply = (pindex->pprev ? pindex->pprev->nMoneySupply : 0) + nValueOut - nValueIn;
-		printf("Generated %f Nexus\n", (double) pindex->nMint / COIN);
+		
+		if(GetArg("-verbose", 0) >= 0)
+			printf("Generated %f Nexus\n", (double) pindex->nMint / COIN);
 		
 		if (!indexdb.WriteBlockIndex(CDiskBlockIndex(pindex)))
 			return error("Connect() : WriteBlockIndex for pindex failed");
@@ -211,7 +211,7 @@ namespace Core
 
 		// Nexus: fees are not collected by miners as in bitcoin
 		// Nexus: fees are destroyed to compensate the entire network
-		if (fDebug && GetBoolArg("-printcreation"))
+		if(GetArg("-verbose", 0) >= 1)
 			printf("ConnectBlock() : destroy=%s nFees=%"PRI64d"\n", FormatMoney(nFees).c_str(), nFees);
 
 		// Update block index on disk without changing it in memory.
@@ -280,7 +280,7 @@ namespace Core
 
 			
 			/** Debug output if there is a fork. **/
-			if(vDisconnect.size() > 0)
+			if(vDisconnect.size() > 0 && GetArg("-verbose", 0) >= 1)
 			{
 				printf("REORGANIZE: Disconnect %i blocks; %s..%s\n", vDisconnect.size(), pfork->GetBlockHash().ToString().substr(0,20).c_str(), pindexBest->GetBlockHash().ToString().substr(0,20).c_str());
 				printf("REORGANIZE: Connect %i blocks; %s..%s\n", vConnect.size(), pfork->GetBlockHash().ToString().substr(0,20).c_str(), pindexNew->GetBlockHash().ToString().substr(0,20).c_str());
@@ -299,8 +299,6 @@ namespace Core
 				/** Remove Transactions from Current Trust Keys **/
 				if(block.IsProofOfStake() && !cTrustPool.Remove(block))
 					return error("CBlock::SetBestChain() : Disconnect Failed to Remove Trust Key at Block %s", pindex->GetBlockHash().ToString().substr(0,20).c_str());
-					
-				printf("Disconnected %s...\n", pindex->GetBlockHash().ToString().substr(0,20).c_str());
 				
 				/** Resurrect Memory Pool Transactions. **/
 				BOOST_FOREACH(const CTransaction& tx, block.vtx)
@@ -327,8 +325,6 @@ namespace Core
 				/** Add Transaction to Current Trust Keys **/
 				if(block.IsProofOfStake() && !cTrustPool.Accept(block))
 					return error("CBlock::SetBestChain() : Failed To Accept Trust Key Block.");
-					
-				printf("Connected %s...\n", pindex->GetBlockHash().ToString().substr(0,20).c_str());
 
 				/** Resurrect Memory Pool Transactions. **/
 				BOOST_FOREACH(const CTransaction& tx, block.vtx)
@@ -336,7 +332,7 @@ namespace Core
 						vDelete.push_back(tx);
 			}
 			
-			
+			/** Write the Best Chain to the Index Database LLD. **/
 			if (!indexdb.WriteHashBestChain(pindexNew->GetBlockHash()))
 				return error("CBlock::SetBestChain() : WriteHashBestChain failed");
 
@@ -380,7 +376,8 @@ namespace Core
 		nBestChainTrust = pindexNew->nChainTrust;
 		nTimeBestReceived = GetUnifiedTimestamp();
 		
-		printf("SetBestChain: new best=%s  height=%d  trust=%"PRIu64"  moneysupply=%s\n", hashBestChain.ToString().substr(0,20).c_str(), nBestHeight, nBestChainTrust, FormatMoney(pindexBest->nMoneySupply).c_str());
+		if(GetArg("-verbose", 0) >= 0)
+			printf("SetBestChain: new best=%s  height=%d  trust=%"PRIu64"  moneysupply=%s\n", hashBestChain.ToString().substr(0,20).c_str(), nBestHeight, nBestChainTrust, FormatMoney(pindexBest->nMoneySupply).c_str());
 		
 		/** Grab the transactions for the block and set the address balances. **/
 		for(int nTx = 0; nTx < vtx.size(); nTx++)
@@ -511,13 +508,18 @@ namespace Core
 
 		/** Write the new Block to Disk. **/
 		LLD::CIndexDB indexdb("r+");
+		indexdb.TransactionStart();
 		indexdb.WriteBlockIndex(CDiskBlockIndex(pindexNew));
 
 		/** Set the Best chain if Highest Trust. **/
 		if (pindexNew->nChainTrust > nBestChainTrust)
 			if (!SetBestChain(indexdb, pindexNew))
 				return false;
-
+			
+		/** Commit the Transaction to the Database. **/
+		if(!indexdb.TransactionCommit())
+			return error("CBlock::AddToBlockIndex() : Failed to Commit Transaction to the Database.");
+		
 		if (pindexNew == pindexBest)
 		{
 			// Notify UI to display prev block's coinbase if it was ours
@@ -869,7 +871,8 @@ namespace Core
 		// If don't already have its previous block, shunt it off to holding area until we get it
 		if (!mapBlockIndex.count(pblock->hashPrevBlock))
 		{
-			printf("ProcessBlock: ORPHAN BLOCK, prev=%s\n", pblock->hashPrevBlock.ToString().substr(0,20).c_str());
+			if(GetArg("-verbose", 0) >= 0)
+				printf("ProcessBlock: ORPHAN BLOCK, prev=%s\n", pblock->hashPrevBlock.ToString().substr(0,20).c_str());
 			
 			CBlock* pblock2 = new CBlock(*pblock);
 			mapOrphanBlocks.insert(make_pair(hash, pblock2));
@@ -1039,7 +1042,8 @@ namespace Core
 			TRUST_KEY_MIN_INTERVAL = 5;
 		}
 
-		printf("%s Network: genesis=0x%s nBitsLimit=0x%08x nBitsInitial=0x%08x nCoinbaseMaturity=%d\n",
+		if(GetArg("-verbose", 0) >= 0)
+			printf("%s Network: genesis=0x%s nBitsLimit=0x%08x nBitsInitial=0x%08x nCoinbaseMaturity=%d\n",
 			   fTestNet? "Test" : "Nexus", hashGenesisBlock.ToString().substr(0, 20).c_str(), bnProofOfWorkLimit[0].GetCompact(), bnProofOfWorkStart[0].GetCompact(), nCoinbaseMaturity);
 		
 		/*

@@ -17,10 +17,11 @@ namespace LLD
 		Only Flush to Database if not Cached. (TODO) **/
 	enum 
 	{
-		EMPTY = 0,
-		READ  = 1,
-		WRITE = 2,
-		READY = 3
+		EMPTY 			= 0,
+		READ  			= 1,
+		WRITE 			= 2,
+		READY 			= 3,
+		TRANSACTION     = 4
 	};
 	
 	/** Key Class to Hold the Location of Sectors it is referencing. 
@@ -64,7 +65,7 @@ namespace LLD
 				READWRITE(nSectorFile);
 				READWRITE(nSectorSize);
 				READWRITE(nSectorStart);
-				//READWRITE(nChecksum);
+				READWRITE(nChecksum);
 			}
 		)
 		
@@ -77,12 +78,11 @@ namespace LLD
 		}
 		
 		/** Return the Size of the Key Sector on Disk. **/
-		unsigned int Size() { return (11 + nLength); }
+		unsigned int Size() { return (19 + nLength); }
 		
 		/** Check for Key Activity on Sector. **/
 		bool Empty() { return (nState == EMPTY); }
-		bool Read()  { return (nState != EMPTY && nState != WRITE); }
-		bool Write() { return (nState != EMPTY && nState != READ);  }
+		bool Ready() { return (nState == READY); }
 		
 	};
 
@@ -178,7 +178,7 @@ namespace LLD
 				unsigned int nPosition = fIncoming.tellg();
 				
 				/** Read the State and Size of Sector Header. **/
-				std::vector<unsigned char> vHeader(fMemoryCaching ? 11 : 3, 0);
+				std::vector<unsigned char> vHeader(fMemoryCaching ? 19 : 3, 0);
 				fIncoming.read((char*) &vHeader[0], vHeader.size());
 				
 				SectorKey cKey;
@@ -187,11 +187,11 @@ namespace LLD
 				
 				
 				/** Skip Empty Sectors for Now. **/
-				if(!cKey.Empty()) {
+				if(cKey.Ready()) {
 				
 					/** Read the Key Data. **/
 					std::vector<unsigned char> vKey(cKey.nLength, 0);
-					fIncoming.seekg(nPosition + 11);
+					fIncoming.seekg(nPosition + 19);
 					fIncoming.read((char*) &vKey[0], vKey.size());
 					
 					/** Set the Key Data. **/
@@ -202,11 +202,12 @@ namespace LLD
 					//	mapKeysCache[vKey] = cKey;
 					
 					/** Debug Output of Sector Key Information. **/
-					printf("KeyDB::Load() : State: %u Length: %u Location: %u Key: %s\n", cKey.nState, cKey.nLength, mapKeys[vKey], HexStr(vKey.begin(), vKey.end()).c_str());
+					if(GetArg("-verbose", 0) >= 4)
+						printf("KeyDB::Load() : State: %u Length: %u Location: %u Key: %s\n", cKey.nState, cKey.nLength, mapKeys[vKey], HexStr(vKey.begin(), vKey.end()).c_str());
 				}
 				else
 					/** Move the Cursor to the Next Record. **/
-					fIncoming.seekg(nPosition + cKey.Size() + 11, std::ios::beg);
+					fIncoming.seekg(nPosition + cKey.Size() + 19, std::ios::beg);
 			}
 			
 			fIncoming.close();
@@ -249,7 +250,8 @@ namespace LLD
 			fStream.close();
 				
 			/** Debug Output of Sector Key Information. **/
-			printf("KEY::Put(): State: %s Length: %u Location: %u Sector File: %u Sector Size: %u Sector Start: %u\n Key: %s\n", cKey.nState == READY ? "Valid" : "Invalid", cKey.nLength, mapKeys[cKey.vKey], cKey.nSectorFile, cKey.nSectorSize, cKey.nSectorStart, HexStr(cKey.vKey.begin(), cKey.vKey.end()).c_str());
+			if(GetArg("-verbose", 0) >= 3)
+				printf("KEY::Put(): State: %s | Length: %u | Location: %u | Sector File: %u | Sector Size: %u | Sector Start: %u\n Key: %s\n", cKey.nState == READY ? "Valid" : "Invalid", cKey.nLength, mapKeys[cKey.vKey], cKey.nSectorFile, cKey.nSectorSize, cKey.nSectorStart, HexStr(cKey.vKey.begin(), cKey.vKey.end()).c_str());
 			
 			return true;
 		}
@@ -300,19 +302,19 @@ namespace LLD
 				fStream.seekg(mapKeys[vKey], std::ios::beg);
 			
 				/** Read the State and Size of Sector Header. **/
-				std::vector<unsigned char> vData(11, 0);
-				fStream.read((char*) &vData[0], 11);
+				std::vector<unsigned char> vData(19, 0);
+				fStream.read((char*) &vData[0], 19);
 				
 				/** De-serialize the Header. **/
 				CDataStream ssHeader(vData, SER_LLD, DATABASE_VERSION);
 				ssHeader >> cKey;
 				
 				/** Debug Output of Sector Key Information. **/
-				printf("KEY::Get(): State: %s Length: %u Location: %u Sector File: %u Sector Size: %u Sector Start: %u\n Key: %s\n", cKey.nState == READY ? "Valid" : "Invalid", cKey.nLength, mapKeys[cKey.vKey], cKey.nSectorFile, cKey.nSectorSize, cKey.nSectorStart, HexStr(cKey.vKey.begin(), cKey.vKey.end()).c_str());
+				if(GetArg("-verbose", 0) >= 3)
+					printf("KEY::Get(): State: %s Length: %u Location: %u Sector File: %u Sector Size: %u Sector Start: %u\n Key: %s\n", cKey.nState == READY ? "Valid" : "Invalid", cKey.nLength, mapKeys[cKey.vKey], cKey.nSectorFile, cKey.nSectorSize, cKey.nSectorStart, HexStr(cKey.vKey.begin(), cKey.vKey.end()).c_str());
 						
-				
 				/** Skip Empty Sectors for Now. (TODO: Expand to Reads / Writes) **/
-				if(cKey.nState == READY) {
+				if(!cKey.Empty()) {
 				
 					/** Read the Key Data. **/
 					std::vector<unsigned char> vKeyIn(cKey.nLength, 0);
@@ -328,8 +330,6 @@ namespace LLD
 					
 					return true;
 				}
-				else
-					Erase(vKey);
 				
 				/** Close the Stream. **/
 				fStream.close();

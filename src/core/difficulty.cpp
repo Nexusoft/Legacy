@@ -92,7 +92,7 @@ namespace Core
 			nIterator += (nIndex * 3);
 			nWeightedAverage += nTime;
 			
-			if(fDebug)
+			if(GetArg("-verbose", 0) >= 2)
 				printf("GetWeightedTimes() : Time %"PRId64" for Weight %i\n", (nTime / (nIndex * 3)), nIndex);
 		}
 			
@@ -191,7 +191,7 @@ namespace Core
 			bnNew = bnProofOfWorkLimit[0];
 			
 			
-		if(output)
+		if(GetArg("-verbose", 0) >= 1 && output)
 		{
 			int64 nDays, nHours, nMinutes;
 			GetChainTimes(GetChainAge(pindexFirst->GetBlockTime()), nDays, nHours, nMinutes);
@@ -313,7 +313,7 @@ namespace Core
 			nBits = bnProofOfWorkLimit[1].getuint();
 			
 		/** Console Output **/
-		if(output)
+		if(GetArg("-verbose", 0) >= 1 && output)
 		{
 			int64 nDays, nHours, nMinutes;
 			GetChainTimes(GetChainAge(pindexFirst->GetBlockTime()), nDays, nHours, nMinutes);
@@ -435,7 +435,7 @@ namespace Core
 			
 			
 		/** Console Output if Flagged. **/
-		if(output)
+		if(GetArg("-verbose", 0) >= 1 && output)
 		{
 			int64 nDays, nHours, nMinutes;
 			GetChainTimes(GetChainAge(pindexFirst->GetBlockTime()), nDays, nHours, nMinutes);
