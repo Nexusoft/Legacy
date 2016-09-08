@@ -28,7 +28,7 @@
 using namespace std;
 using namespace boost;
 
-array<int, THREAD_MAX> vnThreadsRunning;
+boost::array<int, THREAD_MAX> vnThreadsRunning;
 
 namespace Net
 {
