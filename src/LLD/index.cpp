@@ -196,7 +196,7 @@ namespace LLD
 
 		/** Verify the Blocks in the Best Chain To Last Checkpoint. **/
 		int nCheckLevel = GetArg("-checklevel", 6);
-		int nCheckDepth = GetArg( "-checkblocks", 5);
+		int nCheckDepth = GetArg( "-checkblocks", 0);
 		//if (nCheckDepth == 0)
 		//	nCheckDepth = 1000000000;
 			
@@ -209,7 +209,7 @@ namespace LLD
 		map<pair<unsigned int, unsigned int>, Core::CBlockIndex*> mapBlockPos;
 		for (Core::CBlockIndex* pindex = Core::pindexBest; pindex && pindex->pprev && nCheckDepth > 0; pindex = pindex->pprev)
 		{
-			if (pindex->nHeight < Core::nBestHeight - nCheckDepth)
+			if (pindex->nHeight <= Core::nBestHeight - nCheckDepth)
 				break;
 				
 			Core::CBlock block;

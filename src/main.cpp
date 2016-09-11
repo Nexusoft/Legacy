@@ -472,6 +472,8 @@ bool AppInit2(int argc, char* argv[])
     Core::CBlockIndex *pindexRescan = Core::pindexBest;
     if (GetBoolArg("-rescan"))
         pindexRescan = Core::pindexGenesisBlock;
+	 
+	 /* OMIT for Now
     else
     {
         Wallet::CWalletDB walletdb("wallet.dat");
@@ -479,6 +481,8 @@ bool AppInit2(int argc, char* argv[])
         if (walletdb.ReadBestBlock(locator))
             pindexRescan = locator.GetBlockIndex();
     }
+    */
+    
     if (Core::pindexBest != pindexRescan && Core::pindexBest && pindexRescan && Core::pindexBest->nHeight > pindexRescan->nHeight)
     {
         InitMessage(_("Rescanning..."));
