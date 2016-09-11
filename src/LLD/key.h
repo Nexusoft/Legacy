@@ -250,7 +250,7 @@ namespace LLD
 			fStream.close();
 				
 			/** Debug Output of Sector Key Information. **/
-			if(GetArg("-verbose", 0) >= 3)
+			if(GetArg("-verbose", 0) >= 4)
 				printf("KEY::Put(): State: %s | Length: %u | Location: %u | Sector File: %u | Sector Size: %u | Sector Start: %u\n Key: %s\n", cKey.nState == READY ? "Valid" : "Invalid", cKey.nLength, mapKeys[cKey.vKey], cKey.nSectorFile, cKey.nSectorSize, cKey.nSectorStart, HexStr(cKey.vKey.begin(), cKey.vKey.end()).c_str());
 			
 			return true;
@@ -310,7 +310,7 @@ namespace LLD
 				ssHeader >> cKey;
 				
 				/** Debug Output of Sector Key Information. **/
-				if(GetArg("-verbose", 0) >= 3)
+				if(GetArg("-verbose", 0) >= 4)
 					printf("KEY::Get(): State: %s Length: %u Location: %u Sector File: %u Sector Size: %u Sector Start: %u\n Key: %s\n", cKey.nState == READY ? "Valid" : "Invalid", cKey.nLength, mapKeys[cKey.vKey], cKey.nSectorFile, cKey.nSectorSize, cKey.nSectorStart, HexStr(cKey.vKey.begin(), cKey.vKey.end()).c_str());
 						
 				/** Skip Empty Sectors for Now. (TODO: Expand to Reads / Writes) **/

@@ -136,7 +136,6 @@ namespace Core
 				BOOST_FOREACH(CDiskTxPos &pos, txindexOld.vSpent)
 					if (pos.IsNull()){
 						
-						
 						return error("ConnectBlock() : Transaction Disk Index is Null %s", tx.GetHash().ToString().c_str());
 					}
 						
@@ -319,6 +318,7 @@ namespace Core
 
 				if (!block.ConnectBlock(indexdb, pindex))
 				{
+                    indexdb.TransactionAbort();
 					return error("CBlock::SetBestChain() : ConnectBlock %s Height %u failed", pindex->GetBlockHash().ToString().substr(0,20).c_str(), pindex->nHeight);
 				}
 				
@@ -852,7 +852,7 @@ namespace Core
 
 			
 		/** Relay the Block to Nexus Network. **/
-		if (hashBestChain == hash)
+		if (hashBestChain == hash && !IsInitialBlockDownload())
 		{
 			LOCK(Net::cs_vNodes);
 			BOOST_FOREACH(Net::CNode* pnode, Net::vNodes)
@@ -887,12 +887,8 @@ namespace Core
 			mapOrphanBlocksByPrev.insert(make_pair(pblock2->hashPrevBlock, pblock2));
 			
 			/** Simple Catch until I finish Checkpoint Syncing. **/
-			pfrom->PushGetBlocks(pindexBest, 0);
-
-			// Ask this guy to fill in what we're missing
-			if (pfrom)
-				pfrom->AskFor(Net::CInv(Net::MSG_BLOCK, WantedByOrphan(pblock2)));
-			
+            if(pfrom)
+                pfrom->PushGetBlocks(pindexBest, 0);
 			
 			return true;
 		}

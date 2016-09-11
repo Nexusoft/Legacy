@@ -93,7 +93,7 @@ namespace Core
 
 
 
-
+	/* Static Reference for now. */
 	bool ProcessMessage(Net::CNode* pfrom, string strCommand, CDataStream& vRecv)
 	{
 		static map<Net::CService, vector<unsigned char> > mapReuseKey;
@@ -314,7 +314,7 @@ namespace Core
 				pfrom->AddInventoryKnown(inv);
 
 				bool fAlreadyHave = AlreadyHave(indexdb, inv);
-				if(GetArg("-verbose", 0) >= 2)
+				if(GetArg("-verbose", 0) >= 3)
 					printf("  got inventory: %s  %s\n", inv.ToString().c_str(), fAlreadyHave ? "have" : "new");
 
 				if (!fAlreadyHave)
@@ -327,7 +327,7 @@ namespace Core
 					// this situation and push another getblocks to continue.
 					std::vector<Net::CInv> vGetData(1,inv);
 					pfrom->PushGetBlocks(mapBlockIndex[inv.hash], uint1024(0));
-					if(GetArg("-verbose", 0) >= 2)
+					if(GetArg("-verbose", 0) >= 3)
 						printf("force request: %s\n", inv.ToString().c_str());
 				}
 
@@ -352,7 +352,7 @@ namespace Core
 				if (fShutdown)
 					return true;
 					
-				if(GetArg("-verbose", 0) >= 2)
+				if(GetArg("-verbose", 0) >= 3)
 					printf("received getdata for: %s\n", inv.ToString().c_str());
 
 				if (inv.type == Net::MSG_BLOCK)
@@ -415,14 +415,14 @@ namespace Core
 			int nLimit = 1000 + locator.GetDistanceBack();
 			unsigned int nBytes = 0;
 			
-			if(GetArg("-verbose", 0) >= 2)
+			if(GetArg("-verbose", 0) >= 3)
 				printf("getblocks %d to %s limit %d\n", (pindex ? pindex->nHeight : -1), hashStop.ToString().substr(0,20).c_str(), nLimit);
 			
 			for (; pindex; pindex = pindex->pnext)
 			{
 				if (pindex->GetBlockHash() == hashStop)
 				{
-					if(GetArg("-verbose", 0) >= 2)
+					if(GetArg("-verbose", 0) >= 3)
 						printf("  getblocks stopping at %d %s (%u bytes)\n", pindex->nHeight, pindex->GetBlockHash().ToString().substr(0,20).c_str(), nBytes);
 					
 					// Nexus: tell downloading node about the latest block if it's
@@ -439,7 +439,7 @@ namespace Core
 				{
 					// When this block is requested, we'll send an inv that'll make them
 					// getblocks the next batch of inventory.
-					if(GetArg("-verbose", 0) >= 2)
+					if(GetArg("-verbose", 0) >= 3)
 						printf("  getblocks stopping at limit %d %s (%u bytes)\n", pindex->nHeight, pindex->GetBlockHash().ToString().substr(0,20).c_str(), nBytes);
 					
 					pfrom->hashContinue = pindex->GetBlockHash();
@@ -475,7 +475,7 @@ namespace Core
 			vector<CBlock> vHeaders;
 			int nLimit = 2000;
 			
-			if(GetArg("-verbose", 0) >= 2)
+			if(GetArg("-verbose", 0) >= 3)
 				printf("getheaders %d to %s\n", (pindex ? pindex->nHeight : -1), hashStop.ToString().substr(0,20).c_str());
 			
 			for (; pindex; pindex = pindex->pnext)
@@ -539,7 +539,7 @@ namespace Core
 							// invalid orphan
 							vEraseQueue.push_back(inv.hash.getuint512());
 							
-							if(GetArg("-verbose", 0) >= 1)
+							if(GetArg("-verbose", 0) >= 0)
 								printf("   removed invalid orphan tx %s\n", inv.hash.ToString().substr(0,10).c_str());
 						}
 					}
@@ -566,7 +566,7 @@ namespace Core
 			CBlock block;
 			vRecv >> block;
 
-			if(GetArg("-verbose", 0) >= 2)
+			if(GetArg("-verbose", 0) >= 3)
 				printf("received block %s\n", block.GetHash().ToString().substr(0,20).c_str());
 			
 			if(GetArg("-verbose", 0) >= 1)
@@ -644,7 +644,7 @@ namespace Core
 		unsigned char pchMessageStart[4];
 		Net::GetMessageStart(pchMessageStart);
 		static int64 nTimeLastPrintMessageStart = 0;
-		if (GetArg("-verbose", 0) >= 2 && nTimeLastPrintMessageStart + 30 < GetUnifiedTimestamp())
+		if (GetArg("-verbose", 0) >= 3 && nTimeLastPrintMessageStart + 30 < GetUnifiedTimestamp())
 		{
 			string strMessageStart((const char *)pchMessageStart, sizeof(pchMessageStart));
 			vector<unsigned char> vchMessageStart(strMessageStart.begin(), strMessageStart.end());
@@ -891,7 +891,7 @@ namespace Core
 				const Net::CInv& inv = (*pto->mapAskFor.begin()).second;
 				if (!AlreadyHave(CIndexDB, inv))
 				{
-					if(GetArg("-verbose", 0) >= 2)
+					if(GetArg("-verbose", 0) >= 3)
 						printf("sending getdata: %s\n", inv.ToString().c_str());
 					
 					vGetData.push_back(inv);

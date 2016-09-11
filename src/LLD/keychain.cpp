@@ -15,7 +15,7 @@ namespace LLD
 		MUTEX_LOCK(REGISTRY_MUTEX);
 		
 		/** Create the New Keychain Database. **/
-		KeyDatabase* SectorKeys = new KeyDatabase(GetDefaultDataDir().string() + "//keychain//", strBaseName);
+		KeyDatabase* SectorKeys = new KeyDatabase(GetDefaultDataDir().string() + "/keychain/", strBaseName);
 		SectorKeys->Initialize();
 		
 		/** Log the new Keychain into the Memeory Map. **/

@@ -174,7 +174,7 @@ namespace LLD
 		SectorDatabase(std::string strName, std::string strKeychain, const char* pszMode="r+")
 		{
 			strKeychainRegistry = strKeychain;
-			strBaseLocation = GetDefaultDataDir().string() + "\\datachain\\"; 
+			strBaseLocation = GetDefaultDataDir().string() + "/datachain/"; 
 			strBaseName = strName;
 			
 			/** Read only flag when instantiating new database. **/
@@ -182,7 +182,11 @@ namespace LLD
 			
 			Initialize();
 		}
-		~SectorDatabase() { }
+		~SectorDatabase()
+        { 
+            if (pTransaction) 
+                delete pTransaction;
+        }
 		
 		/** Initialize Sector Database. **/
 		void Initialize()
@@ -334,7 +338,7 @@ namespace LLD
 				if(cKey.nChecksum != nChecksum)
 					return error("Sector Get() : Checksums don't match data. Corrupted Sector.");
 				
-				if(GetArg("-verbose", 0) >= 3)
+				if(GetArg("-verbose", 0) >= 4)
 					printf("SECTOR GET:%s\n", HexStr(vData.begin(), vData.end()).c_str());
 				
 				return true;
@@ -426,7 +430,7 @@ namespace LLD
 				SectorKeys->Put(cKey);
 			}
 			
-			if(GetArg("-verbose", 0) >= 3)
+			if(GetArg("-verbose", 0) >= 4)
 				printf("SECTOR PUT:%s\n", HexStr(vData.begin(), vData.end()).c_str());
 			
 			return true;
@@ -495,6 +499,7 @@ namespace LLD
 			if(GetArg("-verbose", 0) >= 4)
 				printf("TransactionCommit() : Commiting Keys to Keychain.\n");
 			
+			/** Set the Sector Keys to an Invalid State to know if there are interuptions the sector was not finished successfully. **/
 			for(typename std::map< std::vector<unsigned char>, std::vector<unsigned char> >::iterator nIterator = pTransaction->mapTransactions.begin(); nIterator != pTransaction->mapTransactions.end(); nIterator++ )
 			{
 				SectorKey cKey;
@@ -507,6 +512,16 @@ namespace LLD
 				}
 			}
 			
+			/** Update the Keychain with Checksums and READY Flag letting sectors know they were written successfully. **/
+			if(GetArg("-verbose", 0) >= 4)
+				printf("TransactionCommit() : Erasing Sector Keys Flagged for Deletingn.\n");
+			
+			/** Erase all the Transactions that are set to be erased. That way if they are assigned a TRANSACTION flag we know to roll back their key to orginal data. **/
+			for(typename std::map< std::vector<unsigned char>, unsigned int >::iterator nIterator = pTransaction->mapEraseData.begin(); nIterator != pTransaction->mapEraseData.end(); nIterator++ )
+			{
+				if(!SectorKeys->Erase(nIterator->first))
+					return error("CommitTransaction() : Couldn't get the Active Sector Key for Delete.");
+			}
 			
 			/** Commit the Sector Data to the Database. **/
 			if(GetArg("-verbose", 0) >= 4)

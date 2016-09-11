@@ -221,7 +221,7 @@ namespace LLD
 		Core::pindexBest->pnext = NULL;
 
 		/** Verify the Blocks in the Best Chain To Last Checkpoint. **/
-		int nCheckLevel = GetArg("-checklevel", 1);
+		int nCheckLevel = GetArg("-checklevel", 6);
 		int nCheckDepth = GetArg( "-checkblocks", 5);
 		//if (nCheckDepth == 0)
 		//	nCheckDepth = 1000000000;
@@ -241,6 +241,8 @@ namespace LLD
 			Core::CBlock block;
 			if (!block.ReadFromDisk(pindex))
 				return error("LoadBlockIndex() : block.ReadFromDisk failed");
+			
+			block.print();
 				
 			if (nCheckLevel > 0 && !block.CheckBlock())
 			{
@@ -259,7 +261,7 @@ namespace LLD
 					Core::CTxIndex txindex;
 					if (ReadTxIndex(hashTx, txindex))
 					{
-					
+						
 						// check level 3: checker transaction hashes
 						if (nCheckLevel>2 || pindex->nFile != txindex.pos.nFile || pindex->nBlockPos != txindex.pos.nBlockPos)
 						{
@@ -323,6 +325,7 @@ namespace LLD
 							}
 						}
 					}
+					
 					// check level 5: check whether all prevouts are marked spent
 					if (nCheckLevel>4)
 					{

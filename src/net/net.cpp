@@ -28,8 +28,7 @@
 using namespace std;
 using namespace boost;
 
-array<int, THREAD_MAX> vnThreadsRunning;
-
+boost::array<int, THREAD_MAX> vnThreadsRunning;
 namespace Net
 {
 	static const int MAX_OUTBOUND_CONNECTIONS = 8;
