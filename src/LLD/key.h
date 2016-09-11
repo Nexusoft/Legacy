@@ -33,7 +33,7 @@ namespace LLD
 		/** The Key Header:
 			Byte 0: nState
 			Byte 1 - 3: nLength  **/
-		unsigned char   		   nState;
+		unsigned char   		   	nState;
 		unsigned short 			   nLength;
 		std::vector<unsigned char> vKey;
 		
@@ -41,7 +41,7 @@ namespace LLD
 			Sector in the Sector Database of 
 			Given Sector Key. **/
 		unsigned short 			   nSectorFile;
-		unsigned short   		   nSectorSize;
+		unsigned short   		   	nSectorSize;
 		unsigned int   			   nSectorStart;
 		
 		/** Checksum of Original Data to ensure no database corrupted sectors. 
