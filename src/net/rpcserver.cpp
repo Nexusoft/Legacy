@@ -373,6 +373,13 @@ namespace Net
 		obj.push_back(Pair("balance",       ValueFromAmount(pwalletMain->GetBalance())));
 		obj.push_back(Pair("newmint",       ValueFromAmount(pwalletMain->GetNewMint())));
 		obj.push_back(Pair("stake",         ValueFromAmount(pwalletMain->GetStake())));
+
+		double dPercent = ((double)Core::dTrustWeight + (double)Core::dBlockWeight) / 37.5;
+		obj.push_back(Pair("interestweight", (double)Core::dInterestRate * 100.0));
+		obj.push_back(Pair("stakeweight",    dPercent * 100.0));
+		obj.push_back(Pair("trustweight",    (double)Core::dTrustWeight * 100.0 / 17.5));
+		obj.push_back(Pair("blockweight",    (double)Core::dBlockWeight * 100.0  / 20.0));
+
 		obj.push_back(Pair("blocks",        (int)Core::nBestHeight));
 		obj.push_back(Pair("timestamp", (int)GetUnifiedTimestamp()));
 		
@@ -413,9 +420,7 @@ namespace Net
 		obj.push_back(Pair("hashReserve",        ValueFromAmount(pindexGPU->nReleasedReserve[0])));
 		obj.push_back(Pair("primeValue",       ValueFromAmount(Core::GetCoinbaseReward(Core::pindexBest, 1, 0))));
 		obj.push_back(Pair("hashValue",        ValueFromAmount(Core::GetCoinbaseReward(Core::pindexBest, 2, 0))));
-		obj.push_back(Pair("pooledtx",      (uint64_t)Core::mempool.size()));
-
-		
+		obj.push_back(Pair("pooledtx",      (uint64_t)Core::mempool.size()));	
 		return obj;
 	}
 
