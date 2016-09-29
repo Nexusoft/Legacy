@@ -83,6 +83,7 @@ namespace LLD
 		/** Check for Key Activity on Sector. **/
 		bool Empty() { return (nState == EMPTY); }
 		bool Ready() { return (nState == READY); }
+		bool IsTxn() { return (nState == TRANSACTION); }
 		
 	};
 
@@ -186,7 +187,8 @@ namespace LLD
 				ssKey >> cKey;
 				
 				
-				/** Skip Empty Sectors for Now. **/
+				/** Skip Empty Sectors for Now. 
+                    TODO: Handle any sector and keys gracfully here to ensure that the Sector is returned to a valid state from the transaction journal in case there was a failure reading and writing in the sector. This will most likely be held in the sector database code. **/
 				if(cKey.Ready()) {
 				
 					/** Read the Key Data. **/
@@ -202,12 +204,17 @@ namespace LLD
 					//	mapKeysCache[vKey] = cKey;
 					
 					/** Debug Output of Sector Key Information. **/
-					if(GetArg("-verbose", 0) >= 4)
+					if(GetArg("-verbose", 0) >= 5)
 						printf("KeyDB::Load() : State: %u Length: %u Location: %u Key: %s\n", cKey.nState, cKey.nLength, mapKeys[vKey], HexStr(vKey.begin(), vKey.end()).c_str());
 				}
-				else
+				else {
 					/** Move the Cursor to the Next Record. **/
-					fIncoming.seekg(nPosition + cKey.Size() + 19, std::ios::beg);
+					fIncoming.seekg(nPosition + cKey.Size(), std::ios::beg);
+                    
+                    /** Debug Output of Sector Key Information. **/
+					if(GetArg("-verbose", 0) >= 3)
+						printf("KeyDB::Load() : Skiping Sector State: %u Length: %u\n", cKey.nState, cKey.nLength);
+                }
 			}
 			
 			fIncoming.close();
@@ -314,7 +321,7 @@ namespace LLD
 					printf("KEY::Get(): State: %s Length: %u Location: %u Sector File: %u Sector Size: %u Sector Start: %u\n Key: %s\n", cKey.nState == READY ? "Valid" : "Invalid", cKey.nLength, mapKeys[cKey.vKey], cKey.nSectorFile, cKey.nSectorSize, cKey.nSectorStart, HexStr(cKey.vKey.begin(), cKey.vKey.end()).c_str());
 						
 				/** Skip Empty Sectors for Now. (TODO: Expand to Reads / Writes) **/
-				if(!cKey.Empty()) {
+				if(cKey.Ready() || cKey.IsTxn()) {
 				
 					/** Read the Key Data. **/
 					std::vector<unsigned char> vKeyIn(cKey.nLength, 0);

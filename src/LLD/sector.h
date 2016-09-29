@@ -67,11 +67,8 @@ namespace LLD
 		{
 			MUTEX_LOCK(TX_MUTEX);
 			
-			if(mapEraseData.count(vKey))
-				return false;
-			
 			mapTransactions[vKey] = vData;
-			//mapOriginalData[vKey] = vOriginalData;
+			mapOriginalData[vKey] = vOriginalData;
 			
 			return true;
 		}
@@ -90,6 +87,12 @@ namespace LLD
 			
 			return true;
 		}
+		
+		/* Hash to keep track of the Sector Transactions in the Transaction History Journal. */
+		uint512 GetHash()
+        {
+            
+        }
 		
 	};
 
@@ -317,6 +320,21 @@ namespace LLD
 			
 			if(SectorKeys->HasKey(vKey))
 			{	
+                /* Check that the key is not pending in a transaction for Erase. */
+                if(pTransaction && pTransaction->mapEraseData.count(vKey))
+                    return false;
+                
+                /* Check if the new data is set in a transaction to ensure that the database knows what is in volatile memory. */
+                if(pTransaction && pTransaction->mapTransactions.count(vKey))
+                {
+                    vData = pTransaction->mapTransactions[vKey];
+                    
+                    if(GetArg("-verbose", 0) >= 4)
+                        printf("SECTOR GET:%s\n", HexStr(vData.begin(), vData.end()).c_str());
+                    
+                    return true;
+                }
+                
 				/** Read the Sector Key from Keychain. **/
 				SectorKey cKey;
 				if(!SectorKeys->Get(vKey, cKey))
@@ -566,11 +584,8 @@ namespace LLD
 				{
 					/** Get the Sector Key from the Keychain. **/
 					SectorKey cKey;
-					if(!SectorKeys->Get(vKey, cKey)) {
-						SectorKeys->Erase(vKey);
-						
+					if(!SectorKeys->Get(vKey, cKey))
 						return false;
-					}
 						
 					/** Open the Stream to Read the data from Sector on File. **/
 					std::fstream fStream(strprintf("%s%s%u.dat", strBaseLocation.c_str(), strBaseName.c_str(), cKey.nSectorFile).c_str(), std::ios::in | std::ios::out | std::ios::binary);

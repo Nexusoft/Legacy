@@ -135,7 +135,6 @@ namespace LLD
 			{
 				printf("Failed to Read Block %s Height %u\n", hashBlock.ToString().substr(0, 20).c_str(), diskindex.nHeight);
 				
-				Core::mapBlockIndex.erase(hashBlock);
 				break;
 			}
 			
@@ -203,7 +202,7 @@ namespace LLD
 		if (nCheckDepth > Core::nBestHeight)
 			nCheckDepth = Core::nBestHeight;
 		printf("Verifying last %i blocks at level %i\n", nCheckDepth, nCheckLevel);
-		Core::CBlockIndex* pindexFork = NULL;
+		Core::CBlockIndex* pindexFork = Core::pindexBest->pprev->pprev;
 		
 		
 		map<pair<unsigned int, unsigned int>, Core::CBlockIndex*> mapBlockPos;

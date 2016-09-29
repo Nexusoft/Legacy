@@ -73,7 +73,7 @@
 #define ADDRMAN_HORIZON_DAYS 30
 
 // after how many failed attempts we give up on a new node
-#define ADDRMAN_RETRIES 3
+#define ADDRMAN_RETRIES 11
 
 // how many successive failures are allowed ...
 #define ADDRMAN_MAX_FAILURES 10
