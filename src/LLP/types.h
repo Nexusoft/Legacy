@@ -189,7 +189,7 @@ namespace LLP
 		{
 			LOCK_GUARD(MUTEX);
 			
-			if(Banned())
+			if((TIMER.Elapsed() < BANTIME))
 				return;
 			
 			TIMER.Start();
@@ -204,7 +204,15 @@ namespace LLP
 		}
 		
 		/** Check if Connection is Still Banned. **/
-		bool Banned() { return (TIMER.Elapsed() < BANTIME); }
+		bool Banned() 
+		{
+			LOCK_GUARD(MUTEX);
+			
+			unsigned int ELAPSED = TIMER.Elapsed();
+			
+			return (ELAPSED < BANTIME); 
+			
+		}
 	};
 	
 	
