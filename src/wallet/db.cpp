@@ -676,9 +676,6 @@ namespace Wallet
 				Core::CDiskBlockIndex diskIndex(pindex);
 				indexdb.WriteBlockIndex(diskIndex);
 				
-				Core::mapBlockIndex.erase(pindex->GetBlockHash());
-				delete pindex;
-				
 				pindex = pindex->pnext;
 				
 				/** Exit the Loop on the Best Block. **/

@@ -202,7 +202,21 @@ namespace LLD
 		if (nCheckDepth > Core::nBestHeight)
 			nCheckDepth = Core::nBestHeight;
 		printf("Verifying last %i blocks at level %i\n", nCheckDepth, nCheckLevel);
-		Core::CBlockIndex* pindexFork = Core::pindexBest->pprev->pprev;
+		Core::CBlockIndex* pindexFork = NULL;
+		
+		/* Allow Forking out an old chain. */
+		unsigned int nFork = GetArg("-forkblocks", 0);
+		if(nFork > 0 && Core::pindexBest)
+		{
+			pindexFork = Core::pindexBest;
+			for(int nIndex = 0; nIndex < nFork; nIndex++)
+			{
+				if(!pindexFork->pprev)
+					break;
+				
+				pindexFork = pindexFork->pprev;
+			}
+		}
 		
 		
 		map<pair<unsigned int, unsigned int>, Core::CBlockIndex*> mapBlockPos;

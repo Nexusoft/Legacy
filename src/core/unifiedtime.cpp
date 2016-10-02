@@ -31,19 +31,6 @@ vector<Net::CAddress> SEED_NODES;
 /** Declarations for the DNS Seed Nodes. **/
 const char* DNS_SeedNodes[] = 
 {
-	"node1.nexusoft.io",
-	"node2.nexusoft.io",
-	"node3.nexusoft.io",
-	"node4.nexusoft.io",
-	"node5.nexusoft.io",
-	"node6.nexusoft.io",
-	"node7.nexusoft.io",
-	"node8.nexusoft.io",
-	"node9.nexusoft.io",
-	"node10.nexusoft.io",
-	"node11.nexusoft.io",
-	"node12.nexusoft.io",
-	"node13.nexusoft.io",
 	"node1.nexusearth.com",
 	"node2.nexusearth.com",
 	"node3.nexusearth.com",
@@ -265,7 +252,7 @@ void ThreadTimeRegulator(void* parg)
 vector<Net::CAddress> DNS_Lookup(const char* DNS_Seed[])
 {
 	vector<Net::CAddress> vNodes;
-    for (unsigned int seed = 0; seed < (fTestNet ? 1 : 26); seed++)
+    for (unsigned int seed = 0; seed < (fTestNet ? 1 : 13); seed++)
 	{
 		printf("%u Host: %s\n", seed, DNS_Seed[seed]);
         vector<Net::CNetAddr> vaddr;
