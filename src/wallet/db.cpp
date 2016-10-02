@@ -761,6 +761,20 @@ namespace Wallet
 		printf("Verifying last %i blocks at level %i\n", nCheckDepth, nCheckLevel);
 		Core::CBlockIndex* pindexFork = NULL;
 		
+		/* Allow Forking out an old chain. */
+		unsigned int nFork = GetArg("-forkblocks", 0);
+		if(nFork > 0 && Core::pindexBest)
+		{
+			pindexFork = Core::pindexBest;
+			for(int nIndex = 0; nIndex < nFork; nIndex++)
+			{
+				if(!pindexFork->pprev)
+					break;
+				
+				pindexFork = pindexFork->pprev;
+			}
+		}
+		
 		
 		map<pair<unsigned int, unsigned int>, Core::CBlockIndex*> mapBlockPos;
 		for (Core::CBlockIndex* pindex = Core::pindexBest; pindex && pindex->pprev && nCheckDepth > 0; pindex = pindex->pprev)
