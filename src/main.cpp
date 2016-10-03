@@ -344,9 +344,6 @@ bool AppInit2(int argc, char* argv[])
     InitMessage(_("Initializing Unified Time..."));
     printf("Initializing Unified Time...\n");
 	InitializeUnifiedTime();
-
-	
-	CreateThread(ThreadTimeRegulator, NULL);
 	
 	
 	/** Wait for Unified Time if First Start. **/

@@ -64,6 +64,7 @@ int GetUnifiedAverage();
 /** Unified Time Clock Regulator. Periodically gets Offset from Time Seeds to build a strong Average.
     Checks current time against itself, if there is too much drift, your local offset adjusts to Unified Average. **/
 void ThreadTimeRegulator(void* parg);
+void ThreadUnifiedSamples(void* parg);
 
 std::vector<Net::CAddress> DNS_Lookup(const char* DNS_Seed[]);
 
