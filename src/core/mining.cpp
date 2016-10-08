@@ -324,7 +324,20 @@ namespace LLP
 			
 			/** If There are no Active nodes, or it is Initial Block Download:
 				Send a failed response to the miners. **/
-			if(Net::vNodes.size() == 0 || Core::IsInitialBlockDownload() || pwalletMain->IsLocked()) { printf("%%%%%%%%%% Mining LLP: Rejected Request...\n"); return false; }
+			if(Net::vNodes.size() == 0 ) 
+			{ 
+				printf("%%%%%%%%%% Mining LLP: Rejected Request...No Connections\n"); return false; 
+			}
+
+			if(Core::IsInitialBlockDownload() ) 
+			{ 
+				printf("%%%%%%%%%% Mining LLP: Rejected Request...Downloadning BLockchain\n"); return false; 
+			}
+
+			if( pwalletMain->IsLocked()) 
+			{ 
+				printf("%%%%%%%%%% Mining LLP: Rejected Request...Wallet Locked\n"); return false; 
+			}
 			
 			
 			/** Set the Mining Channel this Connection will Serve Blocks for. **/

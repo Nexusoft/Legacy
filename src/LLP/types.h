@@ -409,6 +409,12 @@ namespace LLP
 			
 			CONNECTED = false;
 		}
+
+		std::string GetIPAddress()
+		{
+			boost::system::error_code ec;
+			return SOCKET->remote_endpoint(ec).address().to_string();
+		}
 		
 		
 	private:

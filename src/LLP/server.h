@@ -107,7 +107,9 @@ namespace LLP
 						
 						
 						/** Handle any DDOS Filters. **/
-						if(fDDOS)
+						boost::system::error_code ec;
+						std::string ADDRESS = CONNECTIONS[nIndex]->GetIPAddress();
+                        if(fDDOS && ADDRESS != "127.0.0.1")
 						{
 							/** Ban a node if it has too many Requests per Second. **/
 							if(CONNECTIONS[nIndex]->DDOS->rSCORE.Score() > DDOS_rSCORE || CONNECTIONS[nIndex]->DDOS->cSCORE.Score() > DDOS_cSCORE)

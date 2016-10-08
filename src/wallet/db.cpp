@@ -675,13 +675,70 @@ namespace Wallet
 				/** Test Case to Write to LLD Indexing Database. **/
 				Core::CDiskBlockIndex diskIndex(pindex);
 				indexdb.WriteBlockIndex(diskIndex);
-				
-				pindex = pindex->pnext;
-				
-				/** Exit the Loop on the Best Block. **/
-				if(!pindex)
-					break;
 			}
+				
+				
+			/** Add the Pending Checkpoint into the Blockchain. **/
+			if(!pindex->pprev || Core::HardenCheckpoint(pindex, true))
+				pindex->PendingCheckpoint = make_pair(pindex->nHeight, pindex->GetBlockHash());
+			else
+				pindex->PendingCheckpoint = pindex->pprev->PendingCheckpoint;
+	
+			/** Exit the Loop on the Best Block. **/
+			if(pindex->GetBlockHash() == Core::hashBestChain)
+			{
+				printf("LoadBlockIndex(): hashBestChain=%s  height=%d  trust=%s\n", Core::hashBestChain.ToString().substr(0,20).c_str(), Core::nBestHeight, Core::bnBestChainTrust.ToString().c_str());
+				break;
+			}
+			
+			
+			pindex = pindex->pnext;
+		}
+
+		// Load bnBestInvalidTrust, OK if it doesn't exist
+		ReadBestInvalidTrust(Core::bnBestInvalidTrust);
+		
+		
+
+		/** Verify the Blocks in the Best Chain To Last Checkpoint. **/
+		int nCheckLevel = GetArg("-checklevel", 1);
+		
+		int nCheckDepth = GetArg( "-checkblocks", 100);
+		//if (nCheckDepth == 0)
+		//	nCheckDepth = 1000000000;
+			
+		if (nCheckDepth > Core::nBestHeight)
+			nCheckDepth = Core::nBestHeight;
+		printf("Verifying last %i blocks at level %i\n", nCheckDepth, nCheckLevel);
+		Core::CBlockIndex* pindexFork = NULL;
+		
+		/* Allow Forking out an old chain. */
+		unsigned int nFork = GetArg("-forkblocks", 0);
+		if(nFork > 0 && Core::pindexBest)
+		{
+			pindexFork = Core::pindexBest;
+			for(int nIndex = 0; nIndex < nFork; nIndex++)
+			{
+				if(!pindexFork->pprev)
+					break;
+				
+				pindexFork = pindexFork->pprev;
+			}
+		}
+		
+		
+		map<pair<unsigned int, unsigned int>, Core::CBlockIndex*> mapBlockPos;
+		for (Core::CBlockIndex* pindex = Core::pindexBest; pindex && pindex->pprev && nCheckDepth > 0; pindex = pindex->pprev)
+		{
+			if (pindex->nHeight < Core::nBestHeight - nCheckDepth)
+				break;
+				
+			pindex = pindex->pnext;
+				
+			/** Exit the Loop on the Best Block. **/
+			if(!pindex)
+				break;
+		}
 	}
 
 

@@ -341,8 +341,8 @@ bool AppInit2(int argc, char* argv[])
 	InitMessage(_("Initializing LLD Keychains..."));
 	LLD::RegisterKeychain("blkindex", "blkindex");
 
-    InitMessage(_("Initializing Unified Time..."));
-    printf("Initializing Unified Time...\n");
+	InitMessage(_("Initializing Unified Time..."));
+	printf("Initializing Unified Time...\n");
 	InitializeUnifiedTime();
 	
 	
@@ -350,6 +350,7 @@ bool AppInit2(int argc, char* argv[])
 	while(!fTimeUnified)
 		Sleep(10);
 	
+	/** Start sending Unified Samples. **/
 	if(GetBoolArg("-unified", false)) {
 		InitMessage(_("Initializing Core LLP..."));
 		printf("Initializing Core LLP...\n");
@@ -610,9 +611,6 @@ bool AppInit2(int argc, char* argv[])
         }
     }
 	
-	/** Add in the Allowed IP's for Mining LLP. **/
-	
-
     //
     // Start the node
     //
