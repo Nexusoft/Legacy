@@ -531,213 +531,156 @@ namespace Wallet
 	
 	bool CTxDB::MigrateToLLD()
 	{
-			// Get cursor
-			Dbc* pcursor = GetCursor();
-			if (!pcursor)
+		// Get cursor
+		Dbc* pcursor = GetCursor();
+		if (!pcursor)
+		{
+			return error("Error getting wallet database cursor\n");
+		}
+
+		LLD::CIndexDB indexdb("r+");
+		loop
+		{
+			// Read next record
+			CDataStream ssKey(SER_DISK, DATABASE_VERSION);
+			CDataStream ssValue(SER_DISK, DATABASE_VERSION);
+			int ret = ReadAtCursor(pcursor, ssKey, ssValue);
+			if (ret == DB_NOTFOUND)
+				break;
+			else if (ret != 0)
 			{
-				return error("Error getting wallet database cursor\n");
+				return error("Error reading next record from wallet database\n");
 			}
 
-			LLD::CIndexDB indexdb("r+");
-			loop
+			// Unserialize
+			string strType;
+			ssKey >> strType;
+			if (strType == "tx")
 			{
-				// Read next record
-				CDataStream ssKey(SER_DISK, DATABASE_VERSION);
-				CDataStream ssValue(SER_DISK, DATABASE_VERSION);
-				int ret = ReadAtCursor(pcursor, ssKey, ssValue);
-				if (ret == DB_NOTFOUND)
-					break;
-				else if (ret != 0)
-				{
-					return error("Error reading next record from wallet database\n");
-				}
-
-				// Unserialize
-				string strType;
-				ssKey >> strType;
-				if (strType == "tx")
-				{
-					uint512 hashTx;
-					ssKey >> hashTx;
+				uint512 hashTx;
+				ssKey >> hashTx;
 					
-					Core::CTxIndex cIndex;
-					ssValue >> cIndex;
+				Core::CTxIndex cIndex;
+				ssValue >> cIndex;
 					
-					indexdb.UpdateTxIndex(hashTx, cIndex);
-				}
-				else if(strType == "blockindex")
-				{
-					uint1024 hashBlock;
-					ssKey >> hashBlock;
-					
-					Core::CDiskBlockIndex diskindex;
-					ssValue >> diskindex;
-
-					Core::CBlockIndex* pindexNew = InsertBlockIndex(diskindex.GetBlockHash());
-					pindexNew->pprev             = InsertBlockIndex(diskindex.hashPrev);
-					pindexNew->pnext             = InsertBlockIndex(diskindex.hashNext);
-					pindexNew->nFile             = diskindex.nFile;
-					pindexNew->nBlockPos         = diskindex.nBlockPos;
-					pindexNew->nMint             = diskindex.nMint;
-					pindexNew->nMoneySupply      = diskindex.nMoneySupply;
-					pindexNew->nFlags            = diskindex.nFlags;
-					pindexNew->nVersion          = diskindex.nVersion;
-					pindexNew->hashMerkleRoot    = diskindex.hashMerkleRoot;
-					pindexNew->nChannel          = diskindex.nChannel;
-					pindexNew->nHeight           = diskindex.nHeight;
-					pindexNew->nBits             = diskindex.nBits;
-					pindexNew->nNonce            = diskindex.nNonce;
-					pindexNew->nTime             = diskindex.nTime;
-
-					if (Core::pindexGenesisBlock == NULL && diskindex.GetBlockHash() == Core::hashGenesisBlock)
-						Core::pindexGenesisBlock = pindexNew;
-				}
-				else if(strType == "hashBestChain")
-				{
-					uint1024 hashBestChain;
-					ssValue >> hashBestChain;
-					
-					Core::hashBestChain = hashBestChain;
-					indexdb.WriteHashBestChain(hashBestChain);
-				}
-				else if(strType == "strCheckpointPubKey")
-				{
-					string strPubKey;
-					ssValue >> strPubKey;
-				}
+				indexdb.UpdateTxIndex(hashTx, cIndex);
 			}
-			pcursor->close();
+			else if(strType == "blockindex")
+			{
+				uint1024 hashBlock;
+				ssKey >> hashBlock;
+					
+				Core::CDiskBlockIndex diskindex;
+				ssValue >> diskindex;
+
+				Core::CBlockIndex* pindexNew = InsertBlockIndex(diskindex.GetBlockHash());
+				pindexNew->pprev             = InsertBlockIndex(diskindex.hashPrev);
+				pindexNew->pnext             = InsertBlockIndex(diskindex.hashNext);
+				pindexNew->nFile             = diskindex.nFile;
+				pindexNew->nBlockPos         = diskindex.nBlockPos;
+				pindexNew->nMint             = diskindex.nMint;
+				pindexNew->nMoneySupply      = diskindex.nMoneySupply;
+				pindexNew->nFlags            = diskindex.nFlags;
+				pindexNew->nVersion          = diskindex.nVersion;
+				pindexNew->hashMerkleRoot    = diskindex.hashMerkleRoot;
+				pindexNew->nChannel          = diskindex.nChannel;
+				pindexNew->nHeight           = diskindex.nHeight;
+				pindexNew->nBits             = diskindex.nBits;
+				pindexNew->nNonce            = diskindex.nNonce;
+				pindexNew->nTime             = diskindex.nTime;
+
+				if (Core::pindexGenesisBlock == NULL && diskindex.GetBlockHash() == Core::hashGenesisBlock)
+					Core::pindexGenesisBlock = pindexNew;
+			}
+			else if(strType == "hashBestChain")
+			{
+				uint1024 hashBestChain;
+				ssValue >> hashBestChain;
+					
+				Core::hashBestChain = hashBestChain;
+				indexdb.WriteHashBestChain(hashBestChain);
+			}
+			else if(strType == "strCheckpointPubKey")
+			{
+				string strPubKey;
+				ssValue >> strPubKey;
+			}
+		}
+		pcursor->close();
 			
-			Core::CBlockIndex* pindex = Core::pindexGenesisBlock;
-			loop
+		Core::CBlockIndex* pindex = Core::pindexGenesisBlock;
+		loop
+		{
+			/** Get the Coinbase Transaction Rewards. **/
+			if(pindex->pprev)
 			{
-				/** Get the Coinbase Transaction Rewards. **/
-				if(pindex->pprev)
-				{
-					Core::CBlock block;
-					if (!block.ReadFromDisk(pindex))
-						break;
+				Core::CBlock block;
+				if (!block.ReadFromDisk(pindex))
+					break;
 						
-					if(pindex->IsProofOfWork())
-					{
-						unsigned int nSize = block.vtx[0].vout.size();
-						pindex->nCoinbaseRewards[0] = 0;
-						for(int nIndex = 0; nIndex < nSize - 2; nIndex++)
-							pindex->nCoinbaseRewards[0] += block.vtx[0].vout[nIndex].nValue;
-								
-						pindex->nCoinbaseRewards[1] = block.vtx[0].vout[nSize - 2].nValue;
-						pindex->nCoinbaseRewards[2] = block.vtx[0].vout[nSize - 1].nValue;
-					}
-					
-					/** Add Transaction to Current Trust Keys **/
-					else if(pindex->IsProofOfStake() && !Core::cTrustPool.Accept(block, true))
-						return error("CTxDB::LoadBlockIndex() : Failed To Accept Trust Key Block.");
-					
-				}
-				else
+				if(pindex->IsProofOfWork())
 				{
-					
+					unsigned int nSize = block.vtx[0].vout.size();
 					pindex->nCoinbaseRewards[0] = 0;
-					pindex->nCoinbaseRewards[1] = 0;
-					pindex->nCoinbaseRewards[2] = 0;
+					for(int nIndex = 0; nIndex < nSize - 2; nIndex++)
+						pindex->nCoinbaseRewards[0] += block.vtx[0].vout[nIndex].nValue;
+								
+					pindex->nCoinbaseRewards[1] = block.vtx[0].vout[nSize - 2].nValue;
+					pindex->nCoinbaseRewards[2] = block.vtx[0].vout[nSize - 1].nValue;
 				}
 					
+				/** Add Transaction to Current Trust Keys **/
+				else if(pindex->IsProofOfStake() && !Core::cTrustPool.Accept(block, true))
+					return error("CTxDB::LoadBlockIndex() : Failed To Accept Trust Key Block.");
 					
-				/** Calculate the Chain Trust. **/
-				pindex->nChainTrust = (pindex->pprev ? pindex->pprev->nChainTrust : 0) + pindex->GetBlockTrust();
-				
-				
-				/** Release the Nexus Rewards into the Blockchain. **/
-				const Core::CBlockIndex* pindexPrev = GetLastChannelIndex(pindex->pprev, pindex->GetChannel());
-				pindex->nChannelHeight = (pindexPrev ? pindexPrev->nChannelHeight : 0) + 1;
-				
-				
-				/** Compute the Released Reserves. **/
-				for(int nType = 0; nType < 3; nType++)
-				{
-					if(pindex->IsProofOfWork() && pindexPrev)
-					{
-						int64 nReserve = GetReleasedReserve(pindex, pindex->GetChannel(), nType);
-						pindex->nReleasedReserve[nType] = pindexPrev->nReleasedReserve[nType] + nReserve - pindex->nCoinbaseRewards[nType];
-					}
-					else
-						pindex->nReleasedReserve[nType] = 0;
-
-				}
-					
-					
-				/** Add the Pending Checkpoint into the Blockchain. **/
-				if(!pindex->pprev || Core::HardenCheckpoint(pindex, true))
-					pindex->PendingCheckpoint = make_pair(pindex->nHeight, pindex->GetBlockHash());
-				else
-					pindex->PendingCheckpoint = pindex->pprev->PendingCheckpoint;
-					
-				/** Test Case to Write to LLD Indexing Database. **/
-				Core::CDiskBlockIndex diskIndex(pindex);
-				indexdb.WriteBlockIndex(diskIndex);
 			}
+			else
+			{
+					
+				pindex->nCoinbaseRewards[0] = 0;
+				pindex->nCoinbaseRewards[1] = 0;
+				pindex->nCoinbaseRewards[2] = 0;
+			}
+					
+					
+			/** Calculate the Chain Trust. **/
+			pindex->nChainTrust = (pindex->pprev ? pindex->pprev->nChainTrust : 0) + pindex->GetBlockTrust();
 				
 				
+			/** Release the Nexus Rewards into the Blockchain. **/
+			const Core::CBlockIndex* pindexPrev = GetLastChannelIndex(pindex->pprev, pindex->GetChannel());
+			pindex->nChannelHeight = (pindexPrev ? pindexPrev->nChannelHeight : 0) + 1;
+				
+				
+			/** Compute the Released Reserves. **/
+			for(int nType = 0; nType < 3; nType++)
+			{
+				if(pindex->IsProofOfWork() && pindexPrev)
+				{
+					int64 nReserve = GetReleasedReserve(pindex, pindex->GetChannel(), nType);
+					pindex->nReleasedReserve[nType] = pindexPrev->nReleasedReserve[nType] + nReserve - pindex->nCoinbaseRewards[nType];
+				}
+				else
+					pindex->nReleasedReserve[nType] = 0;
+
+			}
+					
+					
 			/** Add the Pending Checkpoint into the Blockchain. **/
 			if(!pindex->pprev || Core::HardenCheckpoint(pindex, true))
 				pindex->PendingCheckpoint = make_pair(pindex->nHeight, pindex->GetBlockHash());
 			else
 				pindex->PendingCheckpoint = pindex->pprev->PendingCheckpoint;
-	
+					
+			/** Test Case to Write to LLD Indexing Database. **/
+			Core::CDiskBlockIndex diskIndex(pindex);
+			indexdb.WriteBlockIndex(diskIndex);
+				
 			/** Exit the Loop on the Best Block. **/
 			if(pindex->GetBlockHash() == Core::hashBestChain)
-			{
-				printf("LoadBlockIndex(): hashBestChain=%s  height=%d  trust=%s\n", Core::hashBestChain.ToString().substr(0,20).c_str(), Core::nBestHeight, Core::bnBestChainTrust.ToString().c_str());
-				break;
-			}
-			
-			
-			pindex = pindex->pnext;
-		}
-
-		// Load bnBestInvalidTrust, OK if it doesn't exist
-		ReadBestInvalidTrust(Core::bnBestInvalidTrust);
-		
-		
-
-		/** Verify the Blocks in the Best Chain To Last Checkpoint. **/
-		int nCheckLevel = GetArg("-checklevel", 1);
-		
-		int nCheckDepth = GetArg( "-checkblocks", 100);
-		//if (nCheckDepth == 0)
-		//	nCheckDepth = 1000000000;
-			
-		if (nCheckDepth > Core::nBestHeight)
-			nCheckDepth = Core::nBestHeight;
-		printf("Verifying last %i blocks at level %i\n", nCheckDepth, nCheckLevel);
-		Core::CBlockIndex* pindexFork = NULL;
-		
-		/* Allow Forking out an old chain. */
-		unsigned int nFork = GetArg("-forkblocks", 0);
-		if(nFork > 0 && Core::pindexBest)
-		{
-			pindexFork = Core::pindexBest;
-			for(int nIndex = 0; nIndex < nFork; nIndex++)
-			{
-				if(!pindexFork->pprev)
-					break;
-				
-				pindexFork = pindexFork->pprev;
-			}
-		}
-		
-		
-		map<pair<unsigned int, unsigned int>, Core::CBlockIndex*> mapBlockPos;
-		for (Core::CBlockIndex* pindex = Core::pindexBest; pindex && pindex->pprev && nCheckDepth > 0; pindex = pindex->pprev)
-		{
-			if (pindex->nHeight < Core::nBestHeight - nCheckDepth)
 				break;
 				
 			pindex = pindex->pnext;
-				
-			/** Exit the Loop on the Best Block. **/
-			if(!pindex)
-				break;
 		}
 	}
 
