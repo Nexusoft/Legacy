@@ -525,14 +525,38 @@ vector<unsigned char> ParseHex(const string& str)
     return ParseHex(str.c_str());
 }
 
+/* Split a string into it's components by delimiter. */
+std::vector<std::string> Split(const std::string& strInput, char strDelimiter)
+{
+   string::size_type nIndex = 0;
+   string::size_type nFind  = strInput.find(strDelimiter);
+
+	std::vector<std::string> vData;
+   while (nFind != std::string::npos) {
+      vData.push_back(strInput.substr(nIndex, nFind - nIndex));
+      nIndex = ++ nFind;
+      nFind  = strInput.find(strDelimiter, nFind);
+
+      if (nFind == std::string::npos)
+         vData.push_back(strInput.substr(nIndex, strInput.length()));
+   }
+   
+   return vData;
+}
+
 /** IP Filtering Definitions
 	IP's are Filtered By Ports.
 	Format is IP and PORT. **/
-bool CheckPermissions(std::vector<unsigned char> vAddress, unsigned int nPort)
+bool CheckPermissions(std::string strAddress, unsigned int nPort)
 {
 	/* Bypass localhost addresses first. */
-	if(vAddress[0] == 127 && vAddress[1] == 0 && vAddress[2] == 0 && vAddress[3] == 1)
+	if(strAddress == "127.0.0.1")
 		return true;
+	
+	/* Split the Address into String Vector. */
+	std::vector<std::string> vAddress = Split(strAddress, '.');
+	if(vAddress.size() != 4)
+		return false;
 	
 	/* Check against the commandline parameters. */
 	const std::vector<std::string>& vAllow = mapMultiArgs["-llpallowip"];
@@ -542,23 +566,26 @@ bool CheckPermissions(std::vector<unsigned char> vAddress, unsigned int nPort)
 		bool fWildcardPort = (vAllow[nIndex].find(":") == std::string::npos);
 		
 		/* Scan out the data for the wildcard port. */
-		std::vector<unsigned char> vCheck(fWildcardPort ? 4 : 5, 0);
+		std::vector<std::string> vCheck = Split(vAllow[nIndex], ',');
+		
+		/* Skip invalid inputs. */
+		if(vCheck.size() != 4)
+			continue;
+		
+		/* Check the Wildcard port. */
 		if(!fWildcardPort) {
-			sscanf(vAllow[nIndex].c_str(), "%u.%u.%u.%u:%u", &vCheck[0], &vCheck[1], &vCheck[2], &vCheck[3], &vCheck[4]);
+			std::vector<std::string> strPort = Split(vCheck[3], ':');
+			vCheck[3] = strPort[0];
 			
-			/* Check the port if it was extracted */
-			if(nPort != vCheck[4])
+			unsigned int nPortCheck = stoi(strPort[1]);
+			if(nPort != nPortCheck)
 				return false;
 		}
-		else
-			sscanf(vAllow[nIndex].c_str(), "%u.%u.%u.%u", &vCheck[0], &vCheck[1], &vCheck[2], &vCheck[3]);
 		
 		/* Check the components of IP address. */
-		unsigned char nWildcard[2] = "*";
-		for(int nByte = 0; nByte < 4; nByte++) {
-			if(vCheck[nByte] != nWildcard[0] && vCheck[nByte] != vAddress[nByte])
+		for(int nByte = 0; nByte < 4; nByte++)
+			if(vCheck[nByte] != "*" && vCheck[nByte] != vAddress[nByte])
 				return false;
-		}
 	}
 	
 	return true;;

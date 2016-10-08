@@ -281,7 +281,7 @@ namespace LLP
 							DDOS_MAP[ADDRESS] = new DDOS_Filter(30);
 							
 						/** DDOS Operations: Only executed when DDOS is enabled. **/
-						if((fDDOS && DDOS_MAP[ADDRESS]->Banned()) || !CheckPermissions(vAddress, PORT))
+						if((fDDOS && DDOS_MAP[ADDRESS]->Banned()) || !CheckPermissions(strprintf("%u.%u.%u.%u:%u",vAddress[0], vAddress[1], vAddress[2],vAddress[3]), PORT))
 						{
 							SOCKET -> shutdown(boost::asio::ip::tcp::socket::shutdown_both, ERROR_HANDLE);
 							SOCKET -> close();

@@ -280,7 +280,10 @@ std::string EncodeBase64(const std::string& str);
 void ParseParameters(int argc, const char*const argv[]);
 bool WildcardMatch(const char* psz, const char* mask);
 bool WildcardMatch(const std::string& str, const std::string& mask);
-bool CheckPermissions(std::vector<unsigned char> vAddress, unsigned int nPort);
+
+std::vector<std::string> Split(const std::string& strInput, char strDelimiter);
+bool CheckPermissions(std::string strAddress, unsigned int nPort);
+
 int GetFilesize(FILE* file);
 boost::filesystem::path GetDefaultDataDir(std::string strName = "Nexus");
 const boost::filesystem::path &GetDataDir(bool fNetSpecific = true);
