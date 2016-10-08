@@ -283,7 +283,7 @@ void ThreadUnifiedSamples(void* parg)
 vector<Net::CAddress> DNS_Lookup(const char* DNS_Seed[])
 {
 	vector<Net::CAddress> vNodes;
-    for (unsigned int seed = 0; seed < (fTestNet ? 1 : 13); seed++)
+    for (unsigned int seed = 0; seed < (fTestNet ? 1 : 28); seed++)
 	{
 		printf("%u Host: %s\n", seed, DNS_Seed[seed]);
         vector<Net::CNetAddr> vaddr;
