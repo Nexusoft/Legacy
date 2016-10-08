@@ -56,7 +56,14 @@ const char* DNS_SeedNodes[] =
 	"node10.nexusearth.com",
 	"node11.nexusearth.com",
 	"node12.nexusearth.com",
-	"node13.nexusearth.com"
+	"node13.nexusearth.com",
+	"seed.mercuryminer.com",
+	"seed1.mercuryminer.com",
+	"seed2.mercuryminer.com",
+	"seed3.mercuryminer.com",
+	"seed4.mercuryminer.com",
+	"seed5.mercuryminer.com",
+	"seed6.mercuryminer.com"
 };
 
 /** Declarations for the DNS Seed Nodes. **/
