@@ -63,7 +63,8 @@ const char* DNS_SeedNodes[] =
 	"seed3.mercuryminer.com",
 	"seed4.mercuryminer.com",
 	"seed5.mercuryminer.com",
-	"seed6.mercuryminer.com"
+	"seed6.mercuryminer.com",
+	"seed.nexusminingpool.com"
 };
 
 /** Declarations for the DNS Seed Nodes. **/
