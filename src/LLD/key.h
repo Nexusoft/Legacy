@@ -32,10 +32,13 @@ namespace LLD
 		
 		/** The Key Header:
 			Byte 0: nState
-			Byte 1 - 3: nLength  **/
+			Byte 1 - 3: nLength (The Size of the Sector)
+			Byte 3 - 5: nSector (The Sector Number [0 - x])
+		**/
 		unsigned char   		   	nState;
 		unsigned short 			   nLength;
-		std::vector<unsigned char> vKey;
+		//TODO: Implement Multikeys 
+		//unsigned short					nSector;
 		
 		/** These three hold the location of 
 			Sector in the Sector Database of 
@@ -43,6 +46,9 @@ namespace LLD
 		unsigned short 			   nSectorFile;
 		unsigned short   		   	nSectorSize;
 		unsigned int   			   nSectorStart;
+		
+		/* The binary data of the Sector key. */
+		std::vector<unsigned char> vKey;
 		
 		/** Checksum of Original Data to ensure no database corrupted sectors. 
 			TODO: Consider the Original Data from a checksum.
@@ -59,6 +65,7 @@ namespace LLD
 		(
 			READWRITE(nState);
 			READWRITE(nLength);
+			//READWRITE(nSector);
 			
 			if (!(nType & SER_LLD_KEY_HEADER))
 			{

@@ -528,13 +528,40 @@ vector<unsigned char> ParseHex(const string& str)
 /** IP Filtering Definitions
 	IP's are Filtered By Ports.
 	Format is IP and PORT. **/
-bool CheckPermissions(std::string strAddress)
+bool CheckPermissions(std::vector<unsigned char> vAddress, unsigned int nPort)
 {
+	/* Bypass localhost addresses first. */
+	if(vAddress[0] == 127 && vAddress[1] == 0 && vAddress[2] == 0 && vAddress[3] == 1)
+		return true;
+	
+	/* Check against the commandline parameters. */
 	const std::vector<std::string>& vAllow = mapMultiArgs["-llpallowip"];
 	for(int nIndex = 0; nIndex < vAllow.size(); nIndex++)
-		if (WildcardMatch(strAddress, vAllow[nIndex]))
-			return true;
-	return false;
+	{
+		/* Detect if the port for LLP filtering is a wildcard or not. */
+		bool fWildcardPort = (vAllow[nIndex].find(":") == std::string::npos);
+		
+		/* Scan out the data for the wildcard port. */
+		std::vector<unsigned char> vCheck(fWildcardPort ? 4 : 5, 0);
+		if(!fWildcardPort) {
+			sscanf(vAllow[nIndex].c_str(), "%u.%u.%u.%u:%u", &vCheck[0], &vCheck[1], &vCheck[2], &vCheck[3], &vCheck[4]);
+			
+			/* Check the port if it was extracted */
+			if(nPort != vCheck[4])
+				return false;
+		}
+		else
+			sscanf(vAllow[nIndex].c_str(), "%u.%u.%u.%u", &vCheck[0], &vCheck[1], &vCheck[2], &vCheck[3]);
+		
+		/* Check the components of IP address. */
+		unsigned char nWildcard[2] = "*";
+		for(int nByte = 0; nByte < 4; nByte++) {
+			if(vCheck[nByte] != nWildcard[0] && vCheck[nByte] != vAddress[nByte])
+				return false;
+		}
+	}
+	
+	return true;;
 }
 
 static void InterpretNegativeSetting(string name, map<string, string>& mapSettingsRet)

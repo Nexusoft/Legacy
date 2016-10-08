@@ -173,7 +173,7 @@ namespace LLP
 		bool fDDOS;
 		
 	public:
-		int PORT, MAX_THREADS;
+		unsigned int PORT, MAX_THREADS;
 		
 		/** The data type to keep track of current running threads. **/
 		std::vector< DataThread<ProtocolType>* > DATA_THREADS;
@@ -270,21 +270,21 @@ namespace LLP
 					LISTENER.accept(*SOCKET);
 					
 					/** Initialize DDOS Protection for Incoming IP Address. **/
-					std::vector<unsigned char> BYTES(4, 0);
-					sscanf(SOCKET->remote_endpoint().address().to_string().c_str(), "%u.%u.%u.%u", &BYTES[0], &BYTES[1], &BYTES[2], &BYTES[3]);
-					unsigned int ADDRESS = (BYTES[0] << 24) + (BYTES[1] << 16) + (BYTES[2] << 8) + BYTES[3];
+					std::vector<unsigned char> vAddress(4, 0);
+					sscanf(SOCKET->remote_endpoint().address().to_string().c_str(), "%u.%u.%u.%u", &vAddress[0], &vAddress[1], &vAddress[2], &vAddress[3]);
+					unsigned int ADDRESS = (vAddress[0] << 24) + (vAddress[1] << 16) + (vAddress[2] << 8) + vAddress[3];
 					
 					{ //LOCK(DDOS_MUTEX);
 						if(!DDOS_MAP.count(ADDRESS))
 							DDOS_MAP[ADDRESS] = new DDOS_Filter(30);
 							
 						/** DDOS Operations: Only executed when DDOS is enabled. **/
-						if((fDDOS && DDOS_MAP[ADDRESS]->Banned()) || !CheckPermissions(strprintf("%u.%u.%u.%u:%u",BYTES[0], BYTES[1], BYTES[2], BYTES[3], PORT)))
+						if((fDDOS && DDOS_MAP[ADDRESS]->Banned()) || !CheckPermissions(vAddress, PORT))
 						{
 							SOCKET -> shutdown(boost::asio::ip::tcp::socket::shutdown_both, ERROR_HANDLE);
 							SOCKET -> close();
 							
-							printf("##### BLOCKED: LLP Connection Request from %u.%u.%u.%u to Port %u\n", BYTES[0], BYTES[1], BYTES[2], BYTES[3], PORT);
+							printf("##### BLOCKED: LLP Connection Request from %u.%u.%u.%u to Port %u\n", vAddress[0], vAddress[1], vAddress[2], vAddress[3], PORT);
 								
 							continue;
 						}
