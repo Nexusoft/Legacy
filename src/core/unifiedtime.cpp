@@ -138,7 +138,7 @@ void ThreadUnifiedSamples(void* parg)
 	SEED_NODES    = DNS_Lookup(fTestNet ? DNS_SeedNodes_Testnet : DNS_SeedNodes);
 	
 	/** Iterator to be used to ensure every time seed is giving an equal weight towards the Global Seeds. **/
-	int nIterator = 0;
+	int nIterator = -1;
 	
 	for(int nIndex = 0; nIndex < SEED_NODES.size(); nIndex++)
 		SEEDS.push_back(SEED_NODES[nIndex].ToStringIP());
