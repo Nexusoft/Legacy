@@ -345,18 +345,6 @@ bool AppInit2(int argc, char* argv[])
 	printf("Initializing Unified Time...\n");
 	InitializeUnifiedTime();
 	
-	
-	/** Wait for Unified Time if First Start. **/
-	while(!fTimeUnified)
-		Sleep(10);
-	
-	/** Start sending Unified Samples. **/
-	if(GetBoolArg("-unified", false)) {
-		InitMessage(_("Initializing Core LLP..."));
-		printf("Initializing Core LLP...\n");
-		LLP_SERVER = new LLP::Server<LLP::CoreLLP>(fTestNet ? TESTNET_CORE_LLP_PORT : NEXUS_CORE_LLP_PORT, 5, true, 1, 1, 1);
-	}
-	
     if (!fDebug)
         ShrinkDebugFile();
 	
@@ -610,10 +598,23 @@ bool AppInit2(int argc, char* argv[])
             return false;
         }
     }
+    
 	
     //
     // Start the node
     //
+    
+	/** Wait for Unified Time if First Start. **/
+	while(!fTimeUnified)
+		Sleep(10);
+	
+	/** Start sending Unified Samples. **/
+	if(GetBoolArg("-unified", false)) {
+		InitMessage(_("Initializing Core LLP..."));
+		printf("Initializing Core LLP...\n");
+		LLP_SERVER = new LLP::Server<LLP::CoreLLP>(fTestNet ? TESTNET_CORE_LLP_PORT : NEXUS_CORE_LLP_PORT, 5, true, 1, 1, 1);
+	}
+	
     if (!Core::CheckDiskSpace())
         return false;
 
