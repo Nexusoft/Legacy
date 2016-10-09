@@ -207,7 +207,7 @@ bool AppInit2(int argc, char* argv[])
             "  -timeout=<n>     \t  "   + _("Specify connection timeout (in milliseconds)") + "\n" +
             "  -proxy=<ip:port> \t  "   + _("Connect through socks4 proxy") + "\n" +
             "  -dns             \t  "   + _("Allow DNS lookups for addnode and connect") + "\n" +
-            "  -port=<port>     \t\t  " + _("Listen for connections on <port> (default: 9901 or testnet: 9903)") + "\n" +
+            "  -port=<port>     \t\t  " + _("Listen for connections on <port> (default: 9323 or testnet: 9903)") + "\n" +
             "  -maxconnections=<n>\t  " + _("Maintain at most <n> connections to peers (default: 125)") + "\n" +
             "  -addnode=<ip>    \t  "   + _("Add a node to connect to and attempt to keep the connection open") + "\n" +
             "  -connect=<ip>    \t\t  " + _("Connect only to the specified node") + "\n" +
@@ -242,9 +242,11 @@ bool AppInit2(int argc, char* argv[])
 #ifdef WIN32
             "  -printtodebugger \t  "   + _("Send trace/debug info to debugger") + "\n" +
 #endif
+            "  -llpallowip=<ip> \t  "   + _("Allow mining from specified IP address or range (192.168.6.* for example") + "\n" +
+			"  -mining 			\t  "   + _("Allow mining (default: 0)") + "\n" +
             "  -rpcuser=<user>  \t  "   + _("Username for JSON-RPC connections") + "\n" +
             "  -rpcpassword=<pw>\t  "   + _("Password for JSON-RPC connections") + "\n" +
-            "  -rpcport=<port>  \t\t  " + _("Listen for JSON-RPC connections on <port> (default: 9902)") + "\n" +
+            "  -rpcport=<port>  \t\t  " + _("Listen for JSON-RPC connections on <port> (default: 9325)") + "\n" +
             "  -rpcallowip=<ip> \t\t  " + _("Allow JSON-RPC connections from specified IP address") + "\n" +
             "  -rpcconnect=<ip> \t  "   + _("Send commands to node running on <ip> (default: 127.0.0.1)") + "\n" +
             "  -blocknotify=<cmd> "     + _("Execute command when the best block changes (%s in cmd is replaced by block hash)") + "\n" +
@@ -507,7 +509,7 @@ bool AppInit2(int argc, char* argv[])
 
     // Note: Nexus-QT stores several settings in the wallet, so we want
     // to load the wallet BEFORE parsing command-line arguments, so
-    // the command-line/bitcoin.conf settings override GUI setting.
+    // the command-line/nexus.conf settings override GUI setting.
     if (mapArgs.count("-timeout"))
     {
         int nNewTimeout = GetArg("-timeout", 5000);
