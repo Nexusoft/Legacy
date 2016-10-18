@@ -577,7 +577,7 @@ bool CheckPermissions(std::string strAddress, unsigned int nPort)
 			std::vector<std::string> strPort = Split(vCheck[3], ':');
 			vCheck[3] = strPort[0];
 			
-			unsigned int nPortCheck = stoi(strPort[1]);
+			unsigned int nPortCheck = std::stoi(strPort[1]);
 			if(nPort != nPortCheck)
 				return false;
 		}
