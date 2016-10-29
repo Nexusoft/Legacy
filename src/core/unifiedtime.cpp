@@ -199,7 +199,9 @@ void ThreadUnifiedSamples(void* parg)
 						nSamples.Add(nOffset);
 						
 						SERVER.GetOffset((unsigned int)GetLocalTimestamp());
-						printf("***** Core LLP: Added Sample %i | Seed %s\n", nOffset, SERVER.IP.c_str());
+						
+						if(GetArg("-verbose", 0) >= 2)
+							printf("***** Core LLP: Added Sample %i | Seed %s\n", nOffset, SERVER.IP.c_str());
 					}
 					
 					SERVER.ResetPacket();
@@ -265,11 +267,8 @@ void ThreadUnifiedSamples(void* parg)
 				fTimeUnified = true;
 				UNIFIED_AVERAGE_OFFSET = GetUnifiedAverage();
 				
-				Wallet::CTimeDB DB("cw");
-				DB.WriteTimeData(UNIFIED_AVERAGE_OFFSET);
-				DB.Close();
-				
-				printf("***** %i Iterator | %i Offset | %i Current | %"PRId64"\n", UNIFIED_MOVING_ITERATOR, nSamples.Majority(), UNIFIED_AVERAGE_OFFSET, GetUnifiedTimestamp());
+				if(GetArg("-verbose", 0) >= 1)
+					printf("***** %i Iterator | %i Offset | %i Current | %"PRId64"\n", UNIFIED_MOVING_ITERATOR, nSamples.Majority(), UNIFIED_AVERAGE_OFFSET, GetUnifiedTimestamp());
 			}
 			
 			/* Sleep for 5 Minutes Between Sample. */

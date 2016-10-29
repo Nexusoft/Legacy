@@ -92,6 +92,7 @@ namespace LLP
 		{
 			Packet PACKET   = this->INCOMING;
 			
+			//TODO: Calculate the latency of the request and put that into the time equation
 			if(PACKET.HEADER == GET_OFFSET)
 			{
 				unsigned int nTimestamp = bytes2uint(PACKET.DATA);
@@ -102,7 +103,9 @@ namespace LLP
 				RESPONSE.LENGTH = 4;
 				RESPONSE.DATA   = int2bytes(nOffset);
 				
-				printf("***** Core LLP: Sent Offset %i | %u.%u.%u.%u | Unified %"PRId64"\n", nOffset, ADDRESS[0], ADDRESS[1], ADDRESS[2], ADDRESS[3], GetUnifiedTimestamp());
+				if(GetArg("-verbose", 0) >= 3)
+					printf("***** Core LLP: Sent Offset %i | %u.%u.%u.%u | Unified %"PRId64"\n", nOffset, ADDRESS[0], ADDRESS[1], ADDRESS[2], ADDRESS[3], GetUnifiedTimestamp());
+				
 				this->WritePacket(RESPONSE);
 				return true;
 			}
@@ -113,7 +116,9 @@ namespace LLP
 				RESPONSE.HEADER = TIME_DATA;
 				RESPONSE.LENGTH = 4;
 				RESPONSE.DATA = uint2bytes((unsigned int)GetUnifiedTimestamp());
-				printf("***** Core LLP: Sent Time Sample %"PRId64" to %u.%u.%u.%u\n", GetUnifiedTimestamp(), ADDRESS[0], ADDRESS[1], ADDRESS[2], ADDRESS[3]);
+				
+				if(GetArg("-verbose", 0) >= 3)
+					printf("***** Core LLP: Sent Time Sample %"PRId64" to %u.%u.%u.%u\n", GetUnifiedTimestamp(), ADDRESS[0], ADDRESS[1], ADDRESS[2], ADDRESS[3]);
 				
 				this->WritePacket(RESPONSE);
 				return true;
