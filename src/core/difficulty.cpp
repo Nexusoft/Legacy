@@ -91,9 +91,6 @@ namespace Core
 			
 			nIterator += (nIndex * 3);
 			nWeightedAverage += nTime;
-			
-			if(GetArg("-verbose", 0) >= 2)
-				printf("GetWeightedTimes() : Time %"PRId64" for Weight %i\n", (nTime / (nIndex * 3)), nIndex);
 		}
 			
 		nWeightedAverage /= nIterator;
