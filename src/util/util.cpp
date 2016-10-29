@@ -556,7 +556,7 @@ bool CheckPermissions(std::string strAddress, unsigned int nPort)
 	/* Split the Address into String Vector. */
 	std::vector<std::string> vAddress = Split(strAddress, '.');
 	if(vAddress.size() != 4)
-		return false;
+		return error("Address size not at least 4 bytes.");
 	
 	/* Check against the commandline parameters. */
 	const std::vector<std::string>& vAllow = mapMultiArgs["-llpallowip"];
@@ -579,13 +579,13 @@ bool CheckPermissions(std::string strAddress, unsigned int nPort)
 			
 			unsigned int nPortCheck = boost::lexical_cast<unsigned int>(strPort[1]);
 			if(nPort != nPortCheck)
-				return false;
+				return error("Bad Port.");
 		}
 		
 		/* Check the components of IP address. */
 		for(int nByte = 0; nByte < 4; nByte++)
 			if(vCheck[nByte] != "*" && vCheck[nByte] != vAddress[nByte])
-				return false;
+				return error("Check %s - %s\n", vCheck[nByte], vAddress[nByte]);
 	}
 	
 	return true;;
