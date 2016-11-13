@@ -37,6 +37,7 @@ namespace LLD
 		**/
 		unsigned char   		   	nState;
 		unsigned short 			   nLength;
+		
 		//TODO: Implement Multikeys 
 		//unsigned short					nSector;
 		
