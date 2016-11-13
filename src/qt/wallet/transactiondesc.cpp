@@ -8,7 +8,7 @@
 
 #include "transactiondesc.h"
 
-#include "../util/guiutil.h"
+#include "../LLU/guiutil.h"
 #include "../core/units.h"
 
 #include "../../core/core.h"
@@ -16,7 +16,7 @@
 #include "../../wallet/db.h"
 
 #include "../../LLD/index.h"
-#include "../../util/ui_interface.h"
+#include "../../LLU/ui_interface.h"
 
 #include <QString>
 

@@ -7,7 +7,7 @@
 *******************************************************************************************/
 
 #include "protocol.h"
-#include "../util/util.h"
+#include "../LLU/util.h"
 #include "netbase.h"
 
 #ifndef WIN32

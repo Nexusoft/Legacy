@@ -14,11 +14,11 @@
 #include "../models/addresstablemodel.h"
 #include "../models/transactiontablemodel.h"
 #include "../core/units.h"
-#include "../util/csvmodelwriter.h"
+#include "../LLU/csvmodelwriter.h"
 #include "../dialogs/transactiondescdialog.h"
 #include "../dialogs/editaddressdialog.h"
 #include "../models/optionsmodel.h"
-#include "../util/guiutil.h"
+#include "../LLU/guiutil.h"
 
 #include <QScrollBar>
 #include <QComboBox>

@@ -12,8 +12,8 @@
 #include <stdexcept>
 #include <vector>
 
-#include "../util/allocators.h"
-#include "../hash/uint1024.h"
+#include "../LLU/allocators.h"
+#include "../LLH/uint1024.h"
 
 #include <openssl/ec.h> // for EC_KEY definition
 

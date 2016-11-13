@@ -8,11 +8,11 @@
 
 #include "optionsdialog.h"
 #include "../models/optionsmodel.h"
-#include "../util/amountfield.h"
-#include "../util/monitoreddatamapper.h"
-#include "../util/guiutil.h"
+#include "../LLU/amountfield.h"
+#include "../LLU/monitoreddatamapper.h"
+#include "../LLU/guiutil.h"
 #include "../core/units.h"
-#include "../util/qvaluecombobox.h"
+#include "../LLU/qvaluecombobox.h"
 
 #include <QHBoxLayout>
 #include <QVBoxLayout>

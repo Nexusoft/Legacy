@@ -11,8 +11,8 @@
 #include <boost/tokenizer.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
-#include "../util/ui_interface.h"
-#include "../util/util.h"
+#include "../LLU/ui_interface.h"
+#include "../LLU/util.h"
 #include "qtipcserver.h"
 
 using namespace boost::interprocess;

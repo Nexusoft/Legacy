@@ -10,8 +10,8 @@
 #include "addrman.h"
 
 #include "../main.h"
-#include "../util/strlcpy.h"
-#include "../util/ui_interface.h"
+#include "../LLU/strlcpy.h"
+#include "../LLU/ui_interface.h"
 #include "../wallet/db.h"
 
 #ifdef WIN32

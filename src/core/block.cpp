@@ -10,7 +10,7 @@
 #include "unifiedtime.h"
 
 #include "../wallet/db.h"
-#include "../util/ui_interface.h"
+#include "../LLU/ui_interface.h"
 
 #include "../LLD/index.h"
 

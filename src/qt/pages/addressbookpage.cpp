@@ -12,8 +12,8 @@
 #include "../models/addresstablemodel.h"
 #include "../core/gui.h"
 #include "../dialogs/editaddressdialog.h"
-#include "../util/csvmodelwriter.h"
-#include "../util/guiutil.h"
+#include "../LLU/csvmodelwriter.h"
+#include "../LLU/guiutil.h"
 
 #include <QSortFilterProxyModel>
 #include <QClipboard>

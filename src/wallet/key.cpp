@@ -12,7 +12,7 @@
 #include <openssl/obj_mac.h>
 
 #include "key.h"
-#include "../util/util.h"
+#include "../LLU/util.h"
 
 namespace Wallet
 {

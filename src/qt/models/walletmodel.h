@@ -11,7 +11,7 @@
 
 #include <QObject>
 
-#include "../../util/allocators.h" /* for SecureString */
+#include "../../LLU/allocators.h" /* for SecureString */
 
 class OptionsModel;
 class AddressTableModel;

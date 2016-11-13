@@ -13,7 +13,7 @@
 #include "../pages/addressbookpage.h"
 #include "../models/optionsmodel.h"
 #include "../wallet/sendcoinsentry.h"
-#include "../util/guiutil.h"
+#include "../LLU/guiutil.h"
 #include "askpassphrasedialog.h"
 
 #include <QMessageBox>

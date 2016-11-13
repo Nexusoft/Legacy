@@ -22,6 +22,26 @@ extern "C" {
 }
 #endif
 
+/** Hashing template for Checksums in LLD Keychain **/
+inline unsigned int SK32(const std::vector<unsigned char>& vch)
+{
+	static unsigned char pblank[1];
+	
+	uint64 skein;
+	Skein_256_Ctxt_t ctx;
+	Skein_256_Init(&ctx, 32);
+	Skein_256_Update(&ctx, (unsigned char *)&vch[0], vch.size());
+	Skein_256_Final(&ctx, (unsigned char *)&skein);
+	
+    uint64 keccak;
+	Keccak_HashInstance ctx_keccak;
+	Keccak_HashInitialize(&ctx_keccak, 1344, 256, 32, 0x06);
+	Keccak_HashUpdate(&ctx_keccak, (unsigned char *)&skein, 32);
+	Keccak_HashFinal(&ctx_keccak, (unsigned char *)&keccak);
+	
+	return keccak;
+}
+
 /** Hashing template for Checksums **/
 template<typename T1>
 inline uint64 SK64(const T1 pbegin, const T1 pend)

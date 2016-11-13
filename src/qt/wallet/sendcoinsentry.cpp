@@ -8,7 +8,7 @@
 
 #include "sendcoinsentry.h"
 #include "ui_sendcoinsentry.h"
-#include "../util/guiutil.h"
+#include "../LLU/guiutil.h"
 #include "../core/units.h"
 #include "../pages/addressbookpage.h"
 #include "../models/walletmodel.h"

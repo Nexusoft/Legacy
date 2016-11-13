@@ -6,7 +6,7 @@
   
 *******************************************************************************************/
 
-#include "../util/addressvalidator.h"
+#include "../LLU/addressvalidator.h"
 
 
 NexusAddressValidator::NexusAddressValidator(QObject *parent) :

@@ -8,7 +8,7 @@
 
 #include "qrcodedialog.h"
 #include "ui_qrcodedialog.h"
-#include "../util/guiutil.h"
+#include "../LLU/guiutil.h"
 
 #include <QPixmap>
 #include <QUrl>

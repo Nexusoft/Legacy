@@ -17,13 +17,13 @@
 
 #include "../../main.h"
 #include "../../wallet/wallet.h"
-#include "../../util/util.h"
+#include "../../LLU/util.h"
 
 #include "messagepage.h"
 #include "ui_messagepage.h"
 
 #include "addressbookpage.h"
-#include "../util/guiutil.h"
+#include "../LLU/guiutil.h"
 #include "../models/walletmodel.h"
 
 MessagePage::MessagePage(QWidget *parent) :

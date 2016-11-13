@@ -7,13 +7,13 @@
 *******************************************************************************************/
 
 #include "netbase.h"
-#include "../util/util.h"
+#include "../LLU/util.h"
 
 #ifndef WIN32
 #include <sys/fcntl.h>
 #endif
 
-#include "../util/strlcpy.h"
+#include "../LLU/strlcpy.h"
 
 using namespace std;
 

@@ -9,7 +9,7 @@
 #include "editaddressdialog.h"
 #include "ui_editaddressdialog.h"
 #include "../models/addresstablemodel.h"
-#include "../util/guiutil.h"
+#include "../LLU/guiutil.h"
 
 #include <QDataWidgetMapper>
 #include <QMessageBox>

@@ -7,7 +7,7 @@
 *******************************************************************************************/
 
 #include "db.h"
-#include "../util/util.h"
+#include "../LLU/util.h"
 #include "../core/core.h"
 #include <boost/version.hpp>
 #include <boost/filesystem.hpp>

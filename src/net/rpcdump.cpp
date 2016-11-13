@@ -8,7 +8,7 @@
 
 #include "../main.h" // for pwalletMain
 #include "../net/rpcserver.h"
-#include "../util/ui_interface.h"
+#include "../LLU/ui_interface.h"
 
 #include <boost/lexical_cast.hpp>
 

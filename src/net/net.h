@@ -18,7 +18,7 @@
 #include <arpa/inet.h>
 #endif
 
-#include "../util/mruset.h"
+#include "../LLU/mruset.h"
 #include "netbase.h"
 #include "protocol.h"
 #include "addrman.h"

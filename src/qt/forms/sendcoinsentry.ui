@@ -153,13 +153,13 @@
   <customwidget>
    <class>NexusAmountField</class>
    <extends>QLineEdit</extends>
-   <header>util/amountfield.h</header>
+   <header>LLU/amountfield.h</header>
    <container>1</container>
   </customwidget>
   <customwidget>
    <class>QValidatedLineEdit</class>
    <extends>QLineEdit</extends>
-   <header>util/qvalidatedlineedit.h</header>
+   <header>LLU/qvalidatedlineedit.h</header>
   </customwidget>
  </customwidgets>
  <resources>

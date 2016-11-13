@@ -13,10 +13,10 @@
 #ifndef __INCLUDED_PROTOCOL_H__
 #define __INCLUDED_PROTOCOL_H__
 
-#include "../util/serialize.h"
+#include "../LLU/serialize.h"
 #include "netbase.h"
 #include <string>
-#include "../hash/uint1024.h"
+#include "../LLH/uint1024.h"
 
 #define NEXUS_PORT  9323
 #define NEXUS_CORE_LLP_PORT 9324

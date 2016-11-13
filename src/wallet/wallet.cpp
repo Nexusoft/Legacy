@@ -9,7 +9,7 @@
 #include "wallet.h"
 #include "walletdb.h"
 #include "crypter.h"
-#include "../util/ui_interface.h"
+#include "../LLU/ui_interface.h"
 
 #include "../LLD/index.h"
 

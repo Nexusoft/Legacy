@@ -9,7 +9,7 @@
 #ifndef NEXUS_CORE_H
 #define NEXUS_CORE_H
 
-#include "../util/bignum.h"
+#include "../LLU/bignum.h"
 #include "../net/net.h"
 #include "../wallet/script.h"
 

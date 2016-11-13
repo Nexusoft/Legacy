@@ -11,7 +11,7 @@
 
 #include "../models/clientmodel.h"
 #include "../../net/rpcserver.h"
-#include "../util/guiutil.h"
+#include "../LLU/guiutil.h"
 
 
 #include <QTime>

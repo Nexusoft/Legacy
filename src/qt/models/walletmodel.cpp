@@ -12,7 +12,7 @@
 #include "addresstablemodel.h"
 #include "transactiontablemodel.h"
 
-#include "../../util/ui_interface.h"
+#include "../../LLU/ui_interface.h"
 #include "../../wallet/wallet.h"
 #include "../../wallet/walletdb.h" // for BackupWallet
 

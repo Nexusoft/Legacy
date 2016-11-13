@@ -13,7 +13,7 @@
 
 #define LOCK_GUARD(a) boost::lock_guard<boost::mutex> lock(a)
 
-#include "../util/util.h"
+#include "../LLU/util.h"
 	
 namespace LLP
 {

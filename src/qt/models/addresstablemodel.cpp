@@ -7,7 +7,7 @@
 *******************************************************************************************/
 
 #include "addresstablemodel.h"
-#include "../util/guiutil.h"
+#include "../LLU/guiutil.h"
 #include "walletmodel.h"
 
 #include "../../wallet/wallet.h"

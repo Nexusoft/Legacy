@@ -9,7 +9,7 @@
 #ifndef NEXUS_UTIL_H
 #define NEXUS_UTIL_H
 
-#include "../hash/templates.h"
+#include "../LLH/templates.h"
 
 #ifndef WIN32
 #include <sys/types.h>

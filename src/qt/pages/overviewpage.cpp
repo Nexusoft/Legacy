@@ -14,7 +14,7 @@
 #include "../models/optionsmodel.h"
 #include "../models/transactiontablemodel.h"
 #include "../wallet/transactionfilterproxy.h"
-#include "../util/guiutil.h"
+#include "../LLU/guiutil.h"
 #include "../core/guiconstants.h"
 
 #include <QAbstractItemDelegate>

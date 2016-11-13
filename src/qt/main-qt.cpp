@@ -10,10 +10,10 @@
 #include "models/clientmodel.h"
 #include "models/walletmodel.h"
 #include "models/optionsmodel.h"
-#include "util/guiutil.h"
+#include "LLU/guiutil.h"
 
 #include "../main.h"
-#include "../util/ui_interface.h"
+#include "../LLU/ui_interface.h"
 #include "core/qtipcserver.h"
 
 #include <QApplication>

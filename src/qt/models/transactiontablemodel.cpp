@@ -7,7 +7,7 @@
 *******************************************************************************************/
 
 #include "transactiontablemodel.h"
-#include "../util/guiutil.h"
+#include "../LLU/guiutil.h"
 #include "../wallet/transactionrecord.h"
 #include "../core/guiconstants.h"
 #include "../wallet/transactiondesc.h"

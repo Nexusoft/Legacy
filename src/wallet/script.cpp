@@ -17,8 +17,8 @@ using namespace boost;
 #include "keystore.h"
 
 #include "../core/core.h"
-#include "../util/util.h"
-#include "../util/bignum.h"
+#include "../LLU/util.h"
+#include "../LLU/bignum.h"
 
 namespace Wallet
 {

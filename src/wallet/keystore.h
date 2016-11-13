@@ -10,7 +10,7 @@
 #define NEXUS_KEYSTORE_H
 
 #include "crypter.h"
-#include "../util/util.h"
+#include "../LLU/util.h"
 #include "base58.h"
 
 class CScript;

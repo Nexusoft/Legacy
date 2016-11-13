@@ -9,7 +9,7 @@
 #ifndef TRANSACTIONRECORD_H
 #define TRANSACTIONRECORD_H
 
-#include "../../hash/uint1024.h"
+#include "../../LLH/uint1024.h"
 
 #include <QList>
 

@@ -10,7 +10,7 @@
 #include <boost/foreach.hpp>
 
 #include "core.h"
-#include "../hash/uint1024.h"
+#include "../LLH/uint1024.h"
 #include "../wallet/db.h"
 
 namespace Core

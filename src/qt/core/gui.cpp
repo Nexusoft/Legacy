@@ -26,13 +26,13 @@
 #include "units.h"
 #include "guiconstants.h"
 #include "../dialogs/askpassphrasedialog.h"
-#include "../util/notificator.h"
-#include "../util/guiutil.h"
+#include "../LLU/notificator.h"
+#include "../LLU/guiutil.h"
 #include "rpcconsole.h"
 #include "../../wallet/wallet.h"
 
 #ifdef Q_WS_MAC
-#include "../util/macdockiconhandler.h"
+#include "../LLU/macdockiconhandler.h"
 #endif
 
 #include <QApplication>
