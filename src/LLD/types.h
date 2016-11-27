@@ -3,12 +3,9 @@
 
 #include "../LLU/util.h"
 
-/* TODO: Move this helper to LLU
-	 * Helps to parse out the individual bits from a byte to use multiple flags in a 0xff range. */
-	bool GetBit(unsigned char byte, int position) // position in range 0-7
-	{
-		return (byte >> position) & 0x1;
-	}
+/** Lower Level Database Name Space. **/
+namespace LLD
+{
 
 	/** Enumeration for each State.
 		Allows better thread concurrency
@@ -123,17 +120,17 @@
 		unsigned char   		   	nState;
 		unsigned short 			   nLength;
 		
-		/** Checksum of Original Data to ensure no database corrupted sectors. 
+		/* Checksum of Original Data to ensure no database corrupted sectors. 
 			TODO: Consider the Original Data from a checksum.
 			When transactions implemented have transactions stored in a sector Database.
 			Ensure Original keychain and new keychain are stored on disk.
 			If there is failure here before it is commited to the main database it will only
 			corrupt the database backups. This will ensure the core database never gets corrupted.
 			On startup ensure that the checksums match to ensure that the database was not stopped
-			in the middle of a write. **/
+			in the middle of a write. */
 		unsigned int nChecksum;
 		
-		/** The Kye Locations. **/
+		/* The Kye Locations. */
 		mutable KeyLocation cKeyStart;
 		mutable KeyLocation cKeyNext;
 		
@@ -166,11 +163,19 @@
 		/** Return the Size of the Key Sector on Disk. **/
 		unsigned int Size() { return (7 + cKeyStart.Size() + cKeyNext.Size() + nLength); }
 		
-		/** Check for Key Activity on Sector. **/
+		/* A standard validating Empty check for sector data. */
 		bool Empty() { return (nState == EMPTY); }
-		bool Ready() { return (nState == READY); }
+		
+		/* A standard validated Ready check for sector. */
+		bool Ready() { return (nState == READY || nState == APPEND); }
+		
+		/* Append Sector means that there is data available in the sector chains to be added without new key. */
 		bool Append(){ return (nState == APPEND); }
 		
+		/* A static key is one that only has one sector data is pointing to. */
+		bool Statci(){ return cKeyNext.IsNull(); } 
+		
 	};
-	
+}
+
 #endif

@@ -84,6 +84,12 @@ static const int64 CENT = 10000;
 // This is needed because the foreach macro can't get over the comma in pair<t1, t2>
 #define PAIRTYPE(t1, t2)    std::pair<t1, t2>
 
+/* Helps to parse out the individual bits from a byte to use multiple flags in a 0xff range. */
+bool GetBit(unsigned char byte, int position) // position in range 0-7
+{
+	return (byte >> position) & 0x1;
+}
+
 // Align by increasing pointer, must have extra space at end of buffer
 template <size_t nBytes, typename T>
 T* alignup(T* p)
