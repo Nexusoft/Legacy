@@ -278,7 +278,8 @@ SOURCES += src/core/block.cpp \
 	src/LLD/index.cpp
 
 RESOURCES += \
-    src/qt/nexus.qrc
+    src/qt/nexus.qrc \
+    src/qt/Nexus.qrc
 
 FORMS += \
     src/qt/forms/sendcoinsdialog.ui \

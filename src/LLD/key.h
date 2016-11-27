@@ -18,18 +18,18 @@ namespace LLD
 	class KeyDatabase
 	{
 	protected:
-		/** Mutex for Thread Synchronization. **/
+		/* Mutex for Thread Synchronization. */
 		mutable boost::mutex KEY_MUTEX;
 		
-		/** The String to hold the Disk Location of Database File. 
+		/* The String to hold the Disk Location of Database File. 
 			Each Database File Acts as a New Table as in Conventional Design.
-			Key can be any Type, which is how the Database Records are Accessed. **/
+			Key can be any Type, which is how the Database Records are Accessed. */
 		std::string strBaseLocation;
 		std::string strDatabaseName;
 		std::string strLocation;
 		
-		/** Caching Flag
-			TODO: Expand the Caching System. **/
+		/* Caching Flag
+			TODO: Expand the Caching System. */
 		bool fMemoryCaching = false;
 		
 		/** Caching Size.
@@ -78,8 +78,6 @@ namespace LLD
 			std::fstream fIncoming(strLocation.c_str(), std::ios::in | std::ios::binary);
 			if(!fIncoming)
 			{
-				printf("[DATABASE] Creating %s Keychain....\n", strDatabaseName.c_str());
-				
 				/** Create the Sector Database Directories. **/
 				boost::filesystem::path dir(strBaseLocation);
 				boost::filesystem::create_directory(dir);
@@ -89,6 +87,9 @@ namespace LLD
 					
 				return;
 			}
+			
+			/* Basic Debug Information. */
+			printf("[DATABASE] Initializing %s Keychain....\n", strDatabaseName.c_str());
 			
 			/** Get the Binary Size. **/
 			fIncoming.seekg (0, std::ios::end);

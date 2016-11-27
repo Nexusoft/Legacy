@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>627</width>
+    <width>734</width>
     <height>347</height>
    </rect>
   </property>
@@ -60,7 +60,7 @@
         <string>&amp;New Address...</string>
        </property>
        <property name="icon">
-        <iconset resource="../Nexus.qrc">
+        <iconset resource="../nexus.qrc">
          <normaloff>:/icons/add</normaloff>:/icons/add</iconset>
        </property>
       </widget>
@@ -74,7 +74,7 @@
         <string>&amp;Copy to Clipboard</string>
        </property>
        <property name="icon">
-        <iconset resource="../Nexus.qrc">
+        <iconset resource="../nexus.qrc">
          <normaloff>:/icons/editcopy</normaloff>:/icons/editcopy</iconset>
        </property>
       </widget>
@@ -85,7 +85,7 @@
         <string>Show &amp;QR Code</string>
        </property>
        <property name="icon">
-        <iconset resource="../Nexus.qrc">
+        <iconset resource="../nexus.qrc">
          <normaloff>:/images/qrcode</normaloff>:/images/qrcode</iconset>
        </property>
       </widget>
@@ -99,7 +99,7 @@
         <string>&amp;Sign Message</string>
        </property>
        <property name="icon">
-        <iconset resource="../Nexus.qrc">
+        <iconset resource="../nexus.qrc">
          <normaloff>:/icons/edit</normaloff>:/icons/edit</iconset>
        </property>
       </widget>
@@ -113,7 +113,7 @@
         <string>&amp;Delete</string>
        </property>
        <property name="icon">
-        <iconset resource="../Nexus.qrc">
+        <iconset resource="../nexus.qrc">
          <normaloff>:/icons/remove</normaloff>:/icons/remove</iconset>
        </property>
       </widget>
@@ -149,7 +149,7 @@
   </layout>
  </widget>
  <resources>
-  <include location="../Nexus.qrc"/>
+  <include location="../nexus.qrc"/>
  </resources>
  <connections/>
 </ui>

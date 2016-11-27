@@ -25,11 +25,20 @@
         <x>0</x>
         <y>0</y>
         <width>666</width>
-        <height>165</height>
+        <height>161</height>
        </rect>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_2">
-       <property name="margin">
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <property name="topMargin">
+        <number>0</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
         <number>0</number>
        </property>
        <item>
@@ -67,7 +76,7 @@
         <string>&amp;Add recipient...</string>
        </property>
        <property name="icon">
-        <iconset resource="../Nexus.qrc">
+        <iconset resource="../nexus.qrc">
          <normaloff>:/icons/add</normaloff>:/icons/add</iconset>
        </property>
       </widget>
@@ -87,7 +96,7 @@
         <string>Clear all</string>
        </property>
        <property name="icon">
-        <iconset resource="../Nexus.qrc">
+        <iconset resource="../nexus.qrc">
          <normaloff>:/icons/remove</normaloff>:/icons/remove</iconset>
        </property>
        <property name="autoRepeatDelay">
@@ -147,7 +156,7 @@
         <string>&amp;Send</string>
        </property>
        <property name="icon">
-        <iconset resource="../Nexus.qrc">
+        <iconset resource="../nexus.qrc">
          <normaloff>:/icons/send</normaloff>:/icons/send</iconset>
        </property>
        <property name="default">
@@ -160,7 +169,7 @@
   </layout>
  </widget>
  <resources>
-  <include location="../Nexus.qrc"/>
+  <include location="../nexus.qrc"/>
  </resources>
  <connections/>
 </ui>
