@@ -40,6 +40,21 @@ namespace LLD
 	 * 		3. Piece out the Master Sector into Pieces based on keychain location allocations
 	 * 		4. If there is remaining data after Pieces, add a new sector location to last keychain location. Write last record.
 	 * 
+	 * 
+	 * 	TODO: Keychain Routing based on IP address
+	 * 	Load balance the Location and Keychain data to locate Sector Pieces from nodes that advertise it.
+	 * 
+	 * 
+	 * 	Have the network internally check any relayed data to their own data to add a trust score. Internal relay before it is relayed
+	 * 	to the endpoint.
+	 * 
+	 * 	A. Node asked for Sector piece, requester on relay path passes it through trust relays and signs the message with a 32 bit checksum
+	 * 	B. Receiver verifies that this is signed by a trusted node. Trust is built by relaying pieces that can be stored in a trust database.
+	 * 	C. Pieces put back together and answered to contact node. 
+	 * 
+	 * 	As rule of thumb, contact node cannot send its data, but rather relay the data
+	 * 	of other's to maintain a trust less environment
+	 * 
 	 * */
 	
 	/* Handle the Registry of Shared Keychain Pointer Objects. */
