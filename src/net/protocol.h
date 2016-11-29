@@ -1,10 +1,10 @@
 /*******************************************************************************************
- 
-			Hash(BEGIN(Satoshi[2010]), END(Sunny[2012])) == Videlicet[2014] ++
-   
- [Learn and Create] Viz. http://www.opensource.org/licenses/mit-license.php
-  
-*******************************************************************************************/
+ * 
+ * "Trouble is found on the other side of the grave" - Videlicet
+ * 
+ * http://www.opensource.org/licenses/mit-license.php
+ * 
+ ******************************************************************************************/
 
 #ifndef __cplusplus
 # error This header can only be compiled as C++.

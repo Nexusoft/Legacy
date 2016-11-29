@@ -1,3 +1,11 @@
+/*******************************************************************************************
+ * 
+ * "Senses fail to bind what you see" - Videlicet
+ * 
+ * http://www.opensource.org/licenses/mit-license.php
+ * 
+ ******************************************************************************************/
+
 #ifndef LOWER_LEVEL_LIBRARY_LLD_SECTOR_KEY
 #define LOWER_LEVEL_LIBRARY_LLD_SECTOR_KEY
 

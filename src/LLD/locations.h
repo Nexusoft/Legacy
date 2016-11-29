@@ -1,3 +1,11 @@
+/*******************************************************************************************
+   
+   "To learn wit is to understand silence" - Videlicet
+	
+   http://www.opensource.org/licenses/mit-license.php
+  
+*******************************************************************************************/
+
 #ifndef LOWER_LEVEL_LIBRARY_LLD_LOCATIONS
 #define LOWER_LEVEL_LIBRARY_LLD_LOCATIONS
 
