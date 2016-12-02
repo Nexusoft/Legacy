@@ -175,17 +175,17 @@ namespace LLD
 		}
 		
 		/* Erase Functionality as follows TODO:
-         * 
-         *  1. Flag the Sector Key as EMPTY
-         *  2. Add the Sector Key binary position in a stored memory mapKeys
-         *  3. If this is a transaction data, stroe it in the transaction journal
-         *  
-         *  ON INSERT:
-         *  1. Use old sector locationd data first for HD usage efficiency
-         *  2. Piece together and see if specific key needs to be appended.
-         *  3. If sector is only at partial capacity whether dynamic or static, 
-         *     have the available sector space be logged in the sector location or the key memory map as 'empty space'
-         */
+		 * 
+		 *  1. Flag the Sector Key as EMPTY
+		 *  2. Add the Sector Key binary position in a stored memory mapKeys
+		 *  3. If this is a transaction data, stroe it in the transaction journal
+		 *  
+		 *  ON INSERT:
+		 *  1. Use old sector locationd data first for HD usage efficiency
+		 *  2. Piece together and see if specific key needs to be appended.
+		 *  3. If sector is only at partial capacity whether dynamic or static, 
+		 *     have the available sector space be logged in the sector location or the key memory map as 'empty space'
+		 */
 		bool Erase(const std::vector<unsigned char> vKey)
 		{
 			/* Check for the Key. **/
