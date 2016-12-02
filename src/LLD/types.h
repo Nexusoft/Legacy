@@ -10,8 +10,8 @@
 /** Lower Level Database Name Space. **/
 namespace LLD
 {
-    /* Handle to automatically create new files if the file size is exceeded. */
-    const unsigned int MAX_FILE_SIZE = 1024 * 1024;
+	/* Handle to automatically create new files if the file size is exceeded. */
+	const unsigned int MAX_FILE_SIZE = 1024 * 1024;
     
     
 	/* Enumeration for each State.
@@ -56,9 +56,9 @@ namespace LLD
 		void SetNull() { nKeyPosiition = 0; nKeyFile = 0; }
 		
 		/* Null check indicator to determine validity of this keybase. */
-        bool IsNull(){ return (nKeyFile == 0); }
+		bool IsNull(){ return (nKeyFile == 0); }
         
-        /* Size of the Key Base class. Fixed width, but for expandability in the future. */
+		/* Size of the Key Base class. Fixed width, but for expandability in the future. */
 		int  Size()  { return 6; }
 	};
 	
@@ -75,7 +75,7 @@ namespace LLD
 	 */
 	class KeyChain
 	{
-        mutable boost::mutex MUTEX;
+		mutable boost::mutex MUTEX;
         
 	public:
 		/* These three hold the location of 
@@ -85,16 +85,16 @@ namespace LLD
 		unsigned short            nSectorSize;
 		unsigned int              nSectorStart;
         
-        /* Key Base Location for Next Key in the Chain. */
-        KeyBase cNext;
+		/* Key Base Location for Next Key in the Chain. */
+		KeyBase cNext;
 		
 		KeyChain() { SetNull(); }
 		KeyChain(unsigned short nFileIn, unsigned short nSizeIn, unsigned int nStartIn) : nSectorFile(nFileIn), nSectorSize(nSizeIn), nSectorStart(nStartIn) { }
 		KeyChain(unsigned short nFileIn, unsigned short nSizeIn, unsigned int nStartIn, unsigned short nNextFile, unsigned int nNextPosition) : nSectorFile(nFileIn), nSectorSize(nSizeIn), nSectorStart(nStartIn) 
-        { 
-            cNext.nKeyFile     = nNextFile;
-            cNext.nKeyPosition = nNextPosition;
-        }
+		{ 
+			cNext.nKeyFile     = nNextFile;
+			cNext.nKeyPosition = nNextPosition;
+		}
 		
 		/* Serialization Macro. */
 		IMPLEMENT_SERIALIZE
@@ -102,8 +102,7 @@ namespace LLD
 			READWRITE(nSectorFile);
 			READWRITE(nSectorSize);
 			READWRITE(nSectorStart);
-            
-            READWRITE(cNext);
+			READWRITE(cNext);
 		)
 		
 		/* Automatic assignment of NULL value. */
@@ -112,8 +111,7 @@ namespace LLD
 				nSectorFile  = 0;
 				nSectorSize  = 0;
 				nSectorStart = 0;
-                
-                cNext.SetNull();
+				cNext.SetNull();
 		}
 		
 		/* Flags to know whether this location is active. */
@@ -126,53 +124,66 @@ namespace LLD
 		int Size() { return 8 + cNext.Size(); }
 		
 		/* Indicator if this is the last key in the keychain. */
-        bool Last() { return cNext.IsNull(); }
+		bool Last() { return cNext.IsNull(); }
         
-        /* Check for appending data.
-         * 
-         * TODO: This checks how much free data is available in the last sector.
-         * Dynamic sectors will need to be allocated at a fixed sector size.
-         * This will only come into play if it is set as a dynamic record.
-         * This is controlled by a record being appended when it is already written.
-         * This will set an auto flag, and begin an auto growth in the sector data.*/
-        int Append()
-        {
+		/* Check for appending data.
+		 * 
+		 * TODO: This checks how much free data is available in the last sector.
+		 * Dynamic sectors will need to be allocated at a fixed sector size.
+		 * This will only come into play if it is set as a dynamic record.
+		 * This is controlled by a record being appended when it is already written.
+		 * This will set an auto flag, and begin an auto growth in the sector data. 
+		 * 
+		 * Return value of (-1) indicates it can't be determined because current iterator is not on last sector.
+		 */
+		int Append()
+		{
+			if(!cNext.IsNull())
+				return -1;
+			
+			/* Send fail code if there is a problem with the sector sizes. */
+			if(nSectorSize < cNext.nKeyPosition)
+				return -1;
             
-        }
+			/* Free Append data is determined by the Next Keybase nKeyPosition
+			 * This becomes the substitue for the total used space in sector. 
+			 */
+			return (nSectorSize - cNext.nKeyPosition);
+		}
 		
 		/* Read the Sector Location data from a Key Location Index. */
-        bool Read(KeyBase cKeyLocation, std::string strDirectory)
-        {
-            std::fstream fStream(strprintf("%s/keychain.%04u", strDirectory.c_str(), nSectorFile).c_str(), std::ios::in | std::ios::out | std::ios::binary);
-            if(!fStream) //read operation should not be done if the file doesn't exist
-                return false;
+		bool Read(KeyBase cKeyLocation, std::string strDirectory)
+		{
+			std::fstream fStream(strprintf("%s/keychain.%04u", strDirectory.c_str(), nSectorFile).c_str(), std::ios::in | std::ios::out | std::ios::binary);
+			if(!fStream) //read operation should not be done if the file doesn't exist
+				return false;
+			
+			fStream.seekg(nSectorStart, std::ios::beg);
+			std::vector<unsigned char> vSector(Size(), 0);
+			fStream.read((char*) &vSector[0], vSector.size());
+			
+			CDataStream ssValue(vSector, SER_LLD, DATABASE_VERSION);
+			ssValue >> *this;
             
-            fStream.seekg(nSectorStart, std::ios::beg);
-            std::vector<unsigned char> vSector(Size(), 0);
-            fStream.read((char*) &vSector[0], vSector.size());
-            
-            CDataStream ssValue(vSector, SER_LLD, DATABASE_VERSION);
-            ssValue >> *this;
-            
-            return false;
-        }
+			return false;
+		}
         
-        /* Write the Sector Location data from a Key Location Index. */
-        bool Write(KeyBase cKeyLocation, std::string strDirectory)
-        {
-            std::fstream fStream(strprintf("%s/keychain.%04u", strDirectory.c_str(), nSectorFile).c_str(), std::ios::in | std::ios::out | std::ios::binary);
-            if(!fStream) //write operation should not be done if the file doesn't exist
-                return false;
+		/* Write the Sector Location data from a Key Location Index. */
+		bool Write(KeyBase cKeyLocation, std::string strDirectory)
+		{
+			std::fstream fStream(strprintf("%s/keychain.%04u", strDirectory.c_str(), nSectorFile).c_str(), std::ios::in | std::ios::out | std::ios::binary);
+			if(!fStream) //write operation should not be done if the file doesn't exist
+				return false;
+			
+			fStream.seekp(nSectorStart, std::ios::beg);
+			CDataStream ssValue(vSector, SER_LLD, DATABASE_VERSION);
+			ssValue << *this;
             
-            fStream.seekp(nSectorStart, std::ios::beg);
-            CDataStream ssValue(vSector, SER_LLD, DATABASE_VERSION);
-            ssValue << *this;
-            
-            std::vector<unsigned char> vSector(ssValue.begin(), ssValue.end());
-            fStream.write((char*) &vSector[0], vSector.size());
-            
-            return false;
-        }
+			std::vector<unsigned char> vSector(ssValue.begin(), ssValue.end());
+			fStream.write((char*) &vSector[0], vSector.size());
+			
+			return false;
+		}
 		
 		/* Operator Overloading for Read Ability. */
 		friend bool operator==(const SectorLocation& a, const SectorLocation& b)  { return (a.nSectorFile == b.nSectorFile && a.nSectorSize == b.nSectorSize && a.nSectorStart == b.nSectorStart); }
