@@ -63,15 +63,15 @@ namespace LLD
 	};
 	
     
-	/** Sector Location Class
+	/*  Sector Location Class
 	 * 
 	 *  Handles the storing of the data associated with each sector position
 	 *  This allows the sectors to be pieced together to establish dynamic record allocation.
-     * 
-     *  This is Indexed by the Key Location class to be read from the location filesystems.
-     *  
-     *  TODO: Think of optized algorithm and structuring, so far is O(3 +- 2)
-     *  Sector Location handles the reading and writing of files instead of the need for a sepearate class initialization.
+	 * 
+	 *  This is Indexed by the Key Location class to be read from the location filesystems.
+	 *  
+	 *  TODO: Think of optized algorithm and structuring, so far is O(3 +- 2)
+	 *  Sector Location handles the reading and writing of files instead of the need for a sepearate class initialization.
 	 */
 	class KeyChain
 	{

@@ -188,9 +188,9 @@ namespace LLD
 		bool Get(std::vector<unsigned char> vKey, std::vector<unsigned char>& vData)
 		{
 			MUTEX_LOCK(SECTOR_MUTEX);
-            
-            /* Flush the Data vector. */
-            vData.clear();
+			
+			/* Flush the Data vector. */
+			vData.clear();
 			
 			/** Read a Record from Binary Data. **/
 			KeyDatabase* SectorKeys = GetKeychain(strKeychain);
@@ -199,22 +199,22 @@ namespace LLD
 			
 			if(SectorKeys->HasKey(vKey))
 			{	
-                /* TODO: Check that the key is not pending in a transaction for Erase.
-                if(pTransaction && pTransaction->mapEraseData.count(vKey))
-                    return false;
-                */
+				/* TODO: Check that the key is not pending in a transaction for Erase.
+				if(pTransaction && pTransaction->mapEraseData.count(vKey))
+					return false;
+				*/
                 
-                /* TODO: Check if the new data is set in a transaction to ensure that the database knows what is in volatile memory.
-                if(pTransaction && pTransaction->mapTransactions.count(vKey))
-                {
-                    vData = pTransaction->mapTransactions[vKey];
+				/* TODO: Check if the new data is set in a transaction to ensure that the database knows what is in volatile memory.
+				if(pTransaction && pTransaction->mapTransactions.count(vKey))
+				{
+					vData = pTransaction->mapTransactions[vKey];
                     
-                    if(GetArg("-verbose", 0) >= 4)
-                        printf("SECTOR GET:%s\n", HexStr(vData.begin(), vData.end()).c_str());
+					if(GetArg("-verbose", 0) >= 4)
+						printf("SECTOR GET:%s\n", HexStr(vData.begin(), vData.end()).c_str());
                     
-                    return true;
-                }
-                */
+					return true;
+				}
+				*/
                 
 				/** Read the Sector Key from Keychain. **/
 				SectorKey cKey;
@@ -223,30 +223,30 @@ namespace LLD
 				
 				/** Open the Stream to Read the data from Sector on File. **/
 				std::fstream fStream(strprintf("%s/keychain.%04u", strDirectory.c_str(), nSectorFile).c_str(), std::ios::in | std::ios::binary);
-                if(!fStream)
-                    return false;
+				if(!fStream)
+					return false;
                 
-                /* Iterate the Sector Linked List of Key Positions. */
-                std::vector<unsigned char> vSector;
-                while(!cKey.cKeychain.Last())
-                {
-                    /* Read the Sector data and append to sector vector. */
-                    fStream.seekg(cKey.cKeychain.nSectorStart);
-                
-                    /** Read the State and Size of Sector Header. **/
-                    vSector.resize(cKey.cKeychain.nSectorSize);
-                    fStream.read((char*) &vSector[0], vSector.size());
-                    
-                    /* Append the Data into Data Vector. */
-                    vData.insert(vData.end(), vSector.start(), vSector.end());
-                    
-                    /* Read the next keychain from the disk if not at the end of the keychain. */
-                    KeyChain cNext;
-                    cNext.Read(cKey.cKeychain.cNext, strKeychain);
-                    
-                    /* Iterate to the next key in the keychain if available. */
-                    cKey.cKeychain = cNext;
-                }
+				/* Iterate the Sector Linked List of Key Positions. */
+				std::vector<unsigned char> vSector;
+				while(!cKey.cKeychain.Last())
+				{
+					/* Read the Sector data and append to sector vector. */
+					fStream.seekg(cKey.cKeychain.nSectorStart);
+					
+					/** Read the State and Size of Sector Header. **/
+					vSector.resize(cKey.cKeychain.nSectorSize);
+					fStream.read((char*) &vSector[0], vSector.size());
+					
+					/* Append the Data into Data Vector. */
+					vData.insert(vData.end(), vSector.start(), vSector.end());
+					
+					/* Read the next keychain from the disk if not at the end of the keychain. */
+					KeyChain cNext;
+					cNext.Read(cKey.cKeychain.cNext, strKeychain);
+					
+					/* Iterate to the next key in the keychain if available. */
+					cKey.cKeychain = cNext;
+				}
 				fStream.close();
 				
 				/** Check the Data Integrity of the Sector by comparing the Checksums. **/
