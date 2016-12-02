@@ -109,7 +109,7 @@ namespace LLD
 			ssKey << key;
 			std::vector<unsigned char> vKey(ssKey.begin(), ssKey.end());
 			
-            /* TODO: HANDLE TRANACTION
+			/* TODO: HANDLE TRANACTION
 			if(pTransaction){
 				pTransaction->EraseTransaction(vKey);
 				
