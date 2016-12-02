@@ -10,9 +10,19 @@
 /** Lower Level Database Name Space. **/
 namespace LLD
 {
-	/* Handle to automatically create new files if the file size is exceeded. */
+	/* Handle to automatically create new files if the file size is exceeded. 
+	 * TODO: Make this a configurable option
+	 * 
+	 * NOTE: A larger max file size should be seen within constraints of OS. Keep under 1 GB for MAx Compatability. 
+	 */
 	const unsigned int MAX_FILE_SIZE = 1024 * 1024;
-    
+	
+	/* Handle to automatically append sectors of a given size. 
+	 * TODO: Make this a configured option
+	 * 
+	 * NOTE: A larger APPEND_SIZE will make the O(n) operate faster over larger datq sizes and appends.
+	 */
+	const unsigned int MAX_APPEND_SIZE = 1024 * 1024;
     
 	/* Enumeration for each State.
 		Allows better thread concurrency

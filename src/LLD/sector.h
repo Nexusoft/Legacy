@@ -66,7 +66,7 @@ namespace LLD
 		
 		/** Class to handle Transaction Data. **/
 		bool fTransaction = false;
-        
+		
 	public:
 		/** The Database Constructor. To determine file location and the Bytes per Record. **/
 		SectorDatabase(std::string strKeychainIn, const char* pszMode="r+")
