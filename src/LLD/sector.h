@@ -1,3 +1,11 @@
+/*******************************************************************************************
+ * 
+ * TODO: - Videlicet
+ * 
+ * http://www.opensource.org/licenses/mit-license.php
+ * 
+ ******************************************************************************************/
+
 #ifndef LOWER_LEVEL_LIBRARY_LLD_SECTOR
 #define LOWER_LEVEL_LIBRARY_LLD_SECTOR
 
@@ -44,12 +52,6 @@ namespace LLD
 			Will allow higher efficiency for thread concurrency. **/
 		boost::mutex SECTOR_MUTEX;
 		
-		/** The String to hold the Disk Location of Database File. 
-			Each Database File Acts as a New Table as in Conventional Design.
-			Key can be any Type, which is how the Database Records are Accessed. **/
-		std::string strBaseName;
-		
-		
 		/** Location of the Directory to host Database File System. 
 			Main File Components are Derived from Base Name.
 			Contains Key and Cache Databases. **/
@@ -57,51 +59,27 @@ namespace LLD
 		
 		/** Keychain Registry:
 			The nameof the Keychain Registry. **/
-		std::string strKeychainRegistry;
-		
-		/** Memory Structure to Track the Database Sizes. **/
-		std::vector<unsigned int> vDatabaseSizes;
+		std::string strKeychain;
 		
 		/** Read only Flag for Sectors. **/
 		bool fReadOnly = false;
 		
 		/** Class to handle Transaction Data. **/
-		SectorTransaction* pTransaction;
+		bool fTransaction = false;
+        
 	public:
 		/** The Database Constructor. To determine file location and the Bytes per Record. **/
-		SectorDatabase(std::string strName, std::string strKeychain, const char* pszMode="r+")
+		SectorDatabase(std::string strKeychainIn, const char* pszMode="r+")
 		{
-			strKeychainRegistry = strKeychain;
-			strBaseLocation = GetDefaultDataDir().string() + "/datachain/"; 
-			strBaseName = strName;
+			strKeychain     = strKeychainIn;
+			strBaseLocation = GetDefaultDataDir().string() + "/datachain/" + strKeychainIn; 
 			
 			/** Read only flag when instantiating new database. **/
 			fReadOnly = (!strchr(pszMode, '+') && !strchr(pszMode, 'w'));
 			
-			Initialize();
-		}
-		~SectorDatabase()
-        { 
-            if (pTransaction) 
-                delete pTransaction;
-        }
-		
-		/** Initialize Sector Database. **/
-		void Initialize()
-		{
 			/** Create the Sector Database Directories. **/
 			boost::filesystem::path dir(strBaseLocation);
 			boost::filesystem::create_directory(dir);
-			
-			/** TODO: Make a worker or thread to check sizes of files and automatically create new file.
-				Keep independent of reads and writes for efficiency. **/
-			std::fstream fIncoming(strprintf("%s%s%u.dat", strBaseLocation.c_str(), strBaseName.c_str(), 0).c_str(), std::ios::in | std::ios::binary);
-			if(!fIncoming) {
-				std::ofstream cStream(strprintf("%s%s%u.dat", strBaseLocation.c_str(), strBaseName.c_str(), 0).c_str(), std::ios::binary);
-				cStream.close();
-			}
-			
-			pTransaction = NULL;
 		}
 		
 		template<typename Key>
@@ -114,9 +92,9 @@ namespace LLD
 			std::vector<unsigned char> vKey(ssKey.begin(), ssKey.end());
 			
 			/** Read a Record from Binary Data. **/
-			KeyDatabase* SectorKeys = GetKeychain(strKeychainRegistry);
+			KeyDatabase* SectorKeys = GetKeychain(strKeychain);
 			if(!SectorKeys)
-				return error("Exists() : Sector Keys not Registered for Name %s\n", strKeychainRegistry.c_str());
+				return error("Exists() : Sector Keys not Registered for Name %s\n", strKeychain.c_str());
 			
 			/** Return the Key existance in the Keychain Database. **/
 			return SectorKeys->HasKey(vKey);
@@ -131,16 +109,18 @@ namespace LLD
 			ssKey << key;
 			std::vector<unsigned char> vKey(ssKey.begin(), ssKey.end());
 			
+            /* TODO: HANDLE TRANACTION
 			if(pTransaction){
 				pTransaction->EraseTransaction(vKey);
 				
 				return true;
 			}
+			*/
 		
 			/** Read a Record from Binary Data. **/
-			KeyDatabase* SectorKeys = GetKeychain(strKeychainRegistry);
+			KeyDatabase* SectorKeys = GetKeychain(strKeychain);
 			if(!SectorKeys)
-				return error("Erase() : Sector Keys not Registered for Name %s\n", strKeychainRegistry.c_str());
+				return error("Erase() : Sector Keys not Registered for Name %s\n", strKeychain.c_str());
 			
 			/** Return the Key existance in the Keychain Database. **/
 			return SectorKeys->Erase(vKey);
@@ -190,7 +170,7 @@ namespace LLD
 			ssValue << value;
 			std::vector<unsigned char> vData(ssValue.begin(), ssValue.end());
 
-			/** Commit to the Database. **/
+			/* TODO: HANDLE TRANACTION
 			if(pTransaction)
 			{
 				
@@ -199,6 +179,7 @@ namespace LLD
 				
 				return pTransaction->AddTransaction(vKey, vData, vOriginalData);
 			}
+			*/
 			
 			return Put(vKey, vData);
 		}
@@ -207,19 +188,23 @@ namespace LLD
 		bool Get(std::vector<unsigned char> vKey, std::vector<unsigned char>& vData)
 		{
 			MUTEX_LOCK(SECTOR_MUTEX);
+            
+            /* Flush the Data vector. */
+            vData.clear();
 			
 			/** Read a Record from Binary Data. **/
-			KeyDatabase* SectorKeys = GetKeychain(strKeychainRegistry);
+			KeyDatabase* SectorKeys = GetKeychain(strKeychain);
 			if(!SectorKeys)
-				return error("Get() : Sector Keys not Registered for Name %s\n", strKeychainRegistry.c_str());
+				return error("Get() : Sector Keys not Registered for Name %s\n", strKeychain.c_str());
 			
 			if(SectorKeys->HasKey(vKey))
 			{	
-                /* Check that the key is not pending in a transaction for Erase. */
+                /* TODO: Check that the key is not pending in a transaction for Erase.
                 if(pTransaction && pTransaction->mapEraseData.count(vKey))
                     return false;
+                */
                 
-                /* Check if the new data is set in a transaction to ensure that the database knows what is in volatile memory. */
+                /* TODO: Check if the new data is set in a transaction to ensure that the database knows what is in volatile memory.
                 if(pTransaction && pTransaction->mapTransactions.count(vKey))
                 {
                     vData = pTransaction->mapTransactions[vKey];
@@ -229,6 +214,7 @@ namespace LLD
                     
                     return true;
                 }
+                */
                 
 				/** Read the Sector Key from Keychain. **/
 				SectorKey cKey;
@@ -236,18 +222,35 @@ namespace LLD
 					return false;
 				
 				/** Open the Stream to Read the data from Sector on File. **/
-				std::fstream fStream(strprintf("%s%s%u.dat", strBaseLocation.c_str(), strBaseName.c_str(), cKey.nSectorFile).c_str(), std::ios::in | std::ios::binary);
-
-				/** Seek to the Sector Position on Disk. **/
-				fStream.seekg(cKey.nSectorStart);
-			
-				/** Read the State and Size of Sector Header. **/
-				vData.resize(cKey.nSectorSize);
-				fStream.read((char*) &vData[0], vData.size());
+				std::fstream fStream(strprintf("%s/keychain.%04u", strDirectory.c_str(), nSectorFile).c_str(), std::ios::in | std::ios::binary);
+                if(!fStream)
+                    return false;
+                
+                /* Iterate the Sector Linked List of Key Positions. */
+                std::vector<unsigned char> vSector;
+                while(!cKey.cKeychain.Last())
+                {
+                    /* Read the Sector data and append to sector vector. */
+                    fStream.seekg(cKey.cKeychain.nSectorStart);
+                
+                    /** Read the State and Size of Sector Header. **/
+                    vSector.resize(cKey.cKeychain.nSectorSize);
+                    fStream.read((char*) &vSector[0], vSector.size());
+                    
+                    /* Append the Data into Data Vector. */
+                    vData.insert(vData.end(), vSector.start(), vSector.end());
+                    
+                    /* Read the next keychain from the disk if not at the end of the keychain. */
+                    KeyChain cNext;
+                    cNext.Read(cKey.cKeychain.cNext, strKeychain);
+                    
+                    /* Iterate to the next key in the keychain if available. */
+                    cKey.cKeychain = cNext;
+                }
 				fStream.close();
 				
 				/** Check the Data Integrity of the Sector by comparing the Checksums. **/
-				uint64 nChecksum = SK64(vData);
+				uint64 nChecksum = SK32(vData);
 				if(cKey.nChecksum != nChecksum)
 					return error("Sector Get() : Checksums don't match data. Corrupted Sector.");
 				

@@ -9,11 +9,11 @@ namespace LLD
 	 * 		I. Stored in Memory on Keychain map for quick accass and low rewauirements.
 	 * 
 	 * 	Keychain Database Keys File -> Main keychain file located in 'keychain/[registry].keys'
-	 * 	Keychain Key Locations File -> Main keychain locations files in 'keychain/[registry]/locations.001 ....'
+	 * 	Keychain Key Locations File -> Main keychain locations files in 'keychain/[registry]/location.001 ....'
 	 * 	
-	 * 	Keychain Sector Locations   -> Main keychain sector binary locations in 'keychain/[registry]/sectors.001 ....'
+	 * 	Keychain Sector Locations   -> Main keychain sector binary locations in 'keychain/[registry]/sector.001 ....'
 	 * 
-	 * 	Datachain File Locations    -> Main datachain sector binary locations in 'datachain/[registry].001 ....'
+	 * 	Datachain File Locations    -> Main datachain sector binary locations in 'datachain/[registry]/sector.001 ....'
 	 * 
 	 * 
 	 * 	Database Keychain Logic Sequences

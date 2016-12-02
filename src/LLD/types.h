@@ -2,37 +2,39 @@
 #define LOWER_LEVEL_LIBRARY_LLD_TYPES
 
 #include "../LLU/util.h"
+#include <boost/thread.hpp>
+#include <fstream>
+
+#define MUTEX_LOCK(a) boost::lock_guard<boost::mutex> lock(a)
 
 /** Lower Level Database Name Space. **/
 namespace LLD
 {
-
-	/** Enumeration for each State.
+    /* Handle to automatically create new files if the file size is exceeded. */
+    const unsigned int MAX_FILE_SIZE = 1024 * 1024;
+    
+    
+	/* Enumeration for each State.
 		Allows better thread concurrency
 		Allow Reads on READY and READ. 
 		
-		Only Flush to Database if not Cached. (TODO) *
-		
-		TODO: Add Static and Dynamic Sector Keys for Space Consideration. 
-		This keyspace will be moved 
-		
-		Use Bit Masks to calculate the Enumeration. 
-		TODO: Remove this enumeration into the proper bit masks handled in the keychaiun class */
+		TODO: Only Flush to Database if not Cached*/
 	enum 
 	{
 		EMPTY 			= 0x00, //Keep track of empty sector keys to be used later
 		READ  			= 0x01, //Keep track of read operations on the sector key
 		WRITE 			= 0x02, //Keep track of if the sector is being written or not
-		APPEND         = 0x04  //Keep track of whether there is any extra data that can be written in sectors without creating a new key/sector location
+		APPEND          = 0x04  //Keep track of whether there is any extra data that can be written in sectors without creating a new key/sector location
 	};
 	
+    
 	/**	Used to locate key sectors and pieces
 	 * 	Each Key Location is stored in the keychain filesystems.
 	 * 	This is for storage and navigation of the keychain keys
 	 * 	to track the Sector positions and piece them together
 	 * .
 	 * 	TODO: Assign route positions to each key position. */
-	class KeyLocation
+	class KeyBase
 	{
 	public:
 		unsigned int   nKeyPosiition;
@@ -45,67 +47,137 @@ namespace LLD
 			READWRITE(nKeyFile);
 		)
 		
-		/* Constructors. */
-		KeyLocation() { SetNull(); }
-		KeyLocation(unsigned int nPosIn) : nKeyPosition(nPosIn), nKeyFile(0) {}
-		KeyLocation(unsigned int nPosIn, unsigned short nFileIn) : nKeyPosition(nPosIn), nKeyFile(nFileIn) {}
+		/* Key Base Constructors. */
+		KeyBase() { SetNull(); }
+		KeyBase(unsigned int nPosIn) : nKeyPosition(nPosIn), nKeyFile(0) {}
+		KeyBase(unsigned int nPosIn, unsigned short nFileIn) : nKeyPosition(nPosIn), nKeyFile(nFileIn) {}
 		
+		/* Set the validity of this key base loaction. */
 		void SetNull() { nKeyPosiition = 0; nKeyFile = 0; }
-		bool IsNull(){ return nKeyPosition == 0 && nKeyFile == 0; }
+		
+		/* Null check indicator to determine validity of this keybase. */
+        bool IsNull(){ return (nKeyFile == 0); }
+        
+        /* Size of the Key Base class. Fixed width, but for expandability in the future. */
 		int  Size()  { return 6; }
 	};
 	
+    
 	/** Sector Location Class
 	 * 
 	 *  Handles the storing of the data associated with each sector position
 	 *  This allows the sectors to be pieced together to establish dynamic record allocation.
+     * 
+     *  This is Indexed by the Key Location class to be read from the location filesystems.
+     *  
+     *  TODO: Think of optized algorithm and structuring, so far is O(3 +- 2)
+     *  Sector Location handles the reading and writing of files instead of the need for a sepearate class initialization.
 	 */
-	class SectorLocation
+	class KeyChain
 	{
+        mutable boost::mutex MUTEX;
+        
 	public:
-		
 		/* These three hold the location of 
 			Sector in the Sector Database of 
 			Given Sector Key. */
-		unsigned short					nSectorID;
-		unsigned short 			   nSectorFile;
-		unsigned short   		   	nSectorSize;
-		unsigned int   			   nSectorStart;
+		unsigned short            nSectorFile;
+		unsigned short            nSectorSize;
+		unsigned int              nSectorStart;
+        
+        /* Key Base Location for Next Key in the Chain. */
+        KeyBase cNext;
 		
-		SectorLocation() { SetNull(); }
-		SectorLocation(unsigned short nFileIn, unsigned short nSizeIn, unsigned int nStartIn) : nSectorID(0), nSectorFile(nFileIn), nSectorSize(nSizeIn), nSectorStart(nStartIn) { }
-		SectorLocation(unsigned short nIDIn, unsigned short nFileIn, unsigned short nSizeIn, unsigned int nStartIn) : nSectorID(nIDIn), nSectorFile(nFileIn), nSectorSize(nSizeIn), nSectorStart(nStartIn) { }
+		KeyChain() { SetNull(); }
+		KeyChain(unsigned short nFileIn, unsigned short nSizeIn, unsigned int nStartIn) : nSectorFile(nFileIn), nSectorSize(nSizeIn), nSectorStart(nStartIn) { }
+		KeyChain(unsigned short nFileIn, unsigned short nSizeIn, unsigned int nStartIn, unsigned short nNextFile, unsigned int nNextPosition) : nSectorFile(nFileIn), nSectorSize(nSizeIn), nSectorStart(nStartIn) 
+        { 
+            cNext.nKeyFile     = nNextFile;
+            cNext.nKeyPosition = nNextPosition;
+        }
 		
 		/* Serialization Macro. */
 		IMPLEMENT_SERIALIZE
 		(
-			READWRITE(nSectorID);
 			READWRITE(nSectorFile);
 			READWRITE(nSectorSize);
 			READWRITE(nSectorStart);
+            
+            READWRITE(cNext);
 		)
 		
 		/* Automatic assignment of NULL value. */
 		void SetNull()
 		{
-				nSectorID    = 0;
 				nSectorFile  = 0;
 				nSectorSize  = 0;
 				nSectorStart = 0;
+                
+                cNext.SetNull();
 		}
 		
 		/* Flags to know whether this location is active. */
 		bool IsNull()
 		{
-			return (nSectorFile == 0 && nSectorSize == 0 && nSectorStart == 0);
+			return (nSectorFile == 0 && nSectorSize == 0 && nSectorStart == 0 && cNext.IsNull());
 		}
 		
 		/* Fixed width size for accuracy in size projections. */
-		unsigned int Size() { return 10; }
+		int Size() { return 8 + cNext.Size(); }
+		
+		/* Indicator if this is the last key in the keychain. */
+        bool Last() { return cNext.IsNull(); }
+        
+        /* Check for appending data.
+         * 
+         * TODO: This checks how much free data is available in the last sector.
+         * Dynamic sectors will need to be allocated at a fixed sector size.
+         * This will only come into play if it is set as a dynamic record.
+         * This is controlled by a record being appended when it is already written.
+         * This will set an auto flag, and begin an auto growth in the sector data.*/
+        int Append()
+        {
+            
+        }
+		
+		/* Read the Sector Location data from a Key Location Index. */
+        bool Read(KeyBase cKeyLocation, std::string strDirectory)
+        {
+            std::fstream fStream(strprintf("%s/keychain.%04u", strDirectory.c_str(), nSectorFile).c_str(), std::ios::in | std::ios::out | std::ios::binary);
+            if(!fStream) //read operation should not be done if the file doesn't exist
+                return false;
+            
+            fStream.seekg(nSectorStart, std::ios::beg);
+            std::vector<unsigned char> vSector(Size(), 0);
+            fStream.read((char*) &vSector[0], vSector.size());
+            
+            CDataStream ssValue(vSector, SER_LLD, DATABASE_VERSION);
+            ssValue >> *this;
+            
+            return false;
+        }
+        
+        /* Write the Sector Location data from a Key Location Index. */
+        bool Write(KeyBase cKeyLocation, std::string strDirectory)
+        {
+            std::fstream fStream(strprintf("%s/keychain.%04u", strDirectory.c_str(), nSectorFile).c_str(), std::ios::in | std::ios::out | std::ios::binary);
+            if(!fStream) //write operation should not be done if the file doesn't exist
+                return false;
+            
+            fStream.seekp(nSectorStart, std::ios::beg);
+            CDataStream ssValue(vSector, SER_LLD, DATABASE_VERSION);
+            ssValue << *this;
+            
+            std::vector<unsigned char> vSector(ssValue.begin(), ssValue.end());
+            fStream.write((char*) &vSector[0], vSector.size());
+            
+            return false;
+        }
 		
 		/* Operator Overloading for Read Ability. */
-		friend bool operator==(const SectorLocation& a, const SectorLocation& b)  { return (a.nSectorID == b.nSectorID && a.nSectorFile == b.nSectorFile && a.nSectorSize == b.nSectorSize && a.nSectorStart == b.nSectorStart); }
+		friend bool operator==(const SectorLocation& a, const SectorLocation& b)  { return (a.nSectorFile == b.nSectorFile && a.nSectorSize == b.nSectorSize && a.nSectorStart == b.nSectorStart); }
 	};
+    
 	
 	/** Key Class to Hold the Location of Sectors it is referencing. 
 		This Indexes the Sector Database. **/
@@ -129,10 +201,15 @@ namespace LLD
 			On startup ensure that the checksums match to ensure that the database was not stopped
 			in the middle of a write. */
 		unsigned int nChecksum;
+        
+        /* TODO: Timestamp of last data write. Useful for knowing last time sector was modified and do
+         * key sorting algorithms giving priority to newer keys, or once the memory layers and keychain
+         * structures are stored in a binary tree from root memory branches using the index and file positions,
+         * this will help make deeper layered items be the older records in the database. */
+        //unsigned int nTimestamp;
 		
 		/* The Kye Locations. */
-		mutable KeyLocation cKeyStart;
-		mutable KeyLocation cKeyNext;
+		mutable KeyChain cKeychain;
 		
 		/* The binary data of the Sector key. */
 		std::vector<unsigned char> vKey;
@@ -146,8 +223,7 @@ namespace LLD
 			if (!(nType & SER_LLD_KEY_HEADER))
 			{
 				READWRITE(nChecksum);
-				READWRITE(cKeyStart);
-				READWRITE(cKeyNext);
+				READWRITE(cKeychain);
 			}
 		)
 		
@@ -161,7 +237,7 @@ namespace LLD
 		}
 		
 		/** Return the Size of the Key Sector on Disk. **/
-		unsigned int Size() { return (7 + cKeyStart.Size() + cKeyNext.Size() + nLength); }
+		int Size() { return (7 + cKeychain.Size() + nLength); }
 		
 		/* A standard validating Empty check for sector data. */
 		bool Empty() { return (nState == EMPTY); }
@@ -172,8 +248,8 @@ namespace LLD
 		/* Append Sector means that there is data available in the sector chains to be added without new key. */
 		bool Append(){ return (nState == APPEND); }
 		
-		/* A static key is one that only has one sector data is pointing to. */
-		bool Statci(){ return cKeyNext.IsNull(); } 
+		/* Check if there is more data in the keychain. */
+		bool HasNext(){ return !cKeyNext.IsNull(); } 
 		
 	};
 }

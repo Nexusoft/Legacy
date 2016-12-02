@@ -1,3 +1,11 @@
+/*******************************************************************************************
+ * 
+ * "Doubt is poison, cast it out" - Videlicet
+ * 
+ * http://www.opensource.org/licenses/mit-license.php
+ * 
+ ******************************************************************************************/
+
 #ifndef LOWER_LEVEL_LIBRARY_LLD_JOURNAL
 #define LOWER_LEVEL_LIBRARY_LLD_JOURNAL
 
