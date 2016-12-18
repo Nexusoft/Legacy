@@ -138,6 +138,10 @@ namespace Core
 			/** Check that Transaction is not Genesis when Trust Key is Established. **/
 			if(vtx[0].IsGenesis())
 				return error("CBlock::VerifyStake() : Cannot Produce Genesis Transaction when Trust Key Exists.");
+			
+			/* Check the genesis and trust timestamps. */
+			if(cTrustPool.Find(cKey).nGenesisTime > mapBlockIndex[hashPrevBlock]->GetBlockTime())
+				return error("CBlock::VerifyStake() : Genesis Time cannot be after Trust Time.");
 				
 			nTrustAge = cTrustPool.Find(cKey).Age(mapBlockIndex[hashPrevBlock]->GetBlockTime());
 			nBlockAge = cTrustPool.Find(cKey).BlockAge(mapBlockIndex[hashPrevBlock]->GetBlockTime());
@@ -656,15 +660,29 @@ namespace Core
 	
 	
 	/** Key is Expired if it is Invalid or Time between Network Best Block and Best Previous is Greater than Expiration Time. **/
-	uint64 CTrustKey::Age(unsigned int nTime) const { return (uint64)(nTime - nGenesisTime); }
+	uint64 CTrustKey::Age(unsigned int nTime) const 
+	{ 
+		/* Catch overflow attacks. */
+		if(nGenesisTime > nTime)
+			return 0;
+	  
+		return (uint64)(nTime - nGenesisTime);
+	}
 	
 	
 	/** The Age of a Key in Block age as in the Time it has been since Trust Key has produced block. **/
 	uint64 CTrustKey::BlockAge(unsigned int nTime) const
 	{
+		/* Catch overflow attacks. Should be caught in verify stake but double check here. */
+		if(nGenesisTime > nTime)
+			return 0;
+	    
 		/** Genesis Transaction Block Age is Time to Genesis Time. **/
 		if(hashPrevBlocks.empty())
 			return (uint64)(nTime - nGenesisTime);
+		
+		if(mapBlockIndex[hashPrevBlocks.back()]->GetBlockTime() > nTime)
+			return 0;
 			
 		/** Block Age is Time to Previous Block's Time. **/
 		return (uint64)(nTime - mapBlockIndex[hashPrevBlocks.back()]->GetBlockTime());
