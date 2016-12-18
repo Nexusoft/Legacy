@@ -664,7 +664,7 @@ namespace Core
 	{ 
 		/* Catch overflow attacks. */
 		if(nGenesisTime > nTime)
-			return 0;
+			return 1;
 	  
 		return (uint64)(nTime - nGenesisTime);
 	}
@@ -675,14 +675,14 @@ namespace Core
 	{
 		/* Catch overflow attacks. Should be caught in verify stake but double check here. */
 		if(nGenesisTime > nTime)
-			return 0;
+			return 1;
 	    
 		/** Genesis Transaction Block Age is Time to Genesis Time. **/
 		if(hashPrevBlocks.empty())
 			return (uint64)(nTime - nGenesisTime);
 		
 		if(mapBlockIndex[hashPrevBlocks.back()]->GetBlockTime() > nTime)
-			return 0;
+			return 1;
 			
 		/** Block Age is Time to Previous Block's Time. **/
 		return (uint64)(nTime - mapBlockIndex[hashPrevBlocks.back()]->GetBlockTime());
