@@ -612,7 +612,7 @@ bool AppInit2(int argc, char* argv[])
 	if(GetBoolArg("-unified", false)) {
 		InitMessage(_("Initializing Core LLP..."));
 		printf("Initializing Core LLP...\n");
-		LLP_SERVER = new LLP::Server<LLP::CoreLLP>(fTestNet ? TESTNET_CORE_LLP_PORT : NEXUS_CORE_LLP_PORT, 5, true, 1, 1, 1);
+		LLP_SERVER = new LLP::Server<LLP::CoreLLP>(fTestNet ? TESTNET_CORE_LLP_PORT : NEXUS_CORE_LLP_PORT, 5, true, 1, 3, 1);
 	}
 	
     if (!Core::CheckDiskSpace())
