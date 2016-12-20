@@ -532,10 +532,10 @@ namespace LLD
 				
 				
 			/** Add the Pending Checkpoint into the Blockchain. **/
-			if(!pindexNew->pprev || Core::HardenCheckpoint(pindexNew, true))
-				pindexNew->PendingCheckpoint = make_pair(pindexNew->nHeight, pindexNew->GetBlockHash());
+			if(!pindex->pprev || Core::HardenCheckpoint(pindex, true))
+				pindex->PendingCheckpoint = make_pair(pindex->nHeight, pindex->GetBlockHash());
 			else
-				pindexNew->PendingCheckpoint = pindexNew->pprev->PendingCheckpoint;
+				pindex->PendingCheckpoint = pindex->pprev->PendingCheckpoint;
 	
 			/** Exit the Loop on the Best Block. **/
 			if(pindex->GetBlockHash() == Core::hashBestChain)
