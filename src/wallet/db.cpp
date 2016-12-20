@@ -528,6 +528,7 @@ namespace Wallet
 
 		return pindexNew;
 	}
+
 	
 	bool CTxDB::MigrateToLLD()
 	{
@@ -667,7 +668,8 @@ namespace Wallet
 					
 					
 			/** Add the Pending Checkpoint into the Blockchain. **/
-			if(!pindex->pprev || Core::HardenCheckpoint(pindex, true))
+			Core::HardenCheckpoint(pindex, true);
+			if(!pindex->pprev || Core::IsNewTimespan(pindex))
 				pindex->PendingCheckpoint = make_pair(pindex->nHeight, pindex->GetBlockHash());
 			else
 				pindex->PendingCheckpoint = pindex->pprev->PendingCheckpoint;
@@ -679,7 +681,7 @@ namespace Wallet
 			/** Exit the Loop on the Best Block. **/
 			if(pindex->GetBlockHash() == Core::hashBestChain)
 			{
-				printf("LoadBlockIndex(): hashBestChain=%s  height=%d  trust=%s\n", Core::hashBestChain.ToString().substr(0,20).c_str(), Core::nBestHeight, Core::bnBestChainTrust.ToString().c_str());
+				printf("LoadBlockIndex(): hashBestChain=%s  height=%d  trust=%"PRIu64"\n", Core::hashBestChain.ToString().substr(0,20).c_str(), Core::nBestHeight, Core::nBestChainTrust);
 				break;
 			}
 			
@@ -687,36 +689,6 @@ namespace Wallet
 			pindex = pindex->pnext;
 		}
 
-		// Load bnBestInvalidTrust, OK if it doesn't exist
-		ReadBestInvalidTrust(Core::bnBestInvalidTrust);
-		
-		
-
-		/** Verify the Blocks in the Best Chain To Last Checkpoint. **/
-		int nCheckLevel = GetArg("-checklevel", 1);
-		
-		int nCheckDepth = GetArg( "-checkblocks", 100);
-		//if (nCheckDepth == 0)
-		//	nCheckDepth = 1000000000;
-			
-		if (nCheckDepth > Core::nBestHeight)
-			nCheckDepth = Core::nBestHeight;
-		printf("Verifying last %i blocks at level %i\n", nCheckDepth, nCheckLevel);
-		Core::CBlockIndex* pindexFork = NULL;
-		
-		/* Allow Forking out an old chain. */
-		unsigned int nFork = GetArg("-forkblocks", 0);
-		if(nFork > 0 && Core::pindexBest)
-		{
-			pindexFork = Core::pindexBest;
-			for(int nIndex = 0; nIndex < nFork; nIndex++)
-			{
-				if(!pindexFork->pprev)
-					break;
-				
-				pindexFork = pindexFork->pprev;
-			}
-		}
 	}
 
 

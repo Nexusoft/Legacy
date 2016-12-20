@@ -81,6 +81,14 @@ contains(USE_UPNP, -) {
     win32:LIBS += -liphlpapi
 }
 
+#handle the LLD build option
+contains(USE_LLD, 1)
+{
+	message(Building with Lower Level Database Support)
+	
+	DEFINES += LLD
+}
+
 # use: qmake "USE_DBUS=1"
 contains(USE_DBUS, 1) {
     message(Building with DBUS (Freedesktop notifications) support)

@@ -340,9 +340,11 @@ bool AppInit2(int argc, char* argv[])
 	printf("Nexus version %s (%s)\n", FormatFullVersion().c_str(), CLIENT_DATE.c_str());
 	printf("Default data directory %s\n", GetDefaultDataDir().string().c_str());
 
+#ifdef LLD
 	InitMessage(_("Initializing LLD Keychains..."));
 	LLD::RegisterKeychain("blkindex", "blkindex");
-
+#endif
+	
 	InitMessage(_("Initializing Unified Time..."));
 	printf("Initializing Unified Time...\n");
 	InitializeUnifiedTime();

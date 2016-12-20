@@ -230,7 +230,7 @@ namespace Core
 	uint1024 GetLastCheckpoint();
 	bool IsNewTimespan(CBlockIndex* pindex);
 	bool IsDescendant(CBlockIndex* pindex);
-	bool HardenCheckpoint(CBlockIndex* pcheckpoint, bool fInit = false);
+	void HardenCheckpoint(CBlockIndex* pcheckpoint, bool fInit = false);
 	
 	
 	/** DIFFICULTY.CPP **/
@@ -612,7 +612,7 @@ namespace Core
 		unsigned int nGenesisTime;
 		
 		/** Previous Blocks Vector to store list of blocks of this Trust Key. **/
-		mutable std::vector<uint1024> hashPrevBlocks;
+		mutable std::stack<uint1024> hashPrevBlocks;
 		
 		CTrustKey() { SetNull(); }
 		CTrustKey(std::vector<unsigned char> vchPubKeyIn, uint1024 hashBlockIn, uint512 hashTxIn, unsigned int nTimeIn)
@@ -646,22 +646,7 @@ namespace Core
 			hashGenesisTx        = 0;
 			nGenesisTime         = 0;
 			
-			hashPrevBlocks.clear();
 			vchPubKey.clear();
-		}
-		
-		/** Get the Index of the Block with Reverse Search.
-			This is for efficiency when container gets larger
-			as most times this method will be called for recent
-			blocks that will be at the end of the container. **/
-		int GetBlock(uint1024 hash)
-		{
-			int nRemove = -1;
-			for(int nIndex = hashPrevBlocks.size() - 1; nIndex >= 0 ; nIndex--)
-				if(hashPrevBlocks[nIndex] == hash)
-					return nIndex;
-			
-			return -1;
 		}
 		
 		/** Hash of a Trust Key to Verify the Key's Root. **/

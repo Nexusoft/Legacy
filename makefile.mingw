@@ -38,6 +38,12 @@ LIBS= \
  -l crypto
 
 DEFS=-DWIN32 -D_WINDOWS -DBOOST_THREAD_USE_LIB -DBOOST_SPIRIT_THREADSAFE
+
+#add build support for the LLD vs Berklee DB
+ifdef USE_LLD
+	DEFS += -LLD
+endif
+
 DEBUGFLAGS=-g
 CFLAGS=-mthreads -static -static-libgcc -static-libstdc++ -O2 -w -Wno-invalid-offsetof -Wformat $(DEBUGFLAGS) $(DEFS) $(INCLUDEPATHS)
 

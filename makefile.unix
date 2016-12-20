@@ -83,49 +83,55 @@ LIBS+= \
 
 DEBUGFLAGS=-g
 CXXFLAGS=-O2
+
+#add build support for the LLD vs Berklee DB
+ifdef USE_LLD
+	CXXFLAGS+= -LLD
+endif
+
 xCXXFLAGS=-pthread -Wall -Wextra -Wno-sign-compare -Wno-invalid-offsetof -Wno-unused-parameter -Wformat -Wformat-security \
     $(DEBUGFLAGS) $(DEFS) $(HARDENING) $(CXXFLAGS)
 
 HEADERS = $(wildcard *.h)
 OBJS= \
-    	build/version.o \
-    	build/netbase.o \
-    	build/addrman.o \
-    	build/crypter.o \
-    	build/key.o \
-    	build/db.o \
-    	build/main.o \
-    	build/keystore.o \
-    	build/debug.o \
-		build/difficulty.o \
-    	build/net.o \
-    	build/protocol.o \
-		build/unifiedtime.o \
-    	build/rpcserver.o \
-    	build/rpcdump.o \
-    	build/script.o \
-    	build/util.o \
-    	build/wallet.o \
-    	build/walletdb.o \
-    	build/noui.o \
-    	build/kernel.o \
-		build/prime.o \
-		build/skein.o \
-		build/skein_block.o \
-		build/KeccakDuplex.o \
-		build/KeccakSponge.o \
-		build/Keccak-compact64.o \
-		build/KeccakHash.o \
-		build/release.o \
-		build/block.o \
-		build/dispatch.o \
-		build/message.o \
-		build/mining.o \
-		build/transaction.o \
-		build/checkpoints.o \
-		build/global.o \
-		build/keychain.o \
-		build/index.o
+	build/version.o \
+	build/netbase.o \
+	build/addrman.o \
+	build/crypter.o \
+	build/key.o \
+	build/db.o \
+	build/main.o \
+	build/keystore.o \
+	build/debug.o \
+	build/difficulty.o \
+	build/net.o \
+	build/protocol.o \
+	build/unifiedtime.o \
+	build/rpcserver.o \
+	build/rpcdump.o \
+	build/script.o \
+	build/util.o \
+	build/wallet.o \
+	build/walletdb.o \
+	build/noui.o \
+	build/kernel.o \
+	build/prime.o \
+	build/skein.o \
+	build/skein_block.o \
+	build/KeccakDuplex.o \
+	build/KeccakSponge.o \
+	build/Keccak-compact64.o \
+	build/KeccakHash.o \
+	build/release.o \
+	build/block.o \
+	build/dispatch.o \
+	build/message.o \
+	build/mining.o \
+	build/transaction.o \
+	build/checkpoints.o \
+	build/global.o \
+	build/keychain.o \
+	build/index.o
 
 
 all: nexus

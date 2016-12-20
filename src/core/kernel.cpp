@@ -35,7 +35,7 @@ namespace Wallet
 			
 		/** Select Coins to Add Inputs. **/
 		set<pair<const CWalletTx*,unsigned int> > setCoins;
-		if (!SelectCoins(nBalance - nReserveBalance, txNew.nTime, setCoins, nTotalValue))
+		if (!SelectCoins(std::min((int64)15000, nBalance - nReserveBalance), txNew.nTime, setCoins, nTotalValue))
 			return false;
 			
 		/** Return Error if no Coins Selected. **/
@@ -313,12 +313,12 @@ namespace Core
 	}
 	
 	
-	/** Function to Check the Current Trust Key to see if it is expired.
-		If Key is Empty, check Trust Pool for Possible Key owned by this wallet. **/
+	/** TODO: Trust Key Reactivation
+	 * 
+	 * Function to Check the Current Trust Key to see if it is expired.
+	 * If Key is Empty, check Trust Pool for Possible Key owned by this wallet. **/
 	bool CTrustPool::HasTrustKey(unsigned int nTime)
 	{
-		//LOCK(cs);
-		
 		/** First Check if the Current Key is Expired. **/
 		if(!vchTrustKey.empty())
 		{
@@ -392,10 +392,6 @@ namespace Core
 		/** Lock Accepting Trust Keys to Mutex. **/
 		LOCK(cs);
 		
-		/** Ensure the Trust Block is located in Block Chain. **/
-		//if(!mapBlockIndex.count(cBlock.GetHash()))
-		//	return error("CTrustPool::check() : Cannot Accept Orphaned Trust Blocks.");
-		
 		/** Ensure the Block is for Proof of Stake Only. **/
 		if(!cBlock.IsProofOfStake())
 			return error("CTrustPool::check() : Cannot Accept non Coinstake Transactions.");
@@ -450,7 +446,7 @@ namespace Core
 				return error("CTrustPool::check() : Cannot Create Block for Expired Trust Key.");
 				
 			/** Don't allow Blocks Created Before Minimum Interval. **/
-			if((cBlock.nHeight - mapBlockIndex[IsGenesis(cKey) ? mapTrustKeys[cKey].hashGenesisBlock : mapTrustKeys[cKey].hashPrevBlocks.back()]->nHeight) < TRUST_KEY_MIN_INTERVAL)
+			if((cBlock.nHeight - mapBlockIndex[IsGenesis(cKey) ? mapTrustKeys[cKey].hashGenesisBlock : mapTrustKeys[cKey].hashPrevBlocks.top()]->nHeight) < TRUST_KEY_MIN_INTERVAL)
 				return error("CTrustPool::check() : Trust Block Created Before Minimum Trust Key Interval.");
 				
 			/** Don't allow Blocks Created without First Input Previous Output hash of Trust Key Hash. 
@@ -521,12 +517,11 @@ namespace Core
 				return error("CTrustPool::Remove() : Key %s Doesn't Exist in Trust Pool\n", cKey.ToString().substr(0, 20).c_str());
 				
 			/** Get the Index of the Block in the Trust Key. **/
-			int nRemove = mapTrustKeys[cKey].GetBlock(cBlock.GetHash());
-			if(nRemove == -1)
-				return error("CTrustPool::Remove() : Block %s Doesn't Exist for Key\n", cBlock.GetHash().ToString().substr(0, 20).c_str());
+			if(mapTrustKeys[cKey].hashPrevBlocks.top() != cBlock.GetHash())
+				return error("CTrustPool::Remove() : Block %s Isn't in Top. Trust Block Misconfigure...\n", cBlock.GetHash().ToString().substr(0, 20).c_str());
 					
 			/** Remove the Trust Key from the Container. **/
-			mapTrustKeys[cKey].hashPrevBlocks.erase(mapTrustKeys[cKey].hashPrevBlocks.begin() + nRemove);
+			mapTrustKeys[cKey].hashPrevBlocks.pop();
 			printf("CTrustPool::Remove() : Removed Block %s From Trust Key\n", cBlock.GetHash().ToString().substr(0, 20).c_str());
 				
 			return true;
@@ -581,7 +576,7 @@ namespace Core
 		else if(cBlock.vtx[0].IsTrust())
 		{
 			/** Add the new block to the Trust Key. **/
-			mapTrustKeys[cKey].hashPrevBlocks.push_back(cBlock.GetHash());
+			mapTrustKeys[cKey].hashPrevBlocks.push(cBlock.GetHash());
 			
 			/** Dump the Trust Key to Console if not Initializing. **/
 			if(!fInit && GetArg("-verbose", 0) >= 2)
@@ -681,10 +676,10 @@ namespace Core
 		if(hashPrevBlocks.empty())
 			return (uint64)(nTime - nGenesisTime);
 		
-		if(mapBlockIndex[hashPrevBlocks.back()]->GetBlockTime() > nTime)
+		if(mapBlockIndex[hashPrevBlocks.top()]->GetBlockTime() > nTime)
 			return 1;
 			
 		/** Block Age is Time to Previous Block's Time. **/
-		return (uint64)(nTime - mapBlockIndex[hashPrevBlocks.back()]->GetBlockTime());
+		return (uint64)(nTime - mapBlockIndex[hashPrevBlocks.top()]->GetBlockTime());
 	}
 }
