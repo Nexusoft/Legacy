@@ -139,7 +139,6 @@ namespace LLD
 				break;
 			}
 			
-			printf("Read Block %s Height %u\n", hashBlock.ToString().substr(0, 20).c_str(), diskindex.nHeight);
 			Core::CBlockIndex* pindexNew = InsertBlockIndex(diskindex.GetBlockHash());
 			pindexNew->pprev          = InsertBlockIndex(diskindex.hashPrev);
 			pindexNew->pnext          = InsertBlockIndex(diskindex.hashNext);
@@ -166,8 +165,6 @@ namespace LLD
 			pindexNew->nBits          = diskindex.nBits;
 			pindexNew->nNonce         = diskindex.nNonce;
 			pindexNew->nTime          = diskindex.nTime;
-			
-			printf("-- Read Block %s Height %u\n", hashBlock.ToString().substr(0, 20).c_str(), diskindex.nHeight);
 			
 			/** Detect the Genesis Block on Loading. */
 			if(hashBlock == Core::hashGenesisBlock)
