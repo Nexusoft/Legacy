@@ -1053,7 +1053,7 @@ namespace Core
 		if(GetArg("-verbose", 0) >= 0)
 			printf("%s Network: genesis=0x%s nBitsLimit=0x%08x nBitsInitial=0x%08x nCoinbaseMaturity=%d\n",
 			   fTestNet? "Test" : "Nexus", hashGenesisBlock.ToString().substr(0, 20).c_str(), bnProofOfWorkLimit[0].GetCompact(), bnProofOfWorkStart[0].GetCompact(), nCoinbaseMaturity);
-		
+		make -=
 		/** Initialize Block Index Database. **/
 		LLD::CIndexDB indexdb("cr");
 		if (!indexdb.LoadBlockIndex())

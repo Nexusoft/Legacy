@@ -76,11 +76,6 @@ else
 CFLAGS = -g
 endif
 
-#add build support for the LLD vs Berklee DB
-ifdef USE_LLD
-	CFLAGS+= -LLD
-endif
-
 CFLAGS += $(DEBUGFLAGS) $(DEFS) $(INCLUDEPATHS)
 HEADERS = $(wildcard *.h)
 OBJS= \
