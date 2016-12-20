@@ -496,7 +496,7 @@ namespace Core
 		}
 												
 		/** Add the Pending Checkpoint into the Blockchain. **/
-		if(!pindexNew->pprev || IsNewTimespan(pindexNew))
+		if(!pindexNew->pprev || HardenCheckpoint(pindexNew))
 		{
 			pindexNew->PendingCheckpoint = make_pair(pindexNew->nHeight, pindexNew->GetBlockHash());
 			
@@ -511,7 +511,7 @@ namespace Core
 			
 			if(GetArg("-verbose", 0) >= 2)
 				printg("===== Pending Checkpoint Age = %u Hash = %s Height = %u\n", nAge, pindexNew->PendingCheckpoint.second.ToString().substr(0, 15).c_str(), pindexNew->PendingCheckpoint.first);
-		}									 
+		}								 
 
 		/** Add to the MapBlockIndex **/
 		map<uint1024, CBlockIndex*>::iterator mi = mapBlockIndex.insert(make_pair(hash, pindexNew)).first;
@@ -1056,7 +1056,7 @@ namespace Core
 
 		/** Initialize Block Index Database. **/
 		LLD::CIndexDB indexdb("cr");
-		if (!indexdb.LoadBlockIndex())
+		if (!indexdb.LoadBlockIndex() || mapBlockIndex.empty())
 		{
 			if (!fAllowNew)
 				return false;

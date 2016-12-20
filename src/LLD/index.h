@@ -8,7 +8,7 @@
 /** Lower Level Database Name Space. **/
 namespace LLD
 {
-#ifdef LLD
+#ifdef USE_LLD
 	class CIndexDB : public SectorDatabase
 	{
 	public:

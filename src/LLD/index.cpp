@@ -121,7 +121,7 @@ namespace LLD
 		return pindexNew;
 	}
 
-#ifdef LLD
+#ifdef USE_LLD
 	bool CIndexDB::LoadBlockIndex()
 	{
 		Core::hashBestChain;
@@ -139,6 +139,7 @@ namespace LLD
 				break;
 			}
 			
+			printf("Read Block %s Height %u\n", hashBlock.ToString().substr(0, 20).c_str(), diskindex.nHeight);
 			Core::CBlockIndex* pindexNew = InsertBlockIndex(diskindex.GetBlockHash());
 			pindexNew->pprev          = InsertBlockIndex(diskindex.hashPrev);
 			pindexNew->pnext          = InsertBlockIndex(diskindex.hashNext);
@@ -166,9 +167,14 @@ namespace LLD
 			pindexNew->nNonce         = diskindex.nNonce;
 			pindexNew->nTime          = diskindex.nTime;
 			
+			printf("-- Read Block %s Height %u\n", hashBlock.ToString().substr(0, 20).c_str(), diskindex.nHeight);
+			
+			/** Detect the Genesis Block on Loading. */
+			if(hashBlock == Core::hashGenesisBlock)
+				Core::pindexGenesisBlock = pindexNew;
+				
 			/** Add the Pending Checkpoint into the Blockchain. **/
-			Core::HardenCheckpoint(pindexNew, true);
-			if(!pindexNew->pprev || Core::IsNewTimespan(pindexNew))
+			if(!pindexNew->pprev || Core::HardenCheckpoint(pindexNew, true))
 				pindexNew->PendingCheckpoint = make_pair(pindexNew->nHeight, pindexNew->GetBlockHash());
 			else
 				pindexNew->PendingCheckpoint = pindexNew->pprev->PendingCheckpoint;
@@ -182,9 +188,6 @@ namespace LLD
 				if(!Core::cTrustPool.Accept(block, true))
 					return error("CIndexDB::LoadBlockIndex() : Failed To Accept Trust Key Block.");
 			}
-			
-			if(hashBlock == Core::hashGenesisBlock)
-				Core::pindexGenesisBlock = pindexNew;
 				
 			Core::pindexBest  = pindexNew;
 			hashBlock = diskindex.hashNext;
@@ -529,11 +532,10 @@ namespace LLD
 				
 				
 			/** Add the Pending Checkpoint into the Blockchain. **/
-			Core::HardenCheckpoint(pindex, true);
-			if(!pindex->pprev || Core::IsNewTimespan(pindex))
-				pindex->PendingCheckpoint = make_pair(pindex->nHeight, pindex->GetBlockHash());
+			if(!pindexNew->pprev || Core::HardenCheckpoint(pindexNew, true))
+				pindexNew->PendingCheckpoint = make_pair(pindexNew->nHeight, pindexNew->GetBlockHash());
 			else
-				pindex->PendingCheckpoint = pindex->pprev->PendingCheckpoint;
+				pindexNew->PendingCheckpoint = pindexNew->pprev->PendingCheckpoint;
 	
 			/** Exit the Loop on the Best Block. **/
 			if(pindex->GetBlockHash() == Core::hashBestChain)
@@ -548,10 +550,9 @@ namespace LLD
 
 		/** Verify the Blocks in the Best Chain To Last Checkpoint. **/
 		int nCheckLevel = GetArg("-checklevel", 1);
-		
-		int nCheckDepth = GetArg( "-checkblocks", 100);
-		//if (nCheckDepth == 0)
-		//	nCheckDepth = 1000000000;
+		int nCheckDepth = GetArg( "-checkblocks", 1);
+		if (nCheckDepth == 0)
+			nCheckDepth = 1000000000;
 			
 		if (nCheckDepth > Core::nBestHeight)
 			nCheckDepth = Core::nBestHeight;

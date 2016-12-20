@@ -230,7 +230,7 @@ namespace Core
 	uint1024 GetLastCheckpoint();
 	bool IsNewTimespan(CBlockIndex* pindex);
 	bool IsDescendant(CBlockIndex* pindex);
-	void HardenCheckpoint(CBlockIndex* pcheckpoint, bool fInit = false);
+	bool HardenCheckpoint(CBlockIndex* pcheckpoint, bool fInit = false);
 	
 	
 	/** DIFFICULTY.CPP **/
