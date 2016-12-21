@@ -86,7 +86,7 @@ contains(USE_LLD, 1)
 {
 	message(Building with Lower Level Database Support)
 	
-	DEFINES += LLD
+	DEFINES += USE_LLD
 }
 
 # use: qmake "USE_DBUS=1"
