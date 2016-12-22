@@ -81,9 +81,11 @@ contains(USE_UPNP, -) {
     win32:LIBS += -liphlpapi
 }
 
-#handle the LLD build option
-contains(USE_LLD, 1)
-{
+#handle the LLD build option. Default on LLD branch is to use LLD
+contains(USE_LLD, 0) {
+	message(Building without Lower Level Database Support)
+}
+else {
 	message(Building with Lower Level Database Support)
 	
 	DEFINES += USE_LLD

@@ -125,8 +125,8 @@ else
 endif
 endif
 
-#add build support for the LLD vs Berklee DB
-ifdef USE_LLD
+#add build support for the LLD vs Berklee DB. LLD Branch Default is to use the LLD
+ifneq ($(USE_LLD), 0)
 	DEFS += -DUSE_LLD
 endif
 
