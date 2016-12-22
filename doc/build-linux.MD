@@ -30,7 +30,7 @@
 <h2>Dependency Build Instructions: Ubuntu & Debian</h2>
 
 <b>First ensure you have build essentials installed:</b><br>
-<i>sudo apt-get install build-essentials</i>
+<i>sudo apt-get install build-essential</i>
 
 <b>Install Boost:</b><br>
 <i>sudo apt-get install libboost-all-dev</i>

@@ -125,6 +125,11 @@ else
 endif
 endif
 
+#add build support for the LLD vs Berklee DB
+ifdef USE_LLD
+	DEFS += -DUSE_LLD
+endif
+
 all: nexus
 
 # auto-generated dependencies:

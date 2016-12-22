@@ -11,8 +11,8 @@
 
 /** Used for Visual Reference Only **/
 const std::string CLIENT_NAME("Nexus");
-const std::string CLIENT_BUILD("0.3.0.0 - LLD Beta RC2");
-const std::string CLIENT_DATE("August 25th, 2016");
+const std::string CLIENT_BUILD("0.3.0.0 - Beta");
+const std::string CLIENT_DATE("December 21st, 2016");
 
 /** Used to determine the current features available on the local database */
  const int DATABASE_VERSION =

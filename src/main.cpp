@@ -208,7 +208,7 @@ bool AppInit2(int argc, char* argv[])
             "  -timeout=<n>     \t  "   + _("Specify connection timeout (in milliseconds)") + "\n" +
             "  -proxy=<ip:port> \t  "   + _("Connect through socks4 proxy") + "\n" +
             "  -dns             \t  "   + _("Allow DNS lookups for addnode and connect") + "\n" +
-            "  -port=<port>     \t\t  " + _("Listen for connections on <port> (default: 9901 or testnet: 9903)") + "\n" +
+            "  -port=<port>     \t\t  " + _("Listen for connections on <port> (default: 9323 or testnet: 9903)") + "\n" +
             "  -maxconnections=<n>\t  " + _("Maintain at most <n> connections to peers (default: 125)") + "\n" +
             "  -addnode=<ip>    \t  "   + _("Add a node to connect to and attempt to keep the connection open") + "\n" +
             "  -connect=<ip>    \t\t  " + _("Connect only to the specified node") + "\n" +
@@ -243,9 +243,11 @@ bool AppInit2(int argc, char* argv[])
 #ifdef WIN32
             "  -printtodebugger \t  "   + _("Send trace/debug info to debugger") + "\n" +
 #endif
+            "  -llpallowip=<ip> \t  "   + _("Allow mining from specified IP address or range (192.168.6.* for example") + "\n" +
+			"  -mining 			\t  "   + _("Allow mining (default: 0)") + "\n" +
             "  -rpcuser=<user>  \t  "   + _("Username for JSON-RPC connections") + "\n" +
             "  -rpcpassword=<pw>\t  "   + _("Password for JSON-RPC connections") + "\n" +
-            "  -rpcport=<port>  \t\t  " + _("Listen for JSON-RPC connections on <port> (default: 9902)") + "\n" +
+            "  -rpcport=<port>  \t\t  " + _("Listen for JSON-RPC connections on <port> (default: 9325)") + "\n" +
             "  -rpcallowip=<ip> \t\t  " + _("Allow JSON-RPC connections from specified IP address") + "\n" +
             "  -rpcconnect=<ip> \t  "   + _("Send commands to node running on <ip> (default: 127.0.0.1)") + "\n" +
             "  -blocknotify=<cmd> "     + _("Execute command when the best block changes (%s in cmd is replaced by block hash)") + "\n" +
@@ -334,19 +336,21 @@ bool AppInit2(int argc, char* argv[])
     }
 #endif
 
-    printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
-    printf("Nexus version %s (%s)\n", FormatFullVersion().c_str(), CLIENT_DATE.c_str());
-    printf("Default data directory %s\n", GetDefaultDataDir().string().c_str());
+	printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
+	printf("Nexus version %s (%s)\n", FormatFullVersion().c_str(), CLIENT_DATE.c_str());
+	printf("Default data directory %s\n", GetDefaultDataDir().string().c_str());
 
+#ifdef USE_LLD
 	InitMessage(_("Initializing LLD Keychains..."));
 	LLD::RegisterKeychain("blkindex", "blkindex");
-
+#endif
+	
 	InitMessage(_("Initializing Unified Time..."));
 	printf("Initializing Unified Time...\n");
 	InitializeUnifiedTime();
 	
-    if (!fDebug)
-        ShrinkDebugFile();
+	if (!fDebug)
+		ShrinkDebugFile();
 	
     /** Locks to the Local Database. This will keep another process from using the Nexus Databases. **/
     boost::filesystem::path pathLockFile = GetDataDir() / ".lock";
@@ -500,7 +504,7 @@ bool AppInit2(int argc, char* argv[])
 
     // Note: Nexus-QT stores several settings in the wallet, so we want
     // to load the wallet BEFORE parsing command-line arguments, so
-    // the command-line/bitcoin.conf settings override GUI setting.
+    // the command-line/nexus.conf settings override GUI setting.
     if (mapArgs.count("-timeout"))
     {
         int nNewTimeout = GetArg("-timeout", 5000);
@@ -612,7 +616,7 @@ bool AppInit2(int argc, char* argv[])
 	if(GetBoolArg("-unified", false)) {
 		InitMessage(_("Initializing Core LLP..."));
 		printf("Initializing Core LLP...\n");
-		LLP_SERVER = new LLP::Server<LLP::CoreLLP>(fTestNet ? TESTNET_CORE_LLP_PORT : NEXUS_CORE_LLP_PORT, 5, true, 1, 1, 1);
+		LLP_SERVER = new LLP::Server<LLP::CoreLLP>(fTestNet ? TESTNET_CORE_LLP_PORT : NEXUS_CORE_LLP_PORT, 5, true, 1, 3, 1);
 	}
 	
     if (!Core::CheckDiskSpace())

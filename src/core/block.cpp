@@ -307,7 +307,7 @@ namespace Core
 
 
 			
-			/** Connect the Longer Branch. **/
+			/* Connect the Longer Branch. */
 			vector<CTransaction> vDelete;
 			for (unsigned int i = 0; i < vConnect.size(); i++)
 			{
@@ -315,18 +315,22 @@ namespace Core
 				CBlock block;
 				if (!block.ReadFromDisk(pindex))
 					return error("CBlock::SetBestChain() : ReadFromDisk for connect failed");
-
+				
 				if (!block.ConnectBlock(indexdb, pindex))
 				{
-                    indexdb.TransactionAbort();
+					indexdb.TxnAbort();
 					return error("CBlock::SetBestChain() : ConnectBlock %s Height %u failed", pindex->GetBlockHash().ToString().substr(0,20).c_str(), pindex->nHeight);
 				}
+				
+				/* Harden a pending checkpoint if this is the case. */
+				if(pindex->pprev && IsNewTimespan(pindex))
+					HardenCheckpoint(pindex);
 				
 				/** Add Transaction to Current Trust Keys **/
 				if(block.IsProofOfStake() && !cTrustPool.Accept(block))
 					return error("CBlock::SetBestChain() : Failed To Accept Trust Key Block.");
 
-				/** Resurrect Memory Pool Transactions. **/
+				/* Delete Memory Pool Transactions contained already. **/
 				BOOST_FOREACH(const CTransaction& tx, block.vtx)
 					if (!(tx.IsCoinBase() || tx.IsCoinStake()))
 						vDelete.push_back(tx);
@@ -507,7 +511,7 @@ namespace Core
 			
 			if(GetArg("-verbose", 0) >= 2)
 				printg("===== Pending Checkpoint Age = %u Hash = %s Height = %u\n", nAge, pindexNew->PendingCheckpoint.second.ToString().substr(0, 15).c_str(), pindexNew->PendingCheckpoint.first);
-		}									 
+		}								 
 
 		/** Add to the MapBlockIndex **/
 		map<uint1024, CBlockIndex*>::iterator mi = mapBlockIndex.insert(make_pair(hash, pindexNew)).first;
@@ -516,7 +520,7 @@ namespace Core
 
 		/** Write the new Block to Disk. **/
 		LLD::CIndexDB indexdb("r+");
-		indexdb.TransactionStart();
+		indexdb.TxnBegin();
 		indexdb.WriteBlockIndex(CDiskBlockIndex(pindexNew));
 
 		/** Set the Best chain if Highest Trust. **/
@@ -525,7 +529,7 @@ namespace Core
 				return false;
 			
 		/** Commit the Transaction to the Database. **/
-		if(!indexdb.TransactionCommit())
+		if(!indexdb.TxnCommit())
 			return error("CBlock::AddToBlockIndex() : Failed to Commit Transaction to the Database.");
 		
 		if (pindexNew == pindexBest)
@@ -1049,20 +1053,10 @@ namespace Core
 		if(GetArg("-verbose", 0) >= 0)
 			printf("%s Network: genesis=0x%s nBitsLimit=0x%08x nBitsInitial=0x%08x nCoinbaseMaturity=%d\n",
 			   fTestNet? "Test" : "Nexus", hashGenesisBlock.ToString().substr(0, 20).c_str(), bnProofOfWorkLimit[0].GetCompact(), bnProofOfWorkStart[0].GetCompact(), nCoinbaseMaturity);
-		
-		/*
-		{
-			Wallet::CTxDB txdb("cr");
-			txdb.MigrateToLLD();
-			txdb.Close();
-			
-			indexdb.LoadBlockIndex();
-		}
-		*/
-		
+
 		/** Initialize Block Index Database. **/
 		LLD::CIndexDB indexdb("cr");
-		if (!indexdb.LoadBlockIndex())
+		if (!indexdb.LoadBlockIndex() || mapBlockIndex.empty())
 		{
 			if (!fAllowNew)
 				return false;

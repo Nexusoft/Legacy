@@ -528,6 +528,7 @@ namespace Wallet
 
 		return pindexNew;
 	}
+
 	
 	bool CTxDB::MigrateToLLD()
 	{
@@ -667,7 +668,8 @@ namespace Wallet
 					
 					
 			/** Add the Pending Checkpoint into the Blockchain. **/
-			if(!pindex->pprev || Core::HardenCheckpoint(pindex, true))
+			Core::HardenCheckpoint(pindex, true);
+			if(!pindex->pprev || Core::IsNewTimespan(pindex))
 				pindex->PendingCheckpoint = make_pair(pindex->nHeight, pindex->GetBlockHash());
 			else
 				pindex->PendingCheckpoint = pindex->pprev->PendingCheckpoint;
@@ -678,10 +680,15 @@ namespace Wallet
 				
 			/** Exit the Loop on the Best Block. **/
 			if(pindex->GetBlockHash() == Core::hashBestChain)
+			{
+				//printf("LoadBlockIndex(): hashBestChain=%s  height=%d  trust=%"PRIu64"\n", Core::hashBestChain.ToString().substr(0,20).c_str(), Core::nBestHeight, Core::nBestChainTrust);
 				break;
-				
+			}
+			
+			
 			pindex = pindex->pnext;
 		}
+
 	}
 
 

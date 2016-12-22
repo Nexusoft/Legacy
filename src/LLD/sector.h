@@ -355,7 +355,7 @@ namespace LLD
 		/** Start a New Database Transaction. 
 			This will put all the database changes into pending state.
 			If any of the database updates fail in procewss it will roll the database back to its previous state. **/
-		void TransactionStart()
+		void TxnBegin()
 		{
 			/** Delete a previous database transaction pointer if applicable. **/
 			if(pTransaction)
@@ -369,7 +369,7 @@ namespace LLD
 		}
 		
 		/** Abort the current transaction that is pending in the transaction chain. **/
-		void TransactionAbort()
+		void TxnAbort()
 		{
 			/** Delete the previous transaction pointer if applicable. **/
 			if(pTransaction)
@@ -395,7 +395,7 @@ namespace LLD
 			Make it temporary and named after the unique identity of the sector database. 
 			Fingerprint is SK64 hash of unified time and the sector database name along with some other data 
 			To be determined... **/
-		bool TransactionCommit()
+		bool TxnCommit()
 		{
 			MUTEX_LOCK(SECTOR_MUTEX);
 			

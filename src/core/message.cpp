@@ -194,9 +194,9 @@ namespace Core
 				}
 			}
 
-			// Ask the first connected node for block updates
+			// Ask the first 8 connected node for block updates
 			static int nAskedForBlocks = 0;
-			if (!pfrom->fClient && (nAskedForBlocks < 1 || Net::vNodes.size() <= 1))
+			if (!pfrom->fClient && (nAskedForBlocks < 8))
 			{
 				nAskedForBlocks++;
 				pfrom->PushGetBlocks(pindexBest, uint1024(0));
