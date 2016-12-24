@@ -60,6 +60,15 @@ namespace Core
 	int TRUST_KEY_EXPIRE   = 60 * 60 * 24;
 	
 	
+	/* NOTE: For Blocks Version 5 and Above.
+	 *	 The Maximum Grace time before trust begins to be reduced from no trust blocks seen.. **/
+	int TRUST_KEY_MAX_TIMESPAN = 60 * 60 * 12;
+	
+	/* NOTE: For Blocks Version 5 and Above
+	 * The Maximum tolerance that a trust key can have for inconsistent behavior. */
+	double TRUST_KEY_CONSISTENCY_TOLERANCE = 0.9;
+	
+	
 	/** The Minimum Number of Blocks Between Trust Key's Staking Blocks. **/
 	int TRUST_KEY_MIN_INTERVAL = 5;
 	

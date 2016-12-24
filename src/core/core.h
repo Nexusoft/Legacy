@@ -105,7 +105,10 @@ namespace Core
 	extern const int STAKE_TARGET_SPACING;
 	
 	extern int TRUST_KEY_EXPIRE;
+	extern int TRUST_KEY_MAX_TIMESPAN;
 	extern int TRUST_KEY_MIN_INTERVAL;
+	
+	extern double TRUST_KEY_CONSISTENCY_TOLERANCE;
 	
 	extern const uint64 MAX_STAKE_WEIGHT;
 	extern const uint1024 hashGenesisBlockOfficial;
@@ -612,7 +615,7 @@ namespace Core
 		unsigned int nGenesisTime;
 		
 		/** Previous Blocks Vector to store list of blocks of this Trust Key. **/
-		mutable std::stack<uint1024> hashPrevBlocks;
+		mutable std::vector<uint1024> hashPrevBlocks;
 		
 		CTrustKey() { SetNull(); }
 		CTrustKey(std::vector<unsigned char> vchPubKeyIn, uint1024 hashBlockIn, uint512 hashTxIn, unsigned int nTimeIn)
@@ -695,6 +698,10 @@ namespace Core
 		
 		double InterestRate(uint576 cKey, unsigned int nTime) const;
 		
+		/* The Trust score of the Trust Key. Determines the Age and Interest Rates. */
+		uint64 TrustScore(uint576 cKey, unsigned int nTime) const;
+		
+		/* Locate a Trust Key in the Trust Pool. */
 		CTrustKey Find(uint576 cKey) const { return mapTrustKeys[cKey]; }
 	};
 

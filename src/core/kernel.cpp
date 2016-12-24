@@ -446,7 +446,7 @@ namespace Core
 				return error("CTrustPool::check() : Cannot Create Block for Expired Trust Key.");
 				
 			/** Don't allow Blocks Created Before Minimum Interval. **/
-			if((cBlock.nHeight - mapBlockIndex[IsGenesis(cKey) ? mapTrustKeys[cKey].hashGenesisBlock : mapTrustKeys[cKey].hashPrevBlocks.top()]->nHeight) < TRUST_KEY_MIN_INTERVAL)
+			if((cBlock.nHeight - mapBlockIndex[IsGenesis(cKey) ? mapTrustKeys[cKey].hashGenesisBlock : mapTrustKeys[cKey].hashPrevBlocks.back()]->nHeight) < TRUST_KEY_MIN_INTERVAL)
 				return error("CTrustPool::check() : Trust Block Created Before Minimum Trust Key Interval.");
 				
 			/** Don't allow Blocks Created without First Input Previous Output hash of Trust Key Hash. 
@@ -517,11 +517,11 @@ namespace Core
 				return error("CTrustPool::Remove() : Key %s Doesn't Exist in Trust Pool\n", cKey.ToString().substr(0, 20).c_str());
 				
 			/** Get the Index of the Block in the Trust Key. **/
-			if(mapTrustKeys[cKey].hashPrevBlocks.top() != cBlock.GetHash())
+			if(mapTrustKeys[cKey].hashPrevBlocks.back() != cBlock.GetHash())
 				return error("CTrustPool::Remove() : Block %s Isn't in Top. Trust Block Misconfigure...\n", cBlock.GetHash().ToString().substr(0, 20).c_str());
 					
 			/** Remove the Trust Key from the Container. **/
-			mapTrustKeys[cKey].hashPrevBlocks.pop();
+			mapTrustKeys[cKey].hashPrevBlocks.pop_back();
 			printf("CTrustPool::Remove() : Removed Block %s From Trust Key\n", cBlock.GetHash().ToString().substr(0, 20).c_str());
 				
 			return true;
@@ -576,7 +576,7 @@ namespace Core
 		else if(cBlock.vtx[0].IsTrust())
 		{
 			/** Add the new block to the Trust Key. **/
-			mapTrustKeys[cKey].hashPrevBlocks.push(cBlock.GetHash());
+			mapTrustKeys[cKey].hashPrevBlocks.push_back(cBlock.GetHash());
 			
 			/** Dump the Trust Key to Console if not Initializing. **/
 			if(!fInit && GetArg("-verbose", 0) >= 2)
@@ -603,6 +603,27 @@ namespace Core
 			return 0.005;
 			
 		return min(0.03, (((0.025 * log(((9.0 * (nTime - Find(cKey).nGenesisTime)) / (60 * 60 * 24 * 28 * 13)) + 1.0)) / log(10))) + 0.005);
+	}
+	
+	/* Trust Scoie for Trust Keys:
+		Determines how trusted a key is by score. Age of the Key is determined in combination with the Trust Score and Age. */
+	uint64 CTrustPool::TrustScore(uint576 cKey, unsigned int nTime) const
+	{
+		/** Genesis Transactions worth Zero Trust. **/
+		if(!Exists(cKey) || IsGenesis(cKey))
+			return 0;
+		
+		/* Get the Trust Key from the Trust Pool. */
+		CTrustKey cTrustKey = Find(cKey);
+			
+		for(int nIndex = 0; nIndex < cTrustKey.hashPrevBlocks.size(); nIndex++)
+		{
+		/* TODO: Trust Score Forgiveness. Forgive the Decay of trust key if over expiration time and key was created before Block Version 5 Activation. */
+		
+		/* Calculate the Positive Trust Time in the Key. */
+		
+		/* Calculate the Negative Trust Time in the Key. */
+		}
 	}
 	
 	
@@ -676,10 +697,10 @@ namespace Core
 		if(hashPrevBlocks.empty())
 			return (uint64)(nTime - nGenesisTime);
 		
-		if(mapBlockIndex[hashPrevBlocks.top()]->GetBlockTime() > nTime)
+		if(mapBlockIndex[hashPrevBlocks.back()]->GetBlockTime() > nTime)
 			return 1;
 			
 		/** Block Age is Time to Previous Block's Time. **/
-		return (uint64)(nTime - mapBlockIndex[hashPrevBlocks.top()]->GetBlockTime());
+		return (uint64)(nTime - mapBlockIndex[hashPrevBlocks.back()]->GetBlockTime());
 	}
 }

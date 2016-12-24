@@ -761,11 +761,15 @@ namespace Core
 			if (pto->nVersion == 0)
 				return true;
 
-			// Keep-alive ping. We send a nonce of zero because we don't use it anywhere
-			// right now.
-			if (pto->nLastSend && GetUnifiedTimestamp() - pto->nLastSend > 30 * 60 && pto->vSend.empty()) {
-				uint64 nonce = 0;
-				pto->PushMessage("ping", nonce);
+			/* Block Checkups every minute. */
+			static int64 nLastBlockCheckup;
+			if (GetUnifiedTimestamp() - nLastBlockCheckup > 60) {
+				pto->PushGetBlocks(pindexBest, uint1024(0));
+				
+				if(GetArg("-verbose", 0) >= 2)
+					printf("+++++ Requesting Block Update at Unified Timestamp %u\n", (unsigned int) GetUnifiedTimestamp());
+				
+				nLastBlockCheckup = GetUnifiedTimestamp();
 			}
 
 			// Resend wallet transactions that haven't gotten in a block yet
