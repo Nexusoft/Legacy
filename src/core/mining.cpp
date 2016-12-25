@@ -658,10 +658,10 @@ namespace Core
 		CBlockIndex* pindexPrev = pindexBest;
 		
 		/** Modulate the Block Versions if they correspond to their proper time stamp **/
-		if(GetUnifiedTimestamp() >= (fTestNet ? TESTNET_VERSION4_TIMELOCK : NETWORK_VERSION4_TIMELOCK))
-			pblock->nVersion = 4; // --> Version 4 Activation
+		if(GetUnifiedTimestamp() >= (fTestNet ? TESTNET_VERSION_TIMELOCK[TESTNET_BLOCK_CURRENT_VERSION - 2] : NETWORK_VERSION_TIMELOCK[NETWORK_BLOCK_CURRENT_VERSION - 2]))
+			pblock->nVersion = fTestNet ? TESTNET_BLOCK_CURRENT_VERSION : NETWORK_BLOCK_CURRENT_VERSION; // --> New Block Versin Activation Switch
 		else
-			pblock->nVersion = 3;
+			pblock->nVersion = fTestNet ? TESTNET_BLOCK_CURRENT_VERSION - 1 : NETWORK_BLOCK_CURRENT_VERSION - 1;
 		
 		/** Create the Coinbase / Coinstake Transaction. **/
 		CTransaction txNew;
@@ -1063,9 +1063,6 @@ namespace Core
 				continue;
 
 			if (Net::vNodes.empty() || IsInitialBlockDownload())
-				continue;
-				
-			if (GetUnifiedTimestamp() < (fTestNet ? TESTNET_VERSION4_TIMELOCK : NETWORK_VERSION4_TIMELOCK))
 				continue;
 				
 			CBlock* pblock = CreateNewBlock(reservekey, pwalletMain, 0);

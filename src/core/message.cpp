@@ -764,7 +764,7 @@ namespace Core
 			/* Block Checkups every minute. */
 			static int64 nLastBlockCheckup;
 			if (GetUnifiedTimestamp() - nLastBlockCheckup > 60) {
-				pto->PushGetBlocks(pindexBest, uint1024(0));
+				pto->PushMessage("getblocks", Core::CBlockLocator(pindexBest), uint1024(0));
 				
 				if(GetArg("-verbose", 0) >= 2)
 					printf("+++++ Requesting Block Update at Unified Timestamp %u\n", (unsigned int) GetUnifiedTimestamp());
