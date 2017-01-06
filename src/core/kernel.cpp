@@ -190,6 +190,7 @@ namespace Core
 			
 		if(GetArg("-verbose", 0) >= 2)
 		{
+			cTrustPool.TrustScore(cKey, nTime);
 			printf("CBlock::VerifyStake() : Stake Hash  %s\n", GetHash().ToString().substr(0, 20).c_str());
 			printf("CBlock::VerifyStake() : Target Hash %s\n", hashTarget.ToString().substr(0, 20).c_str());
 			printf("CBlock::VerifyStake() : Coin Age %"PRIu64" Trust Age %"PRIu64" Block Age %"PRIu64"\n", nCoinAge, nTrustAge, nBlockAge);
@@ -638,8 +639,8 @@ namespace Core
 				
 			/* Calculate Consistency Moving Average over Scope of Consistency History. */
 			if(cTrustKey.hashPrevBlocks.size() - nIndex <= TRUST_KEY_CONSISTENCY_HISTORY){
-				nAverageConsistency += (nAverageTime / nTrustTime);
-				nMeanHistory		  += (nLastTrustTime / nTrustTime);
+				nAverageConsistency 	+= (nAverageTime / nTrustTime);
+				nMeanHistory		  	+= (nLastTrustTime / nTrustTime);
 				
 				nLastTrustTime = nTrustTime;
 			}
@@ -659,8 +660,8 @@ namespace Core
 		}
 		
 		/* Final Compuatation for Consistency History. */
-		nAverageConsistency /= TRUST_KEY_CONSISTENCY_HISTORY;
-		nMeanHistory		  /= TRUST_KEY_CONSISTENCY_HISTORY;
+		nAverageConsistency 	/= TRUST_KEY_CONSISTENCY_HISTORY;
+		nMeanHistory		  	/= TRUST_KEY_CONSISTENCY_HISTORY;
 		
 		/* Final Computation of the Trust Score. */
 		double nTrustScore = std::max(0.0, (nPositiveTrust - nNegativeTrust));

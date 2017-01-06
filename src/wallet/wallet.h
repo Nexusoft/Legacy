@@ -529,13 +529,13 @@ namespace Wallet
 			if ((IsCoinBase() || IsCoinStake()) && GetBlocksToMaturity() > 0)
 				return 0;
 
-			if (fUseCache && fAvailableCreditCached)
-				return nAvailableCreditCached;
+			//if (fUseCache && fAvailableCreditCached)
+			//	return nAvailableCreditCached;
 
 			int64 nCredit = 0;
 			for (unsigned int i = 0; i < vout.size(); i++)
 			{
-				if (!IsSpent(i))
+				if (!IsSpent(i) && pwallet->IsMine(vout[i]) && vout[i].nValue > 0)
 				{
 					const Core::CTxOut &txout = vout[i];
 					nCredit += pwallet->GetCredit(txout);
