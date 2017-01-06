@@ -80,17 +80,12 @@ namespace Core
 	extern const unsigned int MAX_BLOCK_SIZE_GEN;
 	extern const unsigned int MAX_BLOCK_SIGOPS;
 	extern const unsigned int MAX_ORPHAN_TRANSACTIONS;
+	
 	extern const unsigned int NEXUS_NETWORK_TIMELOCK;
 	extern const unsigned int NEXUS_TESTNET_TIMELOCK;
 	
-	extern const unsigned int TESTNET_VERSION2_TIMELOCK;
-	extern const unsigned int NETWORK_VERSION2_TIMELOCK;
-	
-	extern const unsigned int TESTNET_VERSION3_TIMELOCK;
-	extern const unsigned int NETWORK_VERSION3_TIMELOCK;
-	
-	extern const unsigned int TESTNET_VERSION4_TIMELOCK;
-	extern const unsigned int NETWORK_VERSION4_TIMELOCK;
+	extern const unsigned int TESTNET_VERSION_TIMELOCK[];
+	extern const unsigned int NETWORK_VERSION_TIMELOCK[];
 	
 	extern const unsigned int CHANNEL_NETWORK_TIMELOCK[];
 	extern const unsigned int CHANNEL_TESTNET_TIMELOCK[];
@@ -107,8 +102,10 @@ namespace Core
 	extern int TRUST_KEY_EXPIRE;
 	extern int TRUST_KEY_MAX_TIMESPAN;
 	extern int TRUST_KEY_MIN_INTERVAL;
+	extern int TRUST_KEY_CONSISTENCY_HISTORY;
 	
-	extern double TRUST_KEY_CONSISTENCY_TOLERANCE;
+	extern double TRUST_KEY_MIN_CONSISTENCY_TOLERANCE;
+	extern double TRUST_KEY_MAX_CONSISTENCY_TOLERANCE;
 	
 	extern const uint64 MAX_STAKE_WEIGHT;
 	extern const uint1024 hashGenesisBlockOfficial;
@@ -126,8 +123,8 @@ namespace Core
 	extern const std::string CHANNEL_ADDRESSES[];
 	extern const std::string DEVELOPER_ADDRESSES[];
 	
-	extern const unsigned char DEVELOPER_SIGNATURES[][37];
-	extern const unsigned char CHANNEL_SIGNATURES[][37];
+	extern const unsigned char DEVELOPER_SCRIPT_SIGNATURES[][37];
+	extern const unsigned char AMBASSADOR_SCRIPT_SIGNATURES[][37];
 	extern const unsigned char TESTNET_DUMMY_SIGNATURE[];
 	
 	
@@ -1241,6 +1238,7 @@ namespace Core
 	{
 	public:
 		
+		/* Core Block Header. */
 		unsigned int nVersion;
 		uint1024 hashPrevBlock;
 		uint512 hashMerkleRoot;
@@ -1249,17 +1247,22 @@ namespace Core
 		unsigned int nBits;
 		uint64 nNonce;
 		
+		/* Block Signature Variables. */
 		unsigned int nTime;
 
+		/* Nexus: block signature
+		 * Signed by coinbase / coinstake txout[0]'s owner
+		 * Seals the nTime and nNonce into Block
+		 * References Previous Block's Signature for a Signature Chain.
+		 */
+		std::vector<unsigned char> vchBlockSig;
+		
 		// network and disk
 		std::vector<CTransaction> vtx;
 
-		/** Nexus: block signature - signed by coinbase / coinstake txout[0]'s owner.
-			Seals the nTime and nNonce [For CPU Miners and nPoS] into block **/
-		std::vector<unsigned char> vchBlockSig;
-
 		// memory only
 		mutable std::vector<uint512> vMerkleTree;
+		uint512 hashPrevChecksum;
 
 		// Denial-of-service detection:
 		mutable int nDoS;
@@ -1358,7 +1361,12 @@ namespace Core
 		/** Generate the Signature Hash Required After Block completes Proof of Work / Stake.
 			This is to seal the Block Timestamp / nNonce [For CPU Channel] into the Block Signature while allowing it
 			to be set independent of proof of work searching. This prevents this data from being tampered with after broadcast. **/
-		uint1024 SignatureHash() const { return SK1024(BEGIN(nVersion), END(nTime)); }
+		uint1024 SignatureHash() const { 
+			if(nVersion < 5)
+				return SK1024(BEGIN(nVersion), END(nTime));
+			else
+				return SK1024(BEGIN(nVersion), END(hashPrevChecksum));
+		}
 
 		
 		/** Return the Block's current Timestamp. **/

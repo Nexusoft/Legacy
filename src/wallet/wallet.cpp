@@ -388,7 +388,7 @@ namespace Wallet
 			LOCK(cs_wallet);
 			bool fExisted = mapWallet.count(hash);
 			if (fExisted && !fUpdate) return false;
-			if (fExisted || IsMine(tx) || IsFromMe(tx))
+			if (IsMine(tx) || IsFromMe(tx))
 			{
 				CWalletTx wtx(this,tx);
 				// Get merkle branch if transaction was found in a block
@@ -852,8 +852,9 @@ namespace Wallet
 			for (map<uint512, CWalletTx>::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
 			{
 				const CWalletTx* pcoin = &(*it).second;
-				if (!pcoin->IsFinal() || !pcoin->IsConfirmed())
+				if (!pcoin->IsFinal() || !pcoin->IsConfirmed() || pcoin->nTime > GetUnifiedTimestamp())
 					continue;
+				
 				nTotal += pcoin->GetAvailableCredit();
 			}
 		}
@@ -1661,8 +1662,19 @@ namespace Wallet
 		{
 			// Find the corresponding transaction index
 			Core::CTxIndex txindex;
-			if (!indexdb.ReadTxIndex(pcoin->GetHash(), txindex))
+			if(!indexdb.ReadTxIndex(pcoin->GetHash(), txindex))
+			{
+				printf("FixSpentCoins found invalid transaction %s Nexus %s, %s\n",
+						FormatMoney(pcoin->GetValueOut()).c_str(), pcoin->GetHash().ToString().c_str(), fCheckOnly? "repair not attempted" : "erasing");
+				
+				nMismatchFound++;
+				nBalanceInQuestion += pcoin->GetValueOut();
+				if(!fCheckOnly)
+					EraseFromWallet(pcoin->GetHash());
+				
 				continue;
+			}
+			
 			for (int n=0; n < pcoin->vout.size(); n++)
 			{
 				if (IsMine(pcoin->vout[n]) && pcoin->IsSpent(n) && (txindex.vSpent.size() <= n || txindex.vSpent[n].IsNull()))

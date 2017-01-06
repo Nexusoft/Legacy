@@ -2143,21 +2143,34 @@ namespace Net
 		is done properly.
 		
 		Second TODO: While at this the wallet core code needs to be reworked in orcder to mitigate the issue of
-		having a large number of transactions in the actual memory map which can slow the entire process down.
-	Value getunspent(const Array& params, bool fHelp)
+		having a large number of transactions in the actual memory map which can slow the entire process down. */
+	Value unspentbalance(const Array& params, bool fHelp)
 	{
 		if (fHelp || params.size() > 1)
 			throw runtime_error(
-				"getunspent [address]\n"
+				"unspentbalance [\"address\",...]\n"
 				"Returns the total amount of unspent Nexus for given address\n"
 				"This is a more accurate command than Get Balance.\n");
 
-		if(paramse.size() > 0)
-			Wallet::NexusAddress address(params[0].get_str());
+		set<Wallet::NexusAddress> setAddress;
+		if (params.size() > 0)
+		{
+			Array inputs = params[2].get_array();
+			BOOST_FOREACH(Value& input, inputs)
+			{
+				Wallet::NexusAddress address(input.get_str());
+				if (!address.IsValid())
+					throw JSONRPCError(-5, string("Invalid Nexus address: ")+input.get_str());
+				if (setAddress.count(address))
+					throw JSONRPCError(-8, string("Invalid parameter, duplicated address: ")+input.get_str());
+			   setAddress.insert(address);
+			}
+		}
 
-		Array results;
 		vector<Wallet::COutput> vecOutputs;
 		pwalletMain->AvailableCoins((unsigned int)GetUnifiedTimestamp(), vecOutputs, false);
+		
+		int64 nCredit = 0;
 		BOOST_FOREACH(const Wallet::COutput& out, vecOutputs)
 		{
 			if(setAddress.size())
@@ -2169,29 +2182,26 @@ namespace Net
 				if (!setAddress.count(address))
 					continue;
 			}
-
+			
 			int64 nValue = out.tx->vout[out.i].nValue;
 			const Wallet::CScript& pk = out.tx->vout[out.i].scriptPubKey;
 			Wallet::NexusAddress address;
-			Object entry;
-			entry.push_back(Pair("txid", out.tx->GetHash().GetHex()));
-			entry.push_back(Pair("vout", out.i));
+			
+			printf("txid %s | ", out.tx->GetHash().GetHex().c_str());
+			printf("vout %u | ", out.i);
 			if (Wallet::ExtractAddress(pk, address))
-			{
-				entry.push_back(Pair("address", address.ToString()));
-				if (pwalletMain->mapAddressBook.count(address))
-					entry.push_back(Pair("account", pwalletMain->mapAddressBook[address]));
-			}
-			entry.push_back(Pair("scriptPubKey", HexStr(pk.begin(), pk.end())));
-			entry.push_back(Pair("amount",ValueFromAmount(nValue)));
-			entry.push_back(Pair("confirmations",out.nDepth));
-			results.push_back(entry);
+				printf("address %s |", address.ToString().c_str());
+			
+			printf("amount %f |", (double)nValue / COIN);
+			printf("confirmations %u\n",out.nDepth);
+
+			nCredit += nValue;
 		}
 
-		return results;
+		return ValueFromAmount(nCredit);
 	}
 	
-	**/
+	
 	
 	Value listunspent(const Array& params, bool fHelp)
 	{
@@ -2314,7 +2324,6 @@ namespace Net
 		{ "getreceivedbyaccount",   &getreceivedbyaccount,   false },
 		{ "listreceivedbyaddress",  &listreceivedbyaddress,  false },
 		{ "listreceivedbyaccount",  &listreceivedbyaccount,  false },
-		{ "listunspent",            &listunspent,            false },
 		{ "exportkeys",             &exportkeys,             false },
 		{ "importkeys",             &importkeys,             false },
 		{ "rescan",                 &rescan,                 false },
@@ -2342,6 +2351,7 @@ namespace Net
 		{ "verifymessage",          &verifymessage,          false },
 		{ "listaccounts",           &listaccounts,           false },
 		{ "listunspent",            &listunspent,            false },
+		{ "unspentbalance",         &unspentbalance,         false },
 		{ "settxfee",               &settxfee,               false },
 		{ "listsinceblock",         &listsinceblock,         false },
 		{ "dumpprivkey",            &dumpprivkey,            false },

@@ -196,7 +196,7 @@ namespace Core
 
 			// Ask the first 8 connected node for block updates
 			static int nAskedForBlocks = 0;
-			if (!pfrom->fClient && (nAskedForBlocks < 8))
+			if (!pfrom->fClient && (nAskedForBlocks < 4))
 			{
 				nAskedForBlocks++;
 				pfrom->PushGetBlocks(pindexBest, uint1024(0));
@@ -207,7 +207,8 @@ namespace Core
 			if(GetArg("-verbose", 0) >= 1)
 				printf("version message: version %d, blocks=%d\n", pfrom->nVersion, pfrom->nStartingHeight);
 
-			cPeerBlockCounts.Add(pfrom->nStartingHeight);
+			if (!pfrom->fClient && (nAskedForBlocks < 1))
+				cPeerBlockCounts.Add(pfrom->nStartingHeight);
 		}
 
 
@@ -764,7 +765,7 @@ namespace Core
 			/* Block Checkups every minute. */
 			static int64 nLastBlockCheckup;
 			if (GetUnifiedTimestamp() - nLastBlockCheckup > 60) {
-				pto->PushGetBlocks(pindexBest, uint1024(0));
+				pto->PushMessage("getblocks", Core::CBlockLocator(pindexBest), uint1024(0));
 				
 				if(GetArg("-verbose", 0) >= 2)
 					printf("+++++ Requesting Block Update at Unified Timestamp %u\n", (unsigned int) GetUnifiedTimestamp());

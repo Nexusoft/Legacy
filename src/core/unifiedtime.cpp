@@ -137,6 +137,14 @@ void ThreadUnifiedSamples(void* parg)
 	/** Compile the Seed Nodes into a set of Vectors. **/
 	SEED_NODES    = DNS_Lookup(fTestNet ? DNS_SeedNodes_Testnet : DNS_SeedNodes);
 	
+	/* If the node happens to be offline, wait and recursively attempt to get the DNS seeds. */
+	if(SEED_NODES.empty()) {
+		Sleep(10000);
+		
+		fTimeUnified = true;
+		ThreadUnifiedSamples(parg);
+	}
+	
 	/** Iterator to be used to ensure every time seed is giving an equal weight towards the Global Seeds. **/
 	int nIterator = -1;
 	
