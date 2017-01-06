@@ -441,36 +441,41 @@ namespace Core
 	}
 
 
-	/** AddToBlockIndex: Adds a new Block into the Block Index. 
-		This is where it is categorized and dealt with in the Blockchain. **/
+	/* AddToBlockIndex: Adds a new Block into the Block Index. 
+		This is where it is categorized and dealt with in the Blockchain. */
 	bool CBlock::AddToBlockIndex(unsigned int nFile, unsigned int nBlockPos)
 	{
-		/** Check for Duplicate. **/
+		/* Check for Duplicate. */
 		uint1024 hash = GetHash();
 		if (mapBlockIndex.count(hash))
 			return error("AddToBlockIndex() : %s already exists", hash.ToString().substr(0,20).c_str());
 
 			
-		/** Build new Block Index Object. **/
+		/* Build new Block Index Object. */
 		CBlockIndex* pindexNew = new CBlockIndex(nFile, nBlockPos, *this);
 		if (!pindexNew)
 			return error("AddToBlockIndex() : new CBlockIndex failed");
 
 			
-		/** Find Previous Block. **/
+		/* Find Previous Block. */
 		pindexNew->phashBlock = &hash;
 		map<uint1024, CBlockIndex*>::iterator miPrev = mapBlockIndex.find(hashPrevBlock);
 		if (miPrev != mapBlockIndex.end())
 			pindexNew->pprev = (*miPrev).second;
 		
 		
-		/** Compute the Chain Trust **/
+		/* Compute the Chain Trust */
 		pindexNew->nChainTrust = (pindexNew->pprev ? pindexNew->pprev->nChainTrust : 0) + pindexNew->GetBlockTrust();
 		
 		
-		/** Compute the Channel Height. **/
+		/* Compute the Channel Height. */
 		const CBlockIndex* pindexPrev = GetLastChannelIndex(pindexNew->pprev, pindexNew->GetChannel());
 		pindexNew->nChannelHeight = (pindexPrev ? pindexPrev->nChannelHeight : 0) + 1;
+		
+		
+		/* Check the Block Signature. */
+		if (!CheckBlockSignature())
+			return DoS(100, error("CheckBlock() : bad block signature"));
 		
 		
 		/** Compute the Released Reserves. **/
@@ -610,6 +615,9 @@ namespace Core
 		/** Make sure the Block was Created within Active Channel. **/
 		if (GetChannel() > 2)
 			return DoS(50, error("CheckBlock() : Channel out of Range."));
+		
+		if (GetBlockTime() > GetUnifiedTimestamp() + MAX_UNIFIED_DRIFT)
+			return error("AcceptBlock() : block timestamp too far in the future");
 	
 	
 		/** Do not allow blocks to be accepted above the Current Block Version. **/
@@ -637,39 +645,18 @@ namespace Core
 			return error("CheckBlock() : Block Created before Channel Time-Lock. Channel Opens in %"PRId64" Seconds", (fTestNet ? CHANNEL_TESTNET_TIMELOCK[GetChannel()] : CHANNEL_NETWORK_TIMELOCK[GetChannel()]) - GetUnifiedTimestamp());
 			
 			
-		/** Check the Version 1 Block Time-Lock. **/	
-		if (nHeight > 0 && nVersion == 1 && GetBlockTime() > (fTestNet ? TESTNET_VERSION2_TIMELOCK : NETWORK_VERSION2_TIMELOCK))
-			return error("CheckBlock() : Version 1 Blocks have been Obsolete for %"PRId64" Seconds", (GetUnifiedTimestamp() - (fTestNet ? TESTNET_VERSION2_TIMELOCK : NETWORK_VERSION2_TIMELOCK)));
+		/** Check the Current Version Block Time-Lock. Allow Version (Current -1) Blocks for 1 Hour after Time Lock. **/
+		if (nVersion > 1 && nVersion == (fTestNet ? TESTNET_BLOCK_CURRENT_VERSION - 1 : NETWORK_BLOCK_CURRENT_VERSION - 1) && (GetBlockTime() - 3600) > (fTestNet ? TESTNET_VERSION_TIMELOCK[TESTNET_BLOCK_CURRENT_VERSION - 2] : NETWORK_VERSION_TIMELOCK[NETWORK_BLOCK_CURRENT_VERSION - 2]))
+			return error("CheckBlock() : Version %u Blocks have been Obsolete for %"PRId64" Seconds\n", nVersion, (GetUnifiedTimestamp() - (fTestNet ? TESTNET_VERSION_TIMELOCK[TESTNET_BLOCK_CURRENT_VERSION - 2] : NETWORK_VERSION_TIMELOCK[TESTNET_BLOCK_CURRENT_VERSION - 2])));	
 			
 			
-		/** Check the Version 2 Block Time-Lock. **/
-		if (nHeight > 0 && nVersion >= 2 && GetBlockTime() <= (fTestNet ? TESTNET_VERSION2_TIMELOCK : NETWORK_VERSION2_TIMELOCK))
-			return error("CheckBlock() : Version 2 Blocks are not Accepted for %"PRId64" Seconds\n", (GetUnifiedTimestamp() - (fTestNet ? TESTNET_VERSION2_TIMELOCK : NETWORK_VERSION2_TIMELOCK)));
-
-			
-		/** Check the Version 3 Block Time-Lock. **/
-		if (nHeight > 0 && nVersion == 2 && GetBlockTime() > (fTestNet ? TESTNET_VERSION3_TIMELOCK : NETWORK_VERSION3_TIMELOCK))
-			return error("CheckBlock() : Version 2 Blocks have been Obsolete for %"PRId64" Seconds\n", (GetUnifiedTimestamp() - (fTestNet ? TESTNET_VERSION3_TIMELOCK : NETWORK_VERSION3_TIMELOCK)));	
-			
-			
-		/** Check the Version 3 Block Time-Lock. **/
-		if (nHeight > 0 && nVersion >= 3 && GetBlockTime() <= (fTestNet ? TESTNET_VERSION3_TIMELOCK : NETWORK_VERSION3_TIMELOCK))
-			return error("CheckBlock() : Version 3 Blocks are not Accepted for %"PRId64" Seconds\n", (GetUnifiedTimestamp() - (fTestNet ? TESTNET_VERSION3_TIMELOCK : NETWORK_VERSION3_TIMELOCK)));	
-			
-			
-		/** Check the Version 4 Block Time-Lock. Allow Version 3 Blocks for 1 Hour after Time Lock. **/
-		if (nHeight > 0 && nVersion == 3 && (GetBlockTime() - 3600) > (fTestNet ? TESTNET_VERSION4_TIMELOCK : NETWORK_VERSION4_TIMELOCK))
-			return error("CheckBlock() : Version 3 Blocks have been Obsolete for %"PRId64" Seconds\n", (GetUnifiedTimestamp() - (fTestNet ? TESTNET_VERSION4_TIMELOCK : NETWORK_VERSION4_TIMELOCK)));	
-			
-			
-		/** Check the Version 4 Block Time-Lock. **/
-		if (nHeight > 0 && nVersion >= 4 && GetBlockTime() <= (fTestNet ? TESTNET_VERSION4_TIMELOCK : NETWORK_VERSION4_TIMELOCK))
-			return error("CheckBlock() : Version 4 Blocks are not Accepted for %"PRId64" Seconds\n", (GetUnifiedTimestamp() - (fTestNet ? TESTNET_VERSION4_TIMELOCK : NETWORK_VERSION4_TIMELOCK)));	
+		/** Check the Current Version Block Time-Lock. **/
+		if (nVersion >= (fTestNet ? TESTNET_BLOCK_CURRENT_VERSION : NETWORK_BLOCK_CURRENT_VERSION) && GetBlockTime() <= (fTestNet ? TESTNET_VERSION_TIMELOCK[TESTNET_BLOCK_CURRENT_VERSION - 2] : NETWORK_VERSION_TIMELOCK[NETWORK_BLOCK_CURRENT_VERSION - 2]))
+			return error("CheckBlock() : Version %u Blocks are not Accepted for %"PRId64" Seconds\n", nVersion, (GetUnifiedTimestamp() - (fTestNet ? TESTNET_VERSION_TIMELOCK[TESTNET_BLOCK_CURRENT_VERSION - 2] : NETWORK_VERSION_TIMELOCK[NETWORK_BLOCK_CURRENT_VERSION - 2])));	
 			
 			
 		/** Check the Required Mining Outputs. **/
-		if (IsProofOfWork() && nHeight > 0 && nVersion >= 3)
-		{
+		if (IsProofOfWork() && nVersion >= 3) {
 			unsigned int nSize = vtx[0].vout.size();
 
 			/** Check the Coinbase Tx Size. **/
@@ -678,10 +665,10 @@ namespace Core
 				
 			if(!fTestNet)
 			{
-				if (!VerifyAddressList(vtx[0].vout[nSize - 2].scriptPubKey, CHANNEL_SIGNATURES))
+				if (!VerifyAddressList(vtx[0].vout[nSize - 2].scriptPubKey, AMBASSADOR_SCRIPT_SIGNATURES))
 					return error("CheckBlock() : Block %u Channel Signature Not Verified.\n", nHeight);
 
-				if (!VerifyAddressList(vtx[0].vout[nSize - 1].scriptPubKey, DEVELOPER_SIGNATURES))
+				if (!VerifyAddressList(vtx[0].vout[nSize - 1].scriptPubKey, DEVELOPER_SCRIPT_SIGNATURES))
 					return error("CheckBlock() :  Block %u Developer Signature Not Verified.\n", nHeight);
 			}
 			
@@ -752,10 +739,6 @@ namespace Core
 		if (hashMerkleRoot != BuildMerkleTree())
 			return DoS(100, error("CheckBlock() : hashMerkleRoot mismatch"));
 
-		// Nexus: check block signature
-		if (!CheckBlockSignature())
-			return DoS(100, error("CheckBlock() : bad block signature"));
-
 		return true;
 	}
 	
@@ -794,10 +777,6 @@ namespace Core
 		/** Check That Block Timestamp is not before previous block. **/
 		if (GetBlockTime() <= pindexPrev->GetBlockTime())
 			return error("AcceptBlock() : block's timestamp too early Block: %"PRId64" Prev: %"PRId64"", GetBlockTime(), pindexPrev->GetBlockTime());
-			
-		
-		if (GetBlockTime() > GetUnifiedTimestamp() + MAX_UNIFIED_DRIFT)
-			return error("AcceptBlock() : block timestamp too far in the future");
 			
 			
 		/** Check the Coinbase Transactions in Block Version 3. **/
@@ -1117,5 +1096,3 @@ namespace Core
 		return true;
 	}
 }
-
-
