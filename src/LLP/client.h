@@ -5,7 +5,7 @@
 
 namespace LLP
 {
-	class Outbound : public Connection
+	class Outbound : public Connection<>
 	{
 		Service_t IO_SERVICE;
 		

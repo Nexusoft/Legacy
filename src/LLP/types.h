@@ -276,20 +276,19 @@ namespace LLP
 		}
 	};
 	
-	
 
-	/** Base Template class to handle outgoing / incoming LLP data for both Client and Server. **/
-	class Connection
+	/* Base Template class to handle outgoing / incoming LLP data for both Client and Server. */
+	template<typename PacketType = Packet> class Connection
 	{
 	protected:
 		
-		/** Basic Connection Variables. **/
+		/* Basic Connection Variables. */
 		Timer         TIMER;
 		Error_t       ERROR_HANDLE;
 		Socket_t      SOCKET;
 		
 		
-		/** 
+		/* 
 			Virtual Event Function to be Overridden allowing Custom Read Events. 
 			Each event fired on Header Complete, and each time data is read to fill packet.
 			Useful to check Header length to maximum size of packet type for DDOS protection, 
@@ -297,65 +296,65 @@ namespace LLP
 			
 			LENGTH == 0: General Events
 			LENGTH  > 0 && PACKET: Read nSize Bytes into Data Packet
-		**/
+		*/
 		virtual void Event(unsigned char EVENT, unsigned int LENGTH = 0){ }
 		
-		/** Virtual Process Function. To be overridden with your own custom packet processing. **/
+		/* Virtual Process Function. To be overridden with your own custom packet processing. */
 		virtual bool ProcessPacket(){ }
 	public:
 	
 	
-		/** Incoming Packet Being Built. **/
-		Packet        INCOMING;
+		/* Incoming Packet Being Built. */
+		PacketType        INCOMING;
 		
 		
-		/** DDOS Score if a Incoming Server Connection. **/
+		/* DDOS Score if a Incoming Server Connection. */
 		DDOS_Filter*   DDOS;
 		
 		
-		/** Connected Flag. **/
+		/* Connected Flag. **/
 		bool CONNECTED;
 		
 		
-		/** Flag to Determine if DDOS is Enabled. **/
+		/* Flag to Determine if DDOS is Enabled. */
 		bool fDDOS;
 		
 		
-		/** Connection Constructors **/
+		/* Connection Constructors */
 		Connection() : SOCKET(), DDOS(NULL), INCOMING(), CONNECTED(false), fDDOS(false) { INCOMING.SetNull(); }
 		Connection( Socket_t SOCKET_IN, DDOS_Filter* DDOS_IN, bool isDDOS = false) : SOCKET(SOCKET_IN), fDDOS(isDDOS), DDOS(DDOS_IN), INCOMING(), CONNECTED(false) { TIMER.Start(); }
 		
 		
-		/** Checks for any flags in the Error Handle. **/
+		/* Checks for any flags in the Error Handle. */
 		bool Errors(){ return (ERROR_HANDLE == boost::asio::error::eof || ERROR_HANDLE); }
 				
 				
-		/** Determines if nTime seconds have elapsed since last Read / Write. **/
+		/* Determines if nTime seconds have elapsed since last Read / Write. */
 		bool Timeout(unsigned int nTime){ return (TIMER.Elapsed() >= nTime); }
 		
 		
-		/** Determines if Connected or Not. **/
+		/* Determines if Connected or Not. */
 		bool Connected(){ return CONNECTED; }
 		
 		
-		/** Handles two types of packets, requests which are of header >= 128, and data which are of header < 128. **/
+		/* Handles two types of packets, requests which are of header >= 128, and data which are of header < 128. */
 		bool PacketComplete(){ return INCOMING.Complete(); }
 		
 		
-		/** Used to reset the packet to Null after it has been processed. This then flags the Connection to read another packet. **/
+		/* Used to reset the packet to Null after it has been processed. This then flags the Connection to read another packet. */
 		void ResetPacket(){ INCOMING.SetNull(); }
 		
 		
-		/** Write a single packet to the TCP stream. **/
-		void WritePacket(Packet PACKET) { Write(PACKET.GetBytes()); }
+		/* Write a single packet to the TCP stream. */
+		void WritePacket(PacketType PACKET) { Write(PACKET.GetBytes()); }
 		
 		
-		/** Non-Blocking Packet reader to build a packet from TCP Connection.
-			This keeps thread from spending too much time for each Connection. **/
+		/* Non-Blocking Packet reader to build a packet from TCP Connection.
+			This keeps thread from spending too much time for each Connection. */
 		void ReadPacket()
 		{
 				
-			/** Handle Reading Packet Type Header. **/
+			/* Handle Reading Packet Type Header. */
 			if(SOCKET->available() > 0 && INCOMING.IsNull())
 			{
 				std::vector<unsigned char> HEADER(1, 255);
@@ -366,7 +365,7 @@ namespace LLP
 				
 			if(!INCOMING.IsNull() && !INCOMING.Complete())
 			{
-				/** Handle Reading Packet Length Header. **/
+				/* Handle Reading Packet Length Header. */
 				if(SOCKET->available() >= 4 && INCOMING.LENGTH == 0)
 				{
 					std::vector<unsigned char> BYTES(4, 0);
@@ -377,7 +376,7 @@ namespace LLP
 					}
 				}
 					
-				/** Handle Reading Packet Data. **/
+				/* Handle Reading Packet Data. */
 				unsigned int nAvailable = SOCKET->available();
 				if(nAvailable > 0 && INCOMING.LENGTH > 0 && INCOMING.DATA.size() < INCOMING.LENGTH)
 				{
@@ -394,7 +393,7 @@ namespace LLP
 		}
 		
 		
-		/** Disconnect Socket. Cleans up memory usage to prevent "memory runs" from poor memory management. **/
+		/* Disconnect Socket. Cleans up memory usage to prevent "memory runs" from poor memory management. */
 		void Disconnect()
 		{
 			if(!CONNECTED)
@@ -419,18 +418,15 @@ namespace LLP
 		
 	private:
 		
-		/** Lower level network communications: Read. Interacts with OS sockets. **/
+		/* Lower level network communications: Read. Interacts with OS sockets. */
 		size_t Read(std::vector<unsigned char> &DATA, size_t nBytes) { if(Errors()) return 0; TIMER.Reset(); return  boost::asio::read(*SOCKET, boost::asio::buffer(DATA, nBytes), ERROR_HANDLE); }
 							
 				
 				
-		/** Lower level network communications: Write. Interacts with OS sockets. **/
+		/* Lower level network communications: Write. Interacts with OS sockets. */
 		void Write(std::vector<unsigned char> DATA) { if(Errors()) return; TIMER.Reset(); boost::asio::write(*SOCKET, boost::asio::buffer(DATA, DATA.size()), ERROR_HANDLE); }
 
 	};
-
-	
-
 }
 
 #endif

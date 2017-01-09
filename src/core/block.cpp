@@ -441,41 +441,36 @@ namespace Core
 	}
 
 
-	/* AddToBlockIndex: Adds a new Block into the Block Index. 
-		This is where it is categorized and dealt with in the Blockchain. */
+	/** AddToBlockIndex: Adds a new Block into the Block Index. 
+		This is where it is categorized and dealt with in the Blockchain. **/
 	bool CBlock::AddToBlockIndex(unsigned int nFile, unsigned int nBlockPos)
 	{
-		/* Check for Duplicate. */
+		/** Check for Duplicate. **/
 		uint1024 hash = GetHash();
 		if (mapBlockIndex.count(hash))
 			return error("AddToBlockIndex() : %s already exists", hash.ToString().substr(0,20).c_str());
 
 			
-		/* Build new Block Index Object. */
+		/** Build new Block Index Object. **/
 		CBlockIndex* pindexNew = new CBlockIndex(nFile, nBlockPos, *this);
 		if (!pindexNew)
 			return error("AddToBlockIndex() : new CBlockIndex failed");
 
 			
-		/* Find Previous Block. */
+		/** Find Previous Block. **/
 		pindexNew->phashBlock = &hash;
 		map<uint1024, CBlockIndex*>::iterator miPrev = mapBlockIndex.find(hashPrevBlock);
 		if (miPrev != mapBlockIndex.end())
 			pindexNew->pprev = (*miPrev).second;
 		
 		
-		/* Compute the Chain Trust */
+		/** Compute the Chain Trust **/
 		pindexNew->nChainTrust = (pindexNew->pprev ? pindexNew->pprev->nChainTrust : 0) + pindexNew->GetBlockTrust();
 		
 		
-		/* Compute the Channel Height. */
+		/** Compute the Channel Height. **/
 		const CBlockIndex* pindexPrev = GetLastChannelIndex(pindexNew->pprev, pindexNew->GetChannel());
 		pindexNew->nChannelHeight = (pindexPrev ? pindexPrev->nChannelHeight : 0) + 1;
-		
-		
-		/* Check the Block Signature. */
-		if (!CheckBlockSignature())
-			return DoS(100, error("CheckBlock() : bad block signature"));
 		
 		
 		/** Compute the Released Reserves. **/
@@ -616,6 +611,7 @@ namespace Core
 		if (GetChannel() > 2)
 			return DoS(50, error("CheckBlock() : Channel out of Range."));
 		
+		/* Check the Block's time to the Unified Clock. */
 		if (GetBlockTime() > GetUnifiedTimestamp() + MAX_UNIFIED_DRIFT)
 			return error("AcceptBlock() : block timestamp too far in the future");
 	
@@ -738,6 +734,10 @@ namespace Core
 		// Check merkleroot
 		if (hashMerkleRoot != BuildMerkleTree())
 			return DoS(100, error("CheckBlock() : hashMerkleRoot mismatch"));
+
+		// Nexus: check block signature
+		if (!CheckBlockSignature())
+			return DoS(100, error("CheckBlock() : bad block signature"));
 
 		return true;
 	}

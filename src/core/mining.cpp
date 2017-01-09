@@ -104,7 +104,7 @@ namespace LLP
 	};
 	
 
-	class MiningLLP : public Connection
+	class MiningLLP : public Connection<>
 	{	
 		Coinbase* pCoinbaseTx = NULL;
 		Core::CBlockIndex* pindexBest = NULL;
@@ -1076,7 +1076,6 @@ namespace Core
 				printf("Stake Minter : Created New Block %s\n", pblock->GetHash().ToString().substr(0, 20).c_str());
 			
 			pblock->UpdateTime();
-			
 			
 			vector< std::vector<unsigned char> > vKeys;
 			Wallet::TransactionType keyType;
