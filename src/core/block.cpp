@@ -62,7 +62,7 @@ namespace Core
 	
 	bool IsInitialBlockDownload()
 	{
-		if (pindexBest == NULL || nBestHeight < GetNumBlocksOfPeers() - 1440 )
+		if (pindexBest == NULL)
 			return true;
 			
 		static int64 nLastUpdate;
@@ -72,7 +72,7 @@ namespace Core
 			pindexLastBest = pindexBest;
 			nLastUpdate = GetUnifiedTimestamp();
 		}
-		return (GetUnifiedTimestamp() - nLastUpdate < 30 &&
+		return (GetUnifiedTimestamp() - nLastUpdate < 10 &&
 				pindexBest->GetBlockTime() < GetUnifiedTimestamp() - 24 * 60 * 60);
 	}
 
@@ -1096,5 +1096,3 @@ namespace Core
 		return true;
 	}
 }
-
-

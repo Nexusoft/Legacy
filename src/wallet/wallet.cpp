@@ -1664,19 +1664,35 @@ namespace Wallet
 			Core::CTxIndex txindex;
 			if(!indexdb.ReadTxIndex(pcoin->GetHash(), txindex))
 			{
+				/* Only flag the transaction as invalid if it is not in the mempool. */
+				if(Core::mempool.exists(pcoin->GetHash()) && GetUnifiedTimestamp() - pcoin->nTime < 86400)
+					continue;
+				
+
+				/* Updates for the Console. */
+				nMismatchFound++;
+				nBalanceInQuestion += pcoin->GetValueOut();
 				printf("FixSpentCoins found invalid transaction %s Nexus %s, %s\n",
 						FormatMoney(pcoin->GetValueOut()).c_str(), pcoin->GetHash().ToString().c_str(), fCheckOnly? "repair not attempted" : "erasing");
 				
-				nMismatchFound++;
-				nBalanceInQuestion += pcoin->GetValueOut();
-				if(!fCheckOnly)
+				/* Remove the invalid transation from the wallet database. */
+				if(!fCheckOnly) {
+					
+					/* Erase from the memory pool if it gets stuck unconfirmed for more than one day. */
+					if(Core::mempool.exists(pcoin->GetHash()))
+						Core::mempool.remove(*pcoin);
+					
+					/* Remove the transaction from the wallet file. */
 					EraseFromWallet(pcoin->GetHash());
+				}
 				
 				continue;
 			}
 			
+			/* Check all the outputs to make sure the flags are all set properly. */
 			for (int n=0; n < pcoin->vout.size(); n++)
 			{
+				/* Handle the Index on Disk for Transaction being inconsistent from the Wallet's accounting to the UTXO. */
 				if (IsMine(pcoin->vout[n]) && pcoin->IsSpent(n) && (txindex.vSpent.size() <= n || txindex.vSpent[n].IsNull()))
 				{
 					printf("FixSpentCoins found lost coin %s Nexus %s[%d], %s\n",
@@ -1689,6 +1705,8 @@ namespace Wallet
 						pcoin->WriteToDisk();
 					}
 				}
+				
+				/* Handle the wallet missing a spend that was updated in the indexes. The index is updated on connect inputs. */
 				else if (IsMine(pcoin->vout[n]) && !pcoin->IsSpent(n) && (txindex.vSpent.size() > n && !txindex.vSpent[n].IsNull()))
 				{
 					printf("FixSpentCoins found spent coin %s Nexus %s[%d], %s\n",
