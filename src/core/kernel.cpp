@@ -618,10 +618,10 @@ namespace Core
 		CTrustKey cTrustKey = Find(cKey);
 		
 		/* The Average Block Time of Key. */
-		unsigned int nAverageTime = cTrustKey.Age(nTime) / cTrustKey.hashPrevBlocks.size(), nLastTrustTime = 0;
+		unsigned int nAverageTime = cTrustKey.Age(nTime) / cTrustKey.hashPrevBlocks.size(), nLastTrustTime = 0, nAverageTimespan = 0;
 		
 		/* The Average Block Consistency. */
-		double nAverageConsistency = 0.0, nMeanHistory = 0.0;
+		double nAverageConsistency = 0.0, nMeanHistory = 0.0, nDifficultyAverage = 0.0, nLastDifficulty = 0;
 		
 		/* The Trust Scores. */
 		double nPositiveTrust = 0.0, nNegativeTrust = 0.0, nHistoryIterations = 0;
@@ -629,24 +629,29 @@ namespace Core
 		{
 			/* Calculate the Trust Time of Blocks. */
 			unsigned int nTrustTime = mapBlockIndex[cTrustKey.hashPrevBlocks[nIndex]]->GetBlockTime() - ((nIndex == 0) ? cTrustKey.nGenesisTime : mapBlockIndex[cTrustKey.hashPrevBlocks[nIndex - 1]]->GetBlockTime());
-			if(nLastTrustTime == 0)
+			if(nLastTrustTime == 0) {
 				nLastTrustTime = nTrustTime;
+				nLastDifficulty = GetDifficulty(mapBlockIndex[cTrustKey.hashPrevBlocks[nIndex]]->nBits, 0);
+			}
 			
 			/* TODO: Trust Score Forgiveness. Forgive the Decay of trust key if there is a Trust block created within 1 day of Activation Timelock. */
 			//if(mapBlockIndex[cTrustKey.hashPrevBlocks[nIndex]]->GetBlockTime() + TRUST_KEY_EXPIRE < (fTestNet ? TESTNET_VERSION_TIMELOCK[3] : NETWORK_VERSION_TIMELOCK[3])) {
 				
 			//}
+			
+			/* Calculate the Weighted Trust Based on weight of trust to difficulty. */
+			unsigned int nMaxTimespan = (TRUST_KEY_MAX_TIMESPAN * (GetDifficulty(mapBlockIndex[cTrustKey.hashPrevBlocks[nIndex]]->nBits, 0) / nLastDifficulty));
+			nAverageTimespan += nMaxTimespan;
 				
 			/* Calculate Consistency Moving Average over Scope of Consistency History. */
 			if(cTrustKey.hashPrevBlocks.size() - nIndex <= TRUST_KEY_CONSISTENCY_HISTORY){
-				nAverageConsistency 	+= (nAverageTime / nTrustTime);
-				nMeanHistory		  	+= (nLastTrustTime / nTrustTime);
+				nAverageConsistency += (nAverageTime / nTrustTime);
+				nMeanHistory		  += (nLastTrustTime / nTrustTime);
+				nDifficultyAverage  += (GetDifficulty(mapBlockIndex[cTrustKey.hashPrevBlocks[nIndex]]->nBits, 0) / nLastDifficulty);
 				
 				nLastTrustTime = nTrustTime;
+				nLastDifficulty = GetDifficulty(mapBlockIndex[cTrustKey.hashPrevBlocks[nIndex]]->nBits, 0);
 			}
-			
-			/* Calculate the Weighted Trust Based on weight of trust to difficulty. */
-			unsigned int nMaxTimespan = TRUST_KEY_MAX_TIMESPAN;
 						
 			/* Calculate the Positive Trust Time in the Key. */
 			if(nTrustTime < nMaxTimespan) {
@@ -660,14 +665,16 @@ namespace Core
 		}
 		
 		/* Final Compuatation for Consistency History. */
-		nAverageConsistency 	/= TRUST_KEY_CONSISTENCY_HISTORY;
-		nMeanHistory		  	/= TRUST_KEY_CONSISTENCY_HISTORY;
+		nAverageConsistency /= TRUST_KEY_CONSISTENCY_HISTORY;
+		nDifficultyAverage  /= TRUST_KEY_CONSISTENCY_HISTORY;
+		nMeanHistory		  /= TRUST_KEY_CONSISTENCY_HISTORY;
+		nAverageTimespan	  /= cTrustKey.hashPrevBlocks.size();
 		
 		/* Final Computation of the Trust Score. */
 		double nTrustScore = std::max(0.0, (nPositiveTrust - nNegativeTrust));
 		
 		if(GetArg("-verbose", 0) >= 2)
-			printf("CTrustPool::TRUST [%f %%] Score %f Age %u Index %f %% Mean %f %% | Positive %f | Negative %f\n", (nTrustScore * 100.0) / cTrustKey.Age(nTime), nTrustScore, (unsigned int)cTrustKey.Age(nTime), 100.0 * nAverageConsistency, 100.0 * nMeanHistory, nPositiveTrust, nNegativeTrust);
+			printf("CTrustPool::TRUST [%f %%] Score %f Age %u | Difficulty %f %% Index %f %% Mean %f %% | Positive %f | Negative %f | Total Blocks %u Average Time %u Average Timespan %u [%f %%]\n", (nTrustScore * 100.0) / cTrustKey.Age(nTime), nTrustScore, (unsigned int)cTrustKey.Age(nTime), 100.0 * nDifficultyAverage, .0 * nAverageConsistency, 100.0 * nMeanHistory, nPositiveTrust, nNegativeTrust, cTrustKey.hashPrevBlocks.size(), nAverageTime, nAverageTimespan, 100.0 * nAverageTimespan / TRUST_KEY_MAX_TIMESPAN);
 		
 		return (uint64)nPositiveTrust - nNegativeTrust;
 	}

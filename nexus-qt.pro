@@ -160,6 +160,7 @@ HEADERS += src/qt/core/gui.h \
 	src/LLD/keychain.h \
 	src/LLD/key.h \
 	src/LLD/sector.h \
+	src/LLP/packet.h \
     src/util/mruset.h \
     src/hash/brg_endian.h \
     src/hash/brg_types.h \

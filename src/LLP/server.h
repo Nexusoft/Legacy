@@ -181,7 +181,7 @@ namespace LLP
 		std::vector< DataThread<ProtocolType>* > DATA_THREADS;
 		
 		
-		Server<ProtocolType>(int nPort, int nMaxThreads, bool isDDOS, int cScore, int rScore, int nTimeout) : 
+		Server<ProtocolType>(int nPort, int nMaxThreads, bool isDDOS, int cScore, int rScore, int nTimeout, bool fListen = true) : 
 			fDDOS(isDDOS), LISTENER(SERVICE), PORT(nPort), MAX_THREADS(nMaxThreads), LISTEN_THREAD(boost::bind(&Server::ListeningThread, this)) //,METER_THREAD(boost::bind(&Server::MeterThread, this)), 
 		{
 			for(int index = 0; index < MAX_THREADS; index++)

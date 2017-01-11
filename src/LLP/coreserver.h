@@ -8,7 +8,8 @@
 
 namespace LLP
 {
-	class CoreLLP : public Connection
+	
+	class CoreLLP : public Connection<>
 	{	
 		std::vector<unsigned char> ADDRESS;
 		

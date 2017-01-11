@@ -62,7 +62,7 @@ namespace Core
 	
 	/* NOTE: For Blocks Version 5 and Above.
 	 *	 The Maximum Grace time before trust begins to be reduced from no trust blocks seen.. **/
-	int TRUST_KEY_MAX_TIMESPAN = 60 * 60 * 6;
+	int TRUST_KEY_MAX_TIMESPAN = 60 * 60 * 12;
 	
 	
 	/* NOTE: For Blocks Version 5 and Above
@@ -90,27 +90,27 @@ namespace Core
 	
 	
 	/* TestNet Time - Lock for the First Nexus Block Update. Version 1 Blocks Rejected after this Time - Lock, Version 2 Blocks Rejected Before it. */
-	const unsigned int TESTNET_VERSION_TIMELOCK[]    = {  1412676000,		//--- Block Version 2 Testnet Activation:		10/07/2014 04:00:00 GMT - 6
-																			1421293891,		//--- Block Version 3 Testnet Activation:		01/15/2015 07:51:31 GMT - 6
-																			1421949600,		//--- Block Version 4 Testnet Activation:		05/10/2015 08:01:00 GMT - 6
-																			1482679327 };	//--- Block Version 5 Testnet Activation:		12/25/2016 08:22:07 GMT - 7
+	const unsigned int TESTNET_VERSION_TIMELOCK[]		= { 1412676000,		//--- Block Version 2 Testnet Activation:		10/07/2014 04:00:00 GMT - 6
+																			 1421293891,		//--- Block Version 3 Testnet Activation:		01/15/2015 07:51:31 GMT - 6
+																			 1421949600,		//--- Block Version 4 Testnet Activation:		05/10/2015 08:01:00 GMT - 6
+																			 1482679327 };		//--- Block Version 5 Testnet Activation:		12/25/2016 08:22:07 GMT - 7
 	
 	/* Network Time - Lock for the First Nexus Block Update. Version 1 Blocks Rejected after this Time - Lock, Version 2 Blocks Rejected Before it. */
-	const unsigned int NETWORK_VERSION_TIMELOCK[]    = {  1412964000,		//--- Block Version 2 Activation:				10/10/2014 12:00:00 GMT - 6
-																			1421949600,		//--- Block Version 3 Activation:				01/22/2015 12:00:00 GMT - 6
-																			1438369200,		//--- Block Version 4 Activation:				07/31/2015 12:00:00 GMT - 7
-																			1483294271 };	//--- Block Version 5 Activation:				01/01/2017 11:11:11 GMT - 7
+	const unsigned int NETWORK_VERSION_TIMELOCK[]		= { 1412964000,		//--- Block Version 2 Activation:				10/10/2014 12:00:00 GMT - 6
+																			 1421949600,		//--- Block Version 3 Activation:				01/22/2015 12:00:00 GMT - 6
+																			 1438369200,		//--- Block Version 4 Activation:				07/31/2015 12:00:00 GMT - 7
+																			 1483294271 };		//--- Block Version 5 Activation:				01/01/2017 11:11:11 GMT - 7
 	
 	
 	/** Time - Lock for the Nexus Channels on the Testnet. Each Channel Cannot produce blocks before their corresponding Time - Locks. **/
-	const unsigned int CHANNEL_TESTNET_TIMELOCK[] = { 	1421949600,		//--- POS Testnet Activation:              05/10/2015 08:01:00 GMT - 6
-																		1411437371,		//--- CPU Testnet Activation:              09/22/2014 18:56:11 GMT - 6
-																		1411437371 };	//--- GPU Testnet Activation:              09/22/2014 18:56:11 GMT - 6
+	const unsigned int CHANNEL_TESTNET_TIMELOCK[] 		= { 1421949600,		//--- POS Testnet Activation:              05/10/2015 08:01:00 GMT - 6
+																			 1411437371,		//--- CPU Testnet Activation:              09/22/2014 18:56:11 GMT - 6
+																			 1411437371 };		//--- GPU Testnet Activation:              09/22/2014 18:56:11 GMT - 6
 			
 	/** Time - Lock for the Nexus Channels. Each Channel Cannot produce blocks before their corresponding Time - Locks. **/
-	const unsigned int CHANNEL_NETWORK_TIMELOCK[] = { 	1438369200,		//--- POS Channel Activation:              07/31/2015 12:00:00 GMT - 7
-																		1411510800,		//--- CPU Channel Activation:              09/23/2014 16:20:00 GMT - 6
-																		1413914400 };	//--- GPU Channel Activation:              10/21/2014 12:00:00 GMT - 6
+	const unsigned int CHANNEL_NETWORK_TIMELOCK[] 		= { 1438369200,		//--- POS Channel Activation:              07/31/2015 12:00:00 GMT - 7
+																			 1411510800,		//--- CPU Channel Activation:              09/23/2014 16:20:00 GMT - 6
+																			 1413914400 };		//--- GPU Channel Activation:              10/21/2014 12:00:00 GMT - 6
 													  
 													  
 													  
@@ -125,34 +125,34 @@ namespace Core
 	
 	/** Addresses of the Exchange Channels. **/
 	const string CHANNEL_ADDRESSES[] =  {  "2Qn8MsUCkv9S8X8sMvUPkr9Ekqqg5VKzeKJk2ftcFMUiJ5QnWRc",
-									       "2S4WLATVCdJXTpcfdkDNDVKK5czDi4rjR5HrCRjayktJZ4rN8oA",
-									       "2RE29WahXWawQ9huhyaGhfvEMmUWHH9Hfo1anbNk8eW3nTU7H2g",
-									       "2QpSfg6MBZYCjQKXjTgo9eHoKMCJsYjLQsNT3xeeAYhrQmNBEUd",
-										   "2RHjigCh1qt1j3WKz4mShFBiVE5g6z9vrFpGMT6EDQsFJbtx4hr",
-										   "2SZ87FB1zukH5h7BLDT4yUyMTQnEJEt2KzpGYFxuUzMqAxEFN7Y",
-										   "2STyHuCeBgE81ZNjhH5QB8UXViXW7WPYM1YQgmXfLvMJXaKAFCs",
-										   "2SLq49uDrhLyP1N7Xnkj86WCHQUKxn6zx38LBNoTgwsAjfV1seq",
-										   "2RwtQdi3VPPQqht15QmXnS4KELgxrfaH2hXSywtJrfDdCJMnwPQ",
-										   "2SWscUR6rEezZKgFh5XkEyhmRmja2qrHMRsfmtxdapwMymmM96Q",
-										   "2SJzPMXNPEgW2zJW4489qeiCjdUanDTqCuSNAMmZXm1KX269jAt",
-										   "2Rk2mBEYWkGDMzQhEqdpSGZ77ZGvp9HWAbcsY6mDtbWKJy4DQuq",
-										   "2Rnh3qFvzeRQmSJEHtz6dNphq3r7uDSGQdjucnVFtpcuzBbeiLx" };
+														"2S4WLATVCdJXTpcfdkDNDVKK5czDi4rjR5HrCRjayktJZ4rN8oA",
+														"2RE29WahXWawQ9huhyaGhfvEMmUWHH9Hfo1anbNk8eW3nTU7H2g",
+														"2QpSfg6MBZYCjQKXjTgo9eHoKMCJsYjLQsNT3xeeAYhrQmNBEUd",
+														"2RHjigCh1qt1j3WKz4mShFBiVE5g6z9vrFpGMT6EDQsFJbtx4hr",
+														"2SZ87FB1zukH5h7BLDT4yUyMTQnEJEt2KzpGYFxuUzMqAxEFN7Y",
+														"2STyHuCeBgE81ZNjhH5QB8UXViXW7WPYM1YQgmXfLvMJXaKAFCs",
+														"2SLq49uDrhLyP1N7Xnkj86WCHQUKxn6zx38LBNoTgwsAjfV1seq",
+														"2RwtQdi3VPPQqht15QmXnS4KELgxrfaH2hXSywtJrfDdCJMnwPQ",
+														"2SWscUR6rEezZKgFh5XkEyhmRmja2qrHMRsfmtxdapwMymmM96Q",
+														"2SJzPMXNPEgW2zJW4489qeiCjdUanDTqCuSNAMmZXm1KX269jAt",
+														"2Rk2mBEYWkGDMzQhEqdpSGZ77ZGvp9HWAbcsY6mDtbWKJy4DQuq",
+														"2Rnh3qFvzeRQmSJEHtz6dNphq3r7uDSGQdjucnVFtpcuzBbeiLx" };
 										   
 							
 	/** Addresses for the Developer Accounts. **/
-	const string DEVELOPER_ADDRESSES[] = {  "2Qp1rHzLCCsL4RcmLRcNhhAjnFShDXQaAjyBB9YpDSomCJsfGfS",
-									        "2SFx2tc8tLHBtkLkfK7nNjkU9DwvZZMNKKLaeX4xcG8ev4HQqVP",
-									        "2SawW67sUcVtLNarcAkVaFR2L1R8AWujkoryJHi8L47bdDP8hwC",
-									        "2QvzSNP3jy4MjqmB7jRy6jRGrDz6s6ALzTwu8htdohraU6Fdgrc",
-											"2RxmzQ1XomQrbzQimajfnC2FubYnSzbwz5EkU2du7bDxuJW7i2L",
-											"2S2JaEbGoBFx7N2YGEUJbWRjLf35tY7kezV8R9vzq9Wu1f5cwVz",
-											"2S9bR5wB6RcBm1weFPBXCZai5pRFisa9zQSEedrdi9QLmd5Am8y",
-											"2S6NjGDuTozyCWjMziwEBYKnnaC6fy5zRjDmd2NQhHBjuzKw4bg",
-											"2RURDVPFD14eYCC7brgio2HF77LP22SdN5CeAvwQAwdSPdS95dT",
-											"2SNAEJ6mbmpPXbP6ZkmH7FgtWTWcNnw2Pcs3Stb4PDaq3vH1GgE",
-											"2SDnQuMgW9UdESUUekrrWegxSHLQWnFWJ2BNWAUQVecKNwBeNh5",
-											"2SCLU4SKxh2P27foN9NRoAdtUZMdELMvBpfmVER98HayRRqGKFx",
-											"2SLN8urU2mERZRQajqYe9VgQQgK7tPWWQ1679c5B3scZKP2vDxi" };
+	const string DEVELOPER_ADDRESSES[] = {	"2Qp1rHzLCCsL4RcmLRcNhhAjnFShDXQaAjyBB9YpDSomCJsfGfS",
+														"2SFx2tc8tLHBtkLkfK7nNjkU9DwvZZMNKKLaeX4xcG8ev4HQqVP",
+														"2SawW67sUcVtLNarcAkVaFR2L1R8AWujkoryJHi8L47bdDP8hwC",
+														"2QvzSNP3jy4MjqmB7jRy6jRGrDz6s6ALzTwu8htdohraU6Fdgrc",
+														"2RxmzQ1XomQrbzQimajfnC2FubYnSzbwz5EkU2du7bDxuJW7i2L",
+														"2S2JaEbGoBFx7N2YGEUJbWRjLf35tY7kezV8R9vzq9Wu1f5cwVz",
+														"2S9bR5wB6RcBm1weFPBXCZai5pRFisa9zQSEedrdi9QLmd5Am8y",
+														"2S6NjGDuTozyCWjMziwEBYKnnaC6fy5zRjDmd2NQhHBjuzKw4bg",
+														"2RURDVPFD14eYCC7brgio2HF77LP22SdN5CeAvwQAwdSPdS95dT",
+														"2SNAEJ6mbmpPXbP6ZkmH7FgtWTWcNnw2Pcs3Stb4PDaq3vH1GgE",
+														"2SDnQuMgW9UdESUUekrrWegxSHLQWnFWJ2BNWAUQVecKNwBeNh5",
+														"2SCLU4SKxh2P27foN9NRoAdtUZMdELMvBpfmVER98HayRRqGKFx",
+														"2SLN8urU2mERZRQajqYe9VgQQgK7tPWWQ1679c5B3scZKP2vDxi" };
 											
 									  
 	/** Binary Data of Each Developer Address for Signature Verification of Exchange Transaction in Accept Block. **/

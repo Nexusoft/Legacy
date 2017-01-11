@@ -60,18 +60,21 @@ inline T& REF(const T& val)
 
 enum
 {
-    // primary actions
-    SER_NETWORK         = (1 << 0),
-    SER_DISK            = (1 << 1),
-    SER_GETHASH         = (1 << 2),
+	// primary actions
+	SER_NETWORK         = (1 << 0),
+	SER_DISK            = (1 << 1),
+	SER_GETHASH         = (1 << 2),
 	
 	// LLD actions
 	SER_LLD             = (1 << 3),
 	SER_LLD_KEY_HEADER  = (1 << 4),
 
-    // modifiers
-    SER_SKIPSIG         = (1 << 16),
-    SER_BLOCKHEADERONLY = (1 << 17),
+	// modifiers
+	SER_SKIPSIG         = (1 << 16),
+	SER_BLOCKHEADERONLY = (1 << 17),
+	
+	// LLP actions
+	SER_LLP_HEADER_ONLY = (1 << 30),
 };
 
 #define IMPLEMENT_SERIALIZE(statements)    \

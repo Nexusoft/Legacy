@@ -2946,9 +2946,9 @@ namespace Net
 		//
 		// Special case non-string parameter types
 		//
-		if (strMethod == "setgenerate"            && n > 0) ConvertTo<bool>(params[0]);
+		if (strMethod == "stake"		            && n > 0) ConvertTo<bool>(params[0]);
 		if (strMethod == "dumprichlist"           && n > 0) ConvertTo<int>(params[0]);
-		if (strMethod == "setgenerate"            && n > 1) ConvertTo<boost::int64_t>(params[1]);
+		if (strMethod == "stake"		            && n > 1) ConvertTo<boost::int64_t>(params[1]);
 		if (strMethod == "sendtoaddress"          && n > 1) ConvertTo<double>(params[1]);
 		if (strMethod == "settxfee"               && n > 0) ConvertTo<double>(params[0]);
 		if (strMethod == "getreceivedbyaddress"   && n > 1) ConvertTo<boost::int64_t>(params[1]);
