@@ -126,6 +126,7 @@ namespace Net
 		result.push_back(Pair("hash", block.GetHash().GetHex()));
 		result.push_back(Pair("size", (int)::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION)));
 		result.push_back(Pair("height", (int)blockindex->nHeight));
+		result.push_back(Pair("channel", (int)block.nChannel));
 		result.push_back(Pair("version", (int)block.nVersion));
 		result.push_back(Pair("merkleroot", block.hashMerkleRoot.GetHex()));
 		result.push_back(Pair("time", DateTimeStrFormat(block.GetBlockTime())));

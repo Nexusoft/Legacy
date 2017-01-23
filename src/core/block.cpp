@@ -645,17 +645,17 @@ namespace Core
 			return error("CheckBlock() : Block Created before Channel Time-Lock. Channel Opens in %"PRId64" Seconds", (fTestNet ? CHANNEL_TESTNET_TIMELOCK[GetChannel()] : CHANNEL_NETWORK_TIMELOCK[GetChannel()]) - GetUnifiedTimestamp());
 			
 			
-		/** Check the Current Version Block Time-Lock. Allow Version (Current -1) Blocks for 1 Hour after Time Lock. **/
+		/* Check the Current Version Block Time-Lock. Allow Version (Current -1) Blocks for 1 Hour after Time Lock. */
 		if (nVersion > 1 && nVersion == (fTestNet ? TESTNET_BLOCK_CURRENT_VERSION - 1 : NETWORK_BLOCK_CURRENT_VERSION - 1) && (GetBlockTime() - 3600) > (fTestNet ? TESTNET_VERSION_TIMELOCK[TESTNET_BLOCK_CURRENT_VERSION - 2] : NETWORK_VERSION_TIMELOCK[NETWORK_BLOCK_CURRENT_VERSION - 2]))
 			return error("CheckBlock() : Version %u Blocks have been Obsolete for %"PRId64" Seconds\n", nVersion, (GetUnifiedTimestamp() - (fTestNet ? TESTNET_VERSION_TIMELOCK[TESTNET_BLOCK_CURRENT_VERSION - 2] : NETWORK_VERSION_TIMELOCK[TESTNET_BLOCK_CURRENT_VERSION - 2])));	
 			
 			
-		/** Check the Current Version Block Time-Lock. **/
+		/* Check the Current Version Block Time-Lock. */
 		if (nVersion >= (fTestNet ? TESTNET_BLOCK_CURRENT_VERSION : NETWORK_BLOCK_CURRENT_VERSION) && GetBlockTime() <= (fTestNet ? TESTNET_VERSION_TIMELOCK[TESTNET_BLOCK_CURRENT_VERSION - 2] : NETWORK_VERSION_TIMELOCK[NETWORK_BLOCK_CURRENT_VERSION - 2]))
 			return error("CheckBlock() : Version %u Blocks are not Accepted for %"PRId64" Seconds\n", nVersion, (GetUnifiedTimestamp() - (fTestNet ? TESTNET_VERSION_TIMELOCK[TESTNET_BLOCK_CURRENT_VERSION - 2] : NETWORK_VERSION_TIMELOCK[NETWORK_BLOCK_CURRENT_VERSION - 2])));	
 			
 			
-		/** Check the Required Mining Outputs. **/
+		/* Check the Required Mining Outputs. */
 		if (IsProofOfWork() && nVersion >= 3) {
 			unsigned int nSize = vtx[0].vout.size();
 
@@ -858,6 +858,7 @@ namespace Core
 		// Preliminary checks
 		if (!pblock->CheckBlock())
 			return error("ProcessBlock() : CheckBlock FAILED");
+		
 
 		// If don't already have its previous block, shunt it off to holding area until we get it
 		if (!mapBlockIndex.count(pblock->hashPrevBlock))

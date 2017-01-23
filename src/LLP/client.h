@@ -5,6 +5,73 @@
 
 namespace LLP
 {
+	
+		/** Base Class to create a Custom LLP Server. Protocol Type class must inherit Connection,
+		and provide a ProcessPacket method. Optional Events by providing GenericEvent method. **/
+	template <class ProtocolType> class Client
+	{
+	public:
+		unsigned int MAX_THREADS;
+		
+		/** The data type to keep track of current running threads. **/
+		std::vector< DataThread<ProtocolType>* > DATA_THREADS;
+		
+		
+		Server<ProtocolType>(int nMaxThreads, bool isDDOS, int cScore, int rScore, int nTimeout, bool fListen = true) : 
+			MAX_THREADS(nMaxThreads)
+		{
+			for(int index = 0; index < MAX_THREADS; index++)
+				DATA_THREADS.push_back(new DataThread<ProtocolType>(index, fDDOS, rScore, cScore, nTimeout));
+		}
+		
+		void AddConnection(ProtocolType CONNECTION)
+		{
+			unsigned int nIndex = FindThread();
+			
+			DATA_THREADS[nIndex]->AddConnection(CONNECTION);
+		}
+		
+	private:
+	
+		/** Determine the thread with the least amount of active connections. 
+			This keeps the load balanced across all server threads. **/
+		int FindThread()
+		{
+			int nIndex = 0, nConnections = DATA_THREADS[0]->nConnections;
+			for(int index = 1; index < MAX_THREADS; index++)
+			{
+				if(DATA_THREADS[index]->nConnections < nConnections)
+				{
+					nIndex = index;
+					nConnections = DATA_THREADS[index]->nConnections;
+				}
+			}
+			
+			return nIndex;
+		}
+		
+		/** Used for Meter. Adds up the total amount of requests from each Data Thread. **/
+		int TotalRequests()
+		{
+			int nTotalRequests = 0;
+			for(int nThread = 0; nThread < MAX_THREADS; nThread++)
+				nTotalRequests += DATA_THREADS[nThread]->REQUESTS;
+					
+			return nTotalRequests;
+		}
+			
+		/** Used for Meter. Resets the REQUESTS variable to 0 in each Data Thread. **/
+		void ClearRequests()
+		{
+			for(int nThread = 0; nThread < MAX_THREADS; nThread++)
+				DATA_THREADS[nThread]->REQUESTS = 0;
+		}
+	};
+	
+	
+	/* Old Single Connection one per thread outbound LLP connection handler.
+	 * TODO: Deprecate this specific Class once the new Core LLP is complete.
+	 */
 	class Outbound : public Connection<>
 	{
 		Service_t IO_SERVICE;
