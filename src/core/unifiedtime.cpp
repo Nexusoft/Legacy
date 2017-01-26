@@ -32,33 +32,46 @@ vector<Net::CAddress> SEED_NODES;
 const char* DNS_SeedNodes[] = 
 {
 	"node1.nexusearth.com",
-	"node2.nexusearth.com",
-	"node3.nexusearth.com",
-	"node4.nexusearth.com",
-	"node5.nexusearth.com",
-	"node6.nexusearth.com",
-	"node7.nexusearth.com",
-	"node8.nexusearth.com",
-	"node9.nexusearth.com",
-	"node10.nexusearth.com",
-	"node11.nexusearth.com",
-	"node12.nexusearth.com",
-	"node13.nexusearth.com",
 	"node1.mercuryminer.com",
-	"node2.mercuryminer.com",
-	"node3.mercuryminer.com",
-	"node4.mercuryminer.com",
-	"node5.mercuryminer.com",
-	"node6.mercuryminer.com",
-	"node7.mercuryminer.com",
-	"node8.mercuryminer.com",
-	"node9.mercuryminer.com",
-	"node10.mercuryminer.com",
-	"node11.mercuryminer.com",
-	"node12.mercuryminer.com",
-	"node13.mercuryminer.com",
 	"node1.nexusminingpool.com",
+	"node1.nxs.efficienthash.com",
+	"node2.nexusearth.com",
+	"node2.mercuryminer.com",
 	"node2.nexusminingpool.com"
+        "node2.nxs.efficienthash.com",
+	"node3.nexusearth.com",
+	"node3.mercuryminer.com",
+	"node3.nxs.efficienthash.com",
+	"node4.nexusearth.com",
+	"node4.mercuryminer.com",
+	"node4.nxs.efficienthash.com",
+	"node5.nexusearth.com",
+	"node5.mercuryminer.com",
+	"node5.nxs.efficienthash.com",
+	"node6.nexusearth.com",
+	"node6.mercuryminer.com",
+	"node6.nxs.efficienthash.com",
+	"node7.nexusearth.com",
+	"node7.mercuryminer.com",
+	"node7.nxs.efficienthash.com",
+	"node8.nexusearth.com",
+	"node8.mercuryminer.com",
+	"node8.nxs.efficienthash.com",
+	"node9.nexusearth.com",
+	"node9.mercuryminer.com",
+	"node9.nxs.efficienthash.com",
+	"node10.nexusearth.com",
+	"node10.mercuryminer.com",
+	"node10.nxs.efficienthash.com",
+	"node11.nexusearth.com",
+	"node11.mercuryminer.com",
+	"node11.nxs.efficienthash.com",
+	"node12.nexusearth.com",
+	"node12.mercuryminer.com",
+	"node12.nxs.efficienthash.com",
+	"node13.nexusearth.com",
+	"node13.mercuryminer.com"
+	"node13.nxs.efficienthash.com",
 };
 
 /** Declarations for the DNS Seed Nodes. **/
@@ -290,7 +303,7 @@ void ThreadUnifiedSamples(void* parg)
 vector<Net::CAddress> DNS_Lookup(const char* DNS_Seed[])
 {
 	vector<Net::CAddress> vNodes;
-    for (unsigned int seed = 0; seed < (fTestNet ? 1 : 28); seed++)
+    for (unsigned int seed = 0; seed < (fTestNet ? 1 : 41); seed++)
 	{
 		printf("%u Host: %s\n", seed, DNS_Seed[seed]);
         vector<Net::CNetAddr> vaddr;
