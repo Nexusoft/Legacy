@@ -70,7 +70,7 @@ const char* DNS_SeedNodes[] =
 	"node12.mercuryminer.com",
 	"node12.nxs.efficienthash.com",
 	"node13.nexusearth.com",
-	"node13.mercuryminer.com"
+	"node13.mercuryminer.com",
 	"node13.nxs.efficienthash.com",
 };
 
@@ -303,7 +303,7 @@ void ThreadUnifiedSamples(void* parg)
 vector<Net::CAddress> DNS_Lookup(const char* DNS_Seed[])
 {
 	vector<Net::CAddress> vNodes;
-    for (unsigned int seed = 0; seed < (fTestNet ? 1 : 41); seed++)
+    for (unsigned int seed = 0; seed < (fTestNet ? 1 : 40); seed++)
 	{
 		printf("%u Host: %s\n", seed, DNS_Seed[seed]);
         vector<Net::CNetAddr> vaddr;
