@@ -72,7 +72,7 @@ namespace LLD
 		SectorDatabase(std::string strName, std::string strKeychain, const char* pszMode="r+")
 		{
 			strKeychainRegistry = strKeychain;
-			strBaseLocation = GetDefaultDataDir().string() + "/datachain/"; 
+			strBaseLocation = GetDataDir().string() + "/datachain/"; 
 			strBaseName = strName;
 			
 			/** Read only flag when instantiating new database. **/
