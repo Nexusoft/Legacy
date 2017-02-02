@@ -6,10 +6,15 @@
 namespace LLP
 {
 	
-		/** Base Class to create a Custom LLP Server. Protocol Type class must inherit Connection,
-		and provide a ProcessPacket method. Optional Events by providing GenericEvent method. **/
+
+		
+	/* Base Class to create a Custom LLP Server. Protocol Type class must inherit Connection,
+	 * and provide a ProcessPacket method. Optional Events by providing GenericEvent method. 
+	 */
 	template <class ProtocolType> class Client
 	{
+		Service_t IO_SERVICE;
+		
 	public:
 		unsigned int MAX_THREADS;
 		
@@ -24,11 +29,36 @@ namespace LLP
 				DATA_THREADS.push_back(new DataThread<ProtocolType>(index, fDDOS, rScore, cScore, nTimeout));
 		}
 		
-		void AddConnection(ProtocolType CONNECTION)
+		bool AddConnection(std::string strAdress, std::string strPort)
 		{
-			unsigned int nIndex = FindThread();
+			try
+			{
+				using boost::asio::ip::tcp;
+				
+				tcp::resolver 			  RESOLVER(IO_SERVICE);
+				tcp::resolver::query      QUERY   (tcp::v4(), strAddress.c_str(), strPort.c_str());
+				tcp::resolver::iterator   ADDRESS = RESOLVER.resolve(QUERY);
+				
+				Socket_t CONNECTION = Socket_t(new tcp::socket(IO_SERVICE));
+				CONNECTION -> connect(*ADDRESS, ERROR_HANDLE);
+				
+				if(ERROR_HANDLE)
+					return false;
+				
+				CONNECTED = true;
+				TIMER.Start();
+				
+				unsigned int nIndex = FindThread();
+				DATA_THREADS[nIndex]->AddConnection(CONNECTION);
+				
+				if(GetArgs("-verbose", 0) >= 3)
+					printf("***** Connected to %s:%s::Assigned to thread %u\n", strAddress.c_str(), strPort.c_str(), nIndex);
+				
+				return true;
+			}
+			catch(...){ }
 			
-			DATA_THREADS[nIndex]->AddConnection(CONNECTION);
+			return false;
 		}
 		
 	private:

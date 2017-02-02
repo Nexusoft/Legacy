@@ -25,15 +25,15 @@ extern bool fIsTimeSeed;
 extern bool fIsSeedNode;
 
 
-/** Offset to be added to your Local Time. This counteracts the effects of changing your clock by will or accident. **/
+/* Offset to be added to your Local Time. This counteracts the effects of changing your clock by will or accident. */
 extern int UNIFIED_LOCAL_OFFSET;
 
 
-/** Offset calculated from average Unified Offset collected over time. **/
+/* Offset calculated from average Unified Offset collected over time. */
 extern int UNIFIED_AVERAGE_OFFSET;
 
 
-/** Vector to Contain list of Unified Time Offset from Time Seeds, Seed Nodes, and Peers. **/
+/* Vector to Contain list of Unified Time Offset from Time Seeds, Seed Nodes, and Peers. */
 extern std::vector<int> UNIFIED_TIME_DATA;
 
 extern std::vector<Net::CAddress> SEED_NODES;
@@ -41,8 +41,8 @@ extern std::vector<Net::CAddress> TRUSTED_NODES;
 
 
 
-/** The Maximum Seconds that a Clock can be Off. This is set to account
-    for Network Propogation Times **/
+/* The Maximum Seconds that a Clock can be Off. This is set to account
+    for Network Propogation Times and Normal Hardware level clock drifting. */
 extern int MAX_UNIFIED_DRIFT;
 
 

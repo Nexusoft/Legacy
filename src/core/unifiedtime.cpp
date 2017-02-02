@@ -70,9 +70,14 @@ const char* DNS_SeedNodes_Testnet[] =
 /** Seed Nodes for Unified Time. **/
 vector<string> SEEDS;
 
-/** Baseline Maximum Values for Unified Time. **/
-int MAX_UNIFIED_DRIFT   = 1;
-int MAX_UNIFIED_SAMPLES = 100;
+/* Maximum number of seconds that a clock can be from one another. */
+int MAX_UNIFIED_DRIFT		= 1;
+
+/* Maximum numver of samples in the Unified Time moving Average. */
+int MAX_UNIFIED_SAMPLES		= 200;
+
+/* Maximum Frequency in which the Node will be looking up time samples. */
+int MAX_UNIFIED_FREQUENCY	= 600;
 
 
 /** Gets the UNIX Timestamp from your Local Clock **/
@@ -89,12 +94,12 @@ void InitializeUnifiedTime()
 {
 	printf("***** Unified Time Initialized to %i\n", UNIFIED_AVERAGE_OFFSET);
 	
-	CreateThread(ThreadTimeRegulator,  NULL);
+	//CreateThread(ThreadTimeRegulator,  NULL); TODO: Make this more intelligent with multiple tries to ensure that computer lagging won't give it false readings
 	CreateThread(ThreadUnifiedSamples, NULL);
 }
 
 
-/** Calculate the Average Unified Time. Called after Time Data is Added **/
+/* Calculate the Average Unified Time. Called after Time Data is Added */
 int GetUnifiedAverage()
 {
 	if(UNIFIED_TIME_DATA.empty())
@@ -107,12 +112,13 @@ int GetUnifiedAverage()
 	return round(nAverage / (double) std::min(MAX_UNIFIED_SAMPLES, (int)UNIFIED_TIME_DATA.size()));
 }
 
-/* This method will make sure the clock isn't changed at any point. */
+/* This method will make sure the clock isn't changed at any point. 
+	TODO: Assess the ways this can be attacked and make more intelligent to distinguish a real attacker from a real user. */
 void ThreadTimeRegulator(void* parg)
 {
 	while(!fShutdown)
 	{
-		/** Regulate the Clock while Waiting, and Break if the Clock Changes. **/
+		/* Regulate the Clock while Waiting, and Break if the Clock Changes. */
 		int64 nTimestamp = GetLocalTimestamp();
 		Sleep(10000);
 		
@@ -141,7 +147,6 @@ void ThreadUnifiedSamples(void* parg)
 	if(SEED_NODES.empty()) {
 		Sleep(10000);
 		
-		fTimeUnified = true;
 		ThreadUnifiedSamples(parg);
 	}
 	
@@ -159,21 +164,21 @@ void ThreadUnifiedSamples(void* parg)
 		try
 		{
 		
-			/** Increment the Time Seed Connection Iterator. **/
+			/* Increment the Time Seed Connection Iterator. */
 			nIterator++;
 			
 			
-			/** Reset the ITerator if out of Seeds. **/
+			/* Reset the ITerator if out of Seeds. */
 			if(nIterator == SEEDS.size())
 			   nIterator = 0;
 				
 				
-			/** Connect to the Next Seed in the Iterator. **/
+			/* Connect to the Next Seed in the Iterator. */
 			SERVER.IP = SEEDS[nIterator];
 			SERVER.Connect();
 			
 			
-			/** If the Core LLP isn't connected, Retry in 10 Seconds. **/
+			/* If the Core LLP isn't connected, Retry in 10 Seconds. */
 			if(!SERVER.Connected())
 			{
 				printf("***** Core LLP: Failed To Connect To %s:%s\n", SERVER.IP.c_str(), SERVER.PORT.c_str());
@@ -182,15 +187,15 @@ void ThreadUnifiedSamples(void* parg)
 			}
 
 			
-			/** Use a CMajority to Find the Sample with the Most Weight. **/
+			/* Use a CMajority to Find the Sample with the Most Weight. */
 			CMajority<int> nSamples;
 			
 			
-			/** Get 10 Samples From Server. **/
+			/* Get 10 Samples From Server. */
 			SERVER.GetOffset((unsigned int)GetLocalTimestamp());
 				
 				
-			/** Read the Samples from the Server. **/
+			/* Read the Samples from the Server. */
 			while(SERVER.Connected() && !SERVER.Errors() && !SERVER.Timeout(5))
 			{
 				Sleep(1);
@@ -224,7 +229,7 @@ void ThreadUnifiedSamples(void* parg)
 			}
 			
 			
-			/** If there are no Successful Samples, Try another Connection. **/
+			/* If there are no Successful Samples, Try another Connection. */
 			if(nSamples.Samples() == 0)
 			{
 				printf("***** Core LLP: Failed To Get Time Samples.\n");
@@ -250,7 +255,7 @@ void ThreadUnifiedSamples(void* parg)
 				}
 			}
 			
-			/** If the Moving Average is filled with samples, continue iterating to keep it moving. **/
+			/* If the Moving Average is filled with samples, continue iterating to keep it moving. */
 			if(UNIFIED_TIME_DATA.size() >= MAX_UNIFIED_SAMPLES)
 			{
 				if(UNIFIED_MOVING_ITERATOR >= MAX_UNIFIED_SAMPLES)
@@ -261,7 +266,7 @@ void ThreadUnifiedSamples(void* parg)
 			}
 				
 				
-			/** If The Moving Average is filling, move the iterator along with the Time Data Size. **/
+			/* If The Moving Average is filling, move the iterator along with the Time Data Size. */
 			else
 			{
 				UNIFIED_MOVING_ITERATOR = UNIFIED_TIME_DATA.size();
@@ -269,7 +274,7 @@ void ThreadUnifiedSamples(void* parg)
 			}
 			
 
-			/** Update Iterators and Flags. **/
+			/* Update Iterators and Flags. */
 			if((UNIFIED_TIME_DATA.size() > 0))
 			{
 				fTimeUnified = true;
@@ -279,8 +284,8 @@ void ThreadUnifiedSamples(void* parg)
 					printf("***** %i Iterator | %i Offset | %i Current | %"PRId64"\n", UNIFIED_MOVING_ITERATOR, nSamples.Majority(), UNIFIED_AVERAGE_OFFSET, GetUnifiedTimestamp());
 			}
 			
-			/* Sleep for 5 Minutes Between Sample. */
-			Sleep(60000);
+			/* Sleep for the Unified Frequency Between Sample. */
+			Sleep(MAX_UNIFIED_FREQUENCY * 1000);
 		}
 		catch(std::exception& e){ printf("UTM ERROR: %s\n", e.what()); }
 	}

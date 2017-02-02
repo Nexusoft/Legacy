@@ -215,67 +215,6 @@ namespace LLP
 		}
 	};
 	
-	
-
-	/** Class to handle sending and receiving of LLP Packets. **/
-	class Packet
-	{
-	public:
-		Packet() { SetNull(); }
-	
-		/** Components of an LLP Packet.
-			BYTE 0       : Header
-			BYTE 1 - 5   : Length
-			BYTE 6 - End : Data      **/
-		unsigned char    HEADER;
-		unsigned int     LENGTH;
-		std::vector<unsigned char> DATA;
-		
-		
-		/** Set the Packet Null Flags. **/
-		inline void SetNull()
-		{
-			HEADER   = 255;
-			LENGTH   = 0;
-			
-			DATA.clear();
-		}
-		
-		
-		/** Packet Null Flag. Header = 255. **/
-		bool IsNull() { return (HEADER == 255); }
-		
-		
-		/** Determine if a packet is fully read. **/
-		bool Complete() { return (Header() && DATA.size() == LENGTH); }
-		
-		
-		/** Determine if header is fully read **/
-		bool Header() { return IsNull() ? false : (HEADER < 128 && LENGTH > 0) || (HEADER >= 128 && HEADER < 255 && LENGTH == 0); }
-		
-		
-		/** Sets the size of the packet from Byte Vector. **/
-		void SetLength(std::vector<unsigned char> BYTES) { LENGTH = (BYTES[0] << 24) + (BYTES[1] << 16) + (BYTES[2] << 8) + (BYTES[3] ); }
-		
-		
-		/** Serializes class into a Byte Vector. Used to write Packet to Sockets. **/
-		std::vector<unsigned char> GetBytes()
-		{
-			std::vector<unsigned char> BYTES(1, HEADER);
-			
-			/** Handle for Data Packets. **/
-			if(HEADER < 128)
-			{
-				BYTES.push_back((LENGTH >> 24)); BYTES.push_back((LENGTH >> 16));
-				BYTES.push_back((LENGTH >> 8));  BYTES.push_back(LENGTH);
-				
-				BYTES.insert(BYTES.end(),  DATA.begin(), DATA.end());
-			}
-			
-			return BYTES;
-		}
-	};
-	
 
 	/* Base Template class to handle outgoing / incoming LLP data for both Client and Server. */
 	template<typename PacketType = Packet> class Connection
@@ -351,7 +290,7 @@ namespace LLP
 		
 		/* Non-Blocking Packet reader to build a packet from TCP Connection.
 			This keeps thread from spending too much time for each Connection. */
-		void ReadPacket()
+		virtual void ReadPacket()
 		{
 				
 			/* Handle Reading Packet Type Header. */
@@ -426,6 +365,84 @@ namespace LLP
 		/* Lower level network communications: Write. Interacts with OS sockets. */
 		void Write(std::vector<unsigned char> DATA) { if(Errors()) return; TIMER.Reset(); boost::asio::write(*SOCKET, boost::asio::buffer(DATA, DATA.size()), ERROR_HANDLE); }
 
+	};
+	
+	
+	/* Base Template class to handle outgoing / incoming LLP data for both Client and Server. */
+	class NexusConnection : public Connection<NexusPacket>
+	{
+	protected:
+		/* 
+			Virtual Event Function to be Overridden allowing Custom Read Events. 
+			Each event fired on Header Complete, and each time data is read to fill packet.
+			Useful to check Header length to maximum size of packet type for DDOS protection, 
+			sending a keep-alive ping while downloading large files, etc.
+			
+			LENGTH == 0: General Events
+			LENGTH  > 0 && PACKET: Read nSize Bytes into Data Packet
+		*/
+		virtual void Event(unsigned char EVENT, unsigned int LENGTH = 0){ }
+		
+		/* Virtual Process Function. To be overridden with your own custom packet processing. */
+		virtual bool ProcessPacket(){ }
+	public:
+		
+		/* Handle a Header only Packet. */
+		void PushPacket(std::string strMessage)
+		{
+			NexusPacket RESPONSE;
+			RESPONSE.MESSAGE = strMessage;
+			
+			this->WritePacket(RESPONSE);
+		}
+		
+		/* Serialize the Packets into a Bytes Stream and Send it off to Endpoint. */
+		void PushPacket(std::string strMessage, CDataStream ssData)
+		{
+			NexusPacket RESPONSE;
+			RESPONSE.MESSAGE = strMessage;
+
+			RESPONSE.SetData(ssData);
+			RESPONSE.SetChecksum();
+			
+			this->WritePacket(RESPONSE);
+		}
+
+		/* Non-Blocking Packet reader to build a packet from TCP Connection.
+		 * This keeps thread from spending too much time for each Connection. 
+		 */
+		void ReadPacket()
+		{
+			if(!INCOMING.Complete())
+			{
+				/** Handle Reading Packet Length Header. **/
+				if(SOCKET->available() >= 24 && INCOMING.IsNull())
+				{
+					std::vector<unsigned char> BYTES(24, 0);
+					if(Read(BYTES, 24) == 24)
+					{
+						CDataStream ssHeader(BYTES, SER_NETWORK, MIN_PROTO_VERSION),
+						ssHeader >> INCOMING;
+						
+						Event(EVENT_HEADER);
+					}
+				}
+					
+				/** Handle Reading Packet Data. **/
+				unsigned int nAvailable = SOCKET->available();
+				if(nAvailable > 0 && !INCOMING.IsNull() && INCOMING.DATA.size() < INCOMING.LENGTH)
+				{
+					std::vector<unsigned char> DATA( std::min(nAvailable, (unsigned int)(INCOMING.LENGTH - INCOMING.DATA.size())), 0);
+					unsigned int nRead = Read(DATA, DATA.size());
+					
+					if(nRead == DATA.size())
+					{
+						INCOMING.DATA.insert(INCOMING.DATA.end(), DATA.begin(), DATA.end());
+						Event(EVENT_PACKET, nRead);
+					}
+				}
+			}
+		}
 	};
 }
 
