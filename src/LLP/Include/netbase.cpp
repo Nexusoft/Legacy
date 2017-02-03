@@ -7,17 +7,17 @@
 *******************************************************************************************/
 
 #include "netbase.h"
-#include "../util/util.h"
+#include "../../LLU/util.h"
 
 #ifndef WIN32
 #include <sys/fcntl.h>
 #endif
 
-#include "../util/strlcpy.h"
+#include "../../LLU/strlcpy.h"
 
 using namespace std;
 
-namespace Net
+namespace LLP
 {
 	// Settings
 	int fUseProxy = false;
@@ -584,7 +584,7 @@ namespace Net
 
 	uint64 CNetAddr::GetHash() const
 	{
-		return SK64(&ip[0], &ip[16]);
+		return LLH::SK64(&ip[0], &ip[16]);
 	}
 
 	void CNetAddr::print() const

@@ -70,7 +70,7 @@
 #define ADDRMAN_TRIED_ENTRIES_INSPECT_ON_EVICT 4
 
 // how old addresses can maximally be
-#define ADDRMAN_HORIZON_DAYS 30
+#define ADDRMAN_HORIZON_DAYS 90
 
 // after how many failed attempts we give up on a new node
 #define ADDRMAN_RETRIES 11

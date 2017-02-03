@@ -9,7 +9,7 @@
 #ifndef NEXUS_UTIL_H
 #define NEXUS_UTIL_H
 
-#include "../hash/templates.h"
+#include "../LLH/SK.h"
 
 #ifndef WIN32
 #include <sys/types.h>
@@ -658,7 +658,7 @@ uint512 SerializeHash(const T& obj, int nType=SER_GETHASH, int nVersion=PROTOCOL
     CDataStream ss(nType, nVersion);
     ss.reserve(10000);
     ss << obj;
-    return SK512(ss.begin(), ss.end());
+    return LLH::SK256(ss.begin(), ss.end());
 }
 
 

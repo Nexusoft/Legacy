@@ -9,8 +9,8 @@
 #ifndef NEXUS_CORE_H
 #define NEXUS_CORE_H
 
-#include "../util/bignum.h"
-#include "../net/net.h"
+#include "../LLT/bignum.h"
+#include "../LLP/Include/net.h"
 #include "../wallet/script.h"
 
 #ifdef WIN32
@@ -32,7 +32,7 @@ class CDataStream;
 /** Net Namespace: Lowest Level Below Core Namespace. Handles all the raw
     Data through the network sockets in Nexus Network, and organizes
     into usable objects that are fed into the Core Namespace.	**/
-namespace Net { class CNode; }
+namespace LLP { class CNode; }
 
 
 /** Wallet Namespace: Outer layer on top of Core Namespace.
@@ -204,7 +204,7 @@ namespace Core
 	const CBlockIndex* GetLastChannelIndex(const CBlockIndex* pindex, int nChannel);
 	int GetNumBlocksOfPeers();
 	bool IsInitialBlockDownload();
-	bool ProcessBlock(Net::CNode* pfrom, CBlock* pblock);
+	bool ProcessBlock(LLP::CNode* pfrom, CBlock* pblock);
 	bool CheckDiskSpace(uint64 nAdditionalBytes = 0);
 	FILE* OpenBlockFile(unsigned int nFile, unsigned int nBlockPos, const char* pszMode);
 	FILE* AppendBlockFile(unsigned int& nFileRet);
@@ -244,10 +244,10 @@ namespace Core
 	
 	/** MESSAGE.CPP **/
 	std::string GetWarnings(std::string strFor);
-	bool AlreadyHave(LLD::CIndexDB& indexdb, const Net::CInv& inv);
-	bool ProcessMessage(Net::CNode* pfrom, std::string strCommand, CDataStream& vRecv);
-	bool ProcessMessages(Net::CNode* pfrom);
-	bool SendMessages(Net::CNode* pto, bool fSendTrickle);
+	bool AlreadyHave(LLD::CIndexDB& indexdb, const LLP::CInv& inv);
+	bool ProcessMessage(LLP::CNode* pfrom, std::string strCommand, CDataStream& vRecv);
+	bool ProcessMessages(LLP::CNode* pfrom);
+	bool SendMessages(LLP::CNode* pto, bool fSendTrickle);
 	
 	
 	/** MINING.CPP **/
@@ -1449,7 +1449,7 @@ namespace Core
 
 			// Write index header
 			unsigned char pchMessageStart[4];
-			Net::GetMessageStart(pchMessageStart);
+			LLP::GetMessageStart(pchMessageStart);
 			unsigned int nSize = fileout.GetSerializeSize(*this);
 			fileout << FLATDATA(pchMessageStart) << nSize;
 

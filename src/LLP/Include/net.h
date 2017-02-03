@@ -18,7 +18,7 @@
 #include <arpa/inet.h>
 #endif
 
-#include "../util/mruset.h"
+#include "../../LLU/mruset.h"
 #include "netbase.h"
 #include "protocol.h"
 #include "addrman.h"
@@ -45,7 +45,7 @@ enum threadId
 
 extern boost::array<int, THREAD_MAX> vnThreadsRunning;
 
-namespace Net
+namespace LLP
 {
 	
 	class CRequestTracker;
@@ -356,7 +356,7 @@ namespace Net
 			memcpy((char*)&vSend[nHeaderStart] + offsetof(CMessageHeader, nMessageSize), &nSize, sizeof(nSize));
 
 			// Set the checksum
-			uint512 hash = SK512(vSend.begin() + nMessageStart, vSend.end());
+			uint512 hash = LLH::SK256(vSend.begin() + nMessageStart, vSend.end());
 			unsigned int nChecksum = 0;
 			memcpy(&nChecksum, &hash, sizeof(nChecksum));
 			assert(nMessageStart - nHeaderStart >= offsetof(CMessageHeader, nChecksum) + sizeof(nChecksum));

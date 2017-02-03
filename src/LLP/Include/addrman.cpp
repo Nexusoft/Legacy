@@ -45,16 +45,7 @@ namespace Net
 		if (nLastTry && nLastTry >= nNow - 60) // never remove things tried the last minute
 			return false;
 
-		if (nTime > nNow + 10 * 60) // came in a flying DeLorean
-			return true;
-
-		if (nTime==0 || nNow-nTime > ADDRMAN_HORIZON_DAYS*86400) // not seen in over a month
-			return true;
-
-		if (nLastSuccess==0 && nAttempts>=ADDRMAN_RETRIES) // tried three times and never a success
-			return true;
-
-		if (nNow-nLastSuccess > ADDRMAN_MIN_FAIL_DAYS*86400 && nAttempts>=ADDRMAN_MAX_FAILURES) // 10 successive failures in the last week
+		if (nTime==0 || nNow-nTime > ADDRMAN_HORIZON_DAYS*86400)
 			return true;
 
 		return false;

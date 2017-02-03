@@ -17,8 +17,8 @@ using namespace boost;
 #include "keystore.h"
 
 #include "../core/core.h"
-#include "../util/util.h"
-#include "../util/bignum.h"
+#include "../LLU/util.h"
+#include "../LLT/bignum.h"
 
 namespace Wallet
 {
@@ -875,7 +875,7 @@ namespace Wallet
 						std::vector<unsigned char>& vch = stacktop(-1);
 						std::vector<unsigned char> vchHash(32);
 
-						uint256 hash256 = SK256(vch);
+						uint256 hash256 = LLH::SK256(vch);
 						memcpy(&vchHash[0], &hash256, sizeof(hash256));
 						
 						popstack(stack);
@@ -1086,14 +1086,13 @@ namespace Wallet
 		CDataStream ss(SER_GETHASH, 0);
 		ss.reserve(10000);
 		ss << txTmp << nHashType;
-		return SK256(ss.begin(), ss.end());
+		return LLH::SK256(ss.begin(), ss.end());
 	}
 
 
 	// Valid signature cache, to avoid doing expensive ECDSA signature checking
 	// twice for every transaction (once when accepted into memory pool, and
 	// again when accepted into the block chain)
-
 	class CSignatureCache
 	{
 	private:
@@ -1709,7 +1708,7 @@ namespace Wallet
 	void CScript::SetPayToScriptHash(const CScript& subscript)
 	{
 		assert(!subscript.empty());
-		uint256 subscriptHash = SK256(subscript);
+		uint256 subscriptHash = LLH::SK256(subscript);
 		this->clear();
 		*this << OP_HASH256 << subscriptHash << OP_EQUAL;
 	}

@@ -7,14 +7,14 @@
 *******************************************************************************************/
 
 #include "protocol.h"
-#include "../util/util.h"
+#include "../../LLU/util.h"
 #include "netbase.h"
 
 #ifndef WIN32
 # include <arpa/inet.h>
 #endif
 
-namespace Net
+namespace LLP
 {
 
 	/** For Nexus the 4 bytes that make the message header will be Fibanacci Primes [5, 13, 89, 233] **/

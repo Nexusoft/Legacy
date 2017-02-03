@@ -3,7 +3,7 @@
 
 #include <boost/thread.hpp>
 #include <fstream>
-#include "../util/util.h"
+#include "../../LLU/util.h"
 
 #define MUTEX_LOCK(a) boost::lock_guard<boost::mutex> lock(a)
 
