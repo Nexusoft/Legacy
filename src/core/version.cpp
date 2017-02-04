@@ -11,8 +11,14 @@
 
 /** Used for Visual Reference Only **/
 const std::string CLIENT_NAME("Nexus");
-const std::string CLIENT_BUILD("0.2.2.3 - LLD Stable");
-const std::string CLIENT_DATE("January 5th, 2017");
+
+#ifdef USE_LLD
+const std::string CLIENT_BUILD("0.3.0.0 - LLD Tertium");
+#else
+const std::string CLIENT_BUILD("0.3.0.0 - Oracle Tertium");
+#endif
+
+const std::string CLIENT_DATE("February 3rd, 2017");
 
 /** Used to determine the current features available on the local database */
  const int DATABASE_VERSION =
