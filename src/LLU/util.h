@@ -658,7 +658,7 @@ uint512 SerializeHash(const T& obj, int nType=SER_GETHASH, int nVersion=PROTOCOL
     CDataStream ss(nType, nVersion);
     ss.reserve(10000);
     ss << obj;
-    return LLH::SK256(ss.begin(), ss.end());
+    return LLH::SK512(ss.begin(), ss.end());
 }
 
 
