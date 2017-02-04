@@ -2083,6 +2083,30 @@ namespace Net
 		return result;
 	}
 
+	/* List the trust keys this wallet.dat file contains. */
+	Value listtrustkeys(const Array& params, bool fHelp)
+	{
+		if (fHelp || params.size() > 0)
+			throw runtime_error(
+				"listtrustkeys\n"
+				"List all the Trust Keys this Node owns.\n");
+
+		
+		/** Check each Trust Key to See if we Own it if there is no Key. **/
+		Object result;
+		for(std::map<uint576, Core::CTrustKey>::iterator i = Core::cTrustPool.mapTrustKeys.begin(); i != Core::cTrustPool.mapTrustKeys.end(); ++i)
+		{
+				
+			/** Check the Wallet and Trust Keys in Trust Pool to see if we own any keys. **/
+			Wallet::NexusAddress address;
+			address.SetPubKey(i->second.vchPubKey);
+			if(pwalletMain->HaveKey(address))
+				result.push_back(Pair(address.ToString(), i->second.Expired(Core::pindexBest->GetBlockTime()) ? "TRUE" : "FALSE"));
+			
+		}
+
+		return result;
+	}
 
 	// Nexus: repair wallet
 	Value repairwallet(const Array& params, bool fHelp)
@@ -2358,6 +2382,7 @@ namespace Net
 		{ "dumpprivkey",            &dumpprivkey,            false },
 		{ "importprivkey",          &importprivkey,          false },
 		{ "reservebalance",         &reservebalance,         false },
+		{ "listtrustkeys",          &listtrustkeys,          false },
 		{ "checkwallet",            &checkwallet,            false },
 		{ "repairwallet",           &repairwallet,           false },
 		{ "makekeypair",            &makekeypair,            false }
