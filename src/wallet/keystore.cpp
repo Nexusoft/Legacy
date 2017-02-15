@@ -91,7 +91,7 @@ namespace Wallet
 				const std::vector<unsigned char> &vchPubKey = (*mi).second.first;
 				const std::vector<unsigned char> &vchCryptedSecret = (*mi).second.second;
 				CSecret vchSecret;
-				if(!DecryptSecret(vMasterKeyIn, vchCryptedSecret, SK576(vchPubKey.begin(), vchPubKey.end()), vchSecret))
+				if(!DecryptSecret(vMasterKeyIn, vchCryptedSecret, LLH::SK576(vchPubKey.begin(), vchPubKey.end()), vchSecret))
 					return false;
 				if (vchSecret.size() != 72)
 					return false;
@@ -120,7 +120,7 @@ namespace Wallet
 			std::vector<unsigned char> vchCryptedSecret;
 			std::vector<unsigned char> vchPubKey = key.GetPubKey();
 			bool fCompressed;
-			if (!EncryptSecret(vMasterKey, key.GetSecret(fCompressed), SK576(vchPubKey.begin(), vchPubKey.end()), vchCryptedSecret))
+			if (!EncryptSecret(vMasterKey, key.GetSecret(fCompressed), LLH::SK576(vchPubKey.begin(), vchPubKey.end()), vchCryptedSecret))
 				return false;
 
 			if (!AddCryptedKey(key.GetPubKey(), vchCryptedSecret))
@@ -155,7 +155,7 @@ namespace Wallet
 				const std::vector<unsigned char> &vchPubKey = (*mi).second.first;
 				const std::vector<unsigned char> &vchCryptedSecret = (*mi).second.second;
 				CSecret vchSecret;
-				if (!DecryptSecret(vMasterKey, vchCryptedSecret, SK576(vchPubKey.begin(), vchPubKey.end()), vchSecret))
+				if (!DecryptSecret(vMasterKey, vchCryptedSecret, LLH::SK576(vchPubKey.begin(), vchPubKey.end()), vchSecret))
 					return false;
 				if (vchSecret.size() != 72)
 					return false;
@@ -200,7 +200,7 @@ namespace Wallet
 				const std::vector<unsigned char> vchPubKey = key.GetPubKey();
 				std::vector<unsigned char> vchCryptedSecret;
 				bool fCompressed;
-				if (!EncryptSecret(vMasterKeyIn, key.GetSecret(fCompressed), SK576(vchPubKey.begin(), vchPubKey.end()), vchCryptedSecret))
+				if (!EncryptSecret(vMasterKeyIn, key.GetSecret(fCompressed), LLH::SK576(vchPubKey.begin(), vchPubKey.end()), vchCryptedSecret))
 					return false;
 				if (!AddCryptedKey(vchPubKey, vchCryptedSecret))
 					return false;
