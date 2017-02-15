@@ -64,7 +64,7 @@ namespace Wallet
 			return false;
 		if (!fFileBacked)
 			return true;
-		return CWalletDB(strWalletFile).WriteCScript(SK256(redeemScript), redeemScript);
+		return CWalletDB(strWalletFile).WriteCScript(LLH::SK256(redeemScript), redeemScript);
 	}
 
 	// Nexus: optional setting to unlock wallet for block minting only;
@@ -1563,7 +1563,7 @@ namespace Wallet
 			if (!walletdb.ReadPool(nIndex, keypool))
 				throw runtime_error("ReserveKeyFromKeyPool() : read failed");
 				
-			if (!HaveKey(SK256(keypool.vchPubKey)))
+			if (!HaveKey(LLH::SK256(keypool.vchPubKey)))
 				throw runtime_error("ReserveKeyFromKeyPool() : unknown key in key pool");
 				
 			assert(!keypool.vchPubKey.empty());

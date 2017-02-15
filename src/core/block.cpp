@@ -922,7 +922,7 @@ namespace Core
 			// Sign
 			const std::vector<unsigned char>& vchPubKey = vSolutions[0];
 			Wallet::CKey key;
-			if (!keystore.GetKey(SK256(vchPubKey), key))
+			if (!keystore.GetKey(LLH::SK256(vchPubKey), key))
 				return false;
 			if (key.GetPubKey() != vchPubKey)
 				return false;

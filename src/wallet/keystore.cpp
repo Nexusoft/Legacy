@@ -35,7 +35,7 @@ namespace Wallet
 	{
 		{
 			LOCK(cs_KeyStore);
-			mapScripts[SK256(redeemScript)] = redeemScript;
+			mapScripts[LLH::SK256(redeemScript)] = redeemScript;
 		}
 		return true;
 	}

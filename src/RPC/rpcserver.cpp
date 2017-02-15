@@ -661,7 +661,7 @@ namespace Net
 		ss << strMessage;
 
 		vector<unsigned char> vchSig;
-		if (!key.SignCompact(SK256(ss.begin(), ss.end()), vchSig))
+		if (!key.SignCompact(LLH::SK256(ss.begin(), ss.end()), vchSig))
 			throw JSONRPCError(-5, "Sign failed");
 
 		return EncodeBase64(&vchSig[0], vchSig.size());
@@ -693,7 +693,7 @@ namespace Net
 		ss << strMessage;
 
 		Wallet::CKey key;
-		if (!key.SetCompactSignature(SK256(ss.begin(), ss.end()), vchSig))
+		if (!key.SetCompactSignature(LLH::SK256(ss.begin(), ss.end()), vchSig))
 			return false;
 
 		return (Wallet::NexusAddress(key.GetPubKey()) == addr);
@@ -1246,7 +1246,7 @@ namespace Net
 		Wallet::CScript inner;
 		inner.SetMultisig(nRequired, pubkeys);
 
-		uint256 scriptHash = SK256(inner);
+		uint256 scriptHash = LLH::SK256(inner);
 		Wallet::CScript scriptPubKey;
 		scriptPubKey.SetPayToScriptHash(inner);
 		pwalletMain->AddCScript(inner);
