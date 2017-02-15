@@ -134,7 +134,7 @@ namespace LLP
 		/*Set the Packet Checksum Data. */
 		void SetChecksum()
 		{
-			uint512 hash = SK512(DATA.begin(), DATA.end());
+			uint512 hash = LLH::SK512(DATA.begin(), DATA.end());
 			memcpy(&CHECKSUM, &hash, sizeof(CHECKSUM));
 		}
 		
@@ -162,7 +162,7 @@ namespace LLP
 				return error("Nexus Packet (%s, %u bytes) : Message too Large\n", COMMAND.c_str(), LENGTH);
 
 			/* Double check the Message Checksum. */
-			uint512 hash = SK512(DATA.begin(), DATA.end());
+			uint512 hash = LLH::SK512(DATA.begin(), DATA.end());
 			unsigned int nChecksum = 0;
 			memcpy(&nChecksum, &hash, sizeof(nChecksum));
 			if (nChecksum != CHECKSUM)
