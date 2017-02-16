@@ -1,8 +1,10 @@
 /*******************************************************************************************
  
-			Hash(BEGIN(Satoshi[2010]), END(Sunny[2012])) == Videlicet[2014] ++
-   
- [Learn and Create] Viz. http://www.opensource.org/licenses/mit-license.php
+			Hash(BEGIN(Satoshi[2010]), END(Sunny[2013])) == Videlicet[2014] ++
+			
+			(c) Copyright Nexus Developers 2014 - 2017
+			
+			http://www.opensource.org/licenses/mit-license.php
   
 *******************************************************************************************/
 
@@ -38,7 +40,7 @@ const char* DNS_SeedNodes[] =
 	"node2.nexusearth.com",
 	"node2.mercuryminer.com",
 	"node2.nexusminingpool.com",
-        "node2.nxs.efficienthash.com",
+	"node2.nxs.efficienthash.com",
 	"node3.nexusearth.com",
 	"node3.mercuryminer.com",
 	"node3.nxs.efficienthash.com",
@@ -92,14 +94,11 @@ int MAX_UNIFIED_SAMPLES		= 200;
 /* Maximum Frequency in which the Node will be looking up time samples. */
 int MAX_UNIFIED_FREQUENCY	= 600;
 
-
 /** Gets the UNIX Timestamp from your Local Clock **/
 int64 GetLocalTimestamp(){ return time(NULL); }
 
-
 /** Gets the UNIX Timestamp from the Nexus Network **/
 int64 GetUnifiedTimestamp(){ return GetLocalTimestamp() + UNIFIED_AVERAGE_OFFSET; }
-
 
 /** Called from Thread Time Regulator.
     This keeps time keeping separate from regular processing. **/

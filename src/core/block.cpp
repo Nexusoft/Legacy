@@ -780,7 +780,7 @@ namespace Core
 			
 			
 		/** Check the Coinbase Transactions in Block Version 3. **/
-		if(IsProofOfWork() && nHeight > 0 && nVersion >= 3)
+		if(IsProofOfWork() && nHeight > 0 && nVersion >= 3 && nVersion < 5)
 		{
 			unsigned int nSize = vtx[0].vout.size();
 
@@ -801,6 +801,22 @@ namespace Core
 			if (vtx[0].vout[nSize - 1].nValue != GetCoinbaseReward(pindexPrev, GetChannel(), 2))
 				return error("AcceptBlock() : developer reward mismatch %"PRId64" : %"PRId64"\n", vtx[0].vout[2].nValue, GetCoinbaseReward(pindexPrev, GetChannel(), 2));
 					
+		}
+		
+		/* New Network Rule at Tritium, Cannot include ambassador or developer transaction. */
+		else if(nVersion >= 5)
+		{
+			unsigned int nSize = vtx[0].vout.size();
+
+			/** Add up the Miner Rewards from Coinbase Tx Outputs. **/
+			int64 nMiningReward = 0;
+			for(int nIndex = 0; nIndex < nSize; nIndex++)
+				nMiningReward += vtx[0].vout[nIndex].nValue;
+					
+			/** Check that the Mining Reward Matches the Coinbase Calculations. **/
+			if (nMiningReward != GetCoinbaseReward(pindexPrev, GetChannel(), 0))
+				return error("AcceptBlock() : miner reward mismatch %"PRId64" : %"PRId64"", nMiningReward, GetCoinbaseReward(pindexPrev, GetChannel(), 0));
+			
 		}
 		
 		/** Check the Proof of Stake Claims. **/

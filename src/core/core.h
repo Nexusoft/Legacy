@@ -650,7 +650,7 @@ namespace Core
 		}
 		
 		/** Hash of a Trust Key to Verify the Key's Root. **/
-		uint512 GetHash() const { return SK512(vchPubKey, BEGIN(hashGenesisBlock), END(nGenesisTime)); }
+		uint512 GetHash() const { return LLH::SK512(vchPubKey, BEGIN(hashGenesisBlock), END(nGenesisTime)); }
 		
 		/** Determine how old the Trust Key is From Timestamp. **/
 		uint64 Age(unsigned int nTime) const;
@@ -1400,7 +1400,7 @@ namespace Core
 				for (int i = 0; i < nSize; i += 2)
 				{
 					int i2 = std::min(i+1, nSize-1);
-					vMerkleTree.push_back(SK512(BEGIN(vMerkleTree[j+i]),  END(vMerkleTree[j+i]),
+					vMerkleTree.push_back(LLH::SK512(BEGIN(vMerkleTree[j+i]),  END(vMerkleTree[j+i]),
 											    BEGIN(vMerkleTree[j+i2]), END(vMerkleTree[j+i2])));
 				}
 				j += nSize;
@@ -1431,9 +1431,9 @@ namespace Core
 			BOOST_FOREACH(const uint512& otherside, vMerkleBranch)
 			{
 				if (nIndex & 1)
-					hash = SK512(BEGIN(otherside), END(otherside), BEGIN(hash), END(hash));
+					hash = LLH::SK512(BEGIN(otherside), END(otherside), BEGIN(hash), END(hash));
 				else
-					hash = SK512(BEGIN(hash), END(hash), BEGIN(otherside), END(otherside));
+					hash = LLH::SK512(BEGIN(hash), END(hash), BEGIN(otherside), END(otherside));
 				nIndex >>= 1;
 			}
 			return hash;

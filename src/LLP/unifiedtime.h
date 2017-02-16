@@ -1,12 +1,15 @@
 /*******************************************************************************************
  
-			Hash(BEGIN(Satoshi[2010]), END(Sunny[2012])) == Videlicet[2014] ++
-   
- [Learn and Create] Viz. http://www.opensource.org/licenses/mit-license.php
+			Hash(BEGIN(Satoshi[2010]), END(Sunny[2013])) == Videlicet[2014] ++
+			
+			(c) Copyright Nexus Developers 2014 - 2017
+			
+			http://www.opensource.org/licenses/mit-license.php
   
 *******************************************************************************************/
-#ifndef NEXUS_UNIFIED_TIME_H
-#define NEXUS_UNIFIED_TIME_H
+
+#ifndef NEXUS_LLP_UNIFIED_TIME_H
+#define NEXUS_LLP_UNIFIED_TIME_H
 
 #include <vector>
 #include <time.h>
@@ -14,6 +17,7 @@
 #include "../net/net.h"
 #include "../wallet/db.h"
 
+/* TODO: Put in the LLP Namespace. */
 
 /** Carried on from uint1024.h **/
 typedef long long  int64;

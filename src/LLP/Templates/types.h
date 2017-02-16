@@ -1,5 +1,15 @@
-#ifndef NEXUS_LLP_TYPES_H
-#define NEXUS_LLP_TYPES_H
+/*******************************************************************************************
+ 
+			(c) Hash(BEGIN(Satoshi[2010]), END(Sunny[2012])) == Videlicet[2017] ++
+			
+			(c) Copyright Nexus Developers 2014 - 2017
+			
+			http://www.opensource.org/licenses/mit-license.php
+  
+*******************************************************************************************/
+
+#ifndef NEXUS_LLP_TEMPLATES_TYPES_H
+#define NEXUS_LLP_TEMPLATES_TYPES_H
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 
@@ -215,9 +225,68 @@ namespace LLP
 		}
 	};
 	
+		/* Class to handle sending and receiving of LLP Packets. */
+	class BytePacket
+	{
+	public:
+		BytePacket() { SetNull(); }
+	
+		/* Components of an LLP Packet.
+			BYTE 0       : Header
+			BYTE 1 - 5   : Length
+			BYTE 6 - End : Data      */
+		unsigned char    HEADER;
+		unsigned int     LENGTH;
+		std::vector<unsigned char> DATA;
+		
+		
+		/* Set the Packet Null Flags. */
+		inline void SetNull()
+		{
+			HEADER   = 255;
+			LENGTH   = 0;
+			
+			DATA.clear();
+		}
+		
+		
+		/* Packet Null Flag. Header = 255. */
+		bool IsNull() { return (HEADER == 255); }
+		
+		
+		/* Determine if a packet is fully read. */
+		bool Complete() { return (Header() && DATA.size() == LENGTH); }
+		
+		
+		/* Determine if header is fully read */
+		bool Header() { return IsNull() ? false : (HEADER < 128 && LENGTH > 0) || (HEADER >= 128 && HEADER < 255 && LENGTH == 0); }
+		
+		
+		/* Sets the size of the packet from Byte Vector. */
+		void SetLength(std::vector<unsigned char> BYTES) { LENGTH = (BYTES[0] << 24) + (BYTES[1] << 16) + (BYTES[2] << 8) + (BYTES[3] ); }
+		
+		
+		/* Serializes class into a Byte Vector. Used to write Packet to Sockets. */
+		std::vector<unsigned char> GetBytes()
+		{
+			std::vector<unsigned char> BYTES(1, HEADER);
+			
+			/* Handle for Data Packets. */
+			if(HEADER < 128)
+			{
+				BYTES.push_back((LENGTH >> 24)); BYTES.push_back((LENGTH >> 16));
+				BYTES.push_back((LENGTH >> 8));  BYTES.push_back(LENGTH);
+				
+				BYTES.insert(BYTES.end(),  DATA.begin(), DATA.end());
+			}
+			
+			return BYTES;
+		}
+	};
+	
 
 	/* Base Template class to handle outgoing / incoming LLP data for both Client and Server. */
-	template<typename PacketType = Packet> class Connection
+	template<typename PacketType = BytePacket> class Connection
 	{
 	protected:
 		
@@ -252,16 +321,20 @@ namespace LLP
 		
 		
 		/* Connected Flag. **/
-		bool CONNECTED;
+		bool fCONNECTED;
 		
 		
 		/* Flag to Determine if DDOS is Enabled. */
 		bool fDDOS;
 		
 		
+		/* Flag to Determine if the connection was made by this Node. */
+		bool fOUTGOING;
+		
+		
 		/* Connection Constructors */
-		Connection() : SOCKET(), DDOS(NULL), INCOMING(), CONNECTED(false), fDDOS(false) { INCOMING.SetNull(); }
-		Connection( Socket_t SOCKET_IN, DDOS_Filter* DDOS_IN, bool isDDOS = false) : SOCKET(SOCKET_IN), fDDOS(isDDOS), DDOS(DDOS_IN), INCOMING(), CONNECTED(false) { TIMER.Start(); }
+		Connection() : SOCKET(), DDOS(NULL), INCOMING(), fCONNECTED(false), fDDOS(false), fOUTGOING(false) { INCOMING.SetNull(); }
+		Connection( Socket_t SOCKET_IN, DDOS_Filter* DDOS_IN, bool isDDOS = false, bool fOutgoing = false) : SOCKET(SOCKET_IN), fDDOS(isDDOS), fOUTGOING(fOutgoing), DDOS(DDOS_IN), INCOMING(), fCONNECTED(false) { TIMER.Start(); }
 		
 		
 		/* Checks for any flags in the Error Handle. */
@@ -273,7 +346,7 @@ namespace LLP
 		
 		
 		/* Determines if Connected or Not. */
-		bool Connected(){ return CONNECTED; }
+		bool Connected(){ return fCONNECTED; }
 		
 		
 		/* Handles two types of packets, requests which are of header >= 128, and data which are of header < 128. */
@@ -331,11 +404,46 @@ namespace LLP
 			}
 		}
 		
+		/* Connect Socket to a Remote Endpoint. */
+		bool Connect(std::string strAddress, std::string strPort, Service_t IO_SERVICE)
+		{
+			try
+			{
+				using boost::asio::ip::tcp;
+				
+				tcp::resolver					RESOLVER(IO_SERVICE);
+				tcp::resolver::query			QUERY   (tcp::v4(), strAddress.c_str(), strPort.c_str());
+				tcp::resolver::iterator		ADDRESS = RESOLVER.resolve(QUERY);
+				
+				SOCKET = Socket_t(new tcp::socket(IO_SERVICE));
+				SOCKET -> connect(*ADDRESS, ERROR_HANDLE);
+			
+				/* Handle a Connection Error. */
+				if(ERROR_HANDLE)
+					return error("Failed to Connect to %s:%s....", strAddress.c_str(), strPort.c_str());
+				
+				/* Set Flags. */
+				fCONNECTED = true;
+				fOUTGOING = true;
+				
+				/* Start Connection Timer. */
+				TIMER.Start();
+				
+				/* Fire the Connection Event. */
+				Event(EVENT_CONNECT);
+				
+				return true;
+			}
+			catch(...){ Disconnect(); }
+			
+			return false;
+		}
+		
 		
 		/* Disconnect Socket. Cleans up memory usage to prevent "memory runs" from poor memory management. */
 		void Disconnect()
 		{
-			if(!CONNECTED)
+			if(!fCONNECTED)
 				return;
 				
 			try
@@ -345,7 +453,7 @@ namespace LLP
 			}
 			catch(...){}
 			
-			CONNECTED = false;
+			fCONNECTED = false;
 		}
 
 		std::string GetIPAddress()
@@ -365,84 +473,6 @@ namespace LLP
 		/* Lower level network communications: Write. Interacts with OS sockets. */
 		void Write(std::vector<unsigned char> DATA) { if(Errors()) return; TIMER.Reset(); boost::asio::write(*SOCKET, boost::asio::buffer(DATA, DATA.size()), ERROR_HANDLE); }
 
-	};
-	
-	
-	/* Base Template class to handle outgoing / incoming LLP data for both Client and Server. */
-	class NexusConnection : public Connection<NexusPacket>
-	{
-	protected:
-		/* 
-			Virtual Event Function to be Overridden allowing Custom Read Events. 
-			Each event fired on Header Complete, and each time data is read to fill packet.
-			Useful to check Header length to maximum size of packet type for DDOS protection, 
-			sending a keep-alive ping while downloading large files, etc.
-			
-			LENGTH == 0: General Events
-			LENGTH  > 0 && PACKET: Read nSize Bytes into Data Packet
-		*/
-		virtual void Event(unsigned char EVENT, unsigned int LENGTH = 0){ }
-		
-		/* Virtual Process Function. To be overridden with your own custom packet processing. */
-		virtual bool ProcessPacket(){ }
-	public:
-		
-		/* Handle a Header only Packet. */
-		void PushPacket(std::string strMessage)
-		{
-			NexusPacket RESPONSE;
-			RESPONSE.MESSAGE = strMessage;
-			
-			this->WritePacket(RESPONSE);
-		}
-		
-		/* Serialize the Packets into a Bytes Stream and Send it off to Endpoint. */
-		void PushPacket(std::string strMessage, CDataStream ssData)
-		{
-			NexusPacket RESPONSE;
-			RESPONSE.MESSAGE = strMessage;
-
-			RESPONSE.SetData(ssData);
-			RESPONSE.SetChecksum();
-			
-			this->WritePacket(RESPONSE);
-		}
-
-		/* Non-Blocking Packet reader to build a packet from TCP Connection.
-		 * This keeps thread from spending too much time for each Connection. 
-		 */
-		void ReadPacket()
-		{
-			if(!INCOMING.Complete())
-			{
-				/** Handle Reading Packet Length Header. **/
-				if(SOCKET->available() >= 24 && INCOMING.IsNull())
-				{
-					std::vector<unsigned char> BYTES(24, 0);
-					if(Read(BYTES, 24) == 24)
-					{
-						CDataStream ssHeader(BYTES, SER_NETWORK, MIN_PROTO_VERSION),
-						ssHeader >> INCOMING;
-						
-						Event(EVENT_HEADER);
-					}
-				}
-					
-				/** Handle Reading Packet Data. **/
-				unsigned int nAvailable = SOCKET->available();
-				if(nAvailable > 0 && !INCOMING.IsNull() && INCOMING.DATA.size() < INCOMING.LENGTH)
-				{
-					std::vector<unsigned char> DATA( std::min(nAvailable, (unsigned int)(INCOMING.LENGTH - INCOMING.DATA.size())), 0);
-					unsigned int nRead = Read(DATA, DATA.size());
-					
-					if(nRead == DATA.size())
-					{
-						INCOMING.DATA.insert(INCOMING.DATA.end(), DATA.begin(), DATA.end());
-						Event(EVENT_PACKET, nRead);
-					}
-				}
-			}
-		}
 	};
 }
 

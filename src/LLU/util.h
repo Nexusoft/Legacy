@@ -220,7 +220,7 @@ void LogStackTrace();
 
 
 /** Gets the UNIX Timestamp from the Nexus Network **/
-extern int64 GetUnifiedTimestamp();
+extern int64 GetUnifiedTimestamp(bool fAdjusted = false);
 
 
 extern std::map<std::string, std::string> mapArgs;

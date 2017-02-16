@@ -1,3 +1,13 @@
+/*******************************************************************************************
+ 
+			Hash(BEGIN(Satoshi[2010]), END(Sunny[2013])) == Videlicet[2014] ++
+			
+			(c) Copyright Nexus Developers 2014 - 2017
+			
+			http://www.opensource.org/licenses/mit-license.php
+  
+*******************************************************************************************/
+
 #ifndef NEXUS_MESSAGE_SERVER_H
 #define NEXUS_MESSAGE_SERVER_H
 
@@ -142,7 +152,7 @@ namespace LLP
 			if (nVersion < MIN_PROTO_VERSION)
 			{
 				if(GetArg("-verbose", 0) >= 1)
-					printf("***** Node %s using obsolete version %i; disconnecting\n", pfrom->addr.ToString().c_str(), pfrom->nVersion);
+					printf("***** Node %s using obsolete version %i; disconnecting\n", GetIPAddress().c_str(), nVersion);
 					
 				return false;
 			}
@@ -165,15 +175,12 @@ namespace LLP
 			CAddress addrYou = (fUseProxy ? CAddress(CService("0.0.0.0",0)) : addr);
 			CAddress addrMe = (fUseProxy || !addrLocalHost.IsRoutable() ? CAddress(CService("0.0.0.0",0)) : addrLocalHost);
 			RAND_bytes((unsigned char*)&nLocalHostNonce, sizeof(nLocalHostNonce));
-				
 			
 			/* Push our version back since we just completed getting the version from the other node. */
-			CDataStream ssVersion(SER_NETWORK, MIN_PROTO_VERSION);
-			ssVersion << PROTOCOL_VERSION << nLocalServices << nTime << addrYou << addrMe << nLocalHostNonce << FormatSubVersion(CLIENT_NAME, DATABASE_VERSION, std::vector<string>()) << Core::nBestHeight;
-			PushPacket("version", ssVersion);
+			PushPacket("version", PROTOCOL_VERSION, nLocalServices, nTime, addrYou, addrMe, nLocalHostNonce, FormatSubVersion(CLIENT_NAME, DATABASE_VERSION, std::vector<string>()), Core::nBestHeight);
 			
 			PushPacket("verack");
-			if (!pfrom->fInbound)
+			if (fOUTGOING)
 			{
 				/* Advertise our address */
 				if (!fNoListen && !Net::fUseProxy && Net::addrLocalHost.IsRoutable() &&
@@ -182,15 +189,12 @@ namespace LLP
 					Net::CAddress addr(Net::addrLocalHost);
 					addr.nTime = GetUnifiedTimestamp();
 						
-					CDataStream ssAddress(SER_NETWORK, MIN_PROTO_VERSION);
-					ssAddress << addr;
-						
-					PushPacket("addr", addr);
+					PushAddress(addr);
 				}
 
 				/* Get recent addresses */
-				if (Net::addrman.size() < 1000)
-					PushPacket("getaddr");
+				//if (Net::addrman.size() < 1000)
+				//	PushPacket("getaddr");
 				
 				if(GetArg("-verbose", 0) >= 1)
 					printf("***** Node version message: version %d, blocks=%d\n", pfrom->nVersion, pfrom->nStartingHeight);

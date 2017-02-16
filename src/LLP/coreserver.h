@@ -6,8 +6,84 @@
 #include "../util/util.h"
 #include <inttypes.h>
 
+/*******************************************************************************************
+ 
+			Hash(BEGIN(Satoshi[2010]), END(Sunny[2013])) == Videlicet[2014] ++
+			
+			(c) Copyright Nexus Developers 2014 - 2017
+			
+			http://www.opensource.org/licenses/mit-license.php
+  
+*******************************************************************************************/
+
 namespace LLP
 {
+
+	class CoreOutbound : public Outbound
+	{
+		Service_t IO_SERVICE;
+		
+	public:
+		CoreOutbound(std::string ip, std::string port) : Outbound(ip, port){}
+		
+		enum
+		{
+			/** DATA PACKETS **/
+			TIME_DATA     = 0,
+			ADDRESS_DATA  = 1,
+			TIME_OFFSET   = 2,
+			
+			/** DATA REQUESTS **/
+			GET_OFFSET    = 64,
+			
+			
+			/** REQUEST PACKETS **/
+			GET_TIME      = 129,
+			GET_ADDRESS   = 130,
+					
+
+			/** GENERIC **/
+			PING          = 253,
+			CLOSE         = 254
+		};
+		
+		inline Packet NewPacket() { return this->INCOMING; }
+		
+		inline Packet GetPacket(unsigned char HEADER)
+		{
+			Packet PACKET;
+			PACKET.HEADER = HEADER;
+			return PACKET;
+		}
+		
+		inline void GetOffset(unsigned int nTimestamp)
+		{
+			Packet REQUEST = GetPacket(GET_OFFSET);
+			REQUEST.LENGTH = 4;
+			REQUEST.DATA   = uint2bytes(nTimestamp);
+			
+			this->WritePacket(REQUEST);
+		}
+		
+		inline void GetTime()
+		{
+			Packet REQUEST = GetPacket(GET_TIME);
+			this->WritePacket(REQUEST);
+		}
+		
+		void Close()
+		{
+			Packet RESPONSE = GetPacket(CLOSE);
+			this->WritePacket(RESPONSE);
+			this->Disconnect();
+		}
+		
+		inline void GetAddress()
+		{
+			Packet REQUEST = GetPacket(GET_ADDRESS);
+			this->WritePacket(REQUEST);
+		}
+	};
 	
 	class CoreLLP : public Connection<>
 	{	
