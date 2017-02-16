@@ -262,7 +262,7 @@ namespace LLP
 				CDataStream ssData(SER_NETWORK, MIN_PROTO_VERSION);
 				ssData << t1;
 				
-				this->WritePacket(NewMessage(chMessage));
+				this->WritePacket(NewMessage(chMessage, ssData));
 			}
 			catch(...)
 			{
@@ -278,7 +278,7 @@ namespace LLP
 				CDataStream ssData(SER_NETWORK, MIN_PROTO_VERSION);
 				ssData << t1 << t2;
 				
-				this->WritePacket(NewMessage(chMessage));
+				this->WritePacket(NewMessage(chMessage, ssData));
 			}
 			catch(...)
 			{
@@ -294,7 +294,7 @@ namespace LLP
 				CDataStream ssData(SER_NETWORK, MIN_PROTO_VERSION);
 				ssData << t1 << t2 << t3;
 				
-				this->WritePacket(NewMessage(chMessage));
+				this->WritePacket(NewMessage(chMessage, ssData));
 			}
 			catch(...)
 			{
@@ -310,7 +310,7 @@ namespace LLP
 				CDataStream ssData(SER_NETWORK, MIN_PROTO_VERSION);
 				ssData << t1 << t2 << t3 << t4;
 				
-				this->WritePacket(NewMessage(chMessage));
+				this->WritePacket(NewMessage(chMessage, ssData));
 			}
 			catch(...)
 			{
@@ -326,7 +326,7 @@ namespace LLP
 				CDataStream ssData(SER_NETWORK, MIN_PROTO_VERSION);
 				ssData << t1 << t2 << t3 << t4 << t5;
 				
-				this->WritePacket(NewMessage(chMessage));
+				this->WritePacket(NewMessage(chMessage, ssData));
 			}
 			catch(...)
 			{
@@ -342,7 +342,7 @@ namespace LLP
 				CDataStream ssData(SER_NETWORK, MIN_PROTO_VERSION);
 				ssData << t1 << t2 << t3 << t4 << t5 << t6;
 				
-				this->WritePacket(NewMessage(chMessage));
+				this->WritePacket(NewMessage(chMessage, ssData));
 			}
 			catch(...)
 			{
@@ -358,7 +358,7 @@ namespace LLP
 				CDataStream ssData(SER_NETWORK, MIN_PROTO_VERSION);
 				ssData << t1 << t2 << t3 << t4 << t5 << t6 <<t7;
 				
-				this->WritePacket(NewMessage(chMessage));
+				this->WritePacket(NewMessage(chMessage, ssData));
 			}
 			catch(...)
 			{
@@ -374,7 +374,7 @@ namespace LLP
 				CDataStream ssData(SER_NETWORK, MIN_PROTO_VERSION);
 				ssData << t1 << t2 << t3 << t4 << t5 << t6 <<t7 << t8;
 				
-				this->WritePacket(NewMessage(chMessage));
+				this->WritePacket(NewMessage(chMessage, ssData));
 			}
 			catch(...)
 			{
@@ -390,7 +390,7 @@ namespace LLP
 				CDataStream ssData(SER_NETWORK, MIN_PROTO_VERSION);
 				ssData << t1 << t2 << t3 << t4 << t5 << t6 <<t7 << t8 << t9;
 				
-				this->WritePacket(NewMessage(chMessage));
+				this->WritePacket(NewMessage(chMessage, ssData));
 			}
 			catch(...)
 			{
