@@ -1,20 +1,20 @@
-#ifndef NEXUS_CORE_SERVER_H
-#define NEXUS_CORE_SERVER_H
-
-#include "server.h"
-#include "../core/unifiedtime.h"
-#include "../util/util.h"
-#include <inttypes.h>
-
 /*******************************************************************************************
  
-			Hash(BEGIN(Satoshi[2010]), END(Sunny[2013])) == Videlicet[2014] ++
+			(c) Hash(BEGIN(Satoshi[2010]), END(Sunny[2012])) == Videlicet[2017] ++
 			
 			(c) Copyright Nexus Developers 2014 - 2017
 			
 			http://www.opensource.org/licenses/mit-license.php
   
 *******************************************************************************************/
+
+#ifndef NEXUS_CORE_LLP_H
+#define NEXUS_CORE_LLP_H
+
+#include "server.h"
+#include "../core/unifiedtime.h"
+#include "../util/util.h"
+#include <inttypes.h>
 
 namespace LLP
 {

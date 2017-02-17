@@ -1,6 +1,6 @@
 /*******************************************************************************************
  
-			Hash(BEGIN(Satoshi[2010]), END(Sunny[2013])) == Videlicet[2014] ++
+			(c) Hash(BEGIN(Satoshi[2010]), END(Sunny[2012])) == Videlicet[2017] ++
 			
 			(c) Copyright Nexus Developers 2014 - 2017
 			
@@ -215,7 +215,7 @@ namespace LLP
 				setAddrKnown.insert(addr);
 				
 				/* TODO: Relay Address to other nodes. Might be better to have addresses requested by nodes. */
-				Net::addrman.Add(vAddr, addr, 2 * 60 * 60);
+				//Net::addrman.Add(vAddr, addr, 2 * 60 * 60);
 			}
 		}
 		

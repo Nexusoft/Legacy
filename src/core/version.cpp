@@ -1,8 +1,10 @@
 /*******************************************************************************************
  
-			Hash(BEGIN(Satoshi[2010]), END(Sunny[2012])) == Videlicet[2014] ++
-   
- [Learn and Create] Viz. http://www.opensource.org/licenses/mit-license.php
+			(c) Hash(BEGIN(Satoshi[2010]), END(Sunny[2012])) == Videlicet[2017] ++
+			
+			(c) Copyright Nexus Developers 2014 - 2017
+			
+			http://www.opensource.org/licenses/mit-license.php
   
 *******************************************************************************************/
 
@@ -13,9 +15,9 @@
 const std::string CLIENT_NAME("Nexus");
 
 #ifdef USE_LLD
-const std::string CLIENT_BUILD("0.3.0.0 - LLD Tertium");
+const std::string CLIENT_BUILD("0.3.0.0 - Tritium (LLD)");
 #else
-const std::string CLIENT_BUILD("0.3.0.0 - Oracle Tertium");
+const std::string CLIENT_BUILD("0.3.0.0 - Tritium (BDB)");
 #endif
 
 const std::string CLIENT_DATE("February 3rd, 2017");

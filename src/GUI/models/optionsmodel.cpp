@@ -86,7 +86,7 @@ bool OptionsModel::Upgrade()
     }
     catch (std::ios_base::failure &e)
     {
-        // 0.6.0rc1 saved this as a CService, which causes failure when parsing as a Net::CAddress
+        // 0.6.0rc1 saved this as a CService, which causes failure when parsing as a LLP::CAddress
         if (walletdb.ReadSetting("Net::addrProxy", Net::addrProxy))
         {
             settings.setValue("Net::addrProxy", Net::addrProxy.ToStringIPPort().c_str());
