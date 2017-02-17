@@ -11,8 +11,10 @@
 #include <string>
 #include "core/version.h"
 
+
 /** Used for Visual Reference Only **/
 const std::string CLIENT_NAME("Nexus");
+
 
 #ifdef USE_LLD
 const std::string CLIENT_BUILD("0.3.0.0 - Tritium (LLD)");
@@ -20,7 +22,10 @@ const std::string CLIENT_BUILD("0.3.0.0 - Tritium (LLD)");
 const std::string CLIENT_BUILD("0.3.0.0 - Tritium (BDB)");
 #endif
 
-const std::string CLIENT_DATE("February 3rd, 2017");
+
+/* Update Build Time to Be at Compile Time. */
+const std::string CLIENT_DATE(__DATE__ " " __TIME__);
+
 
 /** Used to determine the current features available on the local database */
  const int DATABASE_VERSION =
@@ -28,14 +33,3 @@ const std::string CLIENT_DATE("February 3rd, 2017");
                   +   10000 * DATABASE_MINOR 
                   +     100 * DATABASE_REVISION
                   +       1 * DATABASE_BUILD;
-
-/** Used to determine the features available in the Nexus Network **/
-const int PROTOCOL_VERSION =
-                   1000000 * PROTOCOL_MAJOR
-                 +   10000 * PROTOCOL_MINOR
-                 +     100 * PROTOCOL_REVISION
-                 +       1 * PROTOCOL_BUILD;
-
-/** Used to Lock-Out Nodes that are running a protocol version that is too old, 
-    Or to allow certain new protocol changes without confusing Old Nodes. **/
-const int MIN_PROTO_VERSION = 10000;

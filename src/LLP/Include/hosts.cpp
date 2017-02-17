@@ -17,8 +17,7 @@
 
 namespace LLP
 {
-	static const unsigned char pchIPv4[12] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff };
-		
+	
 	/** DNS Query of Domain Names Associated with Seed Nodes **/
 	vector<LLP::CAddress> DNS_Lookup(const char* DNS_Seed[])
 	{

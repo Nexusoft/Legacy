@@ -34,9 +34,22 @@
 #define TESTNET_CORE_LLP_PORT 8329
 #define TESTNET_MINING_LLP_PORT 8325
 
+#define PROTOCOL_MAJOR       0
+#define PROTOCOL_MINOR       1
+#define PROTOCOL_REVISION    1
+#define PROTOCOL_BUILD       0
+
 extern bool fTestNet;
 namespace LLP
 {
+	/** Used to Lock-Out Nodes that are running a protocol version that is too old, 
+    Or to allow certain new protocol changes without confusing Old Nodes. **/
+	extern const int MIN_PROTO_VERSION;
+	
+	
+	/** Used to determine the features available in the Nexus Network **/
+	extern const int PROTOCOL_VERSION;
+	
 	
 	/** Declarations for the DNS Seed Nodes. **/
 	const char* DNS_SeedNodes[] = 
