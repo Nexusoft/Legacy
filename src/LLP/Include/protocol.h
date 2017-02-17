@@ -111,6 +111,14 @@ namespace LLP
 	static inline unsigned short GetDefaultPort(const bool testnet = fTestNet){ return testnet ? TESTNET_PORT : NEXUS_PORT; }
 	
 	
+	/* Get the Main Core LLP Port for Nexus. */
+	static inline unsigned short GetCorePort(const bool testnet = fTestNet){ return testnet ? TESTNET_CORE_LLP_PORT : NEXUS_CORE_LLP_PORT; }
+	
+	
+	/* Get the Main Core LLP Port for Nexus. */
+	static inline unsigned short GetMiningPort(const bool testnet = fTestNet){ return testnet ? TESTNET_MINING_LLP_PORT : NEXUS_MINING_LLP_PORT; }
+	
+	
 	/* Proxy Settings fro Nexus Core. */
 	int fUseProxy = false;
 	CService addrProxy("127.0.0.1",9050);

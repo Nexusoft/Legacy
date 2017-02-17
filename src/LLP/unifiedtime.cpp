@@ -101,7 +101,7 @@ void ThreadTimeRegulator(void* parg)
 void ThreadUnifiedSamples(void* parg)
 {
 	/** Compile the Seed Nodes into a set of Vectors. **/
-	SEED_NODES    = DNS_Lookup(fTestNet ? LLP::DNS_SeedNodes_Testnet : LLP::DNS_SeedNodes);
+	SEED_NODES    = LLP::DNS_Lookup(fTestNet ? LLP::DNS_SeedNodes_Testnet : LLP::DNS_SeedNodes);
 	
 	/* If the node happens to be offline, wait and recursively attempt to get the DNS seeds. */
 	if(SEED_NODES.empty()) {
