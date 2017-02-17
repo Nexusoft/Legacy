@@ -8,9 +8,6 @@
   
 *******************************************************************************************/
 
-#ifndef NEXUS_MESSAGE_SERVER_H
-#define NEXUS_MESSAGE_SERVER_H
-
 #include "message.h"
 
 namespace LLP
@@ -45,6 +42,11 @@ namespace LLP
 	 * TODO: Remove all the net / netbase code that isn't needed anymore. Clean up the net folder and move rpcserver.h to RPC/server.h, so forth...
 	 * TODO: Work on a HTTP Packet to be used in reading and writing the HTTP headers so that the JSON RPC server can use the LLP as well. This will inheret the LLP threading model and server.
 	 */
+	
+	
+	/* Check the Inventory to See if a given hash is found. 
+		TODO: Rebuild this Inventory System. Much Better Ways to Do it. 
+		*/
 	bool AlreadyHave(LLD::CIndexDB& indexdb, const Net::CInv& inv)
 	{
 		switch (inv.type)
@@ -65,9 +67,11 @@ namespace LLP
 			return Core::mapBlockIndex.count(inv.hash) ||
 					 Core::mapOrphanBlocks.count(inv.hash);
 		}
-		// Don't know what it is, just say we already got one
+		
+		/* Pretend we know what it is even if we don't. */
 		return true;
 	}
+	
 	
 	/** Handle Event Inheritance. **/
 	void MessageLLP::Event(unsigned char EVENT, unsigned int LENGTH = 0)
@@ -96,7 +100,7 @@ namespace LLP
 				
 			/* Check a packet's validity once it is finished being read. */
 			if(fDDOS) {
-				Packet PACKET   = this->INCOMING;
+				MessagePacket PACKET   = this->INCOMING;
 					
 				/* Give higher score for Bad Packets. */
 				if(INCOMING.IsComplete() && !INCOMING.IsValid())
@@ -206,7 +210,7 @@ namespace LLP
 			BOOST_FOREACH(Net::CAddress& addr, vAddr)
 			{
 				if (Core::fShutdown)
-					return true;
+					return false;
 				
 				/* ignore IPv6 for now, since it isn't implemented anyway */
 				if (!addr.IsIPv4())
@@ -224,7 +228,7 @@ namespace LLP
 		 */
 		else if (PACKET.HEADER == "inv")
 		{
-			vector<Net::CInv> vInv;
+			vector<CInv> vInv;
 			ssMessage >> vInv;
 			
 			/* Make sure the inventory size is not too large. */
@@ -239,13 +243,13 @@ namespace LLP
 			LLD::CIndexDB indexdb("r");
 			for (unsigned int nInv = 0; nInv < vInv.size(); nInv++)
 			{
-				const Net::CInv &inv = vInv[nInv];
+				const CInv &inv = vInv[nInv];
 
-				if (fShutdown)
-					return true;
+				if (Core::fShutdown)
+					return false;
 				
 				{
-					LOCK(cs_inventory);
+					LOCK_GUARD(INVENTORY_MUTEX);
 					setInventoryKnown.insert(inv);
 				}
 
@@ -470,5 +474,3 @@ namespace LLP
 			return true;
 		}
 }
-
-#endif

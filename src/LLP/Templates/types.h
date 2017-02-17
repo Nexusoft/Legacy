@@ -286,7 +286,7 @@ namespace LLP
 	
 
 	/* Base Template class to handle outgoing / incoming LLP data for both Client and Server. */
-	template<typename PacketType = BytePacket> class Connection
+	template<typename PacketType = Packet> class Connection
 	{
 	protected:
 		

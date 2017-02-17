@@ -412,28 +412,47 @@ namespace LLP
 	class MessageLLP : public MessageConnection
 	{	
 	public:
+		
+		/* Address of the current Message LLP Connection. */
 		CAddress addr;
 		
+		
+		/* Node Information about this Message LLP Connection. */
 		std::string addrName;
 		std::string strSubVer;
 		
+		
+		/* Basic node Stats for this Current Message LLP Connection. */
 		int nVersion;
 		int nHeight;
 		int nDuraction;
 		int nTimestamp;
 		
+		
+		/* Basic flags to set the behavior of the Message LLP Connection. */
 		bool fClient;
 		bool fInbound;
 		bool fNetworkNode;
 		
+		
+		/* Mutex for Inventory Operations. */
+		Mutex_t INVENTORY_MUTEX;
+		
+		
+		/* Known Inventory to make sure duplicate requests are not called out. */
 		mruset<CInv> setInventoryKnown;
 		
+		
+		/* Constructors for Message LLP Class. */
 		MessageLLP() : MessageConnection(){ }
 		MessageLLP( Socket_t SOCKET_IN, DDOS_Filter* DDOS_IN, bool isDDOS = false ) : NexusConnection( SOCKET_IN, DDOS_IN ) 
 		{ ADDRESS = parse_ip(SOCKET_IN->remote_endpoint().address().to_string()); }
 		
+		
+		/* Virtual Functions to Determine Behavior of Message LLP. */
 		void Event(unsigned char EVENT, unsigned int LENGTH = 0);
 		bool ProcessPacket();
+		
 		
 		/* Send an Address to Node. */
 		void PushAddress(const CAddress& addr)
@@ -442,12 +461,14 @@ namespace LLP
 				this->PushMessage("addr", addr);
 		}
 
+		
 		/* Keep Track of the Inventory we Already have. */
 		void AddInventoryKnown(const CInv& inv)
 		{
 			setInventoryKnown.insert(inv);
 		}
 
+		
 		/* Send Inventory We have. */
 		void PushInventory(const CInv& inv)
 		{
