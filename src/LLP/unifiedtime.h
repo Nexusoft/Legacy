@@ -14,7 +14,7 @@
 #include <vector>
 #include <time.h>
 
-#include "../net/net.h"
+#include "../Include/protocol.h"
 #include "../wallet/db.h"
 
 /* TODO: Put in the LLP Namespace. */
@@ -40,8 +40,8 @@ extern int UNIFIED_AVERAGE_OFFSET;
 /* Vector to Contain list of Unified Time Offset from Time Seeds, Seed Nodes, and Peers. */
 extern std::vector<int> UNIFIED_TIME_DATA;
 
-extern std::vector<Net::CAddress> SEED_NODES;
-extern std::vector<Net::CAddress> TRUSTED_NODES;
+extern std::vector<LLP::CAddress> SEED_NODES;
+extern std::vector<LLP::CAddress> TRUSTED_NODES;
 
 
 
@@ -69,8 +69,6 @@ int GetUnifiedAverage();
     Checks current time against itself, if there is too much drift, your local offset adjusts to Unified Average. **/
 void ThreadTimeRegulator(void* parg);
 void ThreadUnifiedSamples(void* parg);
-
-std::vector<Net::CAddress> DNS_Lookup(const char* DNS_Seed[]);
 
 
 #endif

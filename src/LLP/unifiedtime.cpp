@@ -28,59 +28,7 @@ int UNIFIED_MOVING_ITERATOR = 0;
 
 /** Unified Time Declarations **/
 vector<int> UNIFIED_TIME_DATA;
-vector<Net::CAddress> SEED_NODES;
-
-/** Declarations for the DNS Seed Nodes. **/
-const char* DNS_SeedNodes[] = 
-{
-	"node1.nexusearth.com",
-	"node1.mercuryminer.com",
-	"node1.nexusminingpool.com",
-	"node1.nxs.efficienthash.com",
-	"node2.nexusearth.com",
-	"node2.mercuryminer.com",
-	"node2.nexusminingpool.com",
-	"node2.nxs.efficienthash.com",
-	"node3.nexusearth.com",
-	"node3.mercuryminer.com",
-	"node3.nxs.efficienthash.com",
-	"node4.nexusearth.com",
-	"node4.mercuryminer.com",
-	"node4.nxs.efficienthash.com",
-	"node5.nexusearth.com",
-	"node5.mercuryminer.com",
-	"node5.nxs.efficienthash.com",
-	"node6.nexusearth.com",
-	"node6.mercuryminer.com",
-	"node6.nxs.efficienthash.com",
-	"node7.nexusearth.com",
-	"node7.mercuryminer.com",
-	"node7.nxs.efficienthash.com",
-	"node8.nexusearth.com",
-	"node8.mercuryminer.com",
-	"node8.nxs.efficienthash.com",
-	"node9.nexusearth.com",
-	"node9.mercuryminer.com",
-	"node9.nxs.efficienthash.com",
-	"node10.nexusearth.com",
-	"node10.mercuryminer.com",
-	"node10.nxs.efficienthash.com",
-	"node11.nexusearth.com",
-	"node11.mercuryminer.com",
-	"node11.nxs.efficienthash.com",
-	"node12.nexusearth.com",
-	"node12.mercuryminer.com",
-	"node12.nxs.efficienthash.com",
-	"node13.nexusearth.com",
-	"node13.mercuryminer.com",
-	"node13.nxs.efficienthash.com",
-};
-
-/** Declarations for the DNS Seed Nodes. **/
-const char* DNS_SeedNodes_Testnet[] = 
-{
-	"test1.nexusoft.io"
-};
+vector<LLP::CAddress> SEED_NODES;
 
 /** Seed Nodes for Unified Time. **/
 vector<string> SEEDS;
@@ -153,7 +101,7 @@ void ThreadTimeRegulator(void* parg)
 void ThreadUnifiedSamples(void* parg)
 {
 	/** Compile the Seed Nodes into a set of Vectors. **/
-	SEED_NODES    = DNS_Lookup(fTestNet ? DNS_SeedNodes_Testnet : DNS_SeedNodes);
+	SEED_NODES    = DNS_Lookup(fTestNet ? LLP::DNS_SeedNodes_Testnet : LLP::DNS_SeedNodes);
 	
 	/* If the node happens to be offline, wait and recursively attempt to get the DNS seeds. */
 	if(SEED_NODES.empty()) {
@@ -303,28 +251,5 @@ void ThreadUnifiedSamples(void* parg)
 	}
 }
 
-/** DNS Query of Domain Names Associated with Seed Nodes **/
-vector<Net::CAddress> DNS_Lookup(const char* DNS_Seed[])
-{
-	vector<Net::CAddress> vNodes;
-    for (unsigned int seed = 0; seed < (fTestNet ? 1 : 41); seed++)
-	{
-		printf("%u Host: %s\n", seed, DNS_Seed[seed]);
-        vector<Net::CNetAddr> vaddr;
-        if (Net::LookupHost(DNS_Seed[seed], vaddr))
-        {
-            BOOST_FOREACH(Net::CNetAddr& ip, vaddr)
-            {
-                Net::CAddress addr = Net::CAddress(Net::CService(ip, Net::GetDefaultPort()));
-                vNodes.push_back(addr);
-				
-				printf("DNS Seed: %s\n", addr.ToStringIP().c_str());
-				
-				Net::addrman.Add(addr, ip, true);
-            }
-        }
-    }
-	
-	return vNodes;
-}
+
 

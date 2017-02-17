@@ -12,9 +12,16 @@
 #define NEXUS_LLP_INCLUDE_PROTOCOL_H
 
 #include "../../LLU/serialize.h"
-#include "netbase.h"
-#include <string>
+#include "../../LLU/compat.h"
 #include "../../LLT/uint1024.h"
+
+#include <string>
+#include <vector>
+
+#ifdef WIN32
+// In MSVC, this is defined as a macro, undefine it to prevent a compile and link error
+#undef SetPort
+#endif
 
 #define NEXUS_PORT  9323
 #define NEXUS_CORE_LLP_PORT 9324
@@ -28,24 +35,115 @@
 #define TESTNET_MINING_LLP_PORT 8325
 
 extern bool fTestNet;
-
 namespace LLP
 {
-	static const unsigned char pchIPv4[12] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff };
 	
-	bool LookupHost(const char *pszName, std::vector<CNetAddr>& vIP, unsigned int nMaxSolutions = 0, bool fAllowLookup = true);
-	
-	static inline unsigned short GetDefaultPort(const bool testnet = fTestNet)
+	/** Declarations for the DNS Seed Nodes. **/
+	const char* DNS_SeedNodes[] = 
 	{
-		return testnet ? TESTNET_PORT : NEXUS_PORT;
-	}
+		"node1.nexusearth.com",
+		"node1.mercuryminer.com",
+		"node1.nexusminingpool.com",
+		"node1.nxs.efficienthash.com",
+		"node2.nexusearth.com",
+		"node2.mercuryminer.com",
+		"node2.nexusminingpool.com",
+		"node2.nxs.efficienthash.com",
+		"node3.nexusearth.com",
+		"node3.mercuryminer.com",
+		"node3.nxs.efficienthash.com",
+		"node4.nexusearth.com",
+		"node4.mercuryminer.com",
+		"node4.nxs.efficienthash.com",
+		"node5.nexusearth.com",
+		"node5.mercuryminer.com",
+		"node5.nxs.efficienthash.com",
+		"node6.nexusearth.com",
+		"node6.mercuryminer.com",
+		"node6.nxs.efficienthash.com",
+		"node7.nexusearth.com",
+		"node7.mercuryminer.com",
+		"node7.nxs.efficienthash.com",
+		"node8.nexusearth.com",
+		"node8.mercuryminer.com",
+		"node8.nxs.efficienthash.com",
+		"node9.nexusearth.com",
+		"node9.mercuryminer.com",
+		"node9.nxs.efficienthash.com",
+		"node10.nexusearth.com",
+		"node10.mercuryminer.com",
+		"node10.nxs.efficienthash.com",
+		"node11.nexusearth.com",
+		"node11.mercuryminer.com",
+		"node11.nxs.efficienthash.com",
+		"node12.nexusearth.com",
+		"node12.mercuryminer.com",
+		"node12.nxs.efficienthash.com",
+		"node13.nexusearth.com",
+		"node13.mercuryminer.com",
+		"node13.nxs.efficienthash.com",
+	};
 
-	/** nServices flags */
+	
+	/** Declarations for the DNS Seed Nodes. **/
+	const char* DNS_SeedNodes_Testnet[] = 
+	{
+		"test1.nexusoft.io"
+	};	
+	
+	
+	/** Services flags */
 	enum
 	{
 		NODE_NETWORK = (1 << 0),
 	};
+	
+	
+	/* Standard Wrapper Function to Interact with cstdlib DNS functions. */
+	bool LookupHost(const char *pszName, std::vector<CNetAddr>& vIP, unsigned int nMaxSolutions = 0, bool fAllowLookup = true);
+	
+	
+	/* The DNS Lookup Routine to find the Nodes that are set as DNS seeds. */
+	std::vector<CAddress> DNS_Lookup(const char* DNS_Seed[]);
+	
+	
+	/* Get the Main Message LLP Port for Nexus. */
+	static inline unsigned short GetDefaultPort(const bool testnet = fTestNet){ return testnet ? TESTNET_PORT : NEXUS_PORT; }
+	
+	
+	/* Proxy Settings fro Nexus Core. */
+	int fUseProxy = false;
+	CService addrProxy("127.0.0.1",9050);
+	
+	
+	/** inv message data */
+	class CInv
+	{
+		public:
+			CInv();
+			CInv(int typeIn, const uint1024& hashIn);
+			CInv(const std::string& strType, const uint1024& hashIn);
 
+			IMPLEMENT_SERIALIZE
+			(
+				READWRITE(type);
+				READWRITE(hash);
+			)
+
+			friend bool operator<(const CInv& a, const CInv& b);
+
+			bool IsKnownType() const;
+			const char* GetCommand() const;
+			std::string ToString() const;
+			void print() const;
+
+		// TODO: make private (improves encapsulation)
+		public:
+			int type;
+			uint1024 hash;
+	};
+
+	
 	/** A CService with information about it as peer */
 	class CAddress : public CService
 	{
@@ -82,46 +180,6 @@ namespace LLP
 			int64 nLastTry;
 	};
 
-	/** inv message data */
-	class CInv
-	{
-		public:
-			CInv();
-			CInv(int typeIn, const uint1024& hashIn);
-			CInv(const std::string& strType, const uint1024& hashIn);
-
-			IMPLEMENT_SERIALIZE
-			(
-				READWRITE(type);
-				READWRITE(hash);
-			)
-
-			friend bool operator<(const CInv& a, const CInv& b);
-
-			bool IsKnownType() const;
-			const char* GetCommand() const;
-			std::string ToString() const;
-			void print() const;
-
-		// TODO: make private (improves encapsulation)
-		public:
-			int type;
-			uint1024 hash;
-	};
-	
-	#include <string>
-#include <vector>
-
-#include "../util/serialize.h"
-#include "../util/compat.h"
-
-#ifdef WIN32
-// In MSVC, this is defined as a macro, undefine it to prevent a compile and link error
-#undef SetPort
-#endif
-
-namespace LLP
-{
 
 	/** IP address (IPv6, or IPv4 using mapped IPv6 range (::FFFF:0:0/96)) */
 	class CNetAddr
@@ -209,14 +267,14 @@ namespace LLP
 	#endif
 
 			IMPLEMENT_SERIALIZE
-				(
+			(
 				 CService* pthis = const_cast<CService*>(this);
 				 READWRITE(FLATDATA(ip));
 				 unsigned short portN = htons(port);
 				 READWRITE(portN);
 				 if (fRead)
 					 pthis->port = ntohs(portN);
-				)
+			)
 	};
 
 }

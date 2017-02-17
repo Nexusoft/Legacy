@@ -76,7 +76,7 @@ bool OptionsModel::Upgrade()
     }
     try
     {
-        Net::CAddress addrProxyAddress;
+        LLP::CAddress addrProxyAddress;
         if (walletdb.ReadSetting("Net::addrProxy", addrProxyAddress))
         {
             Net::addrProxy = addrProxyAddress;

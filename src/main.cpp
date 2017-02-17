@@ -575,7 +575,7 @@ bool AppInit2(int argc, char* argv[])
     {
         BOOST_FOREACH(string strAddr, mapMultiArgs["-addnode"])
         {
-            Net::CAddress addr(Net::CService(strAddr, Net::GetDefaultPort(), Net::fAllowDNS));
+            LLP::CAddress addr(LLP::CService(strAddr, LLP::GetDefaultPort(), LLP::fAllowDNS));
             addr.nTime = 0; // so it won't relay unless successfully connected
             if (addr.IsValid())
                 Net::addrman.Add(addr, Net::CNetAddr("127.0.0.1"));

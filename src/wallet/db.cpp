@@ -711,7 +711,7 @@ namespace Wallet
 		
 		// Read pre-0.6 addr records
 
-		vector<Net::CAddress> vAddr;
+		vector<LLP::CAddress> vAddr;
 		vector<vector<unsigned char> > vDelete;
 
 		// Get cursor
@@ -735,7 +735,7 @@ namespace Wallet
 			ssKey >> strType;
 			if (strType == "addr")
 			{
-				Net::CAddress addr;
+				LLP::CAddress addr;
 				ssValue >> addr;
 				vAddr.push_back(addr);
 			}

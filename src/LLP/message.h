@@ -12,6 +12,7 @@
 #define NEXUS_LLP_MESSAGE_SERVER_H
 
 #include "Templates/base.h"
+#include "Include/protocol.h"
 
 namespace LLP
 {
@@ -19,6 +20,13 @@ namespace LLP
 	/* Message Packet Leading Bytes. */
 	static unsigned char MESSAGE_START_TESTNET[4] = { 0xe9, 0x59, 0x0d, 0x05 };
 	static unsigned char MESSAGE_START_MAINNET[4] = { 0x05, 0x0d, 0x59, 0xe9 };
+	
+	
+	enum
+	{
+		MSG_TX = 1,
+		MSG_BLOCK,
+	};
 	
 	
 		/** inv message data */
@@ -404,7 +412,7 @@ namespace LLP
 	class MessageLLP : public MessageConnection
 	{	
 	public:
-		Net::CAddress addr;
+		CAddress addr;
 		
 		std::string addrName;
 		std::string strSubVer;

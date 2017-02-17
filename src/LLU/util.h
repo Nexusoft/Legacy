@@ -37,7 +37,7 @@ typedef int pid_t; /* define for windows compatiblity */
 #include <boost/date_time/gregorian/gregorian_types.hpp>
 #include <boost/date_time/posix_time/posix_time_types.hpp>
 
-#include "../net/netbase.h"
+#include "../LLP/Include/protocol.h"
 
 
 /** Linux Specific Work Around (For Now). **/

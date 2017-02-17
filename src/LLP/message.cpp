@@ -11,8 +11,7 @@
 #ifndef NEXUS_MESSAGE_SERVER_H
 #define NEXUS_MESSAGE_SERVER_H
 
-#include "server.h"
-#include "types.h"
+#include "message.h"
 
 namespace LLP
 {
@@ -50,21 +49,21 @@ namespace LLP
 	{
 		switch (inv.type)
 		{
-		case Net::MSG_TX:
+		case MSG_TX:
 			{
 			bool txInMap = false;
 				{
-				LOCK(mempool.cs);
-				txInMap = (mempool.exists(inv.hash.getuint512()));
+				LOCK(Core::mempool.cs);
+				txInMap = (Core::mempool.exists(inv.hash.getuint512()));
 				}
 			return txInMap ||
-				   mapOrphanTransactions.count(inv.hash.getuint512()) ||
+				   Core::mapOrphanTransactions.count(inv.hash.getuint512()) ||
 				   indexdb.ContainsTx(inv.hash.getuint512());
 			}
 
-		case Net::MSG_BLOCK:
-			return mapBlockIndex.count(inv.hash) ||
-				   mapOrphanBlocks.count(inv.hash);
+		case MSG_BLOCK:
+			return Core::mapBlockIndex.count(inv.hash) ||
+					 Core::mapOrphanBlocks.count(inv.hash);
 		}
 		// Don't know what it is, just say we already got one
 		return true;
@@ -156,30 +155,11 @@ namespace LLP
 					
 				return false;
 			}
-
-			/* Disconnect if we connected to ourselves */
-			ssMessage >> addrFrom >> nNonce >> >strSubVer >> nHeight;
-			if (nNonce == Net::nLocalHostNonce && nNonce > 1)
-			{
-				if(GetArg("-verbose", 0) >= 1)
-					printf("***** Node connected to self at %s, disconnecting\n", pfrom->addr.ToString().c_str());
-
-				return false;
-			}
-
-			/* Check our External IP Address from Peer Selection. */
-			if (addrFrom.IsRoutable() && addrMe.IsRoutable())
-				Net::addrSeenByPeer = addrMe;
-				
-			nTime = GetUnifiedTimestamp();
-			CAddress addrYou = (fUseProxy ? CAddress(CService("0.0.0.0",0)) : addr);
-			CAddress addrMe = (fUseProxy || !addrLocalHost.IsRoutable() ? CAddress(CService("0.0.0.0",0)) : addrLocalHost);
-			RAND_bytes((unsigned char*)&nLocalHostNonce, sizeof(nLocalHostNonce));
 			
 			/* Push our version back since we just completed getting the version from the other node. */
-			PushPacket("version", PROTOCOL_VERSION, nLocalServices, nTime, addrYou, addrMe, nLocalHostNonce, FormatSubVersion(CLIENT_NAME, DATABASE_VERSION, std::vector<string>()), Core::nBestHeight);
+			PushMessage("version", PROTOCOL_VERSION, nLocalServices, nTime, addrYou, addrMe, nLocalHostNonce, FormatSubVersion(CLIENT_NAME, DATABASE_VERSION, std::vector<string>()), Core::nBestHeight);
 			
-			PushPacket("verack");
+			PushMessage("verack");
 			if (fOUTGOING)
 			{
 				/* Advertise our address */
@@ -213,7 +193,7 @@ namespace LLP
 		 */
 		else if (PACKET.HEADER == "addr")
 		{
-			vector<Net::CAddress> vAddr;
+			vector<CAddress> vAddr;
 			ssMessage >> vAddr;
 
 			/* Don't want addr from older versions unless seeding */
@@ -225,7 +205,7 @@ namespace LLP
 			int64 nSince = nNow - 10 * 60 * 60;
 			BOOST_FOREACH(Net::CAddress& addr, vAddr)
 			{
-				if (fShutdown)
+				if (Core::fShutdown)
 					return true;
 				
 				/* ignore IPv6 for now, since it isn't implemented anyway */
