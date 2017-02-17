@@ -465,6 +465,8 @@ namespace LLP
 		/* Keep Track of the Inventory we Already have. */
 		void AddInventoryKnown(const CInv& inv)
 		{
+			LOCK_GUARD(INVENTORY_MUTEX);
+			
 			setInventoryKnown.insert(inv);
 		}
 

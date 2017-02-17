@@ -253,7 +253,9 @@ namespace LLP
 					setInventoryKnown.insert(inv);
 				}
 
+				//TODO: Move This Function into Proper Place
 				bool fAlreadyHave = AlreadyHave(indexdb, inv);
+				
 				if(GetArg("-verbose", 0) >= 3)
 					printf("***** Node recieved inventory: %s  %s\n", inv.ToString().c_str(), fAlreadyHave ? "have" : "new");
 
@@ -275,10 +277,10 @@ namespace LLP
 				return true;
 			}
 
-			BOOST_FOREACH(const Net::CInv& inv, vInv)
+			BOOST_FOREACH(const CInv& inv, vInv)
 			{
-				if (fShutdown)
-					return true;
+				if (Core::fShutdown)
+					return false;
 						
 				if(GetArg("-verbose", 0) >= 3)
 					printf("received getdata for: %s\n", inv.ToString().c_str());
@@ -287,16 +289,14 @@ namespace LLP
 				{
 					
 					// Send block from disk
-					map<uint1024, CBlockIndex*>::iterator mi = mapBlockIndex.find(inv.hash);
-					if (mi != mapBlockIndex.end())
+					map<uint1024, Core::CBlockIndex*>::iterator mi = mapBlockIndex.find(inv.hash);
+					if (mi != Core::mapBlockIndex.end())
 					{
-						CBlock block;
+						Core::CBlock block;
 						if(!block.ReadFromDisk((*mi).second))
 							return error("ProcessMessage() : Could not read Block.");
 							
-						CDataStream ssBlock(SER_NETWORK, MIN_PROTO_VERSION);
-						ssBlock << block;
-						PushPacket("block", ssBlock);
+						PushMessage("block", block);
 					}
 				}
 			}
@@ -306,12 +306,12 @@ namespace LLP
 		/* Handle a Request to get a list of Blocks from a Node. */
 		else if (PACKET.HEADER == "getblocks")
 		{
-			CBlockLocator locator;
+			Core::CBlockLocator locator;
 			uint1024 hashStop;
 			ssMessage >> locator >> hashStop;
 
 			/* Find the last block the caller has in the main chain */
-			CBlockIndex* pindex = locator.GetBlockIndex();
+			Core::CBlockIndex* pindex = locator.GetBlockIndex();
 
 			/* Send the rest of the chain as INV messages. */
 			if (pindex)
@@ -330,8 +330,7 @@ namespace LLP
 					if(GetArg("-verbose", 0) >= 3)
 						printf("***** Sending getblocks stopping at %d %s (%u bytes)\n", pindex->nHeight, pindex->GetBlockHash().ToString().substr(0,20).c_str(), nBytes);
 						
-					/* TODO: CHANGE THIS. */
-					pfrom->PushInventory(Net::CInv(Net::MSG_BLOCK, pindex->GetBlockHash()));
+					PushInventory(Net::CInv(Net::MSG_BLOCK, pindex->GetBlockHash()));
 				}
 			}
 		}
@@ -345,130 +344,122 @@ namespace LLP
 			CDataStream vMsg(vRecv);
 			LLD::CIndexDB indexdb("r");
 			
-			CTransaction tx;
+			Core::CTransaction tx;
 			ssMessage >> tx;
 
 			/* TODO: Change the Inventory system. */
-			Net::CInv inv(Net::MSG_TX, tx.GetHash());
-			pfrom->AddInventoryKnown(inv);
+			CInv inv(MSG_TX, tx.GetHash());
+			AddInventoryKnown(inv);
 
 			bool fMissingInputs = false;
 			if (tx.AcceptToMemoryPool(indexdb, true, &fMissingInputs))
 			{
-				SyncWithWallets(tx, NULL, true);
+				Core::SyncWithWallets(tx, NULL, true);
 				
 				/* TODO: Make the Relay Message work properly with new LLP Connections. */
 				RelayMessage(inv, vMsg);
 			
-				Net::mapAlreadyAskedFor.erase(inv);
+				/* TODO CHANGE THESE THREE LINES. */
+				mapAlreadyAskedFor.erase(inv);
 				vWorkQueue.push_back(inv.hash.getuint512());
 				vEraseQueue.push_back(inv.hash.getuint512());
 
-					// Recursively process any orphan transactions that depended on this one
-					for (unsigned int i = 0; i < vWorkQueue.size(); i++)
+				
+				// Recursively process any orphan transactions that depended on this one
+				for (unsigned int i = 0; i < vWorkQueue.size(); i++)
+				{
+					uint512 hashPrev = vWorkQueue[i];
+					for (map<uint512, CDataStream*>::iterator mi = mapOrphanTransactionsByPrev[hashPrev].begin(); mi != mapOrphanTransactionsByPrev[hashPrev].end(); ++mi)
 					{
-						uint512 hashPrev = vWorkQueue[i];
-						for (map<uint512, CDataStream*>::iterator mi = mapOrphanTransactionsByPrev[hashPrev].begin();
-							mi != mapOrphanTransactionsByPrev[hashPrev].end();
-							++mi)
-						{
-							const CDataStream& vMsg = *((*mi).second);
-							CTransaction tx;
-							CDataStream(vMsg) >> tx;
-							Net::CInv inv(Net::MSG_TX, tx.GetHash());
-							bool fMissingInputs2 = false;
+						const CDataStream& vMsg = *((*mi).second);
+						Core::CTransaction tx;
+						CDataStream(vMsg) >> tx;
+						
+						CInv inv(MSG_TX, tx.GetHash());
+						bool fMissingInputs2 = false;
 
-							if (tx.AcceptToMemoryPool(indexdb, true, &fMissingInputs2))
-							{
-								if(GetArg("-verbose", 1) >= 0)
-									printf("   accepted orphan tx %s\n", inv.hash.ToString().substr(0,10).c_str());
+						if (tx.AcceptToMemoryPool(indexdb, true, &fMissingInputs2))
+						{
+							if(GetArg("-verbose", 1) >= 0)
+								printf("   accepted orphan tx %s\n", inv.hash.ToString().substr(0,10).c_str());
 								
-								SyncWithWallets(tx, NULL, true);
-								RelayMessage(inv, vMsg);
-								Net::mapAlreadyAskedFor.erase(inv);
-								vWorkQueue.push_back(inv.hash.getuint512());
-								vEraseQueue.push_back(inv.hash.getuint512());
-							}
-							else if (!fMissingInputs2)
-							{
-								// invalid orphan
-								vEraseQueue.push_back(inv.hash.getuint512());
+							SyncWithWallets(tx, NULL, true);
+							RelayMessage(inv, vMsg);
+							Net::mapAlreadyAskedFor.erase(inv);
+							vWorkQueue.push_back(inv.hash.getuint512());
+							vEraseQueue.push_back(inv.hash.getuint512());
+						}
+						else if (!fMissingInputs2)
+						{
+							// invalid orphan
+							vEraseQueue.push_back(inv.hash.getuint512());
 								
-								if(GetArg("-verbose", 0) >= 0)
-									printf("   removed invalid orphan tx %s\n", inv.hash.ToString().substr(0,10).c_str());
-							}
+							if(GetArg("-verbose", 0) >= 0)
+								printf("   removed invalid orphan tx %s\n", inv.hash.ToString().substr(0,10).c_str());
 						}
 					}
-
-					BOOST_FOREACH(uint512 hash, vEraseQueue)
-						EraseOrphanTx(hash);
 				}
-				else if (fMissingInputs)
-				{
-					AddOrphanTx(vMsg);
 
-					// DoS prevention: do not allow mapOrphanTransactions to grow unbounded
-					unsigned int nEvicted = LimitOrphanTxSize(MAX_ORPHAN_TRANSACTIONS);
-					if (nEvicted > 0)
+				BOOST_FOREACH(uint512 hash, vEraseQueue)
+					EraseOrphanTx(hash);
+					
+			}
+			else if (fMissingInputs)
+			{
+				AddOrphanTx(vMsg);
+
+				// DoS prevention: do not allow mapOrphanTransactions to grow unbounded
+				unsigned int nEvicted = LimitOrphanTxSize(MAX_ORPHAN_TRANSACTIONS);
+				if (nEvicted > 0)
 						printf("mapOrphan overflow, removed %u tx\n", nEvicted);
-				}
-				if (tx.nDoS) pfrom->Misbehaving(tx.nDoS);
 			}
+		}
 
 
-			else if (strCommand == "block")
-			{
-				CBlock block;
-				vRecv >> block;
+		else if (strCommand == "block")
+		{
+			Core::CBlock block;
+			vRecv >> block;
 
-				if(GetArg("-verbose", 0) >= 3)
-					printf("received block %s\n", block.GetHash().ToString().substr(0,20).c_str());
+			if(GetArg("-verbose", 0) >= 3)
+				printf("received block %s\n", block.GetHash().ToString().substr(0,20).c_str());
 				
-				if(GetArg("-verbose", 0) >= 1)
-					block.print();
+			if(GetArg("-verbose", 0) >= 1)
+				block.print();
 
-				Net::CInv inv(Net::MSG_BLOCK, block.GetHash());
-				pfrom->AddInventoryKnown(inv);
+			/* Add the Block to Known Inventory. */
+			CInv inv(MSG_BLOCK, block.GetHash());
+			AddInventoryKnown(inv);
 
-				if (ProcessBlock(pfrom, &block))
-					Net::mapAlreadyAskedFor.erase(inv);
-				if (block.nDoS) pfrom->Misbehaving(block.nDoS);
-			}
+			/* TODO: Change Process Block Code. */
+			if (Core::ProcessBlock(pfrom, &block))
+				Net::mapAlreadyAskedFor.erase(inv);
+			
+		}
 
 
-			else if (strCommand == "getaddr")
-			{
-				pfrom->vAddrToSend.clear();
-				vector<Net::CAddress> vAddr = Net::addrman.GetAddr();
-				BOOST_FOREACH(const Net::CAddress &addr, vAddr)
-					pfrom->PushAddress(addr);
-			}
+		/* TODO: Change this Algorithm. */
+		else if (strCommand == "getaddr")
+		{
+			//pfrom->vAddrToSend.clear();
+			//vector<Net::CAddress> vAddr = Net::addrman.GetAddr();
+			//BOOST_FOREACH(const Net::CAddress &addr, vAddr)
+			//	pfrom->PushAddress(addr);
+		}
 
-			else if (strCommand == "ping")
-			{
-				uint64 nonce = 0;
-				vRecv >> nonce;
+		/* TODO: Change the way this works. */
+		else if (strCommand == "ping")
+		{
+			uint64 nonce = 0;
+			vRecv >> nonce;
 				
-				/** Echo the message back with the nonce. This allows for two useful features:
+			pfrom->PushMessage("pong", nonce);
+		}
 
-				1) A remote node can quickly check if the connection is operational
-				2) Remote nodes can measure the latency of the network thread. If this node
-				is overloaded it won't respond to pings quickly and the remote node can
-				avoid sending us more work, like chain download requests.
-
-				The nonce stops the remote getting confused between different pings: without
-				it, if the remote node sends a ping once per second and this node takes 5
-				seconds to respond to each, the 5th ping the remote sends would appear to
-				return very quickly. **/
-				
-				pfrom->PushMessage("pong", nonce);
-			}
-
-
-			// Update the last seen time for this node's address
-			if (pfrom->fNetworkNode)
-				if (strCommand == "version" || strCommand == "addr" || strCommand == "inv" || strCommand == "getdata" || strCommand == "ping")
-					AddressCurrentlyConnected(pfrom->addr);
+		
+		if (fNetworkNode)
+			if (strCommand == "version" || strCommand == "addr" || strCommand == "inv" || strCommand == "getdata" || strCommand == "ping")
+				AddressCurrentlyConnected(addr);
 
 
 			return true;
