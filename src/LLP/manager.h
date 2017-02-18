@@ -28,11 +28,15 @@ namespace LLP
 		
 		
 		/* Tried Address in the Manager. */
-		std::vector<CAddress> vTried;
+		std::vector<CAddrInfo> vTried;
 		
 		
 		/* New Addresses in the Manager. */
-		std::vector<CAddress> vNew;
+		std::vector<CAddrInfo> vNew;
+		
+		
+		/* The Server Running to Handle Incoming / Outgoing connections. */
+		Server<CNode> MANAGER_SERVER;
 		
 		
 	public:
@@ -41,6 +45,15 @@ namespace LLP
 		{
 			
 		}
+		
+		
+		IMPLEMENT_SERIALIZE
+		(
+			READWRITE(vNodes);
+			READWRITE(vTried);
+			READWRITE(vNew);
+		)
+		
 		
 		/* Relay a Message to all Connected Nodes. */
 		void FloodRelay(const CInv* inv);

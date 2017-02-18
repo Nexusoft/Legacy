@@ -23,15 +23,6 @@
 #undef SetPort
 #endif
 
-#define MAINNET_PORT 9323
-#define TESTNET_PORT 8313
-
-#define MAINNET_CORE_LLP_PORT 9324
-#define TESTNET_CORE_LLP_PORT 8329
-
-#define MAINNET_MINING_LLP_PORT 9325
-#define TESTNET_MINING_LLP_PORT 8325
-
 
 namespace LLP
 {
