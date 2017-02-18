@@ -18,7 +18,10 @@ namespace LLP
 	
 	class Manager
 	{
+		
+		/* Manager Mutex for thread safety. */
 		Mutex_t MANAGER_MUTEX;
+		
 		
 		/* Connected Nodes and their Pointer Reference. */
 		std::vector<CNode*> vNodes;
@@ -34,17 +37,20 @@ namespace LLP
 		
 	public:
 		
-		NodeManager(int nTotalThreads, bool fImplementCore = true)
+		Manager(int nTotalThreads, bool fImplementCore = true)
 		{
 			
 		}
 		
+		/* Relay a Message to all Connected Nodes. */
+		void FloodRelay(const CInv* inv);
 		
-		/* Find a Node in this Manager. */
+		
+		/* Find a Node in this Manager by Net Address. */
 		CNode* FindNode(const CNetAddr& ip)
 		{
-			{
-				LOCK(cs_vNodes);
+			{ LOCK_GUARD(MANAGER_MUTEX);
+				
 				BOOST_FOREACH(CNode* pnode, vNodes)
 					if ((CNetAddr)pnode->addrThisNode == ip)
 						return (pnode);
@@ -53,18 +59,17 @@ namespace LLP
 		}
 
 		
+		/* Find a Node in this Manager by Sercie Address. */
 		CNode* FindNode(const CService& addr)
 		{
-			{
-				LOCK(cs_vNodes);
+			{ LOCK_GUARD(MANAGER_MUTEX);
+
 				BOOST_FOREACH(CNode* pnode, vNodes)
 					if ((CService)pnode->addrThisNode == addr)
 						return (pnode);
 			}
 			return NULL;
 		}
-	
-		/* Last Node Status. */
 		
 	};
 }

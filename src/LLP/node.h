@@ -22,8 +22,6 @@ namespace LLP
 	
 	class CNode : public MessageConnection
 	{
-		Mutex_t NODE_MUTEX;
-		
 	public:
 		
 		/* Basic Stats. */
@@ -96,7 +94,7 @@ namespace LLP
 		/* Keep Track of the Inventory we Already have. */
 		void AddInventoryKnown(const CInv& inv)
 		{
-			LOCK_GUARD(NODE_MUTEX);
+			LOCK_GUARD(MUTEX);
 			
 			setInventoryKnown.insert(inv);
 		}
