@@ -65,7 +65,7 @@ namespace LLP
 		
 		/* Constructors for Message LLP Class. */
 		CNode() : CMessageConnection(){ }
-		CNode( Socket_t SOCKET_IN, DDOS_Filter* DDOS_IN, bool isDDOS = false ) : CMessageConnection( SOCKET_IN, DDOS_IN ) 
+		CNode( Socket_t SOCKET_IN, DDOS_Filter* DDOS_IN, bool isDDOS = false ) : CMessageConnection( SOCKET_IN, DDOS_IN )
 		{ ADDRESS = parse_ip(SOCKET_IN->remote_endpoint().address().to_string()); }
 		
 		
