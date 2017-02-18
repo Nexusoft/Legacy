@@ -1,6 +1,6 @@
 /*******************************************************************************************
  
-			Hash(BEGIN(Satoshi[2010]), END(Sunny[2013])) == Videlicet[2014] ++
+			(c) Hash(BEGIN(Satoshi[2010]), END(Sunny[2012])) == Videlicet[2017] ++
 			
 			(c) Copyright Nexus Developers 2014 - 2017
 			
@@ -15,10 +15,12 @@
 #include "Include/protocol.h"
 #include "Include/hosts.h"
 
+#include "message.h"
+
 namespace LLP
 {
 	
-	class CNode : public CMessageConnection
+	class CNode : public MessageConnection
 	{
 		Mutex_t NODE_MUTEX;
 		
@@ -72,8 +74,8 @@ namespace LLP
 		
 		
 		/* Constructors for Message LLP Class. */
-		CNode() : CMessageConnection(){ }
-		CNode( Socket_t SOCKET_IN, DDOS_Filter* DDOS_IN, bool isDDOS = false ) : CMessageConnection( SOCKET_IN, DDOS_IN )
+		CNode() : MessageConnection(){ }
+		CNode( Socket_t SOCKET_IN, DDOS_Filter* DDOS_IN, bool isDDOS = false ) : MessageConnection( SOCKET_IN, DDOS_IN )
 		{ ADDRESS = parse_ip(SOCKET_IN->remote_endpoint().address().to_string()); }
 		
 		

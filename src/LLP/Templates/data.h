@@ -67,8 +67,11 @@ namespace LLP
 			
 			CONNECTIONS[nSlot] = new ProtocolType(SOCKET, DDOS, fDDOS);
 			
-			CONNECTIONS[nSlot]->Event(EVENT_CONNECT);
-			CONNECTIONS[nSlot]->CONNECTED = true;
+			LOCK_GUARD(CONNECTIONS[nSlot]->MUTEX)
+			{
+				CONNECTIONS[nSlot]->Event(EVENT_CONNECT);
+				CONNECTIONS[nSlot]->CONNECTED = true;
+			}
 			
 			nConnections ++;
 		}
@@ -81,20 +84,24 @@ namespace LLP
 				CONNECTIONS.push_back(NULL);
 			
 			CONNECTIONS[nSlot] = new ProtocolType(SOCKET, DDOS, fDDOS);
-			if(!CONNECTIONS[nSlot]->Connect(strAddress, strPort, IO_SERVICE))
+			
+			LOCK_GUARD(CONNECTIONS[nSlot]->MUTEX)
 			{
-				delete CONNECTIONS[index];
-				CONNECTIONS[index] = NULL;
+				if(!CONNECTIONS[nSlot]->Connect(strAddress, strPort, IO_SERVICE))
+				{
+					delete CONNECTIONS[index];
+					CONNECTIONS[index] = NULL;
+					
+					return false;
+				}
 				
-				return false;
+				if(fDDOS)
+					DDOS -> cSCORE += 1;
+				
+				CONNECTIONS[nSlot]->fOUTGOING = true;
+				CONNECTIONS[nSlot]->Event(EVENT_CONNECT);
+				CONNECTIONS[nSlot]->fCONNECTED = true;
 			}
-			
-			if(fDDOS)
-				DDOS -> cSCORE += 1;
-			
-			CONNECTIONS[nSlot]->fOUTGOING = true;
-			CONNECTIONS[nSlot]->Event(EVENT_CONNECT);
-			CONNECTIONS[nSlot]->fCONNECTED = true;
 			
 			nConnections ++;
 			
@@ -105,12 +112,16 @@ namespace LLP
 			Happens with a timeout / error, graceful close, or disconnect command. */
 		void RemoveConnection(int index)
 		{
-			CONNECTIONS[index]->Event(EVENT_DISCONNECT);
-			CONNECTIONS[index]->Disconnect();
+			LOCK_GUARD(CONNECTIONS[index]->MUTEX)
+			{
+				CONNECTIONS[index]->Event(EVENT_DISCONNECT);
+				CONNECTIONS[index]->Disconnect();
 			
-			delete CONNECTIONS[index];
+				delete CONNECTIONS[index];
 					
-			CONNECTIONS[index] = NULL;
+				CONNECTIONS[index] = NULL;
+			}
+			
 			nConnections --;
 		}
 		
@@ -148,53 +159,57 @@ namespace LLP
 							continue;
 						}
 						
-						
-						/* Handle any DDOS Filters. */
-						boost::system::error_code ec;
-						std::string ADDRESS = CONNECTIONS[nIndex]->GetIPAddress();
-						
-						if(fDDOS && ADDRESS != "127.0.0.1")
+						LOCK_GUARD(CONNECTIONS[nIndex]->MUTEX)
 						{
-							/* Ban a node if it has too many Requests per Second. **/
-							if(CONNECTIONS[nIndex]->DDOS->rSCORE.Score() > DDOS_rSCORE || CONNECTIONS[nIndex]->DDOS->cSCORE.Score() > DDOS_cSCORE)
-							   CONNECTIONS[nIndex]->DDOS->Ban();
+						
+							/* Handle any DDOS Filters. */
+							boost::system::error_code ec;
+							std::string ADDRESS = CONNECTIONS[nIndex]->GetIPAddress();
 							
-							/* Remove a connection if it was banned by DDOS Protection. */
-							if(CONNECTIONS[nIndex]->DDOS->Banned())
+							if(fDDOS && ADDRESS != "127.0.0.1")
 							{
-								RemoveConnection(nIndex);
+								/* Ban a node if it has too many Requests per Second. **/
+								if(CONNECTIONS[nIndex]->DDOS->rSCORE.Score() > DDOS_rSCORE || CONNECTIONS[nIndex]->DDOS->cSCORE.Score() > DDOS_cSCORE)
+									CONNECTIONS[nIndex]->DDOS->Ban();
 								
-								continue;
-							}
-						}
-						
-						
-						/* Generic event for Connection. */
-						CONNECTIONS[nIndex]->Event(EVENT_GENERIC);
-						
-						/* Work on Reading a Packet. **/
-						CONNECTIONS[nIndex]->ReadPacket();
-						
-						/* If a Packet was received successfully, increment request count [and DDOS count if enabled]. */
-						if(CONNECTIONS[nIndex]->PacketComplete())
-						{
-							
-							/* Packet Process return value of False will flag Data Thread to Disconnect. */
-							if(!CONNECTIONS[nIndex] -> ProcessPacket())
-							{
-								RemoveConnection(nIndex);
-								
-								continue;
+								/* Remove a connection if it was banned by DDOS Protection. */
+								if(CONNECTIONS[nIndex]->DDOS->Banned())
+								{
+									RemoveConnection(nIndex);
+									
+									continue;
+								}
 							}
 							
-							CONNECTIONS[nIndex] -> ResetPacket();
 							
-							if(fMETER)
-								REQUESTS++;
+							/* Generic event for Connection. */
+							CONNECTIONS[nIndex]->Event(EVENT_GENERIC);
 							
-							if(fDDOS)
-								CONNECTIONS[nIndex]->DDOS->rSCORE += 1;
+							/* Work on Reading a Packet. **/
+							CONNECTIONS[nIndex]->ReadPacket();
 							
+							/* If a Packet was received successfully, increment request count [and DDOS count if enabled]. */
+							if(CONNECTIONS[nIndex]->PacketComplete())
+							{
+								
+								/* Packet Process return value of False will flag Data Thread to Disconnect. */
+								if(!CONNECTIONS[nIndex] -> ProcessPacket())
+								{
+									RemoveConnection(nIndex);
+									
+									continue;
+								}
+								
+								CONNECTIONS[nIndex] -> ResetPacket();
+								
+								if(fMETER)
+									REQUESTS++;
+								
+								if(fDDOS)
+									CONNECTIONS[nIndex]->DDOS->rSCORE += 1;
+								
+							}
+						
 						}
 					}
 					catch(std::exception& e)

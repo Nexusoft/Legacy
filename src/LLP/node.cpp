@@ -1,6 +1,6 @@
 /*******************************************************************************************
  
-			Hash(BEGIN(Satoshi[2010]), END(Sunny[2013])) == Videlicet[2014] ++
+			(c) Hash(BEGIN(Satoshi[2010]), END(Sunny[2012])) == Videlicet[2017] ++
 			
 			(c) Copyright Nexus Developers 2014 - 2017
 			
@@ -452,7 +452,7 @@ namespace LLP
 		else if (PACKET.COMMAND == "ping")
 		{
 			uint64 nonce = 0;
-			vRecv >> nonce;
+			ssMessage >> nonce;
 			
 			nLastPinging = GetUnifiedTimestamp();
 			cLatencyTimer.Start();
@@ -462,9 +462,11 @@ namespace LLP
 		
 		else if(PACKET.COMMAND == "pong")
 		{
-		
+			uint64 nonce = 0;
+			ssMessage >> nonce;
 			
-			
+			nNodeLatency = cLatencyTimer.ElapseMilliseconds();
+			cLatencyTimer.Reset();
 		}
 
 		
@@ -475,32 +477,5 @@ namespace LLP
 
 		return true;
 	}
-	
-	
-	CNode* FindNode(const CNetAddr& ip)
-	{
-		{
-			LOCK(cs_vNodes);
-			BOOST_FOREACH(CNode* pnode, vNodes)
-				if ((CNetAddr)pnode->addrThisNode == ip)
-					return (pnode);
-		}
-		return NULL;
-	}
-
-	
-	CNode* FindNode(const CService& addr)
-	{
-		{
-			LOCK(cs_vNodes);
-			BOOST_FOREACH(CNode* pnode, vNodes)
-				if ((CService)pnode->addrThisNode == addr)
-					return (pnode);
-		}
-		return NULL;
-	}
-	
-
-	
 	
 }

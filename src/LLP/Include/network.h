@@ -181,6 +181,59 @@ namespace LLP
 			// memory only
 			int64 nLastTry;
 	};
+	
+	
+	/** Extended statistics about a CAddress */
+	class CAddrInfo : public CAddress
+	{
+	private:
+		/* Who Gave us this Address. */
+		CNetAddr source;
+
+		
+		/* The last time this connection was seen. */
+		unsigned int nLastSuccess;
+
+		
+		/* The last time this node was tried. */
+		unsigned int nLastAttempt;
+
+		
+		/* Number of attempts to connect since last try. */
+		unsigned int nAttempts;
+
+		
+
+	public:
+
+		IMPLEMENT_SERIALIZE(
+			CAddress* pthis = (CAddress*)(this);
+			READWRITE(*pthis);
+			READWRITE(source);
+			READWRITE(nLastSuccess);
+			READWRITE(nAttempts);
+		)
+
+		void Init()
+		{
+			nLastSuccess = 0;
+			nLastTry = 0;
+			nAttempts = 0;
+			nRefCount = 0;
+			fInTried = false;
+			nRandomPos = -1;
+		}
+
+		CAddrInfo(const CAddress &addrIn, const CNetAddr &addrSource) : CAddress(addrIn), source(addrSource)
+		{
+			Init();
+		}
+
+		CAddrInfo() : CAddress(), source()
+		{
+			Init();
+		}
+	};
 }
 
 #endif

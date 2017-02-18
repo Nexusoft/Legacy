@@ -58,13 +58,20 @@ namespace LLP
 			sscanf(strAddress.c_str(), "%u.%u.%u.%u", &vAddress[0], &vAddress[1], &vAddress[2], &vAddress[3]);
 			unsigned int ADDRESS = (vAddress[0] << 24) + (vAddress[1] << 16) + (vAddress[2] << 8) + vAddress[3];
 					
-			if(!DDOS_MAP.count(ADDRESS))
-				DDOS_MAP[ADDRESS] = new DDOS_Filter(DDOS_TIMESPAN);
-							
-			/** DDOS Operations: Only executed when DDOS is enabled. **/
-			if((fDDOS && DDOS_MAP[ADDRESS]->Banned()))
-				return false;
+			/* Handle the DDOS Checking. */
+			LOCK_GUARD(DDOS_MUTEX);
+			{
+				/* Create new DDOS Filter if NEeded. */
+				if(!DDOS_MAP.count(ADDRESS))
+					DDOS_MAP[ADDRESS] = new DDOS_Filter(DDOS_TIMESPAN);
+								
+				/** DDOS Operations: Only executed when DDOS is enabled. **/
+				if((fDDOS && DDOS_MAP[ADDRESS]->Banned()))
+					return false;
+				
+			}
 			
+			/* Find a balanced Data Thread to Add Connection to. */
 			int nThread = FindThread();
 			if(!DATA_THREADS[nThread]->AddConnection(strAddress, strPort, DDOS_MAP[ADDRESS]))
 				return false;
@@ -80,6 +87,7 @@ namespace LLP
 		Error_t     ERROR_HANDLE;
 		Thread_t    LISTEN_THREAD;
 		Thread_t    METER_THREAD;
+		Mutex_t     DDOS_MUTEX;
 	
 		/* Determine the thread with the least amount of active connections. 
 			This keeps the load balanced across all server threads. */
@@ -132,12 +140,16 @@ namespace LLP
 					Socket_t SOCKET(new boost::asio::ip::tcp::socket(DATA_THREADS[nThread]->IO_SERVICE));
 					LISTENER.accept(*SOCKET);
 					
+// 					
 					/** Initialize DDOS Protection for Incoming IP Address. **/
 					std::vector<unsigned char> vAddress(4, 0);
 					sscanf(SOCKET->remote_endpoint().address().to_string().c_str(), "%u.%u.%u.%u", &vAddress[0], &vAddress[1], &vAddress[2], &vAddress[3]);
 					unsigned int ADDRESS = (vAddress[0] << 24) + (vAddress[1] << 16) + (vAddress[2] << 8) + vAddress[3];
 					
-					{ //LOCK(DDOS_MUTEX);
+					
+					/* Handle the DDOS Code. */
+					LOCK_GUARD(DDOS_MUTEX);
+					{
 						if(!DDOS_MAP.count(ADDRESS))
 							DDOS_MAP[ADDRESS] = new DDOS_Filter(DDOS_TIMESPAN);
 							
@@ -152,10 +164,12 @@ namespace LLP
 							continue;
 						}
 					
-					
-						/** Add new connection if passed all DDOS checks. **/
-						DATA_THREADS[nThread]->AddConnection(SOCKET, DDOS_MAP[ADDRESS]);
 					}
+					
+					
+					/** Add new connection if passed all DDOS checks. **/
+					DATA_THREADS[nThread]->AddConnection(SOCKET, DDOS_MAP[ADDRESS]);
+					
 				}
 				catch(std::exception& e)
 				{
@@ -163,7 +177,7 @@ namespace LLP
 				}
 			}
 		}
-		
+// 		
 		/** LLP Meter Thread. Tracks the Requests / Second. **/
 		void MeterThread()
 		{

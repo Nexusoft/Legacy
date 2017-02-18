@@ -226,10 +226,10 @@ namespace LLP
 	};
 	
 		/* Class to handle sending and receiving of LLP Packets. */
-	class BytePacket
+	class Packet
 	{
 	public:
-		BytePacket() { SetNull(); }
+		Packet() { SetNull(); }
 	
 		/* Components of an LLP Packet.
 			BYTE 0       : Header
@@ -294,6 +294,7 @@ namespace LLP
 		Timer         TIMER;
 		Error_t       ERROR_HANDLE;
 		Socket_t      SOCKET;
+		Mutex_t       MUTEX; //TODO: Optional Use Flag to Tune
 		
 		
 		/* 
