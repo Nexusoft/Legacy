@@ -636,11 +636,6 @@ namespace Core
 				nLastDifficulty = GetDifficulty(mapBlockIndex[cTrustKey.hashPrevBlocks[nIndex]]->nBits, 0);
 			}
 			
-			/* TODO: Trust Score Forgiveness. Forgive the Decay of trust key if there is a Trust block created within 1 day of Activation Timelock. */
-			//if(mapBlockIndex[cTrustKey.hashPrevBlocks[nIndex]]->GetBlockTime() + TRUST_KEY_EXPIRE < (fTestNet ? TESTNET_VERSION_TIMELOCK[3] : NETWORK_VERSION_TIMELOCK[3])) {
-				
-			//}
-			
 			/* Calculate the Weighted Trust Based on weight of trust to difficulty. */
 			unsigned int nMaxTimespan = (TRUST_KEY_MAX_TIMESPAN * (GetDifficulty(mapBlockIndex[cTrustKey.hashPrevBlocks[nIndex]]->nBits, 0) / nLastDifficulty));
 			nAverageTimespan += nMaxTimespan;
