@@ -8,8 +8,8 @@
   
 *******************************************************************************************/
 
-#ifndef NEXUS_LLP_TEMPLATES_BASE_H
-#define NEXUS_LLP_TEMPLATES_BASE_H
+#ifndef NEXUS_LLP_TEMPLATES_SERVER_H
+#define NEXUS_LLP_TEMPLATES_SERVER_H
 
 #include "data.h"
 
@@ -18,7 +18,7 @@ namespace LLP
 	
 	/** Base Class to create a Custom LLP Server. Protocol Type class must inherit Connection,
 		and provide a ProcessPacket method. Optional Events by providing GenericEvent method. **/
-	template <class ProtocolType> class Base
+	template <class ProtocolType> class Server
 	{
 		/* The DDOS variables. Tracks the Requests and Connections per Second
 			from each connected address. */
@@ -32,7 +32,7 @@ namespace LLP
 		std::vector< DataThread<ProtocolType>* > DATA_THREADS;
 		
 		
-		Base<ProtocolType>(int nPort, int nMaxThreads, bool isDDOS, int cScore, int rScore, int nTimeout, int nPort, int nTimespan, bool fListen = true, bool fMeter = false) : 
+		Server<ProtocolType>(int nPort, int nMaxThreads, bool isDDOS, int cScore, int rScore, int nTimeout, int nPort, int nTimespan, bool fListen = true, bool fMeter = false) : 
 			fDDOS(isDDOS), MAX_THREADS(nMaxThreads), PORT(nPort), DDOS_TIMESPAN(nTimespan), fLISTEN(fListen), fMETER(fMeter), METER_THREAD(boost::bind(&Base::MeterThread, this), LISTEN_THREAD(boost::bind(&Base::ListeningThread, this))
 		{
 			for(int index = 0; index < MAX_THREADS; index++)
@@ -40,7 +40,7 @@ namespace LLP
 			
 		}
 		
-		~Base<ProtocolType>()
+		~Server<ProtocolType>()
 		{
 		
 			fLISTEN = false;

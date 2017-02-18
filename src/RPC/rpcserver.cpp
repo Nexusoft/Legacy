@@ -2695,7 +2695,7 @@ namespace Net
 		asio::ip::address bindAddress = mapArgs.count("-rpcallowip") ? asio::ip::address_v4::any() : asio::ip::address_v4::loopback();
 
 		asio::io_service io_service;
-		ip::tcp::endpoint endpoint(bindAddress, GetArg("-rpcport", fTestNet? TESTNET_RPC_PORT : RPC_PORT));
+		ip::tcp::endpoint endpoint(bindAddress, GetArg("-rpcport", fTestNet? TESTNET_RPC_PORT : MAINNET_RPC_PORT));
 		ip::tcp::acceptor acceptor(io_service);
 		try
 		{
@@ -2880,7 +2880,7 @@ namespace Net
 		SSLStream sslStream(io_service, context);
 		SSLIOStreamDevice d(sslStream, fUseSSL);
 		iostreams::stream<SSLIOStreamDevice> stream(d);
-		if (!d.connect(GetArg("-rpcconnect", "127.0.0.1"), GetArg("-rpcport", CBigNum(fTestNet? TESTNET_RPC_PORT : RPC_PORT).ToString().c_str())))
+		if (!d.connect(GetArg("-rpcconnect", "127.0.0.1"), GetArg("-rpcport", CBigNum(fTestNet? TESTNET_RPC_PORT : MAINNET_RPC_PORT).ToString().c_str())))
 			throw runtime_error("couldn't connect to server");
 
 		// HTTP basic authentication

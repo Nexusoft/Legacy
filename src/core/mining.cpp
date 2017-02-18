@@ -642,7 +642,7 @@ namespace Core
 	};
 	
 	/** Entry point for the Mining LLP. **/
-	void StartMiningLLP() { MINING_LLP = new LLP::Server<LLP::MiningLLP>(fTestNet ? TESTNET_MINING_LLP_PORT : NEXUS_MINING_LLP_PORT, GetArg("-mining_threads", 10), true, GetArg("-mining_cscore", 5), GetArg("-mining_rscore", 50), GetArg("-mining_timout", 60)); }
+	void StartMiningLLP() { MINING_LLP = new LLP::Server<LLP::MiningLLP>(LLP::GetMiningPort(), GetArg("-mining_threads", 10), true, GetArg("-mining_cscore", 5), GetArg("-mining_rscore", 50), GetArg("-mining_timout", 60)); }
 	
 	
 	/** Entry Staking Function. **/

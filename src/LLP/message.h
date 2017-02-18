@@ -11,8 +11,13 @@
 #ifndef NEXUS_LLP_MESSAGE_SERVER_H
 #define NEXUS_LLP_MESSAGE_SERVER_H
 
-#include "Templates/base.h"
-#include "Include/protocol.h"
+#include "templates/types.h"
+#include "include/network.h"
+
+#define PROTOCOL_MAJOR       1
+#define PROTOCOL_MINOR       1
+#define PROTOCOL_REVISION    1
+#define PROTOCOL_BUILD       0
 
 namespace LLP
 {
@@ -22,6 +27,16 @@ namespace LLP
 	static unsigned char MESSAGE_START_MAINNET[4] = { 0x05, 0x0d, 0x59, 0xe9 };
 	
 	
+	/** Used to Lock-Out Nodes that are running a protocol version that is too old, 
+    Or to allow certain new protocol changes without confusing Old Nodes. **/
+	extern const int MIN_PROTO_VERSION;
+	
+	
+	/** Used to determine the features available in the Nexus Network **/
+	extern const int PROTOCOL_VERSION;
+	
+	
+	/* Inventory Block Messages Switch. */
 	enum
 	{
 		MSG_TX = 1,
@@ -29,7 +44,7 @@ namespace LLP
 	};
 	
 	
-		/** inv message data */
+	/** inv message data */
 	class CInv
 	{
 		public:
@@ -240,7 +255,7 @@ namespace LLP
 		
 		MessagePacket NewMessage(const char* chMessage, CDataStream ssData)
 		{
-			NexusPacket RESPONSE;
+			MessagePacket RESPONSE;
 			RESPONSE.MESSAGE = chMessage;
 			
 			RESPONSE.SetData(ssData);
@@ -251,7 +266,7 @@ namespace LLP
 		{
 			try
 			{
-				NexusPacket RESPONSE;
+				MessagePacket RESPONSE;
 				RESPONSE.MESSAGE = chMessage;
 			
 				this->WritePacket(RESPONSE);
@@ -406,77 +421,6 @@ namespace LLP
 			}
 		}
 		
-	};
-	
-	
-	class MessageLLP : public MessageConnection
-	{	
-	public:
-		
-		/* Address of the current Message LLP Connection. */
-		CAddress addr;
-		
-		
-		/* Node Information about this Message LLP Connection. */
-		std::string addrName;
-		std::string strSubVer;
-		
-		
-		/* Basic node Stats for this Current Message LLP Connection. */
-		int nVersion;
-		int nHeight;
-		int nDuraction;
-		int nTimestamp;
-		
-		
-		/* Basic flags to set the behavior of the Message LLP Connection. */
-		bool fClient;
-		bool fInbound;
-		bool fNetworkNode;
-		
-		
-		/* Mutex for Inventory Operations. */
-		Mutex_t INVENTORY_MUTEX;
-		
-		
-		/* Known Inventory to make sure duplicate requests are not called out. */
-		mruset<CInv> setInventoryKnown;
-		
-		
-		/* Constructors for Message LLP Class. */
-		MessageLLP() : MessageConnection(){ }
-		MessageLLP( Socket_t SOCKET_IN, DDOS_Filter* DDOS_IN, bool isDDOS = false ) : NexusConnection( SOCKET_IN, DDOS_IN ) 
-		{ ADDRESS = parse_ip(SOCKET_IN->remote_endpoint().address().to_string()); }
-		
-		
-		/* Virtual Functions to Determine Behavior of Message LLP. */
-		void Event(unsigned char EVENT, unsigned int LENGTH = 0);
-		bool ProcessPacket();
-		
-		
-		/* Send an Address to Node. */
-		void PushAddress(const CAddress& addr)
-		{
-			if (addr.IsValid() && !setAddrKnown.count(addr))
-				this->PushMessage("addr", addr);
-		}
-
-		
-		/* Keep Track of the Inventory we Already have. */
-		void AddInventoryKnown(const CInv& inv)
-		{
-			LOCK_GUARD(INVENTORY_MUTEX);
-			
-			setInventoryKnown.insert(inv);
-		}
-
-		
-		/* Send Inventory We have. */
-		void PushInventory(const CInv& inv)
-		{
-			if (!setInventoryKnown.count(inv))
-				this->PushMessage("inv", inv);
-		}
 	};
 }
 

@@ -23,32 +23,18 @@
 #undef SetPort
 #endif
 
-#define NEXUS_PORT  9323
-#define NEXUS_CORE_LLP_PORT 9324
-#define NEXUS_MINING_LLP_PORT 9325
-
-#define RPC_PORT     9336
-#define TESTNET_RPC_PORT 9336
-
+#define MAINNET_PORT 9323
 #define TESTNET_PORT 8313
+
+#define MAINNET_CORE_LLP_PORT 9324
 #define TESTNET_CORE_LLP_PORT 8329
+
+#define MAINNET_MINING_LLP_PORT 9325
 #define TESTNET_MINING_LLP_PORT 8325
 
-#define PROTOCOL_MAJOR       0
-#define PROTOCOL_MINOR       1
-#define PROTOCOL_REVISION    1
-#define PROTOCOL_BUILD       0
 
-extern bool fTestNet;
 namespace LLP
 {
-	/** Used to Lock-Out Nodes that are running a protocol version that is too old, 
-    Or to allow certain new protocol changes without confusing Old Nodes. **/
-	extern const int MIN_PROTO_VERSION;
-	
-	
-	/** Used to determine the features available in the Nexus Network **/
-	extern const int PROTOCOL_VERSION;
 	
 	
 	/** Declarations for the DNS Seed Nodes. **/
@@ -112,97 +98,12 @@ namespace LLP
 	};
 	
 	
-	/* Standard Wrapper Function to Interact with cstdlib DNS functions. */
-	bool LookupHost(const char *pszName, std::vector<CNetAddr>& vIP, unsigned int nMaxSolutions = 0, bool fAllowLookup = true);
-	
-	
-	/* The DNS Lookup Routine to find the Nodes that are set as DNS seeds. */
-	std::vector<CAddress> DNS_Lookup(const char* DNS_Seed[]);
-	
-	
-	/* Get the Main Core LLP Port for Nexus. */
-	static inline unsigned short GetCorePort(const bool testnet = fTestNet){ return testnet ? TESTNET_CORE_LLP_PORT : NEXUS_CORE_LLP_PORT; }
-	
-	
-	/* Get the Main Mining LLP Port for Nexus. */
-	static inline unsigned short GetMiningPort(const bool testnet = fTestNet){ return testnet ? TESTNET_MINING_LLP_PORT : NEXUS_MINING_LLP_PORT; }
-	
-	
-	/* Get the Main Message LLP Port for Nexus. */
-	static inline unsigned short GetDefaultPort(const bool testnet = fTestNet){ return testnet ? TESTNET_PORT : NEXUS_PORT; }
-	
-	
 	/* Proxy Settings fro Nexus Core. */
 	int fUseProxy = false;
 	CService addrProxy("127.0.0.1",9050);
 	
 	
-	/** inv message data */
-	class CInv
-	{
-		public:
-			CInv();
-			CInv(int typeIn, const uint1024& hashIn);
-			CInv(const std::string& strType, const uint1024& hashIn);
-
-			IMPLEMENT_SERIALIZE
-			(
-				READWRITE(type);
-				READWRITE(hash);
-			)
-
-			friend bool operator<(const CInv& a, const CInv& b);
-
-			bool IsKnownType() const;
-			const char* GetCommand() const;
-			std::string ToString() const;
-			void print() const;
-
-		// TODO: make private (improves encapsulation)
-		public:
-			int type;
-			uint1024 hash;
-	};
-
-	
-	/** A CService with information about it as peer */
-	class CAddress : public CService
-	{
-		public:
-			CAddress();
-			explicit CAddress(CService ipIn, uint64 nServicesIn = NODE_NETWORK);
-
-			void Init();
-
-			IMPLEMENT_SERIALIZE
-				(
-				 CAddress* pthis = const_cast<CAddress*>(this);
-				 CService* pip = (CService*)pthis;
-				 if (fRead)
-					 pthis->Init();
-				 if (nType & SER_DISK)
-					 READWRITE(nVersion);
-				 if ((nType & SER_DISK) || (!(nType & SER_GETHASH)))
-					 READWRITE(nTime);
-				 READWRITE(nServices);
-				 READWRITE(*pip);
-				)
-
-			void print() const;
-
-		// TODO: make private (improves encapsulation)
-		public:
-			uint64 nServices;
-
-			// disk and network only
-			unsigned int nTime;
-
-			// memory only
-			int64 nLastTry;
-	};
-
-
-	/** IP address (IPv6, or IPv4 using mapped IPv6 range (::FFFF:0:0/96)) */
+		/** IP address (IPv6, or IPv4 using mapped IPv6 range (::FFFF:0:0/96)) */
 	class CNetAddr
 	{
 		protected:
@@ -253,6 +154,7 @@ namespace LLP
 				)
 	};
 
+	
 	/** A combination of a network address (CNetAddr) and a (TCP) port */
 	class CService : public CNetAddr
 	{
@@ -298,6 +200,42 @@ namespace LLP
 			)
 	};
 
+	
+	/** A CService with information about it as peer */
+	class CAddress : public CService
+	{
+		public:
+			CAddress();
+			explicit CAddress(CService ipIn, uint64 nServicesIn = NODE_NETWORK);
+
+			void Init();
+
+			IMPLEMENT_SERIALIZE
+				(
+				 CAddress* pthis = const_cast<CAddress*>(this);
+				 CService* pip = (CService*)pthis;
+				 if (fRead)
+					 pthis->Init();
+				 if (nType & SER_DISK)
+					 READWRITE(nVersion);
+				 if ((nType & SER_DISK) || (!(nType & SER_GETHASH)))
+					 READWRITE(nTime);
+				 READWRITE(nServices);
+				 READWRITE(*pip);
+				)
+
+			void print() const;
+
+		// TODO: make private (improves encapsulation)
+		public:
+			uint64 nServices;
+
+			// disk and network only
+			unsigned int nTime;
+
+			// memory only
+			int64 nLastTry;
+	};
 }
 
-#endif // __INCLUDED_PROTOCOL_H__
+#endif

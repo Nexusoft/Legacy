@@ -12,12 +12,14 @@
 #include <string>
 #include <map>
 
-namespace Wallet { class CReserveKey; }
-
 #include "json/json_spirit_reader_template.h"
 #include "json/json_spirit_writer_template.h"
 #include "json/json_spirit_utils.h"
 
+#define MAINNET_RPC_PORT 9336
+#define TESTNET_RPC_PORT 9336
+
+namespace Wallet { class CReserveKey; }
 namespace Net
 {
 	void ThreadRPCServer(void* parg);
