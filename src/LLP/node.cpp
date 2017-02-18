@@ -125,7 +125,7 @@ namespace LLP
 		 * It gives you basic stats about the node to know how to
 		 * communicate with it.
 		 */
-		if (PACKET.HEADER == "version")
+		if (PACKET.COMMAND == "version")
 		{
 			int64 nTime;
 			CAddress addrMe;
@@ -167,7 +167,7 @@ namespace LLP
 		
 		
 		/* Get a Time Offset from the Connection. */
-		else if(PACKET.HEADER == "getoffset")
+		else if(PACKET.COMMAND == "getoffset")
 		{
 			
 			/* De-Serialize the Timestamp Sent. */
@@ -194,7 +194,7 @@ namespace LLP
 		/* Handle a new Address Message. 
 		 * This allows the exchanging of addresses on the network.
 		 */
-		else if (PACKET.HEADER == "addr")
+		else if (PACKET.COMMAND == "addr")
 		{
 			vector<CAddress> vAddr;
 			ssMessage >> vAddr;
@@ -226,7 +226,7 @@ namespace LLP
 		/* Handle new Inventory Messages.
 		 * This is used to know what other nodes have in their inventory to compare to our own. 
 		 */
-		else if (PACKET.HEADER == "inv")
+		else if (PACKET.COMMAND == "inv")
 		{
 			vector<CInv> vInv;
 			ssMessage >> vInv;
@@ -267,7 +267,7 @@ namespace LLP
 
 		
 		/* Get the Data for a Specific Command. */
-		else if (PACKET.HEADER == "getdata")
+		else if (PACKET.COMMAND == "getdata")
 		{
 			vector<Net::CInv> vInv;
 			ssMessage >> vInv;
@@ -305,7 +305,7 @@ namespace LLP
 
 
 		/* Handle a Request to get a list of Blocks from a Node. */
-		else if (PACKET.HEADER == "getblocks")
+		else if (PACKET.COMMAND == "getblocks")
 		{
 			Core::CBlockLocator locator;
 			uint1024 hashStop;
@@ -337,7 +337,7 @@ namespace LLP
 		}
 
 
-		else if (PACKET.HEADER == "tx")
+		else if (PACKET.COMMAND == "tx")
 		{
 			vector<uint512> vWorkQueue;
 			vector<uint512> vEraseQueue;
@@ -417,7 +417,7 @@ namespace LLP
 		}
 
 
-		else if (strCommand == "block")
+		else if (PACKET.COMMAND == "block")
 		{
 			Core::CBlock block;
 			vRecv >> block;
@@ -433,8 +433,8 @@ namespace LLP
 			AddInventoryKnown(inv);
 
 			/* TODO: Change Process Block Code. */
-			if (Core::ProcessBlock(pfrom, &block))
-				Net::mapAlreadyAskedFor.erase(inv);
+			//if (Core::ProcessBlock(pfrom, &block))
+			//	Net::mapAlreadyAskedFor.erase(inv);
 			
 		}
 
@@ -449,12 +449,22 @@ namespace LLP
 		}
 
 		/* Send a Ping with a nNonce to get Latency Calculations. */
-		else if (strCommand == "ping")
+		else if (PACKET.COMMAND == "ping")
 		{
 			uint64 nonce = 0;
 			vRecv >> nonce;
+			
+			nLastPinging = GetUnifiedTimestamp();
+			cLatencyTimer.Start();
 				
 			pfrom->PushMessage("pong", nonce);
+		}
+		
+		else if(PACKET.COMMAND == "pong")
+		{
+		
+			
+			
 		}
 
 		

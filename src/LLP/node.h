@@ -56,8 +56,16 @@ namespace LLP
 		
 		/* Network Statistics. */
 		unsigned int nNodeLatency; //milli-seconds
-		unsigned int nLastPinging; 
+		unsigned int nLastPinging;
 		
+		
+		/* Node Timers (Internal Statistics) */
+		Timer cLatencyTimer;
+		
+		
+		/* Unified Time Specific Variablesy. */
+		CMajority<int> cTimeSamples;
+		unsigned int nLastUnifiedCheck;
 		
 		/* Known Inventory to make sure duplicate requests are not called out. */
 		mruset<CInv> setInventoryKnown;
