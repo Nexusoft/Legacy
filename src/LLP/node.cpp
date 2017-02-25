@@ -9,7 +9,7 @@
 *******************************************************************************************/
 
 #include "Templates/server.h"
-#include "Include/protocol.h"
+#include "Include/network.h"
 #include "Include/hosts.h"
 
 namespace LLP
@@ -269,7 +269,7 @@ namespace LLP
 		/* Get the Data for a Specific Command. */
 		else if (PACKET.COMMAND == "getdata")
 		{
-			vector<Net::CInv> vInv;
+			vector<CInv> vInv;
 			ssMessage >> vInv;
 			if (vInv.size() > 50000)
 			{
@@ -288,8 +288,6 @@ namespace LLP
 
 				if (inv.type == Net::MSG_BLOCK)
 				{
-					
-					// Send block from disk
 					map<uint1024, Core::CBlockIndex*>::iterator mi = mapBlockIndex.find(inv.hash);
 					if (mi != Core::mapBlockIndex.end())
 					{
@@ -339,80 +337,26 @@ namespace LLP
 
 		else if (PACKET.COMMAND == "tx")
 		{
-			vector<uint512> vWorkQueue;
-			vector<uint512> vEraseQueue;
-				
-			CDataStream vMsg(vRecv);
-			LLD::CIndexDB indexdb("r");
 			
+			/* Deserialize the Transaction. */
 			Core::CTransaction tx;
 			ssMessage >> tx;
+			
+			if(GetArg("-verbose", 0) >= 3)
+				printf("received transaction %s\n", block.GetHash().ToString().substr(0,20).c_str());
+				
+			
+			if(GetArg("-verbose", 0) >= 1)
+				block.print();
 
-			/* TODO: Change the Inventory system. */
+			/* Add the Transaction to Known Inventory. */
 			CInv inv(MSG_TX, tx.GetHash());
 			AddInventoryKnown(inv);
-
-			bool fMissingInputs = false;
-			if (tx.AcceptToMemoryPool(indexdb, true, &fMissingInputs))
-			{
-				Core::SyncWithWallets(tx, NULL, true);
-				
-				/* TODO: Make the Relay Message work properly with new LLP Connections. */
-				RelayMessage(inv, vMsg);
 			
-				/* TODO CHANGE THESE THREE LINES. */
-				mapAlreadyAskedFor.erase(inv);
-				vWorkQueue.push_back(inv.hash.getuint512());
-				vEraseQueue.push_back(inv.hash.getuint512());
-
-				
-				// Recursively process any orphan transactions that depended on this one
-				for (unsigned int i = 0; i < vWorkQueue.size(); i++)
-				{
-					uint512 hashPrev = vWorkQueue[i];
-					for (map<uint512, CDataStream*>::iterator mi = mapOrphanTransactionsByPrev[hashPrev].begin(); mi != mapOrphanTransactionsByPrev[hashPrev].end(); ++mi)
-					{
-						const CDataStream& vMsg = *((*mi).second);
-						Core::CTransaction tx;
-						CDataStream(vMsg) >> tx;
-						
-						CInv inv(MSG_TX, tx.GetHash());
-						bool fMissingInputs2 = false;
-
-						if (tx.AcceptToMemoryPool(indexdb, true, &fMissingInputs2))
-						{
-							if(GetArg("-verbose", 1) >= 0)
-								printf("   accepted orphan tx %s\n", inv.hash.ToString().substr(0,10).c_str());
-								
-							SyncWithWallets(tx, NULL, true);
-							RelayMessage(inv, vMsg);
-							Net::mapAlreadyAskedFor.erase(inv);
-							vWorkQueue.push_back(inv.hash.getuint512());
-							vEraseQueue.push_back(inv.hash.getuint512());
-						}
-						else if (!fMissingInputs2)
-						{
-							// invalid orphan
-							vEraseQueue.push_back(inv.hash.getuint512());
-								
-							if(GetArg("-verbose", 0) >= 0)
-								printf("   removed invalid orphan tx %s\n", inv.hash.ToString().substr(0,10).c_str());
-						}
-					}
-				}
-
-				BOOST_FOREACH(uint512 hash, vEraseQueue)
-					EraseOrphanTx(hash);
-					
-			}
-			else if (fMissingInputs)
-			{
-				AddOrphanTx(vMsg);
-
-				// DoS prevention: do not allow mapOrphanTransactions to grow unbounded
-				unsigned int nEvicted = LimitOrphanTxSize(MAX_ORPHAN_TRANSACTIONS);
-				if (nEvicted > 0)
-						printf("mapOrphan overflow, removed %u tx\n", nEvicted);
+			
+			/* Add the Block to the Process Queue. */
+			{  LOCK_GUARD(NODE_MUTEX);
+				queueBlock.insert(block);
 			}
 		}
 
@@ -432,7 +376,11 @@ namespace LLP
 			CInv inv(MSG_BLOCK, block.GetHash());
 			AddInventoryKnown(inv);
 
-			/* TODO: Change Process Block Code. */
+			/* Add the Block to the Process Queue. */
+			{  LOCK_GUARD(NODE_MUTEX);
+				queueBlock.insert(block);
+			}
+			
 			//if (Core::ProcessBlock(pfrom, &block))
 			//	Net::mapAlreadyAskedFor.erase(inv);
 			

@@ -43,6 +43,10 @@ namespace LLP
 		unsigned int nTotalBadSeeds;
 		
 		
+		/* Node Identifier. */
+		uint576 cTrustKey;
+		
+		
 		/* Consensus Stats. */
 		uint1024 hashLastCheckpoint;
 		unsigned int nUnifiedOffset;
@@ -67,8 +71,29 @@ namespace LLP
 		CMajority<int> cTimeSamples;
 		unsigned int nLastUnifiedCheck;
 		
+		
+		/* Node Block Message Queues. */
+		std::queue<Core::CBlock> queueBlock;
+		
+		
+		/* Node Orphaned Transaction Messages. */
+		std::queue<Core::CBlock> queueBlockOrphan;
+		
+		
+		/* Node Transaction Message Queues. */
+		std::queue<Core:;CTransaction> queueTransaction;
+		
+		
+		/* Node Orphaned Transaction Messages. */
+		std::queue<Core::CTransaction> queueTransactionOrphan;
+		
+		
 		/* Known Inventory to make sure duplicate requests are not called out. */
 		mruset<CInv> setInventoryKnown;
+		
+		
+		/* Mutex for handling node inventory messages. */
+		Mutex_t NODE_MUTEX;
 		
 		
 		/* Constructors for Message LLP Class. */

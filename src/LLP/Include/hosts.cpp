@@ -19,24 +19,24 @@ namespace LLP
 {
 	
 	/** DNS Query of Domain Names Associated with Seed Nodes **/
-	vector<LLP::CAddress> DNS_Lookup(const char* DNS_Seed[])
+	vector<CAddress> DNS_Lookup(const char* DNS_Seed[])
 	{
-		vector<LLP::CAddress> vNodes;
+		vector<CAddress> vNodes;
 		for (unsigned int seed = 0; seed < (fTestNet ? 1 : 41); seed++)
 		{
 			printf("%u Host: %s\n", seed, DNS_Seed[seed]);
 			vector<LLP::CNetAddr> vaddr;
-			if (LLP::LookupHost(DNS_Seed[seed], vaddr))
+			if (LookupHost(DNS_Seed[seed], vaddr))
 			{
-					BOOST_FOREACH(LLP::CNetAddr& ip, vaddr)
-					{
-						LLP::CAddress addr = LLP::CAddress(LLP::CService(ip, LLP::GetDefaultPort()));
-						vNodes.push_back(addr);
+				BOOST_FOREACH(CNetAddr& ip, vaddr)
+				{
+					CAddress addr = CAddress(CService(ip, GetDefaultPort()));
+					vNodes.push_back(addr);
 					
 					printf("DNS Seed: %s\n", addr.ToStringIP().c_str());
 					
-					Net::addrman.Add(addr, ip, true);
-					}
+					//Net::addrman.Add(addr, ip, true);
+				}
 			}
 		}
 		

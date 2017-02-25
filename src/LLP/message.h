@@ -8,8 +8,8 @@
   
 *******************************************************************************************/
 
-#ifndef NEXUS_LLP_MESSAGE_SERVER_H
-#define NEXUS_LLP_MESSAGE_SERVER_H
+#ifndef NEXUS_LLP_MESSAGE_H
+#define NEXUS_LLP_MESSAGE_H
 
 #include "templates/types.h"
 #include "Include/network.h"

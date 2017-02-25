@@ -16,43 +16,39 @@
 namespace LLP
 {
 	
-	class Manager
+	namespace MANAGER
 	{
 		
 		/* Manager Mutex for thread safety. */
-		Mutex_t MANAGER_MUTEX;
+		extern Mutex_t MANAGER_MUTEX;
 		
 		
 		/* Connected Nodes and their Pointer Reference. */
-		std::vector<CNode*> vNodes;
+		extern std::vector<CNode*> vNodes;
 		
 		
 		/* Tried Address in the Manager. */
-		std::vector<CAddrInfo> vTried;
+		extern std::vector<CAddrInfo*> vTried;
 		
 		
 		/* New Addresses in the Manager. */
-		std::vector<CAddrInfo> vNew;
+		extern std::vector<CAddrInfo*> vNew;
 		
 		
 		/* The Server Running to Handle Incoming / Outgoing connections. */
-		Server<CNode> MANAGER_SERVER;
+		extern Server<CNode> MANAGER_SERVER;
 		
 		
-	public:
-		
-		Manager(int nTotalThreads, bool fImplementCore = true)
-		{
-			
-		}
+		/* Connection Manager Thread. */
+		void ConnectionManager();
 		
 		
-		IMPLEMENT_SERIALIZE
-		(
-			READWRITE(vNodes);
-			READWRITE(vTried);
-			READWRITE(vNew);
-		)
+		/* Handle and Process New Blocks. */
+		void BlockManager();
+		
+		
+		/* Handle and Process New Transactions. */
+		void TransactionManager();
 		
 		
 		/* Relay a Message to all Connected Nodes. */
