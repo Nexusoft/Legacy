@@ -17,6 +17,22 @@ namespace LLP
 	
 	namespace MANAGER
 	{
+		/* Manager Mutex for thread safety. */
+		Mutex_t MANAGER_MUTEX;
+		
+		
+		/* Connected Nodes and their Pointer Reference. */
+		std::vector<CNode*> vNodes;
+		
+		
+		/* Tried Address in the Manager. */
+		std::vector<CAddrInfo*> vTried;
+		
+		
+		/* New Addresses in the Manager. */
+		std::vector<CAddrInfo*> vNew;
+		
+		
 		void TransactionManager()
 		{
 					
