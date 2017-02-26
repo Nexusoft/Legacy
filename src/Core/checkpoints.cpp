@@ -16,11 +16,7 @@
 #include "../wallet/db.h"
 
 namespace Core
-{
-	/** Hardened Checkpoints. **/
-	std::map<unsigned int, uint1024> mapCheckpoints;
-	unsigned int CHECKPOINT_TIMESPAN = 60, MAX_CHECKPOINTS_SEARCH= 2;
-	
+{	
 	
 	/** Check Checkpoint Timespan. **/
 	bool IsNewTimespan(CBlockIndex* pindex)

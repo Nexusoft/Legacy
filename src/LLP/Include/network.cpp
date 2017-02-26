@@ -6,7 +6,7 @@
   
 *******************************************************************************************/
 
-#include "protocol.h"
+#include "network.h"
 #include "../../LLU/util.h"
 
 #ifndef WIN32
@@ -21,6 +21,7 @@ namespace LLP
 	/** Used to Lock-Out Nodes that are running a protocol version that is too old, 
     Or to allow certain new protocol changes without confusing Old Nodes. **/
 	const int MIN_PROTO_VERSION = 10000;
+	
 	
 	/** Used to determine the features available in the Nexus Network **/
 	const int PROTOCOL_VERSION =

@@ -19,7 +19,6 @@ namespace LLD
 	
 	bool CIndexDB::EraseTxIndex(const Core::CTransaction& tx)
 	{
-		assert(!Net::fClient);
 		uint512 hash = tx.GetHash();
 
 		return Erase(make_pair(string("tx"), hash));
@@ -35,7 +34,6 @@ namespace LLD
 
 	bool CIndexDB::ContainsTx(uint512 hash)
 	{
-		assert(!Net::fClient);
 		return Exists(make_pair(string("tx"), hash));
 	}
 

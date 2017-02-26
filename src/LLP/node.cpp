@@ -120,12 +120,127 @@ namespace LLP
 		MessagePacket PACKET   = this->INCOMING;
 		CDataStream ssMessage(PACKET.DATA, SER_NETWORK, MIN_PROTO_VERSION),
 			
+		/* Get a Time Offset from the Connection. */
+		if(PACKET.COMMAND == "getoffset")
+		{
+			
+			/* De-Serialize the Timestamp Sent. */
+			unsigned int nTimestamp;
+			ssMessage >> nTimestamp;
+			
+			int   nOffset    = (int)(GetUnifiedTimestamp() - nTimestamp);
+			PushMessage("offset", nOffset);
+				
+			if(GetArg("-verbose", 0) >= 3)
+				printf("***** Node: Sent Offset %i | %u.%u.%u.%u | Unified %"PRId64"\n", nOffset, ADDRESS[0], ADDRESS[1], ADDRESS[2], ADDRESS[3], GetUnifiedTimestamp());
+			
+			return true;
+		}
+		
+		/* Recieve a Time Offset from this Node. */
+		else if(PACKET.HEADER == "offset")
+		{
+			
+			
+		}
+		
+		else if(PACKET.HEADER == "getcheckpoint")
+		{
+			
+			
+		}
+		
+		/* Push a transaction into the Node's Recieved Transaction Queue. */
+		else if (PACKET.COMMAND == "tx")
+		{
+			
+			/* Deserialize the Transaction. */
+			Core::CTransaction tx;
+			ssMessage >> tx;
+			
+			if(GetArg("-verbose", 0) >= 3)
+				printf("received transaction %s\n", block.GetHash().ToString().substr(0,20).c_str());
+				
+			
+			if(GetArg("-verbose", 0) >= 1)
+				block.print();
+
+			/* Add the Transaction to Known Inventory. */
+			CInv inv(MSG_TX, tx.GetHash());
+			AddInventoryKnown(inv);
+			
+			
+			/* Add the Block to the Process Queue. */
+			{  LOCK_GUARD(NODE_MUTEX);
+				queueBlock.insert(block);
+			}
+		}
+
+
+		/* Push a block into the Node's Recieved Blocks Queue. */
+		else if (PACKET.COMMAND == "block")
+		{
+			Core::CBlock block;
+			vRecv >> block;
+
+			if(GetArg("-verbose", 0) >= 3)
+				printf("received block %s\n", block.GetHash().ToString().substr(0,20).c_str());
+				
+			if(GetArg("-verbose", 0) >= 1)
+				block.print();
+
+			/* Add the Block to Known Inventory. */
+			CInv inv(MSG_BLOCK, block.GetHash());
+			AddInventoryKnown(inv);
+
+			/* Add the Block to the Process Queue. */
+			{  LOCK_GUARD(NODE_MUTEX);
+				queueBlock.insert(block);
+			}
+			
+			//if (Core::ProcessBlock(pfrom, &block))
+			//	Net::mapAlreadyAskedFor.erase(inv);
+			
+		}
+		
+		
+		/* Send a Ping with a nNonce to get Latency Calculations. */
+		else if (PACKET.COMMAND == "ping")
+		{
+			uint64 nonce = 0;
+			ssMessage >> nonce;
+			
+			nLastPinging = GetUnifiedTimestamp();
+			cLatencyTimer.Start();
+				
+			pfrom->PushMessage("pong", nonce);
+		}
+		
+		
+		else if(PACKET.COMMAND == "pong")
+		{
+			uint64 nonce = 0;
+			ssMessage >> nonce;
+			
+			nNodeLatency = cLatencyTimer.ElapseMilliseconds();
+			cLatencyTimer.Reset();
+		}
+		
+			
+		/* ______________________________________________________________
+		 * 
+		 * 
+		 * NOTE: These following methods will be deprecated post Tritium. 
+		 *
+		 * ______________________________________________________________
+		 * /
+			
 			
 		/* Message Version is the first message received.
 		 * It gives you basic stats about the node to know how to
 		 * communicate with it.
 		 */
-		if (PACKET.COMMAND == "version")
+		else if (PACKET.COMMAND == "version")
 		{
 			int64 nTime;
 			CAddress addrMe;
@@ -164,31 +279,6 @@ namespace LLP
 			else if (PROTOCOL_VERSION == 0)
 				return false;
 		}
-		
-		
-		/* Get a Time Offset from the Connection. */
-		else if(PACKET.COMMAND == "getoffset")
-		{
-			
-			/* De-Serialize the Timestamp Sent. */
-			unsigned int nTimestamp;
-			ssMessage >> nTimestamp;
-			
-			int   nOffset    = (int)(GetUnifiedTimestamp() - nTimestamp);
-			PushMessage("offset", nOffset);
-				
-			if(GetArg("-verbose", 0) >= 3)
-				printf("***** Node: Sent Offset %i | %u.%u.%u.%u | Unified %"PRId64"\n", nOffset, ADDRESS[0], ADDRESS[1], ADDRESS[2], ADDRESS[3], GetUnifiedTimestamp());
-			
-			return true;
-		}
-		
-		/* Recieve a Time Offset from this Node. */
-		else if(PACKET.HEADER == "offset")
-		{
-			
-			
-		}
 
 		
 		/* Handle a new Address Message. 
@@ -200,8 +290,11 @@ namespace LLP
 			ssMessage >> vAddr;
 
 			/* Don't want addr from older versions unless seeding */
-			if (vAddr.size() > 1000)
+			if (vAddr.size() > 1000){
+				DDOS.rScore += 20;
+				
 				return error("***** Node message addr size() = %d... Dropping Connection", vAddr.size());
+			}
 
 			/* Store the new addresses. */
 			int64 nNow = GetUnifiedTimestamp();
@@ -329,61 +422,9 @@ namespace LLP
 					if(GetArg("-verbose", 0) >= 3)
 						printf("***** Sending getblocks stopping at %d %s (%u bytes)\n", pindex->nHeight, pindex->GetBlockHash().ToString().substr(0,20).c_str(), nBytes);
 						
-					PushInventory(Net::CInv(Net::MSG_BLOCK, pindex->GetBlockHash()));
+					PushInventory(CInv(MSG_BLOCK, pindex->GetBlockHash()));
 				}
 			}
-		}
-
-
-		else if (PACKET.COMMAND == "tx")
-		{
-			
-			/* Deserialize the Transaction. */
-			Core::CTransaction tx;
-			ssMessage >> tx;
-			
-			if(GetArg("-verbose", 0) >= 3)
-				printf("received transaction %s\n", block.GetHash().ToString().substr(0,20).c_str());
-				
-			
-			if(GetArg("-verbose", 0) >= 1)
-				block.print();
-
-			/* Add the Transaction to Known Inventory. */
-			CInv inv(MSG_TX, tx.GetHash());
-			AddInventoryKnown(inv);
-			
-			
-			/* Add the Block to the Process Queue. */
-			{  LOCK_GUARD(NODE_MUTEX);
-				queueBlock.insert(block);
-			}
-		}
-
-
-		else if (PACKET.COMMAND == "block")
-		{
-			Core::CBlock block;
-			vRecv >> block;
-
-			if(GetArg("-verbose", 0) >= 3)
-				printf("received block %s\n", block.GetHash().ToString().substr(0,20).c_str());
-				
-			if(GetArg("-verbose", 0) >= 1)
-				block.print();
-
-			/* Add the Block to Known Inventory. */
-			CInv inv(MSG_BLOCK, block.GetHash());
-			AddInventoryKnown(inv);
-
-			/* Add the Block to the Process Queue. */
-			{  LOCK_GUARD(NODE_MUTEX);
-				queueBlock.insert(block);
-			}
-			
-			//if (Core::ProcessBlock(pfrom, &block))
-			//	Net::mapAlreadyAskedFor.erase(inv);
-			
 		}
 
 
@@ -394,27 +435,6 @@ namespace LLP
 			//vector<Net::CAddress> vAddr = Net::addrman.GetAddr();
 			//BOOST_FOREACH(const Net::CAddress &addr, vAddr)
 			//	pfrom->PushAddress(addr);
-		}
-
-		/* Send a Ping with a nNonce to get Latency Calculations. */
-		else if (PACKET.COMMAND == "ping")
-		{
-			uint64 nonce = 0;
-			ssMessage >> nonce;
-			
-			nLastPinging = GetUnifiedTimestamp();
-			cLatencyTimer.Start();
-				
-			pfrom->PushMessage("pong", nonce);
-		}
-		
-		else if(PACKET.COMMAND == "pong")
-		{
-			uint64 nonce = 0;
-			ssMessage >> nonce;
-			
-			nNodeLatency = cLatencyTimer.ElapseMilliseconds();
-			cLatencyTimer.Reset();
 		}
 
 		

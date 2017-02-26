@@ -15,28 +15,19 @@
 
 namespace LLP
 {
-	
-	namespace MANAGER
+	class BlockManager
 	{
 		
+		
+	};
+	
+	
+	class NodeManager
+	{
+	public:
+		
 		/* Manager Mutex for thread safety. */
-		extern Mutex_t MANAGER_MUTEX;
-		
-		
-		/* Connected Nodes and their Pointer Reference. */
-		extern std::vector<CNode*> vNodes;
-		
-		
-		/* Tried Address in the Manager. */
-		extern std::vector<CAddrInfo*> vTried;
-		
-		
-		/* New Addresses in the Manager. */
-		extern std::vector<CAddrInfo*> vNew;
-		
-		
-		/* The Server Running to Handle Incoming / Outgoing connections. */
-		extern Server<CNode> MANAGER_SERVER;
+		Mutex_t MANAGER_MUTEX;
 		
 		
 		/* Connection Manager Thread. */
@@ -58,12 +49,11 @@ namespace LLP
 		/* Find a Node in this Manager by Net Address. */
 		CNode* FindNode(const CNetAddr& ip)
 		{
-			{ LOCK_GUARD(MANAGER_MUTEX);
-				
-				BOOST_FOREACH(CNode* pnode, vNodes)
-					if ((CNetAddr)pnode->addrThisNode == ip)
-						return (pnode);
+			{  LOCK_GUARD(MANAGER_MUTEX);
+				if(mapNodes.count((CAddress) ip))
+					return mapNodes((CAddress) ip);
 			}
+			
 			return NULL;
 		}
 
@@ -77,8 +67,26 @@ namespace LLP
 					if ((CService)pnode->addrThisNode == addr)
 						return (pnode);
 			}
+			
 			return NULL;
 		}
+		
+	private:
+		
+		/* Connected Nodes and their Pointer Reference. */
+		std::map<CAddress, CNode*> mapNodes;
+		
+		
+		/* Tried Address in the Manager. */
+		std::vector<CAddrInfo> vTried;
+		
+		
+		/* New Addresses in the Manager. */
+		std::vector<CAddrInfo> vNew;
+		
+		
+		/* The Server Running to Handle Incoming / Outgoing connections. */
+		Server<CNode> DATA_SERVER;
 		
 	};
 }
