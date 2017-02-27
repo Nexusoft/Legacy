@@ -8,12 +8,11 @@
   
 *******************************************************************************************/
 
-#ifndef NEXUS_CORE_TEMPLATES_TRANSACTION_H
-#define NEXUS_CORE_TEMPLATES_TRANSACTION_H
+#ifndef NEXUS_CORE_TRANSACTION_H
+#define NEXUS_CORE_TRANSACTION_H
 
 namespace Core
 {
-	
 	
 	enum GetMinFee_mode
 	{
@@ -671,6 +670,54 @@ namespace Core
 	};
 	
 	
+	/** A transaction with a merkle branch linking it to the block chain. */
+	class CMerkleTx : public CTransaction
+	{
+	public:
+		uint1024 hashBlock;
+		std::vector<uint512> vMerkleBranch;
+		int nIndex;
+
+		// memory only
+		mutable bool fMerkleVerified;
+
+
+		CMerkleTx()
+		{
+			Init();
+		}
+
+		CMerkleTx(const CTransaction& txIn) : CTransaction(txIn)
+		{
+			Init();
+		}
+
+		void Init()
+		{
+			hashBlock = 0;
+			nIndex = -1;
+			fMerkleVerified = false;
+		}
+
+
+		IMPLEMENT_SERIALIZE
+		(
+			nSerSize += SerReadWrite(s, *(CTransaction*)this, nType, nVersion, ser_action);
+			nVersion = this->nVersion;
+			READWRITE(hashBlock);
+			READWRITE(vMerkleBranch);
+			READWRITE(nIndex);
+		)
+
+
+		int SetMerkleBranch(const CBlock* pblock=NULL);
+		int GetDepthInMainChain(CBlockIndex* &pindexRet) const;
+		int GetDepthInMainChain() const { CBlockIndex *pindexRet; return GetDepthInMainChain(pindexRet); }
+		bool IsInMainChain() const { return GetDepthInMainChain() > 0; }
+		int GetBlocksToMaturity() const;
+		bool AcceptToMemoryPool(LLD::CIndexDB& indexdb, bool fCheckInputs=true);
+		bool AcceptToMemoryPool();
+	};
 	
 	
 	
@@ -754,16 +801,10 @@ namespace Core
 			READWRITE(vSpent);
 		)
 
-		void SetNull()
-		{
-			pos.SetNull();
-			vSpent.clear();
-		}
-
-		bool IsNull()
-		{
-			return pos.IsNull();
-		}
+		void SetNull();
+		bool IsNull();
+		
+		int GetDepthInMainChain() const;
 
 		friend bool operator==(const CTxIndex& a, const CTxIndex& b)
 		{
@@ -775,16 +816,14 @@ namespace Core
 		{
 			return !(a == b);
 		}
-		int GetDepthInMainChain() const;
-	 
 	};
-	
 	
 	
 	class CTxMemPool
 	{
 	public:
 		mutable CCriticalSection cs;
+		
 		std::map<uint512, CTransaction> mapTx;
 		std::map<COutPoint, CInPoint> mapNextTx;
 
@@ -810,6 +849,33 @@ namespace Core
 			return mapTx[hash];
 		}
 	};
+
+
+	
+	/* The global Memory Pool to Hold New Transactions. */
+	extern CTxMemPool mempool;
+	
+	
+	
+	/* __________________________________________________ (Transaction Methods) __________________________________________________  */
+	
+	
+	
+	
+	/* Add an oprhan transaction to the Orphans Memory Map. */
+	bool AddOrphanTx(const CDataStream& vMsg);
+	
+	
+	/* Remove an Orphaned Transaction from the Memory Mao. */
+	void EraseOrphanTx(uint512 hash);
+	
+	
+	/* Set the Limit of the Orphan Transaction Sizes Dynamically. */
+	unsigned int LimitOrphanTxSize(unsigned int nMaxOrphans);
+	
+	
+	/* Get a specific transaction from the Database or from a block's binary position. */
+	bool GetTransaction(const uint512 &hash, CTransaction &tx, uint1024 &hashBlock);
 	
 }
 
