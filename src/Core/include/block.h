@@ -8,8 +8,8 @@
   
 *******************************************************************************************/
 
-#ifndef NEXUS_CORE_BLOCK_H
-#define NEXUS_CORE_BLOCK_H
+#ifndef NEXUS_CORE_INCLUDE_BLOCK_H
+#define NEXUS_CORE_INCLUDE_BLOCK_H
 
 #include <vector>
 

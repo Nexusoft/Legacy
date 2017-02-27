@@ -8,8 +8,8 @@
   
 *******************************************************************************************/
 
-#ifndef NEXUS_CORE_DISPATCH_H
-#define NEXUS_CORE_DISPATCH_H
+#ifndef NEXUS_CORE_INCLUDE_DISPATCH_H
+#define NEXUS_CORE_INCLUDE_DISPATCH_H
 
 namespace Core
 {

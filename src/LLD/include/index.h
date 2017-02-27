@@ -1,13 +1,23 @@
-#ifndef LOWER_LEVEL_LIBRARY_LLD_INDEX
-#define LOWER_LEVEL_LIBRARY_LLD_INDEX
+/*******************************************************************************************
+ 
+			(c) Hash(BEGIN(Satoshi[2010]), END(Sunny[2012])) == Videlicet[2017] ++
+			
+			(c) Copyright Nexus Developers 2014 - 2017
+			
+			http://www.opensource.org/licenses/mit-license.php
+  
+*******************************************************************************************/
+
+#ifndef NEXUS_LLD_INCLUDE_INDEX_H
+#define NEXUS_LLD_INCLUDE_INDEX_H
 
 #include "sector.h"
 #include "core.h"
 #include "../wallet/db.h"
 
-/** Lower Level Database Name Space. **/
 namespace LLD
 {
+	
 #ifdef USE_LLD
 	class CIndexDB : public SectorDatabase
 	{

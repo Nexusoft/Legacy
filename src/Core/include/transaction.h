@@ -8,8 +8,8 @@
   
 *******************************************************************************************/
 
-#ifndef NEXUS_CORE_TRANSACTION_H
-#define NEXUS_CORE_TRANSACTION_H
+#ifndef NEXUS_CORE_INCLUDE_TRANSACTION_H
+#define NEXUS_CORE_INCLUDE_TRANSACTION_H
 
 namespace Core
 {

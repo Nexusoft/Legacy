@@ -8,8 +8,8 @@
   
 *******************************************************************************************/
 
-#ifndef NEXUS_CORE_DIFFICULTY_H
-#define NEXUS_CORE_DIFFICULTY_H
+#ifndef NEXUS_CORE_INCLUDE_DIFFICULTY_H
+#define NEXUS_CORE_INCLUDE_DIFFICULTY_H
 
 #include "core.h"
 

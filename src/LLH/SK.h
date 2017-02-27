@@ -1,21 +1,23 @@
 /*******************************************************************************************
  
-			Hash(BEGIN(Satoshi[2010]), END(Sunny[2012])) == Videlicet[2014] ++
-   
- [Learn and Create] Viz. http://www.opensource.org/licenses/mit-license.php
+			(c) Hash(BEGIN(Satoshi[2010]), END(Sunny[2012])) == Videlicet[2017] ++
+			
+			(c) Copyright Nexus Developers 2014 - 2017
+			
+			http://www.opensource.org/licenses/mit-license.php
   
 *******************************************************************************************/
+
 #ifndef NEXUS_LLH_SK_H
 #define NEXUS_LLH_SK_H
 
 #include "../LLT/uint1024.h"
 #include "SK/skein.h"
 
-/** Ensure the c function names are not treated as mangled for cross platform support (Issue on OSX) **/
 #if defined(__cplusplus)
 extern "C" {
 #endif
-
+	
 #include "SK/KeccakHash.h"
 	
 #if defined(__cplusplus)
@@ -24,6 +26,7 @@ extern "C" {
 
 namespace LLH 
 {
+	
 	/** Hashing template for Checksums **/
 	template<typename T1>
 	inline uint64 SK64(const T1 pbegin, const T1 pend)

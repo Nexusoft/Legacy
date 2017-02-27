@@ -1,10 +1,19 @@
-#ifndef LOWER_LEVEL_LIBRARY_LLD_JOURNAL
-#define LOWER_LEVEL_LIBRARY_LLD_JOURNAL
+/*******************************************************************************************
+ 
+			(c) Hash(BEGIN(Satoshi[2010]), END(Sunny[2012])) == Videlicet[2017] ++
+			
+			(c) Copyright Nexus Developers 2014 - 2017
+			
+			http://www.opensource.org/licenses/mit-license.php
+  
+*******************************************************************************************/
+
+#ifndef NEXUS_LLD_TEMPLATES_JOURNAL_H
+#define NEXUS_LLD_TEMPLATES_JOURNAL_H
 
 #include "sector.h"
 #include "core.h"
 
-/** Lower Level Database Name Space. **/
 namespace LLD
 {
     /* Journal Database keeps in non-volatile memory the transaction record for rollback.

@@ -8,8 +8,8 @@
   
 *******************************************************************************************/
 
-#ifndef NEXUS_CORE_TRUST_H
-#define NEXUS_CORE_TRUST_H
+#ifndef NEXUS_CORE_INCLUDE_TRUST_H
+#define NEXUS_CORE_INCLUDE_TRUST_H
 
 namespace Core
 {

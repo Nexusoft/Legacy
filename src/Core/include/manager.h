@@ -8,8 +8,8 @@
   
 *******************************************************************************************/
 
-#ifndef NEXUS_LLP_MANAGER_H
-#define NEXUS_LLP_MANAGER_H
+#ifndef NEXUS_CORE_INCLUDE_MANAGER_H
+#define NEXUS_CORE_INCLUDE_MANAGER_H
 
 #include "node.h"
 

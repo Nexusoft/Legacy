@@ -8,8 +8,8 @@
   
 *******************************************************************************************/
 
-#ifndef NEXUS_LLP_UNIFIEDTIME_H
-#define NEXUS_LLP_UNIFIEDTIME_H
+#ifndef NEXUS_LLP_INCLUDE_UNIFIEDTIME_H
+#define NEXUS_LLP_INCLUDE_UNIFIEDTIME_H
 
 #include <vector>
 #include <time.h>

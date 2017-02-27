@@ -8,8 +8,8 @@
   
 *******************************************************************************************/
 
-#ifndef NEXUS_CORE_GLOBAL_H
-#define NEXUS_CORE_GLOBAL_H
+#ifndef NEXUS_CORE_INCLUDE_GLOBAL_H
+#define NEXUS_CORE_INCLUDE_GLOBAL_H
 
 
 #ifdef WIN32

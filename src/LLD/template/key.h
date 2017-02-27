@@ -1,5 +1,15 @@
-#ifndef LOWER_LEVEL_LIBRARY_LLD_SECTOR_KEY
-#define LOWER_LEVEL_LIBRARY_LLD_SECTOR_KEY
+/*******************************************************************************************
+ 
+			(c) Hash(BEGIN(Satoshi[2010]), END(Sunny[2012])) == Videlicet[2017] ++
+			
+			(c) Copyright Nexus Developers 2014 - 2017
+			
+			http://www.opensource.org/licenses/mit-license.php
+  
+*******************************************************************************************/
+
+#ifndef NEXUS_LLD_TEMPLATES_KEY_H
+#define NEXUS_LLD_TEMPLATES_KEY_H
 
 #include <boost/thread.hpp>
 #include <fstream>
@@ -7,7 +17,6 @@
 
 #define MUTEX_LOCK(a) boost::lock_guard<boost::mutex> lock(a)
 
-/** Lower Level Database Name Space. **/
 namespace LLD
 {
 	/** Enumeration for each State.

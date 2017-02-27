@@ -8,14 +8,14 @@
   
 *******************************************************************************************/
 
-#ifndef NEXUS_LLP_NODE_H
-#define NEXUS_LLP_NODE_H
+#ifndef NEXUS_LLP_INCLUDE_NODE_H
+#define NEXUS_LLP_INCLUDE_NODE_H
 
-#include "Templates/server.h"
-#include "Include/protocol.h"
-#include "Include/hosts.h"
+#include "../templates/server.h"
 
+#include "network.h"
 #include "message.h"
+#include "hosts.h"
 
 namespace LLP
 {

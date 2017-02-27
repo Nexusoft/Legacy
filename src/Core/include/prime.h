@@ -8,8 +8,8 @@
   
 *******************************************************************************************/
 
-#ifndef NEXUS_CORE_PRIME_H
-#define NEXUS_CORE_PRIME_H
+#ifndef NEXUS_CORE_INCLUDE_PRIME_H
+#define NEXUS_CORE_INCLUDE_PRIME_H
 
 namespace Core
 {

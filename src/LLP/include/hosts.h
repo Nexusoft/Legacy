@@ -8,8 +8,8 @@
   
 *******************************************************************************************/
 
-#ifndef NEXUS_LLP_INCLUDE_PROTOCOL_H
-#define NEXUS_LLP_INCLUDE_PROTOCOL_H
+#ifndef NEXUS_LLP_INCLUDE_HOSTS_H
+#define NEXUS_LLP_INCLUDE_HOSTS_H
 
 #include "../../LLU/serialize.h"
 #include "../../LLU/compat.h"

@@ -8,8 +8,8 @@
   
 *******************************************************************************************/
 
-#ifndef NEXUS_CORE_VERSION_H
-#define NEXUS_CORE_VERSION_H
+#ifndef NEXUS_CORE_INCLUDE_VERSION_H
+#define NEXUS_CORE_INCLUDE_VERSION_H
 
 #include <string>
 

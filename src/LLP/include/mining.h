@@ -8,8 +8,8 @@
   
 *******************************************************************************************/
 
-#ifndef NEXUS_LLP_MINING_H
-#define NEXUS_LLP_MINING_H
+#ifndef NEXUS_LLP_INCLUDE_MINING_H
+#define NEXUS_LLP_INCLUDE_MINING_H
 
 namespace CORE
 {

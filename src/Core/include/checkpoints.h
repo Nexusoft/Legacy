@@ -8,8 +8,8 @@
   
 *******************************************************************************************/
 
-#ifndef NEXUS_CORE_CHECKPOINTS_H
-#define NEXUS_CORE_CHECKPOINTS_H
+#ifndef NEXUS_CORE_INCLUDE_CHECKPOINTS_H
+#define NEXUS_CORE_INCLUDE_CHECKPOINTS_H
 
 namespace CORE
 {
