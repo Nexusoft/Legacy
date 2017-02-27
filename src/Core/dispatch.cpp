@@ -12,7 +12,7 @@
 
 namespace Core
 {
-	/** Dispatching Functions: To Dispatch to Registered Wallets **/
+	/* Dispatching Functions: To Dispatch to Registered Wallets */
 	void RegisterWallet(Wallet::CWallet* pwalletIn)
 	{
 		{
@@ -29,7 +29,7 @@ namespace Core
 		}
 	}
 
-	/** Check whether the transaction is from us **/
+	/* Check whether the transaction is from us */
 	bool IsFromMe(CTransaction& tx)
 	{
 		BOOST_FOREACH(Wallet::CWallet* pwallet, setpwalletRegistered)
@@ -38,7 +38,7 @@ namespace Core
 		return false;
 	}
 
-	/** Get the transaction from the Wallet **/
+	/* Get the transaction from the Wallet */
 	bool GetTransaction(const uint512& hashTx, Wallet::CWalletTx& wtx)
 	{
 		BOOST_FOREACH(Wallet::CWallet* pwallet, setpwalletRegistered)
@@ -47,14 +47,14 @@ namespace Core
 		return false;
 	}
 
-	/** Removes given transaction from the wallet **/
+	/* Removes given transaction from the wallet */
 	void EraseFromWallets(uint512 hash)
 	{
 		BOOST_FOREACH(Wallet::CWallet* pwallet, setpwalletRegistered)
 			pwallet->EraseFromWallet(hash);
 	}
 
-	/** Make sure all wallets know about the given transaction, in the given block **/
+	/* Make sure all wallets know about the given transaction, in the given block */
 	void SyncWithWallets(const CTransaction& tx, const CBlock* pblock, bool fUpdate, bool fConnect)
 	{
 		if (!fConnect)
@@ -73,35 +73,35 @@ namespace Core
 			pwallet->AddToWalletIfInvolvingMe(tx, pblock, fUpdate);
 	}
 
-	/** Notify wallets about a new best chain **/
+	/* Notify wallets about a new best chain */
 	void SetBestChain(const CBlockLocator& loc)
 	{
 		BOOST_FOREACH(Wallet::CWallet* pwallet, setpwalletRegistered)
 			pwallet->SetBestChain(loc);
 	}
 
-	/** Notify wallets about an updated transaction **/
+	/* Notify wallets about an updated transaction */
 	void UpdatedTransaction(const uint512& hashTx)
 	{
 		BOOST_FOREACH(Wallet::CWallet* pwallet, setpwalletRegistered)
 			pwallet->UpdatedTransaction(hashTx);
 	}
 
-	/** Dump All Wallets **/
+	/* Dump All Wallets */
 	void PrintWallets(const CBlock& block)
 	{
 		BOOST_FOREACH(Wallet::CWallet* pwallet, setpwalletRegistered)
 			pwallet->PrintWallet(block);
 	}
 
-	/** Notify wallets about an incoming inventory (for request counts) **/
+	/* Notify wallets about an incoming inventory (for request counts) */
 	void Inventory(const uint1024& hash)
 	{
 		BOOST_FOREACH(Wallet::CWallet* pwallet, setpwalletRegistered)
 			pwallet->Inventory(hash);
 	}
 
-	/** Ask wallets to resend their transactions **/
+	/* Ask wallets to resend their transactions */
 	void ResendWalletTransactions()
 	{
 		BOOST_FOREACH(Wallet::CWallet* pwallet, setpwalletRegistered)

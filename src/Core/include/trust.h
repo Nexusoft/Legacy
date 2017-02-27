@@ -12,11 +12,7 @@
 #define NEXUS_CORE_INCLUDE_TRUST_H
 
 #include "../../LLU/include/serialize.h"
-
-class uint256;
-class uint512;
-class uint576;
-class uint1024;
+#include "../../LLC/hash/SK.h"
 
 namespace Core
 {
@@ -73,7 +69,7 @@ namespace Core
 		}
 		
 		/** Hash of a Trust Key to Verify the Key's Root. **/
-		uint512 GetHash() const { return LLH::SK512(vchPubKey, BEGIN(hashGenesisBlock), END(nGenesisTime)); }
+		uint512 GetHash() const { return LLC::HASH::SK512(vchPubKey, BEGIN(hashGenesisBlock), END(nGenesisTime)); }
 		
 		/** Determine how old the Trust Key is From Timestamp. **/
 		uint64 Age(unsigned int nTime) const;

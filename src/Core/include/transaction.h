@@ -13,22 +13,11 @@
 
 #include <map>
 #include <stdint.h>
-
-#if defined(MAC_OSX) || defined(WIN32)
-typedef int64_t int64;
-typedef uint64_t uint64;
-#else
-typedef long long  int64;
-typedef unsigned long long  uint64;
-#endif
-
-class uint256;
-class uint512;
-class uint576;
-class uint1024;
+#include "../../LLU/templates/serialize.h"
+#include "../../LLC/types/uint1024.h"
 
 namespace Wallet
-{ 
+{
 	class CScript;
 }
 
@@ -48,23 +37,6 @@ namespace Core
 		GMF_BLOCK,
 		GMF_RELAY,
 		GMF_SEND,
-	};
-	
-	
-	typedef std::map<uint512, std::pair<CTxIndex, CTransaction> > MapPrevTx;
-
-	
-	/** An inpoint - a combination of a transaction and an index n into its vin */
-	class CInPoint
-	{
-	public:
-		CTransaction* ptx;
-		unsigned int n;
-
-		CInPoint() { SetNull(); }
-		CInPoint(CTransaction* ptxIn, unsigned int nIn) { ptx = ptxIn; n = nIn; }
-		void SetNull() { ptx = NULL; n = -1; }
-		bool IsNull() const { return (ptx == NULL && n == -1); }
 	};
 
 
@@ -96,15 +68,9 @@ namespace Core
 			return !(a == b);
 		}
 
-		std::string ToString() const
-		{
-			return strprintf("COutPoint(%s, %d)", hash.ToString().substr(0,10).c_str(), n);
-		}
+		std::string ToString() const;
 
-		void print() const
-		{
-			printf("%s\n", ToString().c_str());
-		}
+		void print() const;
 	};
 
 
@@ -175,37 +141,11 @@ namespace Core
 			return !(a == b);
 		}
 
-		std::string ToStringShort() const
-		{
-			return strprintf(" %s %d", prevout.hash.ToString().c_str(), prevout.n);
-		}
+		std::string ToStringShort() const;
 
-		std::string ToString() const
-		{
-			std::string str;
-			str += "CTxIn(";
-			str += prevout.ToString();
-			if (prevout.IsNull())
-			{	
-				if(IsStakeSig())
-					str += strprintf(", genesis %s", HexStr(scriptSig).c_str());
-				else
-					str += strprintf(", coinbase %s", HexStr(scriptSig).c_str());
-			}
-			else if(IsStakeSig())
-				str += strprintf(", trust %s", HexStr(scriptSig).c_str());
-			else
-				str += strprintf(", scriptSig=%s", scriptSig.ToString().substr(0,24).c_str());
-			if (nSequence != std::numeric_limits<unsigned int>::max())
-				str += strprintf(", nSequence=%u", nSequence);
-			str += ")";
-			return str;
-		}
+		std::string ToString() const;
 
-		void print() const
-		{
-			printf("%s\n", ToString().c_str());
-		}
+		void print() const;
 	};
 
 
@@ -274,23 +214,11 @@ namespace Core
 			return !(a == b);
 		}
 
-		std::string ToStringShort() const
-		{
-			return strprintf(" out %s %s", FormatMoney(nValue).c_str(), scriptPubKey.ToString(true).c_str());
-		}
+		std::string ToStringShort() const;
 
-		std::string ToString() const
-		{
-			if (IsEmpty()) return "CTxOut(empty)";
-			if (scriptPubKey.size() < 6)
-				return "CTxOut(error)";
-			return strprintf("CTxOut(nValue=%s, scriptPubKey=%s)", FormatMoney(nValue).c_str(), scriptPubKey.ToString().c_str());
-		}
+		std::string ToString() const;
 
-		void print() const
-		{
-			printf("%s\n", ToString().c_str());
-		}
+		void print() const;
 	};
 	
 	
@@ -408,24 +336,24 @@ namespace Core
 		/** Coinstake Transaction Rules: **/
 		bool IsCoinStake() const
 		{
-			/** A] Must have more than one Input. **/
+			/* A] Must have more than one Input. */
 			if(vin.size() <= 1)
 				return false;
 				
-			/** B] First Input Script Signature must be 8 Bytes. **/
+			/* B] First Input Script Signature must be 8 Bytes. */
 			if(vin[0].scriptSig.size() != 8)
 				return false;
 				
-			/** C] First Input Script Signature must Contain Fibanacci Byte Series. **/
+			/* C] First Input Script Signature must Contain Fibanacci Byte Series. */
 			if(!vin[0].IsStakeSig())
 				return false;
 				
-			/** D] All Remaining Previous Inputs must not be Empty. **/
+			/* D] All Remaining Previous Inputs must not be Empty. */
 			for(int nIndex = 1; nIndex < vin.size(); nIndex++)
 				if(vin[nIndex].prevout.IsNull())
 					return false;
 				
-			/** E] Must Contain only 1 Outputs. **/
+			/* E] Must Contain only 1 Outputs. */
 			if(vout.size() != 1)
 				return false;
 				
@@ -435,11 +363,11 @@ namespace Core
 		/** Flag to determine if the transaction is a genesis transaction. **/
 		bool IsGenesis() const
 		{
-			/** A] Genesis Transaction must be Coin Stake. **/
+			/* A] Genesis Transaction must be Coin Stake. */
 			if(!IsCoinStake())
 				return false;
 				
-			/** B] First Input Previous Transaction must be Empty. **/
+			/* B] First Input Previous Transaction must be Empty. */
 			if(!vin[0].prevout.IsNull())
 				return false;
 				
@@ -511,8 +439,6 @@ namespace Core
 		}
 
 		/** Amount of Coins coming in to this transaction
-			Note that lightweight clients may not know anything besides the hash of previous transactions,
-			so may not be able to calculate this.
 
 			@param[in] mapInputs	Map of previous transactions that have outputs we're spending
 			@return	Sum of value of all inputs (scriptSigs)
@@ -527,84 +453,10 @@ namespace Core
 			return dPriority > COIN * 144 / 250;
 		}
 
-		int64 GetMinFee(unsigned int nBlockSize=1, bool fAllowFree=false, enum GetMinFee_mode mode=GMF_BLOCK) const
-		{
-			if(nVersion >= 2)
-				return 0;
-				
-			// Base fee is either MIN_TX_FEE or MIN_RELAY_TX_FEE
-			int64 nBaseFee = (mode == GMF_RELAY) ? MIN_RELAY_TX_FEE : MIN_TX_FEE;
-
-			unsigned int nBytes = ::GetSerializeSize(*this, SER_NETWORK, PROTOCOL_VERSION);
-			unsigned int nNewBlockSize = nBlockSize + nBytes;
-			int64 nMinFee = (1 + (int64)nBytes / 1000) * nBaseFee;
-
-			if (fAllowFree)
-			{
-				if (nBlockSize == 1)
-				{
-					// Transactions under 10K are free
-					// (about 4500bc if made of 50bc inputs)
-					if (nBytes < 10000)
-						nMinFee = 0;
-				}
-				else
-				{
-					// Free transaction area
-					if (nNewBlockSize < 27000)
-						nMinFee = 0;
-				}
-			}
-
-			// To limit dust spam, require MIN_TX_FEE/MIN_RELAY_TX_FEE if any output is less than 0.01
-			if (nMinFee < nBaseFee)
-			{
-				BOOST_FOREACH(const CTxOut& txout, vout)
-					if (txout.nValue < CENT)
-						nMinFee = nBaseFee;
-			}
-
-			// Raise the price as the block approaches full
-			if (nBlockSize != 1 && nNewBlockSize >= MAX_BLOCK_SIZE_GEN/2)
-			{
-				if (nNewBlockSize >= MAX_BLOCK_SIZE_GEN)
-					return MAX_TXOUT_AMOUNT;
-				nMinFee *= MAX_BLOCK_SIZE_GEN / (MAX_BLOCK_SIZE_GEN - nNewBlockSize);
-			}
-
-			if (!MoneyRange(nMinFee))
-				nMinFee = MAX_TXOUT_AMOUNT;
-				
-			return nMinFee;
-		}
+		int64 GetMinFee(unsigned int nBlockSize=1, bool fAllowFree=false, enum GetMinFee_mode mode=GMF_BLOCK) const;
 
 
-		bool ReadFromDisk(CDiskTxPos pos, FILE** pfileRet=NULL)
-		{
-			CAutoFile filein = CAutoFile(OpenBlockFile(pos.nFile, 0, pfileRet ? "rb+" : "rb"), SER_DISK, DATABASE_VERSION);
-			if (!filein)
-				return error("CTransaction::ReadFromDisk() : OpenBlockFile failed");
-
-			// Read transaction
-			if (fseek(filein, pos.nTxPos, SEEK_SET) != 0)
-				return error("CTransaction::ReadFromDisk() : fseek failed");
-
-			try {
-				filein >> *this;
-			}
-			catch (std::exception &e) {
-				return error("%s() : deserialize or I/O error", __PRETTY_FUNCTION__);
-			}
-
-			// Return file pointer
-			if (pfileRet)
-			{
-				if (fseek(filein, pos.nTxPos, SEEK_SET) != 0)
-					return error("CTransaction::ReadFromDisk() : second fseek failed");
-				*pfileRet = filein.release();
-			}
-			return true;
-		}
+		bool ReadFromDisk(CDiskTxPos pos, FILE** pfileRet=NULL);
 
 		friend bool operator==(const CTransaction& a, const CTransaction& b)
 		{
@@ -621,35 +473,11 @@ namespace Core
 		}
 
 
-		std::string ToStringShort() const
-		{
-			std::string str;
-			str += strprintf("%s %s", GetHash().ToString().c_str(), IsCoinBase()? "base" : (IsCoinStake()? "stake" : "user"));
-			return str;
-		}
+		std::string ToStringShort() const;
 
-		std::string ToString() const
-		{
-			std::string str;
-			str += IsCoinBase() ? "Coinbase" : (IsGenesis() ? "Genesis" : (IsTrust() ? "Trust" : "Transaction"));
-			str += strprintf("(hash=%s, nTime=%d, ver=%d, vin.size=%d, vout.size=%d, nLockTime=%d)\n",
-				GetHash().ToString().substr(0,10).c_str(),
-				nTime,
-				nVersion,
-				vin.size(),
-				vout.size(),
-				nLockTime);
-			for (unsigned int i = 0; i < vin.size(); i++)
-				str += "    " + vin[i].ToString() + "\n";
-			for (unsigned int i = 0; i < vout.size(); i++)
-				str += "    " + vout[i].ToString() + "\n";
-			return str;
-		}
+		std::string ToString() const;
 
-		void print() const
-		{
-			printf("%s", ToString().c_str());
-		}
+		void print() const;
 
 
 		bool GetCoinstakeInterest(LLD::CIndexDB& txdb, int64& nInterest) const;
@@ -696,6 +524,20 @@ namespace Core
 
 	protected:
 		const CTxOut& GetOutputFor(const CTxIn& input, const MapPrevTx& inputs) const;
+	};
+	
+	
+	/** An inpoint - a combination of a transaction and an index n into its vin */
+	class CInPoint
+	{
+	public:
+		CTransaction* ptx;
+		unsigned int n;
+
+		CInPoint() { SetNull(); }
+		CInPoint(CTransaction* ptxIn, unsigned int nIn) { ptx = ptxIn; n = nIn; }
+		void SetNull() { ptx = NULL; n = -1; }
+		bool IsNull() const { return (ptx == NULL && n == -1); }
 	};
 	
 	
@@ -786,18 +628,9 @@ namespace Core
 			return !(a == b);
 		}
 
-		std::string ToString() const
-		{
-			if (IsNull())
-				return "null";
-			else
-				return strprintf("(nFile=%d, nBlockPos=%d, nTxPos=%d)", nFile, nBlockPos, nTxPos);
-		}
+		std::string ToString() const;
+		void print() const;
 
-		void print() const
-		{
-			printf("%s", ToString().c_str());
-		}
 	};
 
 
@@ -883,6 +716,9 @@ namespace Core
 	
 	/* The global Memory Pool to Hold New Transactions. */
 	extern CTxMemPool mempool;
+	
+	
+	typedef std::map<uint512, std::pair<CTxIndex, CTransaction> > MapPrevTx;
 	
 	
 	

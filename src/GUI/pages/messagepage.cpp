@@ -103,7 +103,7 @@ void MessagePage::on_signMessage_clicked()
     ss << ui->message->document()->toPlainText().toStdString();
 
     std::vector<unsigned char> vchSig;
-    if (!key.SignCompact(LLH::SK256(ss.begin(), ss.end()), vchSig))
+    if (!key.SignCompact(LLC::HASH::SK256(ss.begin(), ss.end()), vchSig))
     {
         QMessageBox::critical(this, tr("Error signing"), tr("Sign failed"),
                               QMessageBox::Abort, QMessageBox::Abort);
@@ -135,7 +135,7 @@ void MessagePage::on_verifyMessage_clicked()
     ss << ui->message->document()->toPlainText().toStdString();
 
 	Wallet::CKey key;
-	if (!key.SetCompactSignature(LLH::SK256(ss.begin(), ss.end()), vchSig))
+	if (!key.SetCompactSignature(LLC::HASH::SK256(ss.begin(), ss.end()), vchSig))
 	{
 	    QMessageBox::critical(this, tr("Error verifying"), tr("Invalid Signature"),
                             QMessageBox::Abort, QMessageBox::Abort);

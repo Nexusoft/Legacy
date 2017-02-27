@@ -14,11 +14,6 @@
 #include "templates/types.h"
 #include "Include/network.h"
 
-#define PROTOCOL_MAJOR       1
-#define PROTOCOL_MINOR       1
-#define PROTOCOL_REVISION    1
-#define PROTOCOL_BUILD       0
-
 namespace LLP
 {
 	
@@ -142,7 +137,7 @@ namespace LLP
 		/*Set the Packet Checksum Data. */
 		void SetChecksum()
 		{
-			uint512 hash = LLH::SK512(DATA.begin(), DATA.end());
+			uint512 hash = LLC::SK512(DATA.begin(), DATA.end());
 			memcpy(&CHECKSUM, &hash, sizeof(CHECKSUM));
 		}
 		
@@ -174,7 +169,7 @@ namespace LLP
 				return error("Message Packet (%s, %u bytes) : Message too Large", COMMAND.c_str(), LENGTH);
 
 			/* Double check the Message Checksum. */
-			uint512 hash = LLH::SK512(DATA.begin(), DATA.end());
+			uint512 hash = LLC::SK512(DATA.begin(), DATA.end());
 			unsigned int nChecksum = 0;
 			memcpy(&nChecksum, &hash, sizeof(nChecksum));
 			if (nChecksum != CHECKSUM)

@@ -12,19 +12,11 @@
 #define NEXUS_CORE_INCLUDE_BLOCK_H
 
 #include <stdint.h>
+#include "../../LLU/include/serialize.h"
+#include "../../LLC/types/uint1024.h"
 
-#if defined(MAC_OSX) || defined(WIN32)
-typedef int64_t int64;
-typedef uint64_t uint64;
-#else
-typedef long long  int64;
-typedef unsigned long long  uint64;
-#endif
-
-class uint256;
-class uint512;
-class uint576;
-class uint1024;
+#include "../../LLC/hash/SK.h"
+#include "../../LLC/hash/macro.h"
 
 namespace LLD 
 {
@@ -61,11 +53,11 @@ namespace Core
 		uint64 nNonce;
 		
 		
-		/* The Block Time set at Block Signature. */
+		/* The Block Time locked in Block Signature. */
 		unsigned int nTime;
 
 		
-		/* Nexus: block signature */
+		/* Nexus block signature */
 		std::vector<unsigned char> vchBlockSig;
 		
 		
@@ -109,55 +101,153 @@ namespace Core
 
 		/* Set block to a NULL state. */
 		void SetNull()
+		{
+			nVersion = 3;
+			hashPrevBlock = 0;
+			hashMerkleRoot = 0;
+			nChannel = 0;
+			nHeight = 0;
+			nBits = 0;
+			nNonce = 0;
+			
+			nTime = 0;
+
+			vtx.clear();
+			vchBlockSig.clear();
+			vMerkleTree.clear();
+			nDoS = 0;
+		}
 		
 		
 		/* Set the Channel for block. */
 		void SetChannel(unsigned int nNewChannel)
-
+		{
+			nChannel = nNewChannel;
+		}
+		
 		
 		/* Get the Channel block is produced from. */
 		int GetChannel() const
-
-
+		{
+			return nChannel;
+		}
+		
+		
 		/* Check the NULL state of the block. */
 		bool IsNull() const
+		{
+			return (nBits == 0);
+		}
+		
+		
+		/* Return the Block's current UNIX Timestamp. */
+		int64 GetBlockTime() const
+		{
+			return (int64)nTime;
+		}
 		
 		
 		/* Get the prime number of the block. */
 		CBigNum GetPrime() const
-
+		{
+			return CBigNum(GetHash() + nNonce);
+		}
+		
 		
 		/* Generate a Hash For the Block from the Header. */
 		uint1024 GetHash() const
+		{
+			/** Hashing template for CPU miners uses nVersion to nBits **/
+			if(GetChannel() == 1)
+				return SK1024(BEGIN(nVersion), END(nBits));
+				
+			/** Hashing template for GPU uses nVersion to nNonce **/
+			return SK1024(BEGIN(nVersion), END(nNonce));
+		}
 		
 		
 		/* Generate the Signature Hash Required After Block completes Proof of Work / Stake. */
-		uint1024 SignatureHash() const;
+		uint1024 SignatureHash() const
+		{
+			if(nVersion < 5)
+				return SK1024(BEGIN(nVersion), END(nTime));
+			else
+				return SK1024(BEGIN(nVersion), END(hashPrevChecksum));
+		}
 		
-		
-		/* Return the Block's current UNIX Timestamp. */
-		int64 GetBlockTime() const;
-		
-		
+
 		/* Update the nTime of the current block. */
 		void UpdateTime();
 		
 		
 		/* Check flags for nPoS block. */
-		bool IsProofOfStake() const;
+		bool IsProofOfStake() const
+		{
+			return (nChannel == 0);
+		}
 		
 		
 		/* Check flags for PoW block. */
-		bool IsProofOfWork() const;
+		bool IsProofOfWork() const
+		{
+			return (nChannel == 1 || nChannel == 2);
+		}
 
 		
 		/* Generate the Merkle Tree from uint512 hashes. */
-		uint512 BuildMerkleTree() const;
+		uint512 BuildMerkleTree() const
+		{
+			vMerkleTree.clear();
+			BOOST_FOREACH(const CTransaction& tx, vtx)
+				vMerkleTree.push_back(tx.GetHash());
+			int j = 0;
+			for (int nSize = vtx.size(); nSize > 1; nSize = (nSize + 1) / 2)
+			{
+				for (int i = 0; i < nSize; i += 2)
+				{
+					int i2 = std::min(i+1, nSize-1);
+					vMerkleTree.push_back(SK512(BEGIN(vMerkleTree[j+i]),  END(vMerkleTree[j+i]),
+											    BEGIN(vMerkleTree[j+i2]), END(vMerkleTree[j+i2])));
+				}
+				j += nSize;
+			}
+			return (vMerkleTree.empty() ? 0 : vMerkleTree.back());
+		}
+		
+		
+		/* Get the current Branch that is being worked on. */
+		std::vector<uint512> GetMerkleBranch(int nIndex) const
+		{
+			if (vMerkleTree.empty())
+				BuildMerkleTree();
+			std::vector<uint512> vMerkleBranch;
+			int j = 0;
+			for (int nSize = vtx.size(); nSize > 1; nSize = (nSize + 1) / 2)
+			{
+				int i = std::min(nIndex^1, nSize-1);
+				vMerkleBranch.push_back(vMerkleTree[j+i]);
+				nIndex >>= 1;
+				j += nSize;
+			}
+			return vMerkleBranch;
+		}
 
 		
 		/* Check that the Merkle branch matches hash tree. */
-		static uint512 CheckMerkleBranch(uint512 hash, const std::vector<uint512>& vMerkleBranch, int nIndex);
-
+		static uint512 CheckMerkleBranch(uint512 hash, const std::vector<uint512>& vMerkleBranch, int nIndex)
+		{
+			if (nIndex == -1)
+				return 0;
+			for(int i = 0; i < vMerkleBranch.size(); i++)
+			{
+				if (nIndex & 1)
+					hash = SK512(BEGIN(vMerkleBranch[i]), END(vMerkleBranch[i]), BEGIN(hash), END(hash));
+				else
+					hash = SK512(BEGIN(hash), END(hash), BEGIN(vMerkleBranch[i]), END(ovMerkleBranch[i]));
+				nIndex >>= 1;
+			}
+			return hash;
+		}
 	
 		/* Write Block to Disk File. */
 		bool WriteToDisk(unsigned int& nFileRet, unsigned int& nBlockPosRet);
@@ -266,19 +356,135 @@ namespace Core
 
 		unsigned int nTime;
 
-		CBlockIndex();
-		CBlockIndex(unsigned int nFileIn, unsigned int nBlockPosIn, CBlock& block);
+		CBlockIndex()
+		{
+			phashBlock = NULL;
+			pprev = NULL;
+			pnext = NULL;
+			nFile = 0;
+			nBlockPos = 0;
+			
+			nChainTrust = 0;
+			nMint = 0;
+			nMoneySupply = 0;
+			nFlags = 0;
+			nStakeModifier = 0;
+			
+			nCoinbaseRewards[0] = 0;
+			nCoinbaseRewards[1] = 0;
+			nCoinbaseRewards[2] = 0;
 
-		CBlock GetBlockHeader() const;
-		int GetChannel() const;
-		uint1024 GetBlockHash() const;
-		int64 GetBlockTime() const;
-		uint64 GetBlockTrust() const;
-		bool IsInMainChain() const;
-		bool CheckIndex() const;
+			nVersion       = 0;
+			hashMerkleRoot = 0;
+			nHeight        = 0;
+			nBits          = 0;
+			nNonce         = 0;
+			
+			nTime          = 0;
+		}
+		
+		CBlockIndex(unsigned int nFileIn, unsigned int nBlockPosIn, CBlock& block)
+		{
+			phashBlock = NULL;
+			pprev = NULL;
+			pnext = NULL;
+			nFile = nFileIn;
+			nBlockPos = nBlockPosIn;
+			nChainTrust = 0;
+			nMint = 0;
+			nMoneySupply = 0;
+			nStakeModifier = 0;
+			nFlags = 0;
+			
+			nCoinbaseRewards[0] = 0;
+			nCoinbaseRewards[1] = 0;
+			nCoinbaseRewards[2] = 0;
+				
+			if (block.IsProofOfWork() && block.nHeight > 0)
+			{
+				unsigned int nSize = block.vtx[0].vout.size();
+				for(int nIndex = 0; nIndex < nSize - 2; nIndex++)
+					nCoinbaseRewards[0] += block.vtx[0].vout[nIndex].nValue;
+						
+				nCoinbaseRewards[1] = block.vtx[0].vout[nSize - 2].nValue;
+				nCoinbaseRewards[2] = block.vtx[0].vout[nSize - 1].nValue;
+			}
+
+			nVersion       = block.nVersion;
+			hashMerkleRoot = block.hashMerkleRoot;
+			nChannel       = block.nChannel;
+			nHeight        = block.nHeight;
+			nBits          = block.nBits;
+			nNonce         = block.nNonce;
+			
+			nTime          = block.nTime;
+		}
+
+		CBlock GetBlockHeader() const
+		{
+			CBlock block;
+			block.nVersion       = nVersion;
+			if (pprev)
+				block.hashPrevBlock = pprev->GetBlockHash();
+			block.hashMerkleRoot = hashMerkleRoot;
+			block.nChannel       = nChannel;
+			block.nHeight        = nHeight;
+			block.nBits          = nBits;
+			block.nNonce         = nNonce;
+			
+			block.nTime          = nTime;
+			
+			return block;
+		}
+		
+		int GetChannel() const
+		{
+			return nChannel;
+		}
+
+		uint1024 GetBlockHash() const
+		{
+			return *phashBlock;
+		}
+
+		int64 GetBlockTime() const
+		{
+			return (int64)nTime;
+		}
+
+		uint64 GetBlockTrust() const
+		{
+				
+			/** Give higher block trust if last block was of different channel **/
+			if(pprev && pprev->GetChannel() != GetChannel())
+				return 3;
+			
+			/** Normal Block Trust Increment. **/
+			return 1;
+		}
+
+		bool IsInMainChain() const
+		{
+			return (pnext || this == pindexBest);
+		}
+
+		bool CheckIndex() const
+		{
+			return true;//IsProofOfWork() ? CheckProofOfWork(GetBlockHash(), nBits) : true;
+		}
+		
+		bool IsProofOfWork() const
+		{
+			return (nChannel > 0);
+		}
+
+		bool IsProofOfStake() const
+		{
+			return (nChannel == 0);
+		}
+		
 		bool EraseBlockFromDisk();
-		bool IsProofOfWork() const;
-		bool IsProofOfStake() const;
+		
 		std::string ToString() const;
 		void print() const;
 	};
@@ -290,6 +496,18 @@ namespace Core
 	public:
 		uint1024 hashPrev;
 		uint1024 hashNext;
+		
+		CDiskBlockIndex()
+		{
+			hashPrev = 0;
+			hashNext = 0;
+		}
+
+		explicit CDiskBlockIndex(CBlockIndex* pindex) : CBlockIndex(*pindex)
+		{
+			hashPrev = (pprev ? pprev->GetBlockHash() : 0);
+			hashNext = (pnext ? pnext->GetBlockHash() : 0);
+		}
 
 		IMPLEMENT_SERIALIZE
 		(
@@ -335,26 +553,27 @@ namespace Core
 			READWRITE(nTime);
 			
 		)
-		
-		
-		/* Basic Disk Index Constructor. */
-		CDiskBlockIndex()
-
-		
-		/* Disk Index Construct from Block Index. */
-		explicit CDiskBlockIndex(CBlockIndex* pindex) : CBlockIndex(*pindex)
-
 
 		/* Get the Block Hash. */
 		uint1024 GetBlockHash() const
-
-
+		{
+			CBlock block;
+			block.nVersion        = nVersion;
+			block.hashPrevBlock   = hashPrev;
+			block.hashMerkleRoot  = hashMerkleRoot;
+			block.nChannel        = nChannel;
+			block.nHeight         = nHeight;
+			block.nBits           = nBits;
+			block.nNonce          = nNonce;
+			
+			return block.GetHash();
+		}
+		
 		/* Output all data into a std::string. */
-		std::string ToString() const
-
+		std::string ToString() const;
 		
 		/* Dump the data into console / debug.log. */
-		void print() const
+		void print() const;
 	};
 
 
@@ -378,29 +597,39 @@ namespace Core
 			READWRITE(vHave);
 		)
 
-		
-		/* Generic Constructor. */
-		CBlockLocator();
+		CBlockLocator()
+		{
+		}
 
 		
-		/* Set by Block Index. */
-		explicit CBlockLocator(const CBlockIndex* pindex);
+		explicit CBlockLocator(const CBlockIndex* pindex)
+		{
+			Set(pindex);
+		}
 		
 		
-		/* Set by single block hash. */
 		explicit CBlockLocator(uint1024 hashBlock);
 		
 		
 		/* Set by List of Vectors. */
-		CBlockLocator(const std::vector<uint1024>& vHaveIn) { vHave = vHaveIn; }
-
+		CBlockLocator(const std::vector<uint1024>& vHaveIn)
+		{
+			vHave = vHaveIn; 
+		}
+		
 		
 		/* Set the State of Object to NULL. */
-		void SetNull();
+		void SetNull()
+		{
+			vHave.clear();
+		}
 		
 		
 		/* Check the State of Object as NULL. */
-		bool IsNull();
+		bool IsNull()
+		{
+			return vHave.empty();
+		}
 		
 		
 		/* Set from Block Index Object. */
@@ -492,15 +721,7 @@ namespace Core
 	
 	/* Load the Genesis and other blocks from the BDB/LLD Indexes. */
 	bool LoadBlockIndex(bool fAllowNew = true);
-	
-	
-	/* Ensure that a disk read block index is valid still (prevents needs for checks in data. */
-	bool CheckBlockIndex(uint1024 hashBlock);
-	
-	
-	/* Initialize the Mining LLP to start creating work and accepting blocks to broadcast to the network. */
-	void StartMiningLLP();
-	
+
 	
 	/* Create a new block with given parameters and optional coinbase transaction. */
 	CBlock* CreateNewBlock(Wallet::CReserveKey& reservekey, Wallet::CWallet* pwallet, unsigned int nChannel, unsigned int nID = 1, LLP::Coinbase* pCoinbase = NULL);

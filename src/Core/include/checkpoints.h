@@ -24,7 +24,7 @@ namespace Core
 	extern std::map<unsigned int, uint1024> mapCheckpoints;
 	
 	
-	/* Checkpoint Timespan, or the time that triggers a new checkpoint (in Seconds). */
+	/* Checkpoint Timespan, or the time that triggers a new checkpoint (in Minutes). */
 	extern unsigned int CHECKPOINT_TIMESPAN;
 	
 	

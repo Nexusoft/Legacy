@@ -26,6 +26,15 @@ namespace Core
 	class CBlockIndex;
 	
 	
+	/** These values reflect the Three Decay Equations.
+	 * 
+	 * 	50 * e ^ (-0.0000011  * nMinutes) + 1.0
+	 * 	10 * e ^ (-0.00000055 * nMinutes) + 1.0
+	 * 	 1 * e ^ (-0.00000059 * nMinutes) + 0.032 
+	 */
+	double decay[3][3] = { {50.0, -0.0000011, 1.0}, {10.0, -0.00000055, 1.0}, {1.0, -0.00000059, 0.032} };
+	
+	
 	/* Get the Total Amount to be Released at a given Minute since the NETWORK_TIMELOCK. */
 	int64 GetSubsidy(int nMinutes, int nType);
 	

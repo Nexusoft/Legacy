@@ -128,7 +128,7 @@ namespace Wallet
 	{
 		// add 4-byte hash check to the end
 		std::vector<unsigned char> vch(vchIn);
-		uint256 hash = LLH::SK256(vch.begin(), vch.end());
+		uint256 hash = LLC::HASH::SK256(vch.begin(), vch.end());
 		vch.insert(vch.end(), (unsigned char*)&hash, (unsigned char*)&hash + 4);
 		return EncodeBase58(vch);
 	}
@@ -144,7 +144,7 @@ namespace Wallet
 			vchRet.clear();
 			return false;
 		}
-		uint256 hash = LLH::SK256(vchRet.begin(), vchRet.end()-4);
+		uint256 hash = LLC::HASH::SK256(vchRet.begin(), vchRet.end()-4);
 		if (memcmp(&hash, &vchRet.end()[-4], 4) != 0)
 		{
 			vchRet.clear();
@@ -273,7 +273,7 @@ namespace Wallet
 
 		void SetPubKey(const std::vector<unsigned char>& vchPubKey)
 		{
-			SetHash256(LLH::SK256(vchPubKey));
+			SetHash256(LLC::HASH::SK256(vchPubKey));
 		}
 
 		bool SetScriptHash256(const uint256& hash256)

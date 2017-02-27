@@ -56,12 +56,7 @@ static const int64 COIN = 1000000;
 static const int64 CENT = 10000;
 
 
-
 #define loop                for (;;)
-#define BEGIN(a)            ((char*)&(a))
-#define END(a)              ((char*)&((&(a))[1]))
-#define UBEGIN(a)           ((unsigned char*)&(a))
-#define UEND(a)             ((unsigned char*)&((&(a))[1]))
 #define ARRAYLEN(array)     (sizeof(array)/sizeof((array)[0]))
 #define printf              OutputDebugStringF
 #define NULL                0
@@ -205,8 +200,8 @@ inline std::string bytes2string(std::vector<unsigned char> BYTES)
 #define MAX_PATH            1024
 inline void Sleep(int64 n)
 {
-    /*Boost has a year 2038 problem— if the request sleep time is past epoch+2^31 seconds the sleep returns instantly.
-      So we clamp our sleeps here to 10 years and hope that boost is fixed by 2028.*/
+    /* Boost has a year 2038 problem— if the request sleep time is past epoch+2^31 seconds the sleep returns instantly.
+       So we clamp our sleeps here to 10 years and hope that boost is fixed by 2028.*/
     boost::thread::sleep(boost::get_system_time() + boost::posix_time::milliseconds(n>315576000000LL?315576000000LL:n));
 }
 #endif
@@ -660,7 +655,7 @@ uint512 SerializeHash(const T& obj, int nType=SER_GETHASH, int nVersion=PROTOCOL
     CDataStream ss(nType, nVersion);
     ss.reserve(10000);
     ss << obj;
-    return LLH::SK512(ss.begin(), ss.end());
+    return LLC::HASH::SK512(ss.begin(), ss.end());
 }
 
 

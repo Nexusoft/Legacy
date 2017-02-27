@@ -8,7 +8,8 @@
   
 *******************************************************************************************/
 
-#include "../main.h"
+#include "include/block.h"
+#include "include/transaction.h"
 
 using namespace std;
 

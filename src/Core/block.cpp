@@ -9,7 +9,6 @@
 *******************************************************************************************/
 
 #include "../main.h"
-#include "unifiedtime.h"
 
 #include "../wallet/db.h"
 #include "../util/ui_interface.h"
@@ -76,6 +75,87 @@ namespace Core
 		}
 		return (GetUnifiedTimestamp() - nLastUpdate < 10 &&
 				pindexBest->GetBlockTime() < GetUnifiedTimestamp() - 24 * 60 * 60);
+	}
+	
+			
+			
+	bool CBlock::WriteToDisk(unsigned int& nFileRet, unsigned int& nBlockPosRet)
+	{
+		// Open history file to append
+		CAutoFile fileout = CAutoFile(AppendBlockFile(nFileRet), SER_DISK, DATABASE_VERSION);
+		if (!fileout)
+			return error("CBlock::WriteToDisk() : AppendBlockFile failed");
+
+		// Write index header
+		unsigned char pchMessageStart[4];
+		Net::GetMessageStart(pchMessageStart);
+		unsigned int nSize = fileout.GetSerializeSize(*this);
+		fileout << FLATDATA(pchMessageStart) << nSize;
+
+		// Write block
+		long fileOutPos = ftell(fileout);
+		if (fileOutPos < 0)
+			return error("CBlock::WriteToDisk() : ftell failed");
+		nBlockPosRet = fileOutPos;
+		fileout << *this;
+
+		// Flush stdio buffers and commit to disk before returning
+		fflush(fileout);
+		if (!IsInitialBlockDownload() || (nBestHeight+1) % 500 == 0)
+		{
+	#ifdef WIN32
+			_commit(_fileno(fileout));
+	#else
+			fsync(fileno(fileout));
+	#endif
+		}
+
+		return true;
+	}
+
+		
+	bool CBlock::ReadFromDisk(unsigned int nFile, unsigned int nBlockPos, bool fReadTransactions=true)
+	{
+		SetNull();
+
+		// Open history file to read
+		CAutoFile filein = CAutoFile(OpenBlockFile(nFile, nBlockPos, "rb"), SER_DISK, DATABASE_VERSION);
+		if (!filein)
+			return error("CBlock::ReadFromDisk() : OpenBlockFile failed");
+		if (!fReadTransactions)
+			filein.nType |= SER_BLOCKHEADERONLY;
+
+		// Read block
+		try {
+			filein >> *this;
+		}
+		catch (std::exception &e) {
+			return error("%s() : deserialize or I/O error", __PRETTY_FUNCTION__);
+		}
+
+		return true;
+	}
+	
+
+	void CBlock::print() const
+	{
+		printf("CBlock(hash=%s, ver=%d, hashPrevBlock=%s, hashMerkleRoot=%s, nTime=%u, nBits=%08x, nChannel = %u, nHeight = %u, nNonce=%"PRIu64", vtx=%d, vchBlockSig=%s)\n",
+				GetHash().ToString().substr(0,20).c_str(),
+				nVersion,
+				hashPrevBlock.ToString().substr(0,20).c_str(),
+				hashMerkleRoot.ToString().substr(0,10).c_str(),
+				nTime, nBits, nChannel, nHeight, nNonce,
+				vtx.size(),
+				HexStr(vchBlockSig.begin(), vchBlockSig.end()).c_str());
+		for (unsigned int i = 0; i < vtx.size(); i++)
+		{
+			printf("  ");
+			vtx[i].print();
+		}
+		printf("  vMerkleTree: ");
+		for (unsigned int i = 0; i < vMerkleTree.size(); i++)
+			printf("%s ", vMerkleTree[i].ToString().substr(0,10).c_str());
+		printf("\n");
 	}
 
 
@@ -864,7 +944,7 @@ namespace Core
 			// Sign
 			const std::vector<unsigned char>& vchPubKey = vSolutions[0];
 			Wallet::CKey key;
-			if (!keystore.GetKey(LLH::SK256(vchPubKey), key))
+			if (!keystore.GetKey(LLC::SK256(vchPubKey), key))
 				return false;
 			if (key.GetPubKey() != vchPubKey)
 				return false;
@@ -1028,37 +1108,6 @@ namespace Core
 		return true;
 	}
 	
-	/** Useful to let the Map Block Index not need to be loaded fully.
-		If a block index is ever needed it can be read from the LLD. 
-		This lets us have load times of a few seconds 
-		
-		TODO:: Complete this **/
-	bool CheckBlockIndex(uint1024 hashBlock)
-	{
-		
-		return true;
-	}
-	
-	
-	/*******************************************************************************************
- 
-			(c) Hash(BEGIN(Satoshi[2010]), END(Sunny[2012])) == Videlicet[2017] ++
-			
-			(c) Copyright Nexus Developers 2014 - 2017
-			
-			http://www.opensource.org/licenses/mit-license.php
-  
-*******************************************************************************************/
-
-
-namespace Core
-{
-	LLP::Server<LLP::MiningLLP>* MINING_LLP;
-	
-	/** Used to Iterate the Coinbase Addresses used For Exchange Channels and Developer Fund. **/
-	static unsigned int nCoinbaseCounter = 0;
-	static boost::mutex COUNTER_MUTEX;
-	static boost::mutex PROCESS_MUTEX;
 	
 	class COrphan
 	{
@@ -1080,13 +1129,6 @@ namespace Core
 				printf("   setDependsOn %s\n", hash.ToString().substr(0,10).c_str());
 		}
 	};
-	
-	/** Entry point for the Mining LLP. **/
-	void StartMiningLLP() { MINING_LLP = new LLP::Server<LLP::MiningLLP>(LLP::GetMiningPort(), GetArg("-mining_threads", 10), true, GetArg("-mining_cscore", 5), GetArg("-mining_rscore", 50), GetArg("-mining_timout", 60)); }
-	
-	
-	/** Entry Staking Function. **/
-	void StartStaking(Wallet::CWallet *pwallet) { CreateThread(StakeMinter, pwallet); }
 	
 	
 	/** Constructs a new block **/
@@ -1201,7 +1243,7 @@ namespace Core
 			else
 				txNew.vout[0].nValue = GetCoinbaseReward(pindexPrev, nChannel, 0);
 
-			COUNTER_MUTEX.lock();
+			//COUNTER_MUTEX.lock();
 				
 			
 			/** Reset the Coinbase Transaction Counter. **/
@@ -1220,7 +1262,7 @@ namespace Core
 			txNew.vout[txNew.vout.size() - 1].nValue = GetCoinbaseReward(pindexPrev, nChannel, 2);
 					
 			nCoinbaseCounter++;
-			COUNTER_MUTEX.unlock();
+			//COUNTER_MUTEX.unlock();
 		}
 		
 		

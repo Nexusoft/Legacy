@@ -25,6 +25,76 @@ using namespace boost;
 namespace Core
 {
 	
+	std::string COutPoint::ToString() const
+	{
+		return strprintf("COutPoint(%s, %d)", hash.ToString().substr(0,10).c_str(), n);
+	}
+
+	void COutPoint::print() const
+	{
+		printf("%s\n", ToString().c_str());
+	}
+	
+	
+	
+	
+	std::string CTxIn::ToStringShort() const
+	{
+		return strprintf(" %s %d", prevout.hash.ToString().c_str(), prevout.n);
+	}
+
+	std::string CTxIn::ToString() const
+	{
+		std::string str;
+		str += "CTxIn(";
+		str += prevout.ToString();
+		if (prevout.IsNull())
+		{	
+			if(IsStakeSig())
+				str += strprintf(", genesis %s", HexStr(scriptSig).c_str());
+			else
+				str += strprintf(", coinbase %s", HexStr(scriptSig).c_str());
+		}
+		else if(IsStakeSig())
+			str += strprintf(", trust %s", HexStr(scriptSig).c_str());
+		else
+			str += strprintf(", scriptSig=%s", scriptSig.ToString().substr(0,24).c_str());
+		if (nSequence != std::numeric_limits<unsigned int>::max())
+			str += strprintf(", nSequence=%u", nSequence);
+		str += ")";
+		return str;
+	}
+
+	void CTxIn::print() const
+	{
+		printf("%s\n", ToString().c_str());
+	}
+	
+	
+	
+	
+	std::string CTxOut::ToStringShort() const
+	{
+		return strprintf(" out %s %s", FormatMoney(nValue).c_str(), scriptPubKey.ToString(true).c_str());
+	}
+
+	std::string CTxOut::ToString() const
+	{
+		if (IsEmpty()) return "CTxOut(empty)";
+		if (scriptPubKey.size() < 6)
+			return "CTxOut(error)";
+		return strprintf("CTxOut(nValue=%s, scriptPubKey=%s)", FormatMoney(nValue).c_str(), scriptPubKey.ToString().c_str());
+	}
+
+	void CTxOut::print() const
+	{
+		printf("%s\n", ToString().c_str());
+	}
+	
+	
+	
+	
+	
 	void CTxMemPool::queryHashes(std::vector<uint512>& vtxid)
 	{
 		vtxid.clear();
@@ -112,6 +182,136 @@ namespace Core
 	//
 	// CTransaction and CTxIndex
 	//
+	
+	
+	std::string CDiskTxPos::ToString() const
+	{
+		if (IsNull())
+			return "null";
+		else
+			return strprintf("(nFile=%d, nBlockPos=%d, nTxPos=%d)", nFile, nBlockPos, nTxPos);
+	}
+
+	void CDiskTxPos::print() const
+	{
+		printf("%s", ToString().c_str());
+	}
+	
+	
+	
+	
+
+	int64 CTransaction::GetMinFee(unsigned int nBlockSize=1, bool fAllowFree=false, enum GetMinFee_mode mode=GMF_BLOCK) const
+	{
+		if(nVersion >= 2)
+			return 0;
+				
+		// Base fee is either MIN_TX_FEE or MIN_RELAY_TX_FEE
+		int64 nBaseFee = (mode == GMF_RELAY) ? MIN_RELAY_TX_FEE : MIN_TX_FEE;
+		
+		unsigned int nBytes = ::GetSerializeSize(*this, SER_NETWORK, PROTOCOL_VERSION);
+		unsigned int nNewBlockSize = nBlockSize + nBytes;
+		int64 nMinFee = (1 + (int64)nBytes / 1000) * nBaseFee;
+
+		if (fAllowFree)
+		{
+			if (nBlockSize == 1)
+			{
+				// Transactions under 10K are free
+				// (about 4500bc if made of 50bc inputs)
+				if (nBytes < 10000)
+					nMinFee = 0;
+			}
+			else
+			{
+				// Free transaction area
+				if (nNewBlockSize < 27000)
+					nMinFee = 0;
+			}
+		}
+
+		// To limit dust spam, require MIN_TX_FEE/MIN_RELAY_TX_FEE if any output is less than 0.01
+		if (nMinFee < nBaseFee)
+		{
+			BOOST_FOREACH(const CTxOut& txout, vout)
+				if (txout.nValue < CENT)
+					nMinFee = nBaseFee;
+		}
+
+		// Raise the price as the block approaches full
+		if (nBlockSize != 1 && nNewBlockSize >= MAX_BLOCK_SIZE_GEN/2)
+		{
+			if (nNewBlockSize >= MAX_BLOCK_SIZE_GEN)
+				return MAX_TXOUT_AMOUNT;
+			nMinFee *= MAX_BLOCK_SIZE_GEN / (MAX_BLOCK_SIZE_GEN - nNewBlockSize);
+		}
+
+		if (!MoneyRange(nMinFee))
+			nMinFee = MAX_TXOUT_AMOUNT;
+				
+		return nMinFee;
+	}
+
+
+	std::string CTransaction::ToStringShort() const
+	{
+		std::string str;
+		str += strprintf("%s %s", GetHash().ToString().c_str(), IsCoinBase()? "base" : (IsCoinStake()? "stake" : "user"));
+		return str;
+	}
+
+	std::string CTransaction::ToString() const
+	{
+		std::string str;
+		str += IsCoinBase() ? "Coinbase" : (IsGenesis() ? "Genesis" : (IsTrust() ? "Trust" : "Transaction"));
+		str += strprintf("(hash=%s, nTime=%d, ver=%d, vin.size=%d, vout.size=%d, nLockTime=%d)\n",
+			GetHash().ToString().substr(0,10).c_str(),
+			nTime,
+			nVersion,
+			vin.size(),
+			vout.size(),
+			nLockTime);
+		
+		for (unsigned int i = 0; i < vin.size(); i++)
+			str += "    " + vin[i].ToString() + "\n";
+		for (unsigned int i = 0; i < vout.size(); i++)
+			str += "    " + vout[i].ToString() + "\n";
+		return str;
+	}
+
+	void CTransaction::print() const
+	{
+		printf("%s", ToString().c_str());
+	}
+	
+	
+	bool CTransaction::ReadFromDisk(CDiskTxPos pos, FILE** pfileRet=NULL)
+	{
+		CAutoFile filein = CAutoFile(OpenBlockFile(pos.nFile, 0, pfileRet ? "rb+" : "rb"), SER_DISK, DATABASE_VERSION);
+		if (!filein)
+			return error("CTransaction::ReadFromDisk() : OpenBlockFile failed");
+
+		// Read transaction
+		if (fseek(filein, pos.nTxPos, SEEK_SET) != 0)
+			return error("CTransaction::ReadFromDisk() : fseek failed");
+
+		try {
+			filein >> *this;
+		}
+		catch (std::exception &e) {
+			return error("%s() : deserialize or I/O error", __PRETTY_FUNCTION__);
+		}
+
+		// Return file pointer
+		if (pfileRet)
+		{
+			if (fseek(filein, pos.nTxPos, SEEK_SET) != 0)
+				return error("CTransaction::ReadFromDisk() : second fseek failed");
+			*pfileRet = filein.release();
+		}
+		return true;
+	}
+		
 
 	bool CTransaction::ReadFromDisk(LLD::CIndexDB& indexdb, COutPoint prevout, CTxIndex& txindexRet)
 	{

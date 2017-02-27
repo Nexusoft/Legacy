@@ -11,12 +11,22 @@
 #include <boost/assign/list_of.hpp> // for 'map_list_of()'
 #include <boost/foreach.hpp>
 
-#include "core.h"
-#include "../hash/uint1024.h"
-#include "../wallet/db.h"
+#include "include/block.h"
 
 namespace Core
 {	
+	
+	/* Memory Map to hold all the hashes of the checkpoints decided on by the network. */
+	std::map<unsigned int, uint1024> mapCheckpoints;
+	
+	
+	/* Checkpoint Timespan, or the time that triggers a new checkpoint (in Minutes). */
+	unsigned int CHECKPOINT_TIMESPAN = 60;
+	
+	
+	/* Checkpoint Search. The Maximum amount of checkpoints that can be serached back to find a Descendant. */
+	unsigned int MAX_CHECKPOINTS_SEARCH = 2;
+	
 	
 	/** Check Checkpoint Timespan. **/
 	bool IsNewTimespan(CBlockIndex* pindex)
