@@ -1,8 +1,10 @@
 /*******************************************************************************************
  
-			Hash(BEGIN(Satoshi[2010]), END(Sunny[2012])) == Videlicet[2014] ++
-   
- [Learn and Create] Viz. http://www.opensource.org/licenses/mit-license.php
+			(c) Hash(BEGIN(Satoshi[2010]), END(Sunny[2012])) == Videlicet[2017] ++
+			
+			(c) Copyright Nexus Developers 2014 - 2017
+			
+			http://www.opensource.org/licenses/mit-license.php
   
 *******************************************************************************************/
 
@@ -24,8 +26,8 @@
 #include <boost/tuple/tuple_comparison.hpp>
 #include <boost/tuple/tuple_io.hpp>
 
-#include "../util/allocators.h"
-#include "../core/version.h"
+#include "allocators.h"
+#include "../Core/include/version.h"
 
 
 /** Linux Specific Work Around (For Now). **/
@@ -76,6 +78,7 @@ enum
 	// LLP actions
 	SER_LLP_HEADER_ONLY = (1 << 30),
 };
+
 
 #define IMPLEMENT_SERIALIZE(statements)    \
     unsigned int GetSerializeSize(int nType, int nVersion) const  \
@@ -847,7 +850,7 @@ public:
             vch.insert(it, first, last);
     }
 
-/** Fix for MaxOSX Compatability for XCode and Deployment 10.10. **/
+/* Fix for MaxOSX Compatability for XCode and Deployment 10.10. */
 #if !defined(MAC_OSX) 
     void insert(iterator it, std::vector<char>::const_iterator first, std::vector<char>::const_iterator last)
     {

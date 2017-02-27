@@ -39,7 +39,7 @@ typedef int pid_t; /* define for windows compatiblity */
 #include <boost/date_time/gregorian/gregorian_types.hpp>
 #include <boost/date_time/posix_time/posix_time_types.hpp>
 
-#include "../LLP/Include/protocol.h"
+#include "../LLP/include/network.h"
 
 
 /** Linux Specific Work Around (For Now). **/
@@ -690,8 +690,8 @@ public:
 
 
 /** Filter designed to give the majority of set of values.
-	Keeps count of every addition of template paramter type, 
-	in order to give a reasonable majority of votes. **/
+ * Keeps count of every addition of template paramter type, 
+ * in order to give a reasonable majority of votes. **/
 template <typename CType> class CMajority
 {
 private:
@@ -702,7 +702,7 @@ public:
 	CMajority() : nSamples(0) {}
 	
 	
-	/** Add another Element to the Majority Count. **/
+	/* Add another Element to the Majority Count. */
 	void Add(CType value)
 	{
 		if(!mapList.count(value))
@@ -714,30 +714,30 @@ public:
 	}
 	
 	
-	/** Return the total number of samples this container holds. **/
+	/* Return the total number of samples this container holds. */
 	unsigned int Samples(){ return nSamples; }
 	
 	
-	/** Return the Element of Type that has the highest Majority. **/
+	/* Return the Element of Type that has the highest Majority. */
 	CType Majority()
 	{
 		if(nSamples == 0)
 			return 0;
 			
-		/** Temporary Reference Variable to store the largest majority to then compare every element of the map to it. **/
+		/* Temporary Reference Variable to store the largest majority to then compare every element of the map to it. */
 		std::pair<CType, int> nMajority;
 		
 		
 		for(typename std::map<CType, int>::iterator nIterator = mapList.begin(); nIterator != mapList.end(); ++nIterator)
 		{
-			/** Set the return to be the first element, to then compare the rest of the map to it. **/
+			/* Set the return to be the first element, to then compare the rest of the map to it. */
 			if(nIterator == mapList.begin())
 			{
 				nMajority = std::make_pair(nIterator->first, nIterator->second);
 				continue;
 			}
 			
-			/** If a record has higher count, use that one. **/
+			/* If a record has higher count, use that one. */
 			if(nIterator->second > nMajority.second)
 			{
 				nMajority.first = nIterator->first;
@@ -753,7 +753,7 @@ public:
 
 
 
-// Note: It turns out we might have been able to use boost::thread
+// NOTE: It turns out we might have been able to use boost::thread
 // by using TerminateThread(boost::thread.native_handle(), 0);
 #ifdef WIN32
 typedef HANDLE bitcoin_pthread_t;

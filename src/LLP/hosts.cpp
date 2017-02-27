@@ -13,7 +13,7 @@
 #include <sys/fcntl.h>
 #endif
 
-#include "../LLU/strlcpy.h"
+#include "../LLU/include/strlcpy.h"
 
 namespace LLP
 {

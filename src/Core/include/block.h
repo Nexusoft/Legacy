@@ -11,11 +11,21 @@
 #ifndef NEXUS_CORE_INCLUDE_BLOCK_H
 #define NEXUS_CORE_INCLUDE_BLOCK_H
 
-#include <vector>
+class uint256;
+class uint512;
+class uint576;
+class uint1024;
 
+namespace LLD 
+{
+	class CIndexDB;
+}
+		
 namespace Core
 {
-	class CBlockIndex; 
+	class CBlockIndex;
+	class CTransaction;
+
 	
 	/** Nodes collect new transactions into a block, hash them into a hash tree,
 	 * and scan through nonce values to make the block's hash satisfy proof-of-work

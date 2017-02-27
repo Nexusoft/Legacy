@@ -11,6 +11,13 @@
 #ifndef NEXUS_CORE_INCLUDE_TRUST_H
 #define NEXUS_CORE_INCLUDE_TRUST_H
 
+#include "../../LLU/include/serialize.h"
+
+class uint256;
+class uint512;
+class uint576;
+class uint1024;
+
 namespace Core
 {
 	

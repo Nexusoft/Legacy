@@ -11,6 +11,8 @@
 #ifndef NEXUS_CORE_INCLUDE_PRIME_H
 #define NEXUS_CORE_INCLUDE_PRIME_H
 
+class CBigNum;
+
 namespace Core
 {
 

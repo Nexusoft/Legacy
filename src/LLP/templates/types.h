@@ -22,8 +22,6 @@
 #include <boost/thread/thread.hpp>         
 
 #define LOCK_GUARD(a) boost::lock_guard<boost::mutex> lock(a)
-
-#include "../../LLU/util.h"
 	
 namespace LLP
 {

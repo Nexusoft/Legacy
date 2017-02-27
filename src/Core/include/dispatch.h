@@ -11,8 +11,22 @@
 #ifndef NEXUS_CORE_INCLUDE_DISPATCH_H
 #define NEXUS_CORE_INCLUDE_DISPATCH_H
 
+
+class uint512;
+class uint1024;
+
+namespace Wallet
+{
+	class CWallet;
+	class CWalletTx;
+}
+
 namespace Core
 {
+	class CBlock;
+	class CTransaction;
+	class CBlockLocator;
+	
 	
 	/* Register a new wallet class to the dispatch registry (Can handle multiple wallets). */
 	void RegisterWallet(Wallet::CWallet* pwalletIn);

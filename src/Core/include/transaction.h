@@ -11,8 +11,28 @@
 #ifndef NEXUS_CORE_INCLUDE_TRANSACTION_H
 #define NEXUS_CORE_INCLUDE_TRANSACTION_H
 
+#include <map>
+
+class uint256;
+class uint512;
+class uint576;
+class uint1024;
+
+namespace Wallet
+{ 
+	class CScript;
+}
+
+namespace LLD 
+{
+	class CIndexDB;
+}
+
 namespace Core
 {
+	class CTxIndex;
+	class CTransaction;
+	
 	
 	enum GetMinFee_mode
 	{

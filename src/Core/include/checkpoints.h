@@ -11,8 +11,14 @@
 #ifndef NEXUS_CORE_INCLUDE_CHECKPOINTS_H
 #define NEXUS_CORE_INCLUDE_CHECKPOINTS_H
 
-namespace CORE
+#include <map>
+
+class uint1024;
+
+namespace Core
 {
+	class CBlockIndex;
+	
 	
 	/* Memory Map to hold all the hashes of the checkpoints decided on by the network. */
 	extern std::map<unsigned int, uint1024> mapCheckpoints;

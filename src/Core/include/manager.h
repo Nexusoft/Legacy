@@ -12,9 +12,24 @@
 #define NEXUS_CORE_INCLUDE_MANAGER_H
 
 #include "node.h"
+#include <boost/thread/thread.hpp>   
 
 namespace LLP
 {
+	class CInv;
+	class CNode;
+	class CService;
+	class CNetAddr;
+	class CAddrInfo;
+	
+	template<class ProtocolType> class Server;
+}
+
+namespace Core
+{
+	typedef boost::thread Thread_t;
+	typedef boost::mutex   Mutex_t;
+	
 	class BlockManager
 	{
 		
@@ -47,29 +62,11 @@ namespace LLP
 		
 		
 		/* Find a Node in this Manager by Net Address. */
-		CNode* FindNode(const CNetAddr& ip)
-		{
-			{  LOCK_GUARD(MANAGER_MUTEX);
-				if(mapNodes.count((CAddress) ip))
-					return mapNodes((CAddress) ip);
-			}
-			
-			return NULL;
-		}
+		CNode* FindNode(const CNetAddr& ip);
 
 		
 		/* Find a Node in this Manager by Sercie Address. */
-		CNode* FindNode(const CService& addr)
-		{
-			{ LOCK_GUARD(MANAGER_MUTEX);
-
-				BOOST_FOREACH(CNode* pnode, vNodes)
-					if ((CService)pnode->addrThisNode == addr)
-						return (pnode);
-			}
-			
-			return NULL;
-		}
+		CNode* FindNode(const CService& addr);
 		
 	private:
 		

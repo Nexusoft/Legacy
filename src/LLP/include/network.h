@@ -11,12 +11,7 @@
 #ifndef NEXUS_LLP_INCLUDE_NETWORK_H
 #define NEXUS_LLP_INCLUDE_NETWORK_H
 
-#include "../../LLU/serialize.h"
-#include "../../LLU/compat.h"
-#include "../../LLT/uint1024.h"
-
-#include <string>
-#include <vector>
+#include "../../LLU/include/serialize.h"
 
 #ifdef WIN32
 // In MSVC, this is defined as a macro, undefine it to prevent a compile and link error
@@ -32,12 +27,6 @@ namespace LLP
 	{
 		NODE_NETWORK = (1 << 0),
 	};
-	
-	
-	/* Proxy Settings fro Nexus Core. */
-	int fUseProxy = false;
-	CService addrProxy("127.0.0.1",9050);
-	
 	
 		/** IP address (IPv6, or IPv4 using mapped IPv6 range (::FFFF:0:0/96)) */
 	class CNetAddr
@@ -225,6 +214,11 @@ namespace LLP
 			Init();
 		}
 	};
+	
+	
+	/* Proxy Settings for Nexus Core. */
+	int fUseProxy = false;
+	CService addrProxy("127.0.0.1", 9050);
 }
 
 #endif

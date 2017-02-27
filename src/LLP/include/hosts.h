@@ -11,10 +11,6 @@
 #ifndef NEXUS_LLP_INCLUDE_HOSTS_H
 #define NEXUS_LLP_INCLUDE_HOSTS_H
 
-#include "../../LLU/serialize.h"
-#include "../../LLU/compat.h"
-#include "../../LLT/uint1024.h"
-
 #include <string>
 #include <vector>
 
@@ -40,7 +36,14 @@
 namespace LLP
 {
 	
-	/** Declarations for the DNS Seed Nodes. **/
+	class CAddress;
+	class CNetAddr;
+	
+	
+	/* ______________________________________________________________________________________________________________________________  */
+	
+	
+	
 	const char* DNS_SeedNodes[] = 
 	{
 		"node1.nexusearth.com",
@@ -87,11 +90,15 @@ namespace LLP
 	};
 
 	
-	/** Declarations for the DNS Seed Nodes. **/
 	const char* DNS_SeedNodes_Testnet[] = 
 	{
 		"test1.nexusoft.io"
 	};	
+	
+	
+	
+	/* ______________________________________________________________________________________________________________________________  */
+	
 	
 	
 	/* The DNS Lookup Routine to find the Nodes that are set as DNS seeds. */

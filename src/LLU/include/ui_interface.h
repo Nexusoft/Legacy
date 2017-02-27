@@ -1,8 +1,10 @@
 /*******************************************************************************************
  
-			Hash(BEGIN(Satoshi[2010]), END(Sunny[2012])) == Videlicet[2014] ++
-   
- [Learn and Create] Viz. http://www.opensource.org/licenses/mit-license.php
+			(c) Hash(BEGIN(Satoshi[2010]), END(Sunny[2012])) == Videlicet[2017] ++
+			
+			(c) Copyright Nexus Developers 2014 - 2017
+			
+			http://www.opensource.org/licenses/mit-license.php
   
 *******************************************************************************************/
 
@@ -10,7 +12,9 @@
 #define NEXUS_UI_INTERFACE_H
 
 #include <string>
-#include "util.h" // for int64
+
+typedef long long  int64;
+typedef unsigned long long  uint64;
 
 #define wxYES                   0x00000002
 #define wxOK                    0x00000004

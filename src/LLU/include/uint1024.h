@@ -1,8 +1,10 @@
 /*******************************************************************************************
  
-			Hash(BEGIN(Satoshi[2010]), END(Sunny[2012])) == Videlicet[2014] ++
-   
- [Learn and Create] Viz. http://www.opensource.org/licenses/mit-license.php
+			(c) Hash(BEGIN(Satoshi[2010]), END(Sunny[2012])) == Videlicet[2017] ++
+			
+			(c) Copyright Nexus Developers 2014 - 2017
+			
+			http://www.opensource.org/licenses/mit-license.php
   
 *******************************************************************************************/
 
@@ -16,7 +18,7 @@
 #include <vector>
 #include <stdint.h>
 
-/** Linux Specific Work Around (For Now). **/
+/* Linux Specific Work Around (For Now). */
 #if defined(MAC_OSX) || defined(WIN32)
 typedef int64_t int64;
 typedef uint64_t uint64;

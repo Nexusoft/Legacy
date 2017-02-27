@@ -6,11 +6,9 @@
   
 *******************************************************************************************/
 
-#include "../util/ui_interface.h"
+#include "include/ui_interface.h"
 
 #include <string>
-#include "../core/core.h"
-#include "../main.h"
 
 int ThreadSafeMessageBox(const std::string& message, const std::string& caption, int style)
 {

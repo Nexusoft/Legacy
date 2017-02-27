@@ -11,15 +11,41 @@
 #ifndef NEXUS_CORE_INCLUDE_GLOBAL_H
 #define NEXUS_CORE_INCLUDE_GLOBAL_H
 
-
 #ifdef WIN32
 #include <io.h> /* for _commit */
 #define __STDC_FORMAT_MACROS 1
 #endif
 
+#include <string>
+#include <map>
+#include <multimap>
+#include <stdint.h>
+
+#if defined(MAC_OSX) || defined(WIN32)
+typedef int64_t int64;
+typedef uint64_t uint64;
+#else
+typedef long long  int64;
+typedef unsigned long long  uint64;
+#endif
+
+class uint256;
+class uint512;
+class uint576;
+class uint1024;
+
+class CBigNum;
+class CDataStream;
+
+namespace Wallet
+{
+	class CWallet;
+}
 
 namespace Core
 {
+	class CBlockIndex;
+
 	
 	/* The Hash of the Genesis Block for the Network. Genesis Blocks are used as the root of a blockchain. */
 	extern const uint1024 hashGenesisBlockOfficial;

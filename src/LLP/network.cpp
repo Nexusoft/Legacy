@@ -7,13 +7,13 @@
 *******************************************************************************************/
 
 #include "network.h"
-#include "../../LLU/util.h"
+#include "../../LLU/include/util.h"
 
 #ifndef WIN32
 #include <sys/fcntl.h>
 #endif
 
-#include "../LLU/strlcpy.h"
+#include "../LLU/include/strlcpy.h"
 
 namespace LLP
 {
