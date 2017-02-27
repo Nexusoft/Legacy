@@ -11,7 +11,7 @@
 #ifndef NEXUS_LLP_INCLUDE_MINING_H
 #define NEXUS_LLP_INCLUDE_MINING_H
 
-namespace CORE
+namespace LLP
 {
 	
 	

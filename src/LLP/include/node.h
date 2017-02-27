@@ -11,18 +11,38 @@
 #ifndef NEXUS_LLP_INCLUDE_NODE_H
 #define NEXUS_LLP_INCLUDE_NODE_H
 
-#include "../templates/server.h"
+#include <queue>
 
-#include "network.h"
-#include "message.h"
-#include "hosts.h"
+template <typename CType> class CMajority;
+
+class uint256;
+class uint512;
+class uint576;
+class uint1024;
+
+template <typename T> class mruset;
+
+namespace Core
+{
+	class CBlock;
+}
 
 namespace LLP
 {
+	class CInv;
+	class Timer;
+	class CAddress;
+	class DDOS_Filter;
+	class MessageConnection;
+
 	
 	class CNode : public MessageConnection
 	{
 	public:
+		
+		/* Mutex for handling node inventory messages. */
+		Mutex_t NODE_MUTEX;
+		
 		
 		/* Basic Stats. */
 		CAddress addrThisNode;
@@ -92,10 +112,6 @@ namespace LLP
 		mruset<CInv> setInventoryKnown;
 		
 		
-		/* Mutex for handling node inventory messages. */
-		Mutex_t NODE_MUTEX;
-		
-		
 		/* Constructors for Message LLP Class. */
 		CNode() : MessageConnection(){ }
 		CNode( Socket_t SOCKET_IN, DDOS_Filter* DDOS_IN, bool isDDOS = false ) : MessageConnection( SOCKET_IN, DDOS_IN )
@@ -109,28 +125,15 @@ namespace LLP
 		
 		
 		/* Send an Address to Node. */
-		void PushAddress(const CAddress& addr)
-		{
-			if (addr.IsValid() && !setAddrKnown.count(addr))
-				this->PushMessage("addr", addr);
-		}
+		void PushAddress(const CAddress& addr);
 
 		
 		/* Keep Track of the Inventory we Already have. */
-		void AddInventoryKnown(const CInv& inv)
-		{
-			LOCK_GUARD(MUTEX);
-			
-			setInventoryKnown.insert(inv);
-		}
+		void AddInventoryKnown(const CInv& inv);
 
 		
 		/* Send Inventory We have. */
-		void PushInventory(const CInv& inv)
-		{
-			if (!setInventoryKnown.count(inv))
-				this->PushMessage("inv", inv);
-		}
+		void PushInventory(const CInv& inv);
 	};
 }
 

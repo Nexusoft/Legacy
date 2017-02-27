@@ -12,6 +12,15 @@
 #define NEXUS_CORE_INCLUDE_TRANSACTION_H
 
 #include <map>
+#include <stdint.h>
+
+#if defined(MAC_OSX) || defined(WIN32)
+typedef int64_t int64;
+typedef uint64_t uint64;
+#else
+typedef long long  int64;
+typedef unsigned long long  uint64;
+#endif
 
 class uint256;
 class uint512;

@@ -11,6 +11,16 @@
 #ifndef NEXUS_CORE_INCLUDE_BLOCK_H
 #define NEXUS_CORE_INCLUDE_BLOCK_H
 
+#include <stdint.h>
+
+#if defined(MAC_OSX) || defined(WIN32)
+typedef int64_t int64;
+typedef uint64_t uint64;
+#else
+typedef long long  int64;
+typedef unsigned long long  uint64;
+#endif
+
 class uint256;
 class uint512;
 class uint576;

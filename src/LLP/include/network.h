@@ -11,16 +11,24 @@
 #ifndef NEXUS_LLP_INCLUDE_NETWORK_H
 #define NEXUS_LLP_INCLUDE_NETWORK_H
 
-#include "../../LLU/include/serialize.h"
+#include <stdint.h>
+
+#if defined(MAC_OSX) || defined(WIN32)
+typedef int64_t int64;
+typedef uint64_t uint64;
+#else
+typedef long long  int64;
+typedef unsigned long long  uint64;
+#endif
 
 #ifdef WIN32
 // In MSVC, this is defined as a macro, undefine it to prevent a compile and link error
 #undef SetPort
 #endif
 
-
 namespace LLP
 {
+	
 	
 	/** Services flags */
 	enum
@@ -28,7 +36,8 @@ namespace LLP
 		NODE_NETWORK = (1 << 0),
 	};
 	
-		/** IP address (IPv6, or IPv4 using mapped IPv6 range (::FFFF:0:0/96)) */
+	
+	/** IP address (IPv6, or IPv4 using mapped IPv6 range (::FFFF:0:0/96)) */
 	class CNetAddr
 	{
 		protected:
