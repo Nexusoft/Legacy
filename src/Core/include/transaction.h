@@ -30,6 +30,7 @@ namespace LLD
 namespace Core
 {
 	class CTxIndex;
+	class CBlockIndex;
 	class CDiskTxPos;
 	class CTransaction;
 	
@@ -226,7 +227,163 @@ namespace Core
 	};
 	
 	
-	/** The basic transaction that is broadcasted on the network and contained in
+
+	
+	
+	/** An inpoint - a combination of a transaction and an index n into its vin */
+	class CInPoint
+	{
+	public:
+		CTransaction* ptx;
+		unsigned int n;
+
+		CInPoint() { SetNull(); }
+		CInPoint(CTransaction* ptxIn, unsigned int nIn) { ptx = ptxIn; n = nIn; }
+		void SetNull() { ptx = NULL; n = -1; }
+		bool IsNull() const { return (ptx == NULL && n == -1); }
+	};
+	
+	
+	/** A transaction with a merkle branch linking it to the block chain. */
+	class CMerkleTx : public CTransaction
+	{
+	public:
+		uint1024 hashBlock;
+		std::vector<uint512> vMerkleBranch;
+		int nIndex;
+
+		// memory only
+		mutable bool fMerkleVerified;
+
+
+		CMerkleTx()
+		{
+			Init();
+		}
+
+		CMerkleTx(const CTransaction& txIn) : CTransaction(txIn)
+		{
+			Init();
+		}
+
+		void Init()
+		{
+			hashBlock = 0;
+			nIndex = -1;
+			fMerkleVerified = false;
+		}
+
+
+		IMPLEMENT_SERIALIZE
+		(
+			nSerSize += SerReadWrite(s, *(CTransaction*)this, nType, nVersion, ser_action);
+			nVersion = this->nVersion;
+			READWRITE(hashBlock);
+			READWRITE(vMerkleBranch);
+			READWRITE(nIndex);
+		)
+
+
+		int SetMerkleBranch(const CBlock* pblock=NULL);
+		int GetDepthInMainChain(CBlockIndex* &pindexRet) const;
+		int GetDepthInMainChain() const { CBlockIndex *pindexRet; return GetDepthInMainChain(pindexRet); }
+		bool IsInMainChain() const { return GetDepthInMainChain() > 0; }
+		int GetBlocksToMaturity() const;
+		bool AcceptToMemoryPool(LLD::CIndexDB& indexdb, bool fCheckInputs=true);
+		bool AcceptToMemoryPool();
+	};
+	
+	
+	
+	/** Position on disk for a particular transaction. **/
+	class CDiskTxPos
+	{
+	public:
+		unsigned int nFile;
+		unsigned int nBlockPos;
+		unsigned int nTxPos;
+
+		CDiskTxPos()
+		{
+			SetNull();
+		}
+
+		CDiskTxPos(unsigned int nFileIn, unsigned int nBlockPosIn, unsigned int nTxPosIn)
+		{
+			nFile = nFileIn;
+			nBlockPos = nBlockPosIn;
+			nTxPos = nTxPosIn;
+		}
+
+		IMPLEMENT_SERIALIZE( READWRITE(FLATDATA(*this)); )
+		void SetNull() { nFile = -1; nBlockPos = 0; nTxPos = 0; }
+		bool IsNull() const { return (nFile == -1); }
+
+		friend bool operator==(const CDiskTxPos& a, const CDiskTxPos& b)
+		{
+			return (a.nFile     == b.nFile &&
+					a.nBlockPos == b.nBlockPos &&
+					a.nTxPos    == b.nTxPos);
+		}
+
+		friend bool operator!=(const CDiskTxPos& a, const CDiskTxPos& b)
+		{
+			return !(a == b);
+		}
+
+		std::string ToString() const;
+		void print() const;
+
+	};
+
+
+	/**  A txdb record that contains the disk location of a transaction and the
+	 * locations of transactions that spend its outputs.  vSpent is really only
+	 * used as a flag, but having the location is very helpful for debugging.
+	 */
+	class CTxIndex
+	{
+	public:
+		CDiskTxPos pos;
+		std::vector<CDiskTxPos> vSpent;
+
+		CTxIndex()
+		{
+			SetNull();
+		}
+
+		CTxIndex(const CDiskTxPos& posIn, unsigned int nOutputs)
+		{
+			pos = posIn;
+			vSpent.resize(nOutputs);
+		}
+
+		IMPLEMENT_SERIALIZE
+		(
+			if (!(nType & SER_GETHASH))
+				READWRITE(nVersion);
+			READWRITE(pos);
+			READWRITE(vSpent);
+		)
+
+		void SetNull();
+		bool IsNull();
+		
+		int GetDepthInMainChain() const;
+
+		friend bool operator==(const CTxIndex& a, const CTxIndex& b)
+		{
+			return (a.pos    == b.pos &&
+					a.vSpent == b.vSpent);
+		}
+
+		friend bool operator!=(const CTxIndex& a, const CTxIndex& b)
+		{
+			return !(a == b);
+		}
+	};
+	
+		/** The basic transaction that is broadcasted on the network and contained in
 	 * blocks.  A transaction can contain multiple inputs and outputs.
 	 */
 	class CTransaction
@@ -532,164 +689,10 @@ namespace Core
 	};
 	
 	
-	/** An inpoint - a combination of a transaction and an index n into its vin */
-	class CInPoint
-	{
-	public:
-		CTransaction* ptx;
-		unsigned int n;
-
-		CInPoint() { SetNull(); }
-		CInPoint(CTransaction* ptxIn, unsigned int nIn) { ptx = ptxIn; n = nIn; }
-		void SetNull() { ptx = NULL; n = -1; }
-		bool IsNull() const { return (ptx == NULL && n == -1); }
-	};
-	
-	
-	/** A transaction with a merkle branch linking it to the block chain. */
-	class CMerkleTx : public CTransaction
-	{
-	public:
-		uint1024 hashBlock;
-		std::vector<uint512> vMerkleBranch;
-		int nIndex;
-
-		// memory only
-		mutable bool fMerkleVerified;
-
-
-		CMerkleTx()
-		{
-			Init();
-		}
-
-		CMerkleTx(const CTransaction& txIn) : CTransaction(txIn)
-		{
-			Init();
-		}
-
-		void Init()
-		{
-			hashBlock = 0;
-			nIndex = -1;
-			fMerkleVerified = false;
-		}
-
-
-		IMPLEMENT_SERIALIZE
-		(
-			nSerSize += SerReadWrite(s, *(CTransaction*)this, nType, nVersion, ser_action);
-			nVersion = this->nVersion;
-			READWRITE(hashBlock);
-			READWRITE(vMerkleBranch);
-			READWRITE(nIndex);
-		)
-
-
-		int SetMerkleBranch(const CBlock* pblock=NULL);
-		int GetDepthInMainChain(CBlockIndex* &pindexRet) const;
-		int GetDepthInMainChain() const { CBlockIndex *pindexRet; return GetDepthInMainChain(pindexRet); }
-		bool IsInMainChain() const { return GetDepthInMainChain() > 0; }
-		int GetBlocksToMaturity() const;
-		bool AcceptToMemoryPool(LLD::CIndexDB& indexdb, bool fCheckInputs=true);
-		bool AcceptToMemoryPool();
-	};
-	
-	
-	
-	/** Position on disk for a particular transaction. **/
-	class CDiskTxPos
-	{
-	public:
-		unsigned int nFile;
-		unsigned int nBlockPos;
-		unsigned int nTxPos;
-
-		CDiskTxPos()
-		{
-			SetNull();
-		}
-
-		CDiskTxPos(unsigned int nFileIn, unsigned int nBlockPosIn, unsigned int nTxPosIn)
-		{
-			nFile = nFileIn;
-			nBlockPos = nBlockPosIn;
-			nTxPos = nTxPosIn;
-		}
-
-		IMPLEMENT_SERIALIZE( READWRITE(FLATDATA(*this)); )
-		void SetNull() { nFile = -1; nBlockPos = 0; nTxPos = 0; }
-		bool IsNull() const { return (nFile == -1); }
-
-		friend bool operator==(const CDiskTxPos& a, const CDiskTxPos& b)
-		{
-			return (a.nFile     == b.nFile &&
-					a.nBlockPos == b.nBlockPos &&
-					a.nTxPos    == b.nTxPos);
-		}
-
-		friend bool operator!=(const CDiskTxPos& a, const CDiskTxPos& b)
-		{
-			return !(a == b);
-		}
-
-		std::string ToString() const;
-		void print() const;
-
-	};
-
-
-	/**  A txdb record that contains the disk location of a transaction and the
-	 * locations of transactions that spend its outputs.  vSpent is really only
-	 * used as a flag, but having the location is very helpful for debugging.
-	 */
-	class CTxIndex
-	{
-	public:
-		CDiskTxPos pos;
-		std::vector<CDiskTxPos> vSpent;
-
-		CTxIndex()
-		{
-			SetNull();
-		}
-
-		CTxIndex(const CDiskTxPos& posIn, unsigned int nOutputs)
-		{
-			pos = posIn;
-			vSpent.resize(nOutputs);
-		}
-
-		IMPLEMENT_SERIALIZE
-		(
-			if (!(nType & SER_GETHASH))
-				READWRITE(nVersion);
-			READWRITE(pos);
-			READWRITE(vSpent);
-		)
-
-		void SetNull();
-		bool IsNull();
-		
-		int GetDepthInMainChain() const;
-
-		friend bool operator==(const CTxIndex& a, const CTxIndex& b)
-		{
-			return (a.pos    == b.pos &&
-					a.vSpent == b.vSpent);
-		}
-
-		friend bool operator!=(const CTxIndex& a, const CTxIndex& b)
-		{
-			return !(a == b);
-		}
-	};
-	
-	
 	class CTxMemPool
 	{
 	public:
-		mutable CCriticalSection cs;
+		Mutex_t MUTEX;
 		
 		std::map<uint512, CTransaction> mapTx;
 		std::map<COutPoint, CInPoint> mapNextTx;

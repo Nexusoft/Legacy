@@ -11,17 +11,15 @@
 #ifndef NEXUS_LLP_TEMPLATES_TYPES_H
 #define NEXUS_LLP_TEMPLATES_TYPES_H
 
-#include <boost/date_time/posix_time/posix_time.hpp>
-
 #include <string>
 #include <vector>
 #include <stdio.h>
 #include <boost/bind.hpp>
 #include <boost/smart_ptr.hpp>
 #include <boost/asio.hpp>
-#include <boost/thread/thread.hpp>         
 
-#define LOCK_GUARD(a) boost::lock_guard<boost::mutex> lock(a)
+#include "../../LLU/include/mutex.h"
+#include "../../LLU/include/runtime.h"
 	
 namespace LLP
 {
@@ -41,47 +39,7 @@ namespace LLP
 	typedef boost::shared_ptr<boost::asio::ip::tcp::socket>      Socket_t;
 	typedef boost::asio::ip::tcp::acceptor                       Listener_t;
 	typedef boost::asio::io_service                              Service_t;
-	typedef boost::thread                                        Thread_t;
 	typedef boost::system::error_code                            Error_t;
-	typedef boost::mutex                                         Mutex_t;
-	
-	
-	/** Sleep for a duration in Milliseconds. **/
-	inline void Sleep(unsigned int nTime){ boost::this_thread::sleep(boost::posix_time::milliseconds(nTime)); }
-	
-	
-	
-	/** Class the tracks the duration of time elapsed in seconds or milliseconds.
-		Used for socket timers to determine time outs. **/
-	class Timer
-	{
-	private:
-		boost::posix_time::ptime TIMER_START, TIMER_END;
-		bool fStopped = false;
-	
-	public:
-		inline void Start() { TIMER_START = boost::posix_time::microsec_clock::local_time(); fStopped = false; }
-		inline void Reset() { Start(); }
-		inline void Stop()  { TIMER_END = boost::posix_time::microsec_clock::local_time(); fStopped = true; }
-		
-		/** Return the Total Seconds Elapsed Since Timer Started. **/
-		unsigned int Elapsed()
-		{
-			if(fStopped)
-				return (TIMER_END - TIMER_START).total_seconds();
-				
-			return (boost::posix_time::microsec_clock::local_time() - TIMER_START).total_seconds();
-		}
-		
-		/** Return the Total Milliseconds Elapsed Since Timer Started. **/
-		unsigned int ElapsedMilliseconds()
-		{
-			if(fStopped)
-				return (TIMER_END - TIMER_START).total_milliseconds();
-				
-			return (boost::posix_time::microsec_clock::local_time() - TIMER_START).total_milliseconds();
-		}
-	};
 	
 	
 	/** Class that tracks DDOS attempts on LLP Servers. 
@@ -110,7 +68,7 @@ namespace LLP
 		/** Construct a DDOS Score of Moving Average Timespan. **/
 		DDOS_Score(int nTimespan)
 		{
-			LOCK_GUARD(MUTEX);
+			LOCK(MUTEX);
 			
 			for(int i = 0; i < nTimespan; i++)
 				SCORE.push_back(std::make_pair(true, 0));
@@ -123,7 +81,7 @@ namespace LLP
 		/** Flush the DDOS Score to 0. **/
 		void Flush()
 		{
-			LOCK_GUARD(MUTEX);
+			LOCK(MUTEX);
 			
 			Reset();
 			for(int i = 0; i < SCORE.size(); i++)
@@ -134,7 +92,7 @@ namespace LLP
 		/** Access the DDOS Score from the Moving Average. **/
 		int Score()
 		{
-			LOCK_GUARD(MUTEX);
+			LOCK(MUTEX);
 			
 			int nMovingAverage = 0;
 			for(int i = 0; i < SCORE.size(); i++)
@@ -147,7 +105,7 @@ namespace LLP
 		/** Increase the Score by nScore. Operates on the Moving Average to Increment Score per Second. **/
 		DDOS_Score & operator+=(const int& nScore)
 		{
-			LOCK_GUARD(MUTEX);
+			LOCK(MUTEX);
 			
 			int nTime = TIMER.Elapsed();
 			
@@ -195,7 +153,7 @@ namespace LLP
 		/** Ban a Connection, and Flush its Scores. **/
 		void Ban()
 		{
-			LOCK_GUARD(MUTEX);
+			LOCK(MUTEX);
 			
 			if((TIMER.Elapsed() < BANTIME))
 				return;
@@ -214,7 +172,7 @@ namespace LLP
 		/** Check if Connection is Still Banned. **/
 		bool Banned() 
 		{
-			LOCK_GUARD(MUTEX);
+			LOCK(MUTEX);
 			
 			unsigned int ELAPSED = TIMER.Elapsed();
 			
@@ -284,7 +242,7 @@ namespace LLP
 	
 
 	/* Base Template class to handle outgoing / incoming LLP data for both Client and Server. */
-	template<typename PacketType = Packet> class Connection
+	template<typename PacketType = Packet> class BaseConnection
 	{
 	protected:
 		
@@ -362,46 +320,8 @@ namespace LLP
 		
 		/* Non-Blocking Packet reader to build a packet from TCP Connection.
 			This keeps thread from spending too much time for each Connection. */
-		virtual void ReadPacket()
-		{
-				
-			/* Handle Reading Packet Type Header. */
-			if(SOCKET->available() > 0 && INCOMING.IsNull())
-			{
-				std::vector<unsigned char> HEADER(1, 255);
-				if(Read(HEADER, 1) == 1)
-					INCOMING.HEADER = HEADER[0];
-					
-			}
-				
-			if(!INCOMING.IsNull() && !INCOMING.Complete())
-			{
-				/* Handle Reading Packet Length Header. */
-				if(SOCKET->available() >= 4 && INCOMING.LENGTH == 0)
-				{
-					std::vector<unsigned char> BYTES(4, 0);
-					if(Read(BYTES, 4) == 4)
-					{
-						INCOMING.SetLength(BYTES);
-						Event(EVENT_HEADER);
-					}
-				}
-					
-				/* Handle Reading Packet Data. */
-				unsigned int nAvailable = SOCKET->available();
-				if(nAvailable > 0 && INCOMING.LENGTH > 0 && INCOMING.DATA.size() < INCOMING.LENGTH)
-				{
-					std::vector<unsigned char> DATA( std::min(nAvailable, (unsigned int)(INCOMING.LENGTH - INCOMING.DATA.size())), 0);
-					unsigned int nRead = Read(DATA, DATA.size());
-					
-					if(nRead == DATA.size())
-					{
-						INCOMING.DATA.insert(INCOMING.DATA.end(), DATA.begin(), DATA.end());
-						Event(EVENT_PACKET, nRead);
-					}
-				}
-			}
-		}
+		virtual void ReadPacket() { }
+
 		
 		/* Connect Socket to a Remote Endpoint. */
 		bool Connect(std::string strAddress, std::string strPort, Service_t IO_SERVICE)
@@ -473,6 +393,60 @@ namespace LLP
 		void Write(std::vector<unsigned char> DATA) { if(Errors()) return; TIMER.Reset(); boost::asio::write(*SOCKET, boost::asio::buffer(DATA, DATA.size()), ERROR_HANDLE); }
 
 	};
+	
+	
+	
+	class Connection : public BaseConnection
+	{
+		
+		
+		/* Connection Constructors */
+		Connection() : BaseConnection() { }
+		Connection( Socket_t SOCKET_IN, DDOS_Filter* DDOS_IN, bool isDDOS = false, bool fOutgoing = false) : BaseConnection(SOCKET_IN, DDOS_IN, isDDOS, fOutgoing) { }
+		
+		
+		/* Regular Connection Read Packet Method. */
+		void ReadPacket()
+		{
+				
+			/* Handle Reading Packet Type Header. */
+			if(SOCKET->available() > 0 && INCOMING.IsNull())
+			{
+				std::vector<unsigned char> HEADER(1, 255);
+				if(Read(HEADER, 1) == 1)
+					INCOMING.HEADER = HEADER[0];
+					
+			}
+				
+			if(!INCOMING.IsNull() && !INCOMING.Complete())
+			{
+				/* Handle Reading Packet Length Header. */
+				if(SOCKET->available() >= 4 && INCOMING.LENGTH == 0)
+				{
+					std::vector<unsigned char> BYTES(4, 0);
+					if(Read(BYTES, 4) == 4)
+					{
+						INCOMING.SetLength(BYTES);
+						Event(EVENT_HEADER);
+					}
+				}
+					
+				/* Handle Reading Packet Data. */
+				unsigned int nAvailable = SOCKET->available();
+				if(nAvailable > 0 && INCOMING.LENGTH > 0 && INCOMING.DATA.size() < INCOMING.LENGTH)
+				{
+					std::vector<unsigned char> DATA( std::min(nAvailable, (unsigned int)(INCOMING.LENGTH - INCOMING.DATA.size())), 0);
+					unsigned int nRead = Read(DATA, DATA.size());
+					
+					if(nRead == DATA.size())
+					{
+						INCOMING.DATA.insert(INCOMING.DATA.end(), DATA.begin(), DATA.end());
+						Event(EVENT_PACKET, nRead);
+					}
+				}
+			}
+		}	
+	}
 }
 
 #endif

@@ -13,14 +13,28 @@
 
 #include <stdint.h>
 
-#include "../../LLU/templates/serialize.h"
-#include "../../LLC/types/uint1024.h"
-
-#include "../../LLP/include/node.h"
-
 #include "../../LLC/hash/SK.h"
 #include "../../LLC/hash/macro.h"
-		
+
+#include "../../LLU/templates/serialize.h"
+
+namespace LLP 
+{ 
+	class Coinbase; 
+	class CNode;
+}
+
+namespace LLD 
+{
+	class CIndexDB;
+}
+
+namespace Wallet 
+{ 
+	class CWallet; 
+	class CReserveKey; 
+}
+
 namespace Core
 {
 	class CBlockIndex;
@@ -241,7 +255,7 @@ namespace Core
 				if (nIndex & 1)
 					hash = LLC::HASH::SK512(BEGIN(vMerkleBranch[i]), END(vMerkleBranch[i]), BEGIN(hash), END(hash));
 				else
-					hash = LLC::HASH::SK512(BEGIN(hash), END(hash), BEGIN(vMerkleBranch[i]), END(ovMerkleBranch[i]));
+					hash = LLC::HASH::SK512(BEGIN(hash), END(hash), BEGIN(vMerkleBranch[i]), END(vMerkleBranch[i]));
 				nIndex >>= 1;
 			}
 			return hash;
@@ -690,7 +704,7 @@ namespace Core
 	
 	
 	/* Set block as the current leading block of the block chain. */
-	bool SetBestChain(LLD:CIndexDB& indexdb, CBlockIndex* pindexNew, LLP::CNode* pfrom = NULL);
+	bool SetBestChain(LLD::CIndexDB& indexdb, CBlockIndex* pindexNew, LLP::CNode* pfrom = NULL);
 	
 	
 	/* Check the disk space for the current partition database is stored in. */

@@ -64,7 +64,7 @@ namespace LLP
 			unsigned int ADDRESS = (vAddress[0] << 24) + (vAddress[1] << 16) + (vAddress[2] << 8) + vAddress[3];
 					
 			/* Handle the DDOS Checking. */
-			LOCK_GUARD(DDOS_MUTEX);
+			LOCK(DDOS_MUTEX);
 			{
 				/* Create new DDOS Filter if NEeded. */
 				if(!DDOS_MAP.count(ADDRESS))
@@ -152,7 +152,7 @@ namespace LLP
 					unsigned int ADDRESS = (vAddress[0] << 24) + (vAddress[1] << 16) + (vAddress[2] << 8) + vAddress[3];
 					
 					/* Handle the DDOS Code. */
-					LOCK_GUARD(DDOS_MUTEX);
+					LOCK(DDOS_MUTEX);
 					{
 						if(!DDOS_MAP.count(ADDRESS))
 							DDOS_MAP[ADDRESS] = new DDOS_Filter(DDOS_TIMESPAN);

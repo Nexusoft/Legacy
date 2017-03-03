@@ -67,7 +67,7 @@ namespace LLP
 			
 			CONNECTIONS[nSlot] = new ProtocolType(SOCKET, DDOS, fDDOS);
 			
-			{ LOCK_GUARD(CONNECTIONS[nSlot]->MUTEX)
+			{ LOCK(CONNECTIONS[nSlot]->MUTEX)
 				CONNECTIONS[nSlot]->Event(EVENT_CONNECT);
 				CONNECTIONS[nSlot]->CONNECTED = true;
 			}
@@ -84,7 +84,7 @@ namespace LLP
 			
 			CONNECTIONS[nSlot] = new ProtocolType(SOCKET, DDOS, fDDOS);
 			
-			{ LOCK_GUARD(CONNECTIONS[nSlot]->MUTEX)
+			{ LOCK(CONNECTIONS[nSlot]->MUTEX)
 				if(!CONNECTIONS[nSlot]->Connect(strAddress, strPort, IO_SERVICE))
 				{
 					delete CONNECTIONS[index];
@@ -110,7 +110,7 @@ namespace LLP
 			Happens with a timeout / error, graceful close, or disconnect command. */
 		void RemoveConnection(int index)
 		{
-			LOCK_GUARD(CONNECTIONS[index]->MUTEX)
+			LOCK(CONNECTIONS[index]->MUTEX)
 			{
 				CONNECTIONS[index]->Event(EVENT_DISCONNECT);
 				CONNECTIONS[index]->Disconnect();
@@ -158,7 +158,7 @@ namespace LLP
 						}
 						
 						/* Lock the Main Processing of this Thread. */
-						{ LOCK_GUARD(CONNECTIONS[nIndex]->MUTEX)
+						{ LOCK(CONNECTIONS[nIndex]->MUTEX)
 						
 							/* Handle any DDOS Filters. */
 							boost::system::error_code ec;

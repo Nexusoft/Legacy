@@ -8,16 +8,13 @@
   
 *******************************************************************************************/
 
-#ifndef NEXUS_MAIN_H
-#define NEXUS_MAIN_H
+#ifndef NEXUS_LLU_INCLUDE_MUTEX_H
+#define NEXUS_LLU_INCLUDE_MUTEX_H
 
-#include "Wallet/wallet.h"
+#include <boost/thread/thread.hpp>
 
-extern Wallet::CWallet* pwalletMain;
+#define LOCK(a) boost::lock_guard<boost::mutex> lock(a)
 
-void StartShutdown();
-void Shutdown(void* parg);
-bool AppInit(int argc, char* argv[]);
-bool AppInit2(int argc, char* argv[]);
+typedef boost::mutex                                         Mutex_t;
 
 #endif

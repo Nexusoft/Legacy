@@ -8,8 +8,8 @@
   
 *******************************************************************************************/
 
-#ifndef NEXUS_ALLOCATORS_H
-#define NEXUS_ALLOCATORS_H
+#ifndef NEXUS_LLC_HASH_MACRO_H
+#define NEXUS_LLC_HASH_MACRO_H
 
 #define BEGIN(a)            ((char*)&(a))
 #define END(a)              ((char*)&((&(a))[1]))

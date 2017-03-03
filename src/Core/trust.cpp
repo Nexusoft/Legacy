@@ -390,7 +390,7 @@ namespace Core
 		If Key does exist it Must Meet Trust Protocol Requirements. 
 		
 	**/
-	bool CTrustPool::Check(CBlock cBlock)
+	bool CTrustPool::Check(CBlock& cBlock)
 	{
 		/** Lock Accepting Trust Keys to Mutex. **/
 		LOCK(cs);
@@ -477,7 +477,7 @@ namespace Core
 		
 		
 	/** Remove a Block from Trust Key. **/
-	bool CTrustPool::Remove(CBlock cBlock)
+	bool CTrustPool::Remove(CBlock& cBlock)
 	{
 		/** Lock Accepting Trust Keys to Mutex. **/
 		LOCK(cs);
@@ -536,7 +536,7 @@ namespace Core
 	
 	/** Accept a Block's Coinstake into the Trust Pool Assigning it to Specified Trust Key.  
 		This Method shouldn't be called before CTrustPool::Check **/
-	bool CTrustPool::Accept(CBlock cBlock, bool fInit)
+	bool CTrustPool::Accept(CBlock cBlock&, bool fInit)
 	{
 		/** Lock Accepting Trust Keys to Mutex. **/
 		LOCK(cs);
@@ -679,7 +679,7 @@ namespace Core
 	
 	/** Should not be called until key is established in block chain. 
 		Block must have been received and be part of the main chain. **/
-	bool CTrustKey::CheckGenesis(CBlock cBlock) const
+	bool CTrustKey::CheckGenesis(CBlock& cBlock) const
 	{
 		/** Invalid if Null. **/
 		if(IsNull())

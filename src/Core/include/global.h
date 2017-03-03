@@ -18,20 +18,10 @@
 
 #include <string>
 #include <map>
-#include <stdint.h>
 
-#if defined(MAC_OSX) || defined(WIN32)
-typedef int64_t int64;
-typedef uint64_t uint64;
-#else
-typedef long long  int64;
-typedef unsigned long long  uint64;
-#endif
-
-class uint256;
-class uint512;
-class uint576;
-class uint1024;
+#include "../../LLC/types/uint1024.h"
+#include "../../LLU/include/mutex.h"
+#include "../../LLU/templates/containers.h"
 
 class CBigNum;
 class CDataStream;
@@ -319,11 +309,11 @@ namespace Core
 	
 
 	/* Main Critical Section for Core Level Functions (TODO: Remove in Tritium or Post Tritum. TO BE DETERMINED). */
-	extern CCriticalSection cs_main;
+	extern Mutex_t cs_main;
 	
 	
 	/* Main Critical Section for the Wallet Registry Functions (TODO: Remove in Tritium or Post Tritium. TO BE DETERMINED). */
-	extern CCriticalSection cs_setpwalletRegistered;
+	extern Mutex_t cs_setpwalletRegistered;
 	
 	
 	/** Filter to gain average block count among peers **/
@@ -334,7 +324,6 @@ namespace Core
 	inline bool MoneyRange(int64 nValue) { return (nValue >= 0 && nValue <= MAX_TXOUT_AMOUNT); }
 	
 		
-	
 	/* __________________________________________________ (TODO: Post Tritium Deprecation) __________________________________________________  */
 	
 	
@@ -348,6 +337,7 @@ namespace Core
 	
 	/* NOTE: Pre-Tritium Rule. One day expiration. Tritium uses positive and negative trust. (TODO: Remove Post Tritium) */
 	extern int TRUST_KEY_EXPIRE;
+
 	
 }
 

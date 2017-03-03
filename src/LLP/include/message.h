@@ -108,7 +108,6 @@ namespace LLP
 		{
 			LENGTH    = 0;
 			CHECKSUM  = 0;
-			COMMAND   = "";
 			
 			DATA.clear();
 		}
@@ -123,7 +122,7 @@ namespace LLP
 		
 		
 		/* Determine if header is fully read */
-		bool Header()   { return IsNull() ? false : (LENGTH > 0 && CHECKSUM > 0 && COMMAND.length() > 0); }
+		bool Header()   { return IsNull() ? false : (LENGTH > 0 && CHECKSUM > 0 && sizeof(COMMAND) > 0); }
 		
 		
 		/* Sets the size of the packet from Byte Vector. */
@@ -173,8 +172,8 @@ namespace LLP
 			unsigned int nChecksum = 0;
 			memcpy(&nChecksum, &hash, sizeof(nChecksum));
 			if (nChecksum != CHECKSUM)
-				return error("Nexus Packet (%s, %u bytes) : CHECKSUM MISMATCH nChecksum=%08x hdr.nChecksum=%08x",
-				   strCommand.c_str(), nMessageSize, nChecksum, hdr.nChecksum);
+				return error("Message Packet (%s, %u bytes) : CHECKSUM MISMATCH nChecksum=%08x hdr.nChecksum=%08x",
+				   COMMAND.c_str(), LENGTH, nChecksum, CHECKSUM);
 				
 			return true;
 		}
@@ -194,7 +193,7 @@ namespace LLP
 	
 	
 	/* Base Template class to handle outgoing / incoming LLP data for both Client and Server. */
-	class MessageConnection : public Connection<MessagePacket>
+	class MessageConnection : public BaseConnection<MessagePacket>
 	{
 	protected:
 		/* 
@@ -211,11 +210,15 @@ namespace LLP
 		/* Virtual Process Function. To be overridden with your own custom packet processing. */
 		virtual bool ProcessPacket(){ }
 	public:
+		
+		/* Constructors for Message LLP Class. */
+		MessageConnection() : BaseConnection<MessagePacket>(){ }
+		MessageConnection( Socket_t SOCKET_IN, DDOS_Filter* DDOS_IN, bool isDDOS = false ) : BaseConnection<MessagePacket>( SOCKET_IN, DDOS_IN, isDDOS ) { }
 
 		/* Non-Blocking Packet reader to build a packet from TCP Connection.
 		 * This keeps thread from spending too much time for each Connection. 
 		 */
-		void ReadPacket()
+		virtual void ReadPacket()
 		{
 			if(!INCOMING.Complete())
 			{
@@ -251,7 +254,7 @@ namespace LLP
 		MessagePacket NewMessage(const char* chCommand, CDataStream ssData)
 		{
 			MessagePacket RESPONSE;
-			RESPONSE.COMMAND = chCommand;
+			memcpy(RESPONSE.COMMAND, chCommand, sizeof(chCommand));
 			
 			RESPONSE.SetData(ssData);
 			RESPONSE.SetChecksum();
@@ -262,7 +265,7 @@ namespace LLP
 			try
 			{
 				MessagePacket RESPONSE;
-				RESPONSE.COMMAND = chCommand;
+				memcpy(RESPONSE.COMMAND, chCommand, sizeof(chCommand));
 			
 				this->WritePacket(RESPONSE);
 			}

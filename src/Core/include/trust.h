@@ -12,19 +12,24 @@
 #define NEXUS_CORE_INCLUDE_TRUST_H
 
 #include "../../LLU/templates/serialize.h"
+#include "../../LLU/include/mutex.h"
 
 #include "../../LLC/hash/SK.h"
 #include "../../LLC/hash/macro.h"
 
+namespace Wallet { class CWallet; }
+
 namespace Core
 {
+	class CBlock;
+
 	
-	/** Class to Store the Trust Key and It's Interest Rate. **/
+	/* Class to Store the Trust Key and It's Interest Rate. */
 	class CTrustKey
 	{
 	public:
 	
-		/** The Public Key associated with Trust Key. **/
+		/* The Public Key associated with Trust Key. */
 		std::vector<unsigned char> vchPubKey;
 		
 		unsigned int nVersion;
@@ -32,8 +37,10 @@ namespace Core
 		uint512   hashGenesisTx;
 		unsigned int nGenesisTime;
 		
-		/** Previous Blocks Vector to store list of blocks of this Trust Key. **/
+		
+		/* Previous Blocks Vector to store list of blocks of this Trust Key. */
 		mutable std::vector<uint1024> hashPrevBlocks;
+		
 		
 		CTrustKey() { SetNull(); }
 		CTrustKey(std::vector<unsigned char> vchPubKeyIn, uint1024 hashBlockIn, uint512 hashTxIn, unsigned int nTimeIn)
@@ -47,6 +54,7 @@ namespace Core
 			nGenesisTime           = nTimeIn;
 		}
 		
+		
 		IMPLEMENT_SERIALIZE
 		(
 			READWRITE(this->nVersion);
@@ -59,7 +67,7 @@ namespace Core
 		)
 		
 		
-		/** Set the Data structure to Null. **/
+		/* Set the Data structure to Null. */
 		void SetNull() 
 		{ 
 			nVersion             = 1;
@@ -70,20 +78,32 @@ namespace Core
 			vchPubKey.clear();
 		}
 		
-		/** Hash of a Trust Key to Verify the Key's Root. **/
+		
+		/* Hash of a Trust Key to Verify the Key's Root. */
 		uint512 GetHash() const { return LLC::HASH::SK512(vchPubKey, BEGIN(hashGenesisBlock), END(nGenesisTime)); }
 		
-		/** Determine how old the Trust Key is From Timestamp. **/
+		
+		/* Determine how old the Trust Key is From Timestamp. */
 		uint64 Age(unsigned int nTime) const;
 		
-		/** Time Since last Trust Block. **/
+		
+		/* Time Since last Trust Block. */
 		uint64 BlockAge(unsigned int nTime) const;
 		
-		/** Flag to Determine if Class is Empty and Null. **/
+		
+		/* Flag to Determine if Class is Empty and Null. */
 		bool IsNull()  const { return (hashGenesisBlock == 0 || hashGenesisTx == 0 || nGenesisTime == 0 || vchPubKey.empty()); }
+		
+		
+		/* Determine if a key is expired by its age. */
 		bool Expired(unsigned int nTime) const;
+		
+		
+		/* Check the Genesis Transaction of this Trust Key. */
 		bool CheckGenesis(CBlock cBlock) const;
 		
+		
+		/* Dump to Console information about current Trust Key. */
 		void Print()
 		{
 			uint576 cKey;
@@ -94,31 +114,50 @@ namespace Core
 	};	
 	
 	
-	/** Holding Class Structure to contain the Trust Keys. **/
+	/* Holding Class Structure to contain the Trust Keys. */
 	class CTrustPool
 	{
 	private:
-		mutable CCriticalSection cs;
+		Mutex_t MUTEX;
 		mutable std::map<uint576, CTrustKey> mapTrustKeys;
 
 	public:
-		/** The Trust Key Owned By Current Node. **/
+		
+		/* The Trust Key Owned By Current Node. */
 		std::vector<unsigned char>   vchTrustKey;
 		
-		/** Helper Function to Find Trust Key. **/
+		
+		/* Helper Function to Find Trust Key. */
 		bool HasTrustKey(unsigned int nTime);
 		
+		
+		/* Check the Validity of a Trust Key. */
 		bool Check(CBlock cBlock);
+		
+		
+		/* Accept a Trust Key into the Trust Pool. */
 		bool Accept(CBlock cBlock, bool fInit = false);
+		
+		
+		/* Remove a Trust Key from the Trust Pool. */
 		bool Remove(CBlock cBlock);
 		
+		
+		/* Check if a Trust Key Exists in the Trust Pool. */
 		bool Exists(uint576 cKey)    const { return mapTrustKeys.count(cKey); }
+		
+		
+		/* Detect if this key is still a genesis key. */
 		bool IsGenesis(uint576 cKey) const { return mapTrustKeys[cKey].hashPrevBlocks.empty(); }
 		
+		
+		/* Calculate the Interest Rate of given trust key. */
 		double InterestRate(uint576 cKey, unsigned int nTime) const;
+		
 		
 		/* The Trust score of the Trust Key. Determines the Age and Interest Rates. */
 		uint64 TrustScore(uint576 cKey, unsigned int nTime) const;
+		
 		
 		/* Locate a Trust Key in the Trust Pool. */
 		CTrustKey Find(uint576 cKey) const { return mapTrustKeys[cKey]; }

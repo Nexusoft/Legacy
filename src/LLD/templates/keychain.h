@@ -13,13 +13,15 @@
 
 #include "key.h"
 
+#include "../../LLU/include/args.h"
+
 namespace LLD
 {
 	/** Handle the Registry of Shared Keychain Pointer Objects. **/
 	extern std::map<std::string, KeyDatabase*> mapKeychainRegistry;
 	
 	/** Handle the Key Registry. **/
-	extern boost::mutex REGISTRY_MUTEX;
+	extern Mutex_t REGISTRY_MUTEX;
 	
 	/** Handle the Registrying of Keychains for LLD Sectors. **/
 	void RegisterKeychain(std::string strRegistryName, std::string strBaseName);

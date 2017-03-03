@@ -74,10 +74,12 @@ namespace Core
 	}
 
 	/* Notify wallets about a new best chain */
-	void SetBestChain(const CBlockLocator& loc)
+	bool SetBestChain(const CBlockLocator& loc)
 	{
 		BOOST_FOREACH(Wallet::CWallet* pwallet, setpwalletRegistered)
 			pwallet->SetBestChain(loc);
+			
+		return true;
 	}
 
 	/* Notify wallets about an updated transaction */

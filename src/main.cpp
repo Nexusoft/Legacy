@@ -60,7 +60,7 @@ void StartShutdown()
 
 void Shutdown(void* parg)
 {
-    static CCriticalSection cs_Shutdown;
+    static Mutex_t cs_Shutdown;
     static bool fTaken;
     bool fFirstThread = false;
     {

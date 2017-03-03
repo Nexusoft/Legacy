@@ -11,7 +11,6 @@
 #ifndef NEXUS_CORE_INCLUDE_DISPATCH_H
 #define NEXUS_CORE_INCLUDE_DISPATCH_H
 
-
 class uint512;
 class uint1024;
 
@@ -53,7 +52,7 @@ namespace Core
 	
 	
 	/* Set the wallet's best chain pointer and data record. */
-	void SetBestChain(const CBlockLocator& loc);
+	//bool SetBestChain(const CBlockLocator& loc);
 	
 	
 	/* Flag that a transaction has been updated. Signals the walelt to do the same. */

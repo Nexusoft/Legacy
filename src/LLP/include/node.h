@@ -13,28 +13,21 @@
 
 #include <queue>
 
-template <typename CType> class CMajority;
+#include "network.h"
+#include "message.h"
 
-class uint256;
-class uint512;
-class uint576;
-class uint1024;
+#include "../../Core/include/transaction.h"
+#include "../../Core/include/block.h"
 
-template <typename T> class mruset;
+#include "../../LLU/include/mruset.h"
+#include "../../LLU/templates/containers.h"
 
-namespace Core
-{
-	class CBlock;
-}
+#include "../templates/types.h"
+
 
 namespace LLP
 {
-	class CInv;
-	class Timer;
-	class CAddress;
-	class DDOS_Filter;
-	class MessageConnection;
-
+	class CTransaction;
 	
 	class CNode : public MessageConnection
 	{
@@ -47,7 +40,7 @@ namespace LLP
 		/* Basic Stats. */
 		CAddress addrThisNode;
 		std::string strNodeVersion;
-		unsigned int LLP::PROTOCOL_VERSION;
+		unsigned int PROTOCOL_VERSION;
 		
 		
 		/* Positive: Node Stats. */
@@ -114,8 +107,7 @@ namespace LLP
 		
 		/* Constructors for Message LLP Class. */
 		CNode() : MessageConnection(){ }
-		CNode( Socket_t SOCKET_IN, DDOS_Filter* DDOS_IN, bool isDDOS = false ) : MessageConnection( SOCKET_IN, DDOS_IN )
-		{ ADDRESS = parse_ip(SOCKET_IN->remote_endpoint().address().to_string()); }
+		CNode( Socket_t SOCKET_IN, DDOS_Filter* DDOS_IN, bool isDDOS = false ) : MessageConnection( SOCKET_IN, DDOS_IN ) { }
 		
 		
 		/* Virtual Functions to Determine Behavior of Message LLP. */
@@ -140,7 +132,7 @@ namespace LLP
 		bool DoS(int nDoS, bool fReturn)
 		{
 			if(fDDOS)
-				DDOS->rScore += nDoS;
+				DDOS->rSCORE += nDoS;
 			
 			return fReturn;
 		}
@@ -151,7 +143,7 @@ namespace LLP
 	inline bool DoS(CNode* pfrom, int nDoS, bool fReturn)
 	{
 		if(pfrom)
-			pfrom->DDOS->rScore += nDoS;
+			pfrom->DDOS->rSCORE += nDoS;
 			
 		return fReturn;
 	}

@@ -8,13 +8,7 @@
   
 *******************************************************************************************/
 
-#include "../main.h"
-
-#include "../Wallet/db.h"
-#include "../LLU/include/ui_interface.h"
-#include "../LLU/include/util.h"
-
-#include "../LLD/include/index.h"
+#include "../Wallet/wallet.h"
 
 #include "include/block.h"
 #include "include/global.h"
@@ -26,9 +20,14 @@
 #include "include/transaction.h"
 #include "include/checkpoints.h"
 
+#include ""../LLU/ui_interface.h"
+
 #include "../LLP/include/network.h"
 #include "../LLP/include/mining.h"
 #include "../LLP/include/message.h"
+#include "../LLP/include/node.h"
+
+#include "../LLD/include/index.h"
 
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/filesystem.hpp>
@@ -102,7 +101,9 @@ namespace Core
 			return error("CBlock::WriteToDisk() : AppendBlockFile failed");
 
 		// Write index header
-		unsigned char pchMessageStart[4] = (fTestNet ? LLP::MESSAGE_START_TESTNET : LLP::MESSAGE_START_MAINNET);
+		unsigned char pchMessageStart[4];
+		memcpy(pchMessageStart, (fTestNet ? LLP::MESSAGE_START_TESTNET : LLP::MESSAGE_START_MAINNET), sizeof(pchMessageStart));
+		
 		unsigned int nSize = fileout.GetSerializeSize(*this);
 		fileout << FLATDATA(pchMessageStart) << nSize;
 
@@ -251,7 +252,7 @@ namespace Core
 		{
 			nSigOps += tx.GetLegacySigOpCount();
 			if (nSigOps > MAX_BLOCK_SIGOPS)
-				return DoS(pfrom, 100, error("ConnectBlock() : too many sigops"));
+				return LLP::DoS(pfrom, 100, error("ConnectBlock() : too many sigops"));
 
 			CDiskTxPos posThisTx(pindex->nFile, pindex->nBlockPos, nTxPos);
 			nTxPos += ::GetSerializeSize(tx, SER_DISK, DATABASE_VERSION);
@@ -271,7 +272,7 @@ namespace Core
 				// an incredibly-expensive-to-validate block.
 				nSigOps += tx.TotalSigOps(mapInputs);
 				if (nSigOps > MAX_BLOCK_SIGOPS)
-					return DoS(pfrom, 100, error("ConnectBlock() : too many sigops"));
+					return LLP::DoS(pfrom, 100, error("ConnectBlock() : too many sigops"));
 
 				int64 nTxValueIn = tx.GetValueIn(mapInputs);
 				int64 nTxValueOut = tx.GetValueOut();
@@ -469,9 +470,9 @@ namespace Core
 		bool fIsInitialDownload = IsInitialBlockDownload();
 		if (!fIsInitialDownload)
 		{
-			const CBlockLocator locator(pindexNew);
+			//const CBlockLocator locator(pindexNew);
 			
-			Core::SetBestChain(locator);
+			//Core::SetBestChain(locator);
 		}
 
 		
@@ -597,7 +598,6 @@ namespace Core
 			//hashPrevBestCoinBase = pblock->vtx[0].GetHash();
 		}
 
-		MainFrameRepaint();
 		return true;
 	}
 	
@@ -662,12 +662,12 @@ namespace Core
 		
 		/* Check the Size limits of the Current Block. */
 		if (pblock->vtx.empty() || pblock->vtx.size() > MAX_BLOCK_SIZE || ::GetSerializeSize(*pblock, SER_NETWORK, LLP::PROTOCOL_VERSION) > MAX_BLOCK_SIZE)
-			return DoS(pfrom, 100, error("CheckBlock() : size limits failed"));
+			return LLP::DoS(pfrom, 100, error("CheckBlock() : size limits failed"));
 			
 		
 		/* Make sure the Block was Created within Active Channel. **/
 		if (pblock->GetChannel() > 2)
-			return DoS(pfrom, 50, error("CheckBlock() : Channel out of Range."));
+			return LLP::DoS(pfrom, 50, error("CheckBlock() : Channel out of Range."));
 		
 		
 		/* Check that the Timestamp isn't made in the future. */
@@ -677,22 +677,22 @@ namespace Core
 		
 		/* Do not allow blocks to be accepted above the Current Block Version. */
 		if(pblock->nVersion > (fTestNet ? TESTNET_BLOCK_CURRENT_VERSION : NETWORK_BLOCK_CURRENT_VERSION))
-			return DoS(pfrom, 50, error("CheckBlock() : Invalid Block Version."));
+			return LLP::DoS(pfrom, 50, error("CheckBlock() : Invalid Block Version."));
 	
 		
 		/* Only allow POS blocks in Version 4. */
 		if(pblock->IsProofOfStake() && pblock->nVersion < 4)
-			return DoS(pfrom, 50, error("CheckBlock() : Proof of Stake Blocks Rejected until Version 4."));
+			return LLP::DoS(pfrom, 50, error("CheckBlock() : Proof of Stake Blocks Rejected until Version 4."));
 			
 		
 		/* Check the Proof of Work Claims. */
 		if (pblock->IsProofOfWork() && !pblock->VerifyWork())
-			return DoS(pfrom, 50, error("CheckBlock() : Invalid Proof of Work"));
+			return LLP::DoS(pfrom, 50, error("CheckBlock() : Invalid Proof of Work"));
 
 		
 		/* Check the Network Launch Time-Lock. */
 		if (pblock->nHeight > 0 && pblock->GetBlockTime() <= (fTestNet ? NEXUS_TESTNET_TIMELOCK : NEXUS_NETWORK_TIMELOCK))
-			return DoS(pfrom, 50, ("CheckBlock() : Block Created before Network Time-Lock"));
+			return LLP::DoS(pfrom, 50, ("CheckBlock() : Block Created before Network Time-Lock"));
 			
 		
 		/* Check the Current Channel Time-Lock. */
@@ -740,17 +740,17 @@ namespace Core
 		
 		/* Check the Coinbase Transaction is First, with no repetitions. */
 		if (pblock->vtx.empty() || (!pblock->vtx[0].IsCoinBase() && pblock->nChannel > 0))
-			return DoS(pfrom, 100, error("CheckBlock() : first tx is not coinbase for Proof of Work Block"));
+			return LLP::DoS(pfrom, 100, error("CheckBlock() : first tx is not coinbase for Proof of Work Block"));
 			
 		
 		/* Check the Coinstake Transaction is First, with no repetitions. */
 		if (pblock->vtx.empty() || (!pblock->vtx[0].IsCoinStake() && pblock->nChannel == 0))
-			return DoS(pfrom, 100, error("CheckBlock() : first tx is not coinstake for Proof of Stake Block"));
+			return LLP::DoS(pfrom, 100, error("CheckBlock() : first tx is not coinstake for Proof of Stake Block"));
 			
 			
 		/* Check coinbase/coinstake timestamp is at most 20 minutes before block time */
 		if (pblock->GetBlockTime() > (int64)pblock->vtx[0].nTime + ((pblock->nVersion < 4) ? 1200 : 3600))
-			return DoS(pfrom, 50, error("CheckBlock() : coinbase/coinstake timestamp is too early"));
+			return LLP::DoS(pfrom, 50, error("CheckBlock() : coinbase/coinstake timestamp is too early"));
 		
 		
 		/* Check the Transactions in the Block. */
@@ -760,17 +760,17 @@ namespace Core
 			
 			/* Check for duplicate Coinbase / Coinstake Transactions. */
 			if (i > 0 && (pblock->vtx[i].IsCoinBase() || pblock->vtx[i].IsCoinStake()))
-				return DoS(pfrom, 100, error("CheckBlock() : more than one coinbase / coinstake"));
+				return LLP::DoS(pfrom, 100, error("CheckBlock() : more than one coinbase / coinstake"));
 				
 			
 			/* Verify Transaction Validity. */
 			if (!pblock->vtx[i].CheckTransaction())
-				return DoS(pfrom, 50, error("CheckBlock() : CheckTransaction failed"));
+				return LLP::DoS(pfrom, 50, error("CheckBlock() : CheckTransaction failed"));
 				
 			
 			/* Transaction timestamp must be less than block timestamp. */
 			if (pblock->GetBlockTime() < (int64)pblock->vtx[i].nTime)
-				return DoS(pfrom, 50, error("CheckBlock() : block timestamp earlier than transaction timestamp"));
+				return LLP::DoS(pfrom, 50, error("CheckBlock() : block timestamp earlier than transaction timestamp"));
 			
 			
 			/* Check for Duplicate txid's. */
@@ -784,22 +784,22 @@ namespace Core
 		
 		/* Reject Block if there are duplicate txid's. */
 		if (uniqueTx.size() != pblock->vtx.size())
-			return DoS(pfrom, 100, error("CheckBlock() : duplicate transaction"));
+			return LLP::DoS(pfrom, 100, error("CheckBlock() : duplicate transaction"));
 
 		
 		/* Check the signature operations are within bound. */
 		if (nSigOps > MAX_BLOCK_SIGOPS)
-			return DoS(pfrom, 100, error("CheckBlock() : out-of-bounds SigOpCount"));
+			return LLP::DoS(pfrom, 100, error("CheckBlock() : out-of-bounds SigOpCount"));
 
 		
 		/* Check the Merkle Root builds as Advertised. */
 		if (pblock->hashMerkleRoot != pblock->BuildMerkleTree())
-			return DoS(pfrom, 100, error("CheckBlock() : hashMerkleRoot mismatch"));
+			return LLP::DoS(pfrom, 100, error("CheckBlock() : hashMerkleRoot mismatch"));
 		
 		
 		/* Check the Block Signature. */
 		if (!pblock->CheckBlockSignature())
-			return DoS(pfrom, 100, error("CheckBlock() : bad block signature"));
+			return LLP::DoS(pfrom, 100, error("CheckBlock() : bad block signature"));
 
 		return true;
 	}
@@ -817,7 +817,7 @@ namespace Core
 		/** Find the Previous block from hashPrevBlock. **/
 		map<uint1024, CBlockIndex*>::iterator mi = mapBlockIndex.find(pblock->hashPrevBlock);
 		if (mi == mapBlockIndex.end())
-			return DoS(pfrom, 10, error("AcceptBlock() : prev block not found"));
+			return LLP::DoS(pfrom, 10, error("AcceptBlock() : prev block not found"));
 		
 		CBlockIndex* pindexPrev = (*mi).second;
 		int nPrevHeight = pindexPrev->nHeight + 1;
@@ -825,12 +825,12 @@ namespace Core
 		
 		/** Check the Height of Block to Previous Block. **/
 		if(nPrevHeight != pblock->nHeight)
-			return DoS(pfrom, 100, error("AcceptBlock() : incorrect block height."));
+			return LLP::DoS(pfrom, 100, error("AcceptBlock() : incorrect block height."));
 		
 
 		/** Check that the nBits match the current Difficulty. **/
 		if (pblock->nBits != GetNextTargetRequired(pindexPrev, pblock->GetChannel(), !IsInitialBlockDownload()))
-			return DoS(pfrom, 100, error("AcceptBlock() : incorrect proof-of-work/proof-of-stake"));
+			return LLP::DoS(pfrom, 100, error("AcceptBlock() : incorrect proof-of-work/proof-of-stake"));
 			
 			
 		/** Check that Block is Descendant of Hardened Checkpoints. **/
@@ -872,18 +872,18 @@ namespace Core
 		else if (pblock->IsProofOfStake())
 		{
 			if(!cTrustPool.Check(*pblock))
-				return DoS(pfrom, 50, error("AcceptBlock() : Invalid Trust Key"));
+				return LLP::DoS(pfrom, 50, error("AcceptBlock() : Invalid Trust Key"));
 			
 			/** Verify the Stake Kernel. **/
 			if(!pblock->VerifyStake())
-				return DoS(pfrom, 50, error("AcceptBlock() : Invalid Proof of Stake"));
+				return LLP::DoS(pfrom, 50, error("AcceptBlock() : Invalid Proof of Stake"));
 		}
 		
 			
 		/** Check that Transactions are Finalized. **/
 		BOOST_FOREACH(const CTransaction& tx, pblock->vtx)
 			if (!tx.IsFinal(pblock->nHeight, pblock->GetBlockTime()))
-				return DoS(pfrom, 10, error("AcceptBlock() : contains a non-final transaction"));
+				return LLP::DoS(pfrom, 10, error("AcceptBlock() : contains a non-final transaction"));
 
 				
 		/** Write new Block to Disk. **/
@@ -969,11 +969,7 @@ namespace Core
 		if (nFreeBytesAvailable < (uint64)15000000 + nAdditionalBytes)
 		{
 			fShutdown = true;
-			string strMessage = _("Warning: Disk space is low");
-			strMiscWarning = strMessage;
-			printf("*** %s\n", strMessage.c_str());
-			ThreadSafeMessageBox(strMessage, "Nexus", wxOK | wxICON_EXCLAMATION | wxMODAL);
-			StartShutdown();
+			
 			return false;
 		}
 		return true;
@@ -1273,9 +1269,8 @@ namespace Core
 		int64 nFees = 0;
 		{
 			
-			LOCK2(cs_main, mempool.cs);
+			LOCK(mempool.MUTEX);
 			LLD::CIndexDB indexdb("r");
-
 			
 			// Priority order to process transactions
 			list<COrphan> vOrphan; // list memory doesn't move
@@ -1508,7 +1503,7 @@ namespace Core
 
 		// Found a solution
 		{
-			LOCK(cs_main);
+			//LOCK(cs_main);
 			if (pblock->hashPrevBlock != hashBestChain && mapBlockIndex[pblock->hashPrevBlock]->GetChannel() == pblock->GetChannel())
 				return error("Nexus Miner : generated block is stale");
 

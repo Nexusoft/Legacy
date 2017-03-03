@@ -18,8 +18,8 @@
 #include "../../LLC/hash/macro.h"
 
 #include "../../LLU/include/util.h"
-
-#define MUTEX_LOCK(a) boost::lock_guard<boost::mutex> lock(a)
+#include "../../LLU/include/args.h"
+#include "../../LLU/include/mutex.h"
 
 namespace LLD
 {
@@ -169,7 +169,7 @@ namespace LLD
 		/** Read the Database Keys and File Positions. **/
 		void Initialize()
 		{
-			MUTEX_LOCK(KEY_MUTEX);
+			LOCK(KEY_MUTEX);
 			
 			/** Open the Stream to Read from the File Stream. **/
 			std::fstream fIncoming(strLocation.c_str(), std::ios::in | std::ios::binary);
@@ -243,7 +243,7 @@ namespace LLD
 		/** Add / Update A Record in the Database **/
 		bool Put(SectorKey cKey) const
 		{
-			MUTEX_LOCK(KEY_MUTEX);
+			LOCK(KEY_MUTEX);
 			
 			/** Establish the Outgoing Stream. **/
 			std::fstream fStream(strLocation.c_str(), std::ios::in | std::ios::out | std::ios::binary);
@@ -308,7 +308,7 @@ namespace LLD
 		/** Get a Record from the Database with Given Key. **/
 		bool Get(const std::vector<unsigned char> vKey, SectorKey& cKey)
 		{
-			MUTEX_LOCK(KEY_MUTEX);
+			LOCK(KEY_MUTEX);
 			
 			/** Cache Handler. **/
 			if(mapKeysCache.count(vKey) && fMemoryCaching)

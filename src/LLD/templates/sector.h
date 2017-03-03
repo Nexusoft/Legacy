@@ -17,6 +17,8 @@
 #include "../../LLC/hash/SK.h"
 #include "../../LLC/hash/macro.h"
 
+#include "../../LLU/include/args.h"
+
 namespace LLD
 {
 
@@ -56,6 +58,7 @@ namespace LLD
 			Will allow higher efficiency for thread concurrency. **/
 		boost::mutex SECTOR_MUTEX;
 		
+		
 		/** The String to hold the Disk Location of Database File. 
 			Each Database File Acts as a New Table as in Conventional Design.
 			Key can be any Type, which is how the Database Records are Accessed. **/
@@ -67,15 +70,19 @@ namespace LLD
 			Contains Key and Cache Databases. **/
 		std::string strBaseLocation;
 		
+		
 		/** Keychain Registry:
 			The nameof the Keychain Registry. **/
 		std::string strKeychainRegistry;
 		
+		
 		/** Memory Structure to Track the Database Sizes. **/
 		std::vector<unsigned int> vDatabaseSizes;
 		
+		
 		/** Read only Flag for Sectors. **/
 		bool fReadOnly = false;
+		
 		
 		/** Class to handle Transaction Data. **/
 		SectorTransaction* pTransaction;
@@ -259,7 +266,7 @@ namespace LLD
 				fStream.close();
 				
 				/** Check the Data Integrity of the Sector by comparing the Checksums. **/
-				uint64 nChecksum = SK64(vData);
+				uint64 nChecksum = LLC::HASH::SK64(vData);
 				if(cKey.nChecksum != nChecksum)
 					return error("Sector Get() : Checksums don't match data. Corrupted Sector.");
 				
@@ -314,7 +321,7 @@ namespace LLD
 				cKey.nSectorStart = nStart;
 				
 				/** Check the Data Integrity of the Sector by comparing the Checksums. **/
-				cKey.nChecksum    = SK64(vData);
+				cKey.nChecksum    = LLC::HASH::SK64(vData);
 				
 				/** Assign the Key to Keychain. **/
 				SectorKeys->Put(cKey);
@@ -350,7 +357,7 @@ namespace LLD
 				fStream.close();
 				
 				cKey.nState    = READY;
-				cKey.nChecksum = SK64(vData);
+				cKey.nChecksum = LLC::HASH::SK64(vData);
 				
 				SectorKeys->Put(cKey);
 			}
@@ -526,7 +533,7 @@ namespace LLD
 				
 				/** Set the Sector states back to Active. **/
 				cKey.nState    = READY;
-				cKey.nChecksum = SK64(nIterator->second);
+				cKey.nChecksum = LLC::HASH::SK64(nIterator->second);
 				
 				/** Commit the Keys to Keychain Database. **/
 				if(!SectorKeys->Put(cKey))

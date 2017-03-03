@@ -8,8 +8,8 @@
   
 *******************************************************************************************/
 
-#ifndef NEXUS_LLH_SK_H
-#define NEXUS_LLH_SK_H
+#ifndef NEXUS_LLC_HASH_SK_H
+#define NEXUS_LLC_HASH_SK_H
 
 #include "../types/uint1024.h"
 #include "SK/skein.h"

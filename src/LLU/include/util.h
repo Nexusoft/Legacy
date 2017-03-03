@@ -52,8 +52,7 @@ typedef unsigned long long  uint64;
 #endif
 
 
-static const int64 COIN = 1000000;
-static const int64 CENT = 10000;
+
 
 
 #define loop                for (;;)
@@ -104,6 +103,15 @@ inline std::vector<unsigned char> parse_ip(std::string ip)
 	return bytes;
 }
 
+/** Create a sorted Multimap for rich lists. **/
+template <typename A, typename B> std::multimap<B, A> flip_map(std::map<A,B> & src) 
+{
+	std::multimap<B,A> dst;
+	for(typename std::map<A, B>::const_iterator it = src.begin(); it != src.end(); ++it)
+		dst.insert(std::pair<B, A>(it -> second, it -> first));
+
+    return dst;
+}
 
 /** Convert a 32 bit Unsigned Integer to Byte Vector using Bitwise Shifts. **/
 inline std::vector<unsigned char> uint2bytes(unsigned int UINT)
@@ -117,17 +125,7 @@ inline std::vector<unsigned char> uint2bytes(unsigned int UINT)
 	return BYTES;
 }
 
-/** Create a sorted Multimap for rich lists. **/
-template <typename A, typename B> std::multimap<B, A> flip_map(std::map<A,B> & src) 
-{
-	std::multimap<B,A> dst;
-	for(typename std::map<A, B>::const_iterator it = src.begin(); it != src.end(); ++it)
-		dst.insert(std::pair<B, A>(it -> second, it -> first));
 
-    return dst;
-}
-			
-			
 /** Convert a byte stream into a signed integer 32 bit. **/	
 inline int bytes2int(std::vector<unsigned char> BYTES, int nOffset = 0) { return (BYTES[0 + nOffset] << 24) + (BYTES[1 + nOffset] << 16) + (BYTES[2 + nOffset] << 8) + BYTES[3 + nOffset]; }
 		
@@ -182,7 +180,6 @@ inline std::string bytes2string(std::vector<unsigned char> BYTES)
 	std::string STRING(BYTES.begin(), BYTES.end());
 	return STRING;
 }
-
 
 #ifdef WIN32
 #define MSG_NOSIGNAL        0
@@ -301,154 +298,6 @@ std::string FormatSubVersion(const std::string& name, int nClientVersion, const 
 bool copyDir(boost::filesystem::path const & source, boost::filesystem::path const & destination);
 
 
-
-
-
-/** Wrapped boost mutex: supports recursive locking, but no waiting  */
-typedef boost::interprocess::interprocess_recursive_mutex CCriticalSection;
-
-/** Wrapped boost mutex: supports waiting but not recursive locking */
-typedef boost::interprocess::interprocess_mutex CWaitableCriticalSection;
-
-#ifdef DEBUG_LOCKORDER
-void EnterCritical(const char* pszName, const char* pszFile, int nLine, void* cs, bool fTry = false);
-void LeaveCritical();
-#else
-void static inline EnterCritical(const char* pszName, const char* pszFile, int nLine, void* cs, bool fTry = false) {}
-void static inline LeaveCritical() {}
-#endif
-
-/** Wrapper around boost::interprocess::scoped_lock */
-template<typename Mutex>
-class CMutexLock
-{
-private:
-    boost::interprocess::scoped_lock<Mutex> lock;
-public:
-
-    void Enter(const char* pszName, const char* pszFile, int nLine)
-    {
-        if (!lock.owns())
-        {
-            EnterCritical(pszName, pszFile, nLine, (void*)(lock.mutex()));
-#ifdef DEBUG_LOCKCONTENTION
-            if (!lock.try_lock())
-            {
-                printf("LOCKCONTENTION: %s\n", pszName);
-                printf("Locker: %s:%d\n", pszFile, nLine);
-#endif
-            lock.lock();
-#ifdef DEBUG_LOCKCONTENTION
-            }
-#endif
-        }
-    }
-
-    void Leave()
-    {
-        if (lock.owns())
-        {
-            lock.unlock();
-            LeaveCritical();
-        }
-    }
-
-    bool TryEnter(const char* pszName, const char* pszFile, int nLine)
-    {
-        if (!lock.owns())
-        {
-            EnterCritical(pszName, pszFile, nLine, (void*)(lock.mutex()), true);
-            lock.try_lock();
-            if (!lock.owns())
-                LeaveCritical();
-        }
-        return lock.owns();
-    }
-
-    CMutexLock(Mutex& mutexIn, const char* pszName, const char* pszFile, int nLine, bool fTry = false) : lock(mutexIn, boost::interprocess::defer_lock)
-    {
-        if (fTry)
-            TryEnter(pszName, pszFile, nLine);
-        else
-            Enter(pszName, pszFile, nLine);
-    }
-
-    ~CMutexLock()
-    {
-        if (lock.owns())
-            LeaveCritical();
-    }
-
-    operator bool()
-    {
-        return lock.owns();
-    }
-
-    boost::interprocess::scoped_lock<Mutex> &GetLock()
-    {
-        return lock;
-    }
-};
-
-typedef CMutexLock<CCriticalSection> CCriticalBlock;
-
-#define LOCK(cs) CCriticalBlock criticalblock(cs, #cs, __FILE__, __LINE__)
-#define LOCK2(cs1,cs2) CCriticalBlock criticalblock1(cs1, #cs1, __FILE__, __LINE__),criticalblock2(cs2, #cs2, __FILE__, __LINE__)
-#define TRY_LOCK(cs,name) CCriticalBlock name(cs, #cs, __FILE__, __LINE__, true)
-
-#define ENTER_CRITICAL_SECTION(cs) \
-    { \
-        EnterCritical(#cs, __FILE__, __LINE__, (void*)(&cs)); \
-        (cs).lock(); \
-    }
-
-#define LEAVE_CRITICAL_SECTION(cs) \
-    { \
-        (cs).unlock(); \
-        LeaveCritical(); \
-    }
-
-#ifdef MAC_OSX
-// boost::interprocess::interprocess_semaphore seems to spinlock on OSX; prefer polling instead
-class CSemaphore
-{
-private:
-    CCriticalSection cs;
-    int val;
-
-public:
-    CSemaphore(int init) : val(init) {}
-
-    void wait() {
-        do {
-            {
-                LOCK(cs);
-                if (val>0) {
-                    val--;
-                    return;
-                }
-            }
-            Sleep(100);
-        } while(1);
-    }
-
-    bool try_wait() {
-        LOCK(cs);
-        if (val>0) {
-            val--;
-            return true;
-        }
-        return false;
-    }
-
-    void post() {
-        LOCK(cs);
-        val++;
-    }
-};
-#else
-typedef boost::interprocess::interprocess_semaphore CSemaphore;
-#endif
 
 inline std::string i64tostr(int64 n)
 {
@@ -583,50 +432,7 @@ inline bool IsSwitchChar(char c)
 #endif
 }
 
-/**
- * Return string argument or default value
- *
- * @param strArg Argument to get (e.g. "-foo")
- * @param default (e.g. "1")
- * @return command-line argument or default value
- */
-std::string GetArg(const std::string& strArg, const std::string& strDefault);
 
-/**
- * Return integer argument or default value
- *
- * @param strArg Argument to get (e.g. "-foo")
- * @param default (e.g. 1)
- * @return command-line argument (0 if invalid number) or default value
- */
-int64 GetArg(const std::string& strArg, int64 nDefault);
-
-/**
- * Return boolean argument or default value
- *
- * @param strArg Argument to get (e.g. "-foo")
- * @param default (true or false)
- * @return command-line argument or default value
- */
-bool GetBoolArg(const std::string& strArg, bool fDefault=false);
-
-/**
- * Set an argument if it doesn't already have a value
- *
- * @param strArg Argument to set (e.g. "-foo")
- * @param strValue Value (e.g. "1")
- * @return true if argument gets set, false if it already had a value
- */
-bool SoftSetArg(const std::string& strArg, const std::string& strValue);
-
-/**
- * Set a boolean argument if it doesn't already have a value
- *
- * @param strArg Argument to set (e.g. "-foo")
- * @param fValue Value (e.g. false)
- * @return true if argument gets set, false if it already had a value
- */
-bool SoftSetBoolArg(const std::string& strArg, bool fValue);
 
 
 
@@ -642,109 +448,6 @@ bool SoftSetBoolArg(const std::string& strArg, bool fValue);
             return;                             \
         }                                       \
     }
-
-
-	
-/** Serialize Hash: Used to Serialize a CTransaction class in order to obtain the Tx Hash. Utilizes CDataStream to serialize the class. **/
-template<typename T>
-uint512 SerializeHash(const T& obj, int nType=SER_GETHASH, int nVersion=LLP::PROTOCOL_VERSION)
-{
-    // Most of the time is spent allocating and deallocating CDataStream's
-    // buffer.  If this ever needs to be optimized further, make a CStaticStream
-    // class with its buffer on the stack.
-    CDataStream ss(nType, nVersion);
-    ss.reserve(10000);
-    ss << obj;
-    return LLC::HASH::SK512(ss.begin(), ss.end());
-}
-
-
-/** Average Filter used to give the Numerical Average over given set of values. **/
-template <typename type> class CAverage
-{
-private:
-	std::vector<type> vList;
-	
-public:
-	CAverage(){}
-	
-	void Add(type value)
-	{
-		vList.push_back(value);
-	}
-	
-	type Average()
-	{
-		type average = 0;
-		for(int nIndex = 0; nIndex < vList.size(); nIndex++)
-			average += vList[nIndex];
-			
-		return round(average / (double)vList.size());
-	}
-};
-
-
-/** Filter designed to give the majority of set of values.
- * Keeps count of every addition of template paramter type, 
- * in order to give a reasonable majority of votes. **/
-template <typename CType> class CMajority
-{
-private:
-	std::map<CType, int> mapList;
-	unsigned int nSamples;
-	
-public:
-	CMajority() : nSamples(0) {}
-	
-	
-	/* Add another Element to the Majority Count. */
-	void Add(CType value)
-	{
-		if(!mapList.count(value))
-			mapList[value] = 1;
-		else
-			mapList[value]++;
-			
-		nSamples++;
-	}
-	
-	
-	/* Return the total number of samples this container holds. */
-	unsigned int Samples(){ return nSamples; }
-	
-	
-	/* Return the Element of Type that has the highest Majority. */
-	CType Majority()
-	{
-		if(nSamples == 0)
-			return 0;
-			
-		/* Temporary Reference Variable to store the largest majority to then compare every element of the map to it. */
-		std::pair<CType, int> nMajority;
-		
-		
-		for(typename std::map<CType, int>::iterator nIterator = mapList.begin(); nIterator != mapList.end(); ++nIterator)
-		{
-			/* Set the return to be the first element, to then compare the rest of the map to it. */
-			if(nIterator == mapList.begin())
-			{
-				nMajority = std::make_pair(nIterator->first, nIterator->second);
-				continue;
-			}
-			
-			/* If a record has higher count, use that one. */
-			if(nIterator->second > nMajority.second)
-			{
-				nMajority.first = nIterator->first;
-				nMajority.second = nIterator->second;
-			}
-		}
-		
-		return nMajority.first;
-	}
-};
-
-
 
 
 
