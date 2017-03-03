@@ -50,7 +50,7 @@ namespace LLP
 		CAddress addrYou = (fUseProxy ? CAddress(CService("0.0.0.0",0)) : addr);
 		CAddress addrMe = (fUseProxy || !addrLocalHost.IsRoutable() ? CAddress(CService("0.0.0.0",0)) : addrLocalHost);
 		RAND_bytes((unsigned char*)&nLocalHostNonce, sizeof(nLocalHostNonce));
-		PushMessage("version", PROTOCOL_VERSION, nLocalServices, nTime, addrYou, addrMe,
+		PushMessage("version", LLP::PROTOCOL_VERSION, nLocalServices, nTime, addrYou, addrMe,
 					nLocalHostNonce, FormatSubVersion(CLIENT_NAME, DATABASE_VERSION, std::vector<string>()), Core::nBestHeight);
 	}
 	
@@ -249,7 +249,7 @@ namespace LLP
 			uint64 nServices = 0;
 				
 			/* Check the Protocol Versions */
-			ssMessage >> PROTOCOL_VERSION >> nServices >> nTime >> addrMe;
+			ssMessage >> LLP::PROTOCOL_VERSION >> nServices >> nTime >> addrMe;
 			if (nVersion < MIN_PROTO_VERSION)
 			{
 				if(GetArg("-verbose", 0) >= 1)
@@ -276,7 +276,7 @@ namespace LLP
 			}
 
 			/* If invalid version message drop the connection. */
-			else if (PROTOCOL_VERSION == 0)
+			else if (LLP::PROTOCOL_VERSION == 0)
 				return false;
 		}
 

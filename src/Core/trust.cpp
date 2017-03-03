@@ -64,7 +64,7 @@ namespace Wallet
 				continue;
 			
 			/** Stop adding Inputs if has reached Maximum Transaction Size. **/
-			unsigned int nBytes = ::GetSerializeSize(txNew, SER_NETWORK, PROTOCOL_VERSION);
+			unsigned int nBytes = ::GetSerializeSize(txNew, SER_NETWORK, LLP::PROTOCOL_VERSION);
 			if (nBytes >= Core::MAX_BLOCK_SIZE_GEN / 5)
 				break;
 

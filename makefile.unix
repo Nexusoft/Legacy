@@ -94,46 +94,44 @@ xCXXFLAGS=-pthread -Wall -Wextra -Wno-sign-compare -Wno-invalid-offsetof -Wno-un
 
 HEADERS = $(wildcard *.h)
 OBJS= \
-	build/version.o \
-	build/netbase.o \
-	build/addrman.o \
-	build/crypter.o \
-	build/key.o \
-	build/db.o \
-	build/main.o \
-	build/keystore.o \
-	build/debug.o \
+	build/block.o \
+	build/checkpoints.o \
 	build/difficulty.o \
-	build/net.o \
-	build/protocol.o \
-	build/unifiedtime.o \
-	build/rpcserver.o \
-	build/rpcdump.o \
-	build/script.o \
-	build/util.o \
-	build/wallet.o \
-	build/walletdb.o \
-	build/noui.o \
-	build/kernel.o \
+	build/dispatch.o \
+	build/global.o \
+	build/manager.o \
 	build/prime.o \
+	build/supply.o \
+	build/transaction.o \
+	build/trust.o \
+	build/version.o\
 	build/skein.o \
 	build/skein_block.o \
 	build/KeccakDuplex.o \
 	build/KeccakSponge.o \
 	build/Keccak-compact64.o \
 	build/KeccakHash.o \
-	build/release.o \
-	build/block.o \
-	build/dispatch.o \
+	build/index.o \
+	build/keychain.o \
+	build/hosts.o \
 	build/message.o \
 	build/mining.o \
-	build/transaction.o \
-	build/checkpoints.o \
-	build/global.o \
-	build/keychain.o \
-	build/index.o
-
-
+	build/network.o \
+	build/node.o \
+	build/unifiedtime.o \
+	build/noui.o \
+	build/util.o \
+	build/rpcdump.o \
+	build/rpcserver.o \
+	build/crypter.o \
+	build/db.o \
+	build/key.o \
+	build/keystore.o \
+	build/script.o \
+	build/wallet.o \
+	build/walletdb.o \
+	build/main.o
+	
 all: nexus
 
 # auto-generated dependencies:
@@ -151,35 +149,21 @@ build/%.o: src/%.cpp
 	      -e '/^$$/ d' -e 's/$$/ :/' < $(@:%.o=%.d) >> $(@:%.o=%.P); \
 	  rm -f $(@:%.o=%.d)
 
-build/%.o: src/core/%.cpp
+build/%.o: src/Core/%.cpp
 	$(CXX) -c $(xCXXFLAGS) -MMD -o $@ $<
 	@cp $(@:%.o=%.d) $(@:%.o=%.P); \
 	  sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
 	      -e '/^$$/ d' -e 's/$$/ :/' < $(@:%.o=%.d) >> $(@:%.o=%.P); \
 	  rm -f $(@:%.o=%.d)
 
-build/%.o: src/hash/%.c $(HEADERS)
+build/%.o: src/LLC/hash/SK/%.c $(HEADERS)
 	$(CXX) -c $(xCXXFLAGS) -MMD -x c -fpermissive -o $@ $<
 	@cp $(@:%.o=%.d) $(@:%.o=%.P); \
 	  sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
 	      -e '/^$$/ d' -e 's/$$/ :/' < $(@:%.o=%.d) >> $(@:%.o=%.P); \
 	  rm -f $(@:%.o=%.d)
 
-build/%.o: src/hash/%.cpp
-	$(CXX) -c $(xCXXFLAGS) -MMD -o $@ $<
-	@cp $(@:%.o=%.d) $(@:%.o=%.P); \
-	  sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
-	      -e '/^$$/ d' -e 's/$$/ :/' < $(@:%.o=%.d) >> $(@:%.o=%.P); \
-	  rm -f $(@:%.o=%.d)
-
-build/%.o: src/json/%.cpp
-	$(CXX) -c $(xCXXFLAGS) -MMD -o $@ $<
-	@cp $(@:%.o=%.d) $(@:%.o=%.P); \
-	  sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
-	      -e '/^$$/ d' -e 's/$$/ :/' < $(@:%.o=%.d) >> $(@:%.o=%.P); \
-	  rm -f $(@:%.o=%.d)
-
-build/%.o: src/LLP/%.cpp
+build/%.o: src/LLChash/SK/%.cpp
 	$(CXX) -c $(xCXXFLAGS) -MMD -o $@ $<
 	@cp $(@:%.o=%.d) $(@:%.o=%.P); \
 	  sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
@@ -193,21 +177,28 @@ build/%.o: src/LLD/%.cpp
 	      -e '/^$$/ d' -e 's/$$/ :/' < $(@:%.o=%.d) >> $(@:%.o=%.P); \
 	  rm -f $(@:%.o=%.d)
 
-build/%.o: src/net/%.cpp
+build/%.o: src/LLU/%.cpp
+	$(CXX) -c $(xCXXFLAGS) -MMD -o $@ $<
+	@cp $(@:%.o=%.d) $(@:%.o=%.P); \
+	  sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
+	      -e '/^$$/ d' -e 's/$$/ :/' < $(@:%.o=%.d) >> $(@:%.o=%.P); \
+	  rm -f $(@:%.o=%.d)
+	  
+build/%.o: src/RPC/json/%.cpp
+	$(CXX) -c $(xCXXFLAGS) -MMD -o $@ $<
+	@cp $(@:%.o=%.d) $(@:%.o=%.P); \
+	  sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
+	      -e '/^$$/ d' -e 's/$$/ :/' < $(@:%.o=%.d) >> $(@:%.o=%.P); \
+	  rm -f $(@:%.o=%.d)
+	  
+build/%.o: src/RPC/%.cpp
 	$(CXX) -c $(xCXXFLAGS) -MMD -o $@ $<
 	@cp $(@:%.o=%.d) $(@:%.o=%.P); \
 	  sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
 	      -e '/^$$/ d' -e 's/$$/ :/' < $(@:%.o=%.d) >> $(@:%.o=%.P); \
 	  rm -f $(@:%.o=%.d)
 
-build/%.o: src/util/%.cpp
-	$(CXX) -c $(xCXXFLAGS) -MMD -o $@ $<
-	@cp $(@:%.o=%.d) $(@:%.o=%.P); \
-	  sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
-	      -e '/^$$/ d' -e 's/$$/ :/' < $(@:%.o=%.d) >> $(@:%.o=%.P); \
-	  rm -f $(@:%.o=%.d)
-
-build/%.o: src/wallet/%.cpp
+build/%.o: src/Wallet/%.cpp
 	$(CXX) -c $(xCXXFLAGS) -MMD -fpermissive -o $@ $<
 	@cp $(@:%.o=%.d) $(@:%.o=%.P); \
 	  sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \

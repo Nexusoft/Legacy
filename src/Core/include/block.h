@@ -12,7 +12,8 @@
 #define NEXUS_CORE_INCLUDE_BLOCK_H
 
 #include <stdint.h>
-#include "../../LLU/include/serialize.h"
+
+#include "../../LLU/templates/serialize.h"
 #include "../../LLC/types/uint1024.h"
 
 #include "../../LLC/hash/SK.h"

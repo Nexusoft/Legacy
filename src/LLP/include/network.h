@@ -13,6 +13,46 @@
 
 #include <stdint.h>
 
+#ifdef WIN32
+#define _WIN32_WINNT 0x0501
+#define WIN32_LEAN_AND_MEAN 1
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <winsock2.h>
+#include <mswsock.h>
+#include <ws2tcpip.h>
+#else
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <sys/fcntl.h>
+#include <arpa/inet.h>
+#include <netdb.h>
+#include <net/if.h>
+#include <netinet/in.h>
+#include <ifaddrs.h>
+#endif
+
+typedef u_int SOCKET;
+#ifdef WIN32
+#define MSG_NOSIGNAL        0
+#define MSG_DONTWAIT        0
+typedef int socklen_t;
+#else
+#include "errno.h"
+#define WSAGetLastError()   errno
+#define WSAEINVAL           EINVAL
+#define WSAEALREADY         EALREADY
+#define WSAEWOULDBLOCK      EWOULDBLOCK
+#define WSAEMSGSIZE         EMSGSIZE
+#define WSAEINTR            EINTR
+#define WSAEINPROGRESS      EINPROGRESS
+#define WSAEADDRINUSE       EADDRINUSE
+#define WSAENOTSOCK         EBADF
+#define INVALID_SOCKET      (SOCKET)(~0)
+#define SOCKET_ERROR        -1
+#endif
+
 #if defined(MAC_OSX) || defined(WIN32)
 typedef int64_t int64;
 typedef uint64_t uint64;
@@ -26,9 +66,44 @@ typedef unsigned long long  uint64;
 #undef SetPort
 #endif
 
+#define MAINNET_PORT 9323
+#define TESTNET_PORT 8313
+
+#define MAINNET_CORE_LLP_PORT 9324
+#define TESTNET_CORE_LLP_PORT 8329
+
+#define MAINNET_MINING_LLP_PORT 9325
+#define TESTNET_MINING_LLP_PORT 8325
+
+
+#define PROTOCOL_MAJOR       1
+#define PROTOCOL_MINOR       1
+#define PROTOCOL_REVISION    1
+#define PROTOCOL_BUILD       0
+
 namespace LLP
 {
 	
+	/** Used to determine the features available in the Nexus Network **/
+	const int PROTOCOL_VERSION =
+                   1000000 * PROTOCOL_MAJOR
+                 +   10000 * PROTOCOL_MINOR
+                 +     100 * PROTOCOL_REVISION
+                 +       1 * PROTOCOL_BUILD;
+					  
+	/** Used to Lock-Out Nodes that are running a protocol version that is too old, 
+    Or to allow certain new protocol changes without confusing Old Nodes. **/
+	const int MIN_PROTO_VERSION = 10000;
+	
+
+	
+	static const unsigned char pchIPv4[12] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff };
+	static const char* ppszTypeName[] =
+	{
+		"ERROR",
+		"tx",
+		"block",
+	};
 	
 	/** Services flags */
 	enum
@@ -206,11 +281,8 @@ namespace LLP
 		void Init()
 		{
 			nLastSuccess = 0;
-			nLastTry = 0;
-			nAttempts = 0;
-			nRefCount = 0;
-			fInTried = false;
-			nRandomPos = -1;
+			nLastAttempt = 0;
+			nAttempts    = 0;
 		}
 
 		CAddrInfo(const CAddress &addrIn, const CNetAddr &addrSource) : CAddress(addrIn), source(addrSource)
@@ -228,6 +300,19 @@ namespace LLP
 	/* Proxy Settings for Nexus Core. */
 	int fUseProxy = false;
 	CService addrProxy("127.0.0.1", 9050);
+	
+	
+		/* Get the Main Core LLP Port for Nexus. */
+	inline unsigned short GetCorePort(const bool testnet = fTestNet){ return testnet ? TESTNET_CORE_LLP_PORT : MAINNET_CORE_LLP_PORT; }
+	
+	
+	/* Get the Main Mining LLP Port for Nexus. */
+	inline unsigned short GetMiningPort(const bool testnet = fTestNet){ return testnet ? TESTNET_MINING_LLP_PORT : MAINNET_MINING_LLP_PORT; }
+	
+	
+	/* Get the Main Message LLP Port for Nexus. */
+	inline unsigned short GetDefaultPort(const bool testnet = fTestNet){ return testnet ? TESTNET_PORT : MAINNET_PORT; }
+
 }
 
 #endif

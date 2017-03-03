@@ -8,9 +8,9 @@
   
 *******************************************************************************************/
 
-#include "Templates/server.h"
-#include "Include/protocol.h"
-#include "Include/hosts.h"
+#include "../LLP/templates/server.h"
+#include "../LLP/include/protocol.h"
+#include "../LLP/include/hosts.h"
 
 namespace LLP
 {

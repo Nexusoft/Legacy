@@ -14,10 +14,9 @@
 #include <vector>
 #include <time.h>
 
-#include "../Include/protocol.h"
-#include "../wallet/db.h"
+#include "network.h"
+#include "../templates/server.h"
 
-#include "server.h"
 #include <inttypes.h>
 
 /* TODO: Put in the LLP Namespace. */
@@ -143,7 +142,7 @@ namespace LLP
 		}
 	};
 	
-	class CoreLLP : public Connection<>
+	class CoreLLP : public Connection
 	{	
 		std::vector<unsigned char> ADDRESS;
 		

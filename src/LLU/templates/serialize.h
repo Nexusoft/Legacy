@@ -26,7 +26,7 @@
 #include <boost/tuple/tuple_comparison.hpp>
 #include <boost/tuple/tuple_io.hpp>
 
-#include "allocators.h"
+#include "../include/allocators.h"
 #include "../Core/include/version.h"
 
 

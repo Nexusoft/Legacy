@@ -14,12 +14,14 @@
 #include <map>
 #include <stdint.h>
 #include "../../LLU/templates/serialize.h"
-#include "../../LLC/types/uint1024.h"
 
-namespace Wallet
-{
-	class CScript;
-}
+#include "../../LLC/types/uint1024.h"
+#include "../../LLP/include/network.h"
+#include "../../LLP/include/unifiedtime.h"
+
+#include "../../Wallet/script.h"
+
+class CCriticalSection;
 
 namespace LLD 
 {
@@ -30,6 +32,8 @@ namespace Core
 {
 	class CTxIndex;
 	class CTransaction;
+	
+	typedef std::map<uint512, std::pair<CTxIndex, CTransaction> > MapPrevTx;
 	
 	
 	enum GetMinFee_mode
@@ -717,8 +721,6 @@ namespace Core
 	/* The global Memory Pool to Hold New Transactions. */
 	extern CTxMemPool mempool;
 	
-	
-	typedef std::map<uint512, std::pair<CTxIndex, CTransaction> > MapPrevTx;
 	
 	
 	

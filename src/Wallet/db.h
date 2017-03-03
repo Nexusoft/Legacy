@@ -9,7 +9,8 @@
 #ifndef NEXUS_DB_H
 #define NEXUS_DB_H
 
-#include "../core/core.h"
+#include "../Core/include/block.h"
+#include "../Core/include/transaction.h"
 
 #include <map>
 #include <string>

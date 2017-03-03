@@ -14,25 +14,6 @@
 #include <string>
 #include <vector>
 
-#ifdef WIN32
-// In MSVC, this is defined as a macro, undefine it to prevent a compile and link error
-#undef SetPort
-#endif
-
-#define MAINNET_PORT 9323
-#define TESTNET_PORT 8313
-
-#define MAINNET_CORE_LLP_PORT 9324
-#define TESTNET_CORE_LLP_PORT 8329
-
-#define MAINNET_MINING_LLP_PORT 9325
-#define TESTNET_MINING_LLP_PORT 8325
-
-#define PROTOCOL_MAJOR       1
-#define PROTOCOL_MINOR       1
-#define PROTOCOL_REVISION    1
-#define PROTOCOL_BUILD       0
-
 namespace LLP
 {
 	
@@ -108,18 +89,6 @@ namespace LLP
 	/* Standard Wrapper Function to Interact with cstdlib DNS functions. */
 	bool LookupHost(const char *pszName, std::vector<CNetAddr>& vIP, unsigned int nMaxSolutions = 0, bool fAllowLookup = true);
 	
-	
-	/* Get the Main Core LLP Port for Nexus. */
-	inline unsigned short GetCorePort(const bool testnet = fTestNet){ return testnet ? TESTNET_CORE_LLP_PORT : MAINNET_CORE_LLP_PORT; }
-	
-	
-	/* Get the Main Mining LLP Port for Nexus. */
-	inline unsigned short GetMiningPort(const bool testnet = fTestNet){ return testnet ? TESTNET_MINING_LLP_PORT : MAINNET_MINING_LLP_PORT; }
-	
-	
-	/* Get the Main Message LLP Port for Nexus. */
-	inline unsigned short GetDefaultPort(const bool testnet = fTestNet){ return testnet ? TESTNET_PORT : MAINNET_PORT; }
-
 	
 }
 

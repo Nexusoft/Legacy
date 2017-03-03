@@ -9,7 +9,7 @@
 #ifndef NEXUS_INIT_H
 #define NEXUS_INIT_H
 
-#include "wallet/wallet.h"
+#include "Wallet/wallet.h"
 
 extern Wallet::CWallet* pwalletMain;
 

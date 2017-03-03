@@ -11,7 +11,7 @@
 
 #include <string>
 #include <vector>
-#include "../util/bignum.h"
+#include "../LLC/types/bignum.h"
 #include "key.h"
 
 namespace Wallet

@@ -9,7 +9,7 @@
 #ifndef NEXUS_WALLET_H
 #define NEXUS_WALLET_H
 
-#include "../core/core.h"
+#include "../Core/include/transaction.h"
 
 #include "key.h"
 #include "keystore.h"

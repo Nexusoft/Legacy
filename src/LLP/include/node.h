@@ -47,7 +47,7 @@ namespace LLP
 		/* Basic Stats. */
 		CAddress addrThisNode;
 		std::string strNodeVersion;
-		unsigned int PROTOCOL_VERSION;
+		unsigned int LLP::PROTOCOL_VERSION;
 		
 		
 		/* Positive: Node Stats. */

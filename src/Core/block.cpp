@@ -10,10 +10,19 @@
 
 #include "../main.h"
 
-#include "../wallet/db.h"
-#include "../util/ui_interface.h"
+#include "../Wallet/db.h"
+#include "../LLU/include/ui_interface.h"
+#include "../LLU/include/util.h"
 
-#include "../LLD/index.h"
+#include "../LLD/include/index.h"
+
+#include "include/block.h"
+#include "include/global.h"
+#include "include/trust.h"
+#include "include/difficulty.h"
+#include "include/transaction.h"
+
+#include "../LLP/include/network.h"
 
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/filesystem.hpp>
@@ -690,7 +699,7 @@ namespace Core
 	bool CBlock::CheckBlock() const
 	{
 		/** Check the Size limits of the Current Block. **/
-		if (vtx.empty() || vtx.size() > MAX_BLOCK_SIZE || ::GetSerializeSize(*this, SER_NETWORK, PROTOCOL_VERSION) > MAX_BLOCK_SIZE)
+		if (vtx.empty() || vtx.size() > MAX_BLOCK_SIZE || ::GetSerializeSize(*this, SER_NETWORK, LLP::PROTOCOL_VERSION) > MAX_BLOCK_SIZE)
 			return DoS(100, error("CheckBlock() : size limits failed"));
 			
 			
@@ -1354,7 +1363,7 @@ namespace Core
 
 				
 				// Priority is sum(valuein * age) / txsize
-				dPriority /= ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION);
+				dPriority /= ::GetSerializeSize(tx, SER_NETWORK, LLP::PROTOCOL_VERSION);
 
 				if (porphan)
 					porphan->dPriority = dPriority;
@@ -1384,7 +1393,7 @@ namespace Core
 
 				
 				// Size limits
-				unsigned int nTxSize = ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION);
+				unsigned int nTxSize = ::GetSerializeSize(tx, SER_NETWORK, LLP::PROTOCOL_VERSION);
 				if (nBlockSize + nTxSize >= MAX_BLOCK_SIZE_GEN)
 				{
 					if(GetArg("-verbose", 0) >= 2)

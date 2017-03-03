@@ -11,7 +11,7 @@
 #ifndef NEXUS_CORE_INCLUDE_TRUST_H
 #define NEXUS_CORE_INCLUDE_TRUST_H
 
-#include "../../LLU/include/serialize.h"
+#include "../../LLU/templates/serialize.h"
 #include "../../LLC/hash/SK.h"
 
 namespace Core

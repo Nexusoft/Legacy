@@ -124,7 +124,7 @@ namespace Net
 	{
 		Object result;
 		result.push_back(Pair("hash", block.GetHash().GetHex()));
-		result.push_back(Pair("size", (int)::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION)));
+		result.push_back(Pair("size", (int)::GetSerializeSize(block, SER_NETWORK, LLP::PROTOCOL_VERSION)));
 		result.push_back(Pair("height", (int)blockindex->nHeight));
 		result.push_back(Pair("channel", (int)block.nChannel));
 		result.push_back(Pair("version", (int)block.nVersion));
@@ -371,7 +371,7 @@ namespace Net
 
 		Object obj;
 		obj.push_back(Pair("version",       FormatFullVersion()));
-		obj.push_back(Pair("protocolversion",(int)PROTOCOL_VERSION));
+		obj.push_back(Pair("protocolversion",(int)LLP::PROTOCOL_VERSION));
 		obj.push_back(Pair("walletversion", pwalletMain->GetVersion()));
 		obj.push_back(Pair("balance",       ValueFromAmount(pwalletMain->GetBalance())));
 		obj.push_back(Pair("newmint",       ValueFromAmount(pwalletMain->GetNewMint())));

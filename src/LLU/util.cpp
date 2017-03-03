@@ -1235,7 +1235,7 @@ std::string FormatSubVersion(const std::string& name, int nClientVersion, const 
     ss << "";
 	ss << name << "[v" << CLIENT_BUILD << "]/";
     ss << " DB [" << FormatVersion(nClientVersion);
-    ss << "] PROTOCOL [v" << FormatVersion(PROTOCOL_VERSION) << "]";
+    ss << "] PROTOCOL [v" << FormatVersion(LLP::PROTOCOL_VERSION) << "]";
     
     return ss.str();
 }

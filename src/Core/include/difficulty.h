@@ -54,3 +54,5 @@ namespace Core
 	/* Hash Channel Retargeting: Modulate Difficulty based on production rate. */
 	unsigned int RetargetHash(const CBlockIndex* pindex, bool output);
 }
+
+#endif

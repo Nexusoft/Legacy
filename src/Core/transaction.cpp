@@ -209,7 +209,7 @@ namespace Core
 		// Base fee is either MIN_TX_FEE or MIN_RELAY_TX_FEE
 		int64 nBaseFee = (mode == GMF_RELAY) ? MIN_RELAY_TX_FEE : MIN_TX_FEE;
 		
-		unsigned int nBytes = ::GetSerializeSize(*this, SER_NETWORK, PROTOCOL_VERSION);
+		unsigned int nBytes = ::GetSerializeSize(*this, SER_NETWORK, LLP::PROTOCOL_VERSION);
 		unsigned int nNewBlockSize = nBlockSize + nBytes;
 		int64 nMinFee = (1 + (int64)nBytes / 1000) * nBaseFee;
 
@@ -510,7 +510,7 @@ namespace Core
 			return DoS(10, error("CTransaction::CheckTransaction() : vout empty"));
 			
 		// Size limits
-		if (::GetSerializeSize(*this, SER_NETWORK, PROTOCOL_VERSION) > MAX_BLOCK_SIZE)
+		if (::GetSerializeSize(*this, SER_NETWORK, LLP::PROTOCOL_VERSION) > MAX_BLOCK_SIZE)
 			return DoS(100, error("CTransaction::CheckTransaction() : size limits failed"));
 
 		// Check for negative or overflow output values
@@ -646,7 +646,7 @@ namespace Core
 			// reasonable number of ECDSA signature verifications.
 
 			int64 nFees = tx.GetValueIn(mapInputs)-tx.GetValueOut();
-			unsigned int nSize = ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION);
+			unsigned int nSize = ::GetSerializeSize(tx, SER_NETWORK, LLP::PROTOCOL_VERSION);
 
 			// Don't accept it if it can't get into a block
 			if (nFees < tx.GetMinFee(1000, false, GMF_RELAY))

@@ -11,7 +11,7 @@
 #ifndef NEXUS_UTIL_H
 #define NEXUS_UTIL_H
 
-#include "../LLH/SK.h"
+#include "../LLC/hash/SK.h"
 
 #ifndef WIN32
 #include <sys/types.h>
@@ -647,7 +647,7 @@ bool SoftSetBoolArg(const std::string& strArg, bool fValue);
 	
 /** Serialize Hash: Used to Serialize a CTransaction class in order to obtain the Tx Hash. Utilizes CDataStream to serialize the class. **/
 template<typename T>
-uint512 SerializeHash(const T& obj, int nType=SER_GETHASH, int nVersion=PROTOCOL_VERSION)
+uint512 SerializeHash(const T& obj, int nType=SER_GETHASH, int nVersion=LLP::PROTOCOL_VERSION)
 {
     // Most of the time is spent allocating and deallocating CDataStream's
     // buffer.  If this ever needs to be optimized further, make a CStaticStream

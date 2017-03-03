@@ -18,7 +18,6 @@
 
 #include <string>
 #include <map>
-#include <multimap>
 #include <stdint.h>
 
 #if defined(MAC_OSX) || defined(WIN32)

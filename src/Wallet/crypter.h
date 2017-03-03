@@ -9,9 +9,9 @@
 #ifndef __CRYPTER_H__
 #define __CRYPTER_H__
 
-#include "../util/allocators.h" /* for SecureString */
+#include "../LLU/include/allocators.h" /* for SecureString */
 #include "key.h"
-#include "../util/serialize.h"
+#include "../LLU/templates/serialize.h"
 
 namespace Wallet
 {
