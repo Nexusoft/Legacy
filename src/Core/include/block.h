@@ -16,13 +16,10 @@
 #include "../../LLU/templates/serialize.h"
 #include "../../LLC/types/uint1024.h"
 
+#include "../../LLP/include/node.h"
+
 #include "../../LLC/hash/SK.h"
 #include "../../LLC/hash/macro.h"
-
-namespace LLD 
-{
-	class CIndexDB;
-}
 		
 namespace Core
 {
@@ -160,10 +157,10 @@ namespace Core
 		{
 			/** Hashing template for CPU miners uses nVersion to nBits **/
 			if(GetChannel() == 1)
-				return SK1024(BEGIN(nVersion), END(nBits));
+				return LLC::HASH::SK1024(BEGIN(nVersion), END(nBits));
 				
 			/** Hashing template for GPU uses nVersion to nNonce **/
-			return SK1024(BEGIN(nVersion), END(nNonce));
+			return LLC::HASH::SK1024(BEGIN(nVersion), END(nNonce));
 		}
 		
 		
@@ -171,9 +168,9 @@ namespace Core
 		uint1024 SignatureHash() const
 		{
 			if(nVersion < 5)
-				return SK1024(BEGIN(nVersion), END(nTime));
+				return LLC::HASH::SK1024(BEGIN(nVersion), END(nTime));
 			else
-				return SK1024(BEGIN(nVersion), END(hashPrevChecksum));
+				return LLC::HASH::SK1024(BEGIN(nVersion), END(hashPrevChecksum));
 		}
 		
 
@@ -207,7 +204,7 @@ namespace Core
 				for (int i = 0; i < nSize; i += 2)
 				{
 					int i2 = std::min(i+1, nSize-1);
-					vMerkleTree.push_back(SK512(BEGIN(vMerkleTree[j+i]),  END(vMerkleTree[j+i]),
+					vMerkleTree.push_back(LLC::HASH::SK512(BEGIN(vMerkleTree[j+i]),  END(vMerkleTree[j+i]),
 											    BEGIN(vMerkleTree[j+i2]), END(vMerkleTree[j+i2])));
 				}
 				j += nSize;
@@ -242,9 +239,9 @@ namespace Core
 			for(int i = 0; i < vMerkleBranch.size(); i++)
 			{
 				if (nIndex & 1)
-					hash = SK512(BEGIN(vMerkleBranch[i]), END(vMerkleBranch[i]), BEGIN(hash), END(hash));
+					hash = LLC::HASH::SK512(BEGIN(vMerkleBranch[i]), END(vMerkleBranch[i]), BEGIN(hash), END(hash));
 				else
-					hash = SK512(BEGIN(hash), END(hash), BEGIN(vMerkleBranch[i]), END(ovMerkleBranch[i]));
+					hash = LLC::HASH::SK512(BEGIN(hash), END(hash), BEGIN(vMerkleBranch[i]), END(ovMerkleBranch[i]));
 				nIndex >>= 1;
 			}
 			return hash;
@@ -271,19 +268,7 @@ namespace Core
 		
 		
 		/* Connect all associated inputs from a block. */
-		bool ConnectBlock(LLD::CIndexDB& indexdb, CBlockIndex* pindex);
-		
-		
-		/* Set the block as the best chain. */
-		bool SetBestChain(LLD::CIndexDB& indexdb, CBlockIndex* pindexNew);
-		
-		
-		/* Write block into Block Index Database. */
-		bool AddToBlockIndex(unsigned int nFile, unsigned int nBlockPos);
-		
-		
-		/* Check the validity of the block without connection to Blockchain. */
-		bool CheckBlock() const;
+		bool ConnectBlock(LLD::CIndexDB& indexdb, CBlockIndex* pindex, LLP::CNode* pfrom = NULL);
 		
 		
 		/* Verify the Proof of Work satisfies network requirements. */
@@ -292,10 +277,6 @@ namespace Core
 		
 		/* Verify the Proof of Stake satisfies network requirements. */
 		bool VerifyStake() const;
-		
-		
-		/* Accept a block into the block chain. */
-		bool AcceptBlock();
 		
 		
 		/* Determine the Stake Weight of Given Block. */
@@ -696,16 +677,20 @@ namespace Core
 	bool IsInitialBlockDownload();
 	
 	
+	/* Check a block before it is appended to the blockchain. */
+	bool CheckBlock(CBlock pblock, LLP::CNode* pfrom = NULL);
+	
+	
 	/* Accept a block into the block chain without setting it as the leading block. */
-	bool AcceptBlock(LLP::CNode* pfrom, CBlock* pblock);
+	bool AcceptBlock(CBlock pblock, LLP::CNode* pfrom = NULL);
 	
 	
 	/* Add a block into index memory and give it a location in the chain. */
-	bool AddToBlockIndex(LLP::CNode* pfrom, CBlock* pblock);
+	bool AddToBlockIndex(CBlock pblock, unsigned int nFile, unsigned int nBlockPos, LLP::CNode* pfrom = NULL);
 	
 	
 	/* Set block as the current leading block of the block chain. */
-	bool SetBestChain(LLP::CNode* pfrom, CBlock* pblock);
+	bool SetBestChain(LLD:CIndexDB& indexdb, CBlockIndex* pindexNew, LLP::CNode* pfrom = NULL);
 	
 	
 	/* Check the disk space for the current partition database is stored in. */

@@ -462,7 +462,7 @@ namespace LLP
 		}
 		
 		
-	private:
+	protected:
 		
 		/* Lower level network communications: Read. Interacts with OS sockets. */
 		size_t Read(std::vector<unsigned char> &DATA, size_t nBytes) { if(Errors()) return 0; TIMER.Reset(); return  boost::asio::read(*SOCKET, boost::asio::buffer(DATA, nBytes), ERROR_HANDLE); }

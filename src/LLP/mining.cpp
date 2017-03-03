@@ -26,12 +26,6 @@ namespace LLP
 		/** The Transaction Outputs to be Serialized to Mining LLP. **/
 		std::map<std::string, uint64> vOutputs;
 		
-CE.begin(),       NONCE.end());
-			
-			return DATA;
-		}
-	};
-}
 		/** The Value of this current Coinbase Payout. **/
 		uint64 nMaxValue, nPoolFee;
 		
@@ -101,7 +95,7 @@ CE.begin(),       NONCE.end());
 	};
 	
 
-	class MiningLLP : public Connection<>
+	class MiningLLP : public Connection
 	{	
 		Coinbase* pCoinbaseTx = NULL;
 		Core::CBlockIndex* pindexBest = NULL;

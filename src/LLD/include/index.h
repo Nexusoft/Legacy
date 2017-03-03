@@ -13,6 +13,7 @@
 
 #include "../templates/sector.h"
 #include "../../Core/include/block.h"
+#include "../../Core/include/trust.h"
 #include "../../Core/include/transaction.h"
 #include "../../Wallet/db.h"
 

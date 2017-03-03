@@ -19,10 +19,16 @@
 #include "include/block.h"
 #include "include/global.h"
 #include "include/trust.h"
+#include "include/supply.h"
+#include "include/prime.h"
 #include "include/difficulty.h"
+#include "include/dispatch.h"
 #include "include/transaction.h"
+#include "include/checkpoints.h"
 
 #include "../LLP/include/network.h"
+#include "../LLP/include/mining.h"
+#include "../LLP/include/message.h"
 
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/filesystem.hpp>
@@ -96,8 +102,7 @@ namespace Core
 			return error("CBlock::WriteToDisk() : AppendBlockFile failed");
 
 		// Write index header
-		unsigned char pchMessageStart[4];
-		Net::GetMessageStart(pchMessageStart);
+		unsigned char pchMessageStart[4] = (fTestNet ? LLP::MESSAGE_START_TESTNET : LLP::MESSAGE_START_MAINNET);
 		unsigned int nSize = fileout.GetSerializeSize(*this);
 		fileout << FLATDATA(pchMessageStart) << nSize;
 
@@ -211,7 +216,7 @@ namespace Core
 	}
 
 	
-	bool CBlock::ConnectBlock(LLD::CIndexDB& indexdb, CBlockIndex* pindex)
+	bool CBlock::ConnectBlock(LLD::CIndexDB& indexdb, CBlockIndex* pindex, LLP::CNode* pfrom)
 	{
 
 		// Do not allow blocks that contain transactions which 'overwrite' older transactions,
@@ -246,7 +251,7 @@ namespace Core
 		{
 			nSigOps += tx.GetLegacySigOpCount();
 			if (nSigOps > MAX_BLOCK_SIGOPS)
-				return DoS(100, error("ConnectBlock() : too many sigops"));
+				return DoS(pfrom, 100, error("ConnectBlock() : too many sigops"));
 
 			CDiskTxPos posThisTx(pindex->nFile, pindex->nBlockPos, nTxPos);
 			nTxPos += ::GetSerializeSize(tx, SER_DISK, DATABASE_VERSION);
@@ -266,7 +271,7 @@ namespace Core
 				// an incredibly-expensive-to-validate block.
 				nSigOps += tx.TotalSigOps(mapInputs);
 				if (nSigOps > MAX_BLOCK_SIGOPS)
-					return DoS(100, error("ConnectBlock() : too many sigops"));
+					return DoS(pfrom, 100, error("ConnectBlock() : too many sigops"));
 
 				int64 nTxValueIn = tx.GetValueIn(mapInputs);
 				int64 nTxValueOut = tx.GetValueOut();
@@ -332,9 +337,9 @@ namespace Core
 	}
 
 	
-	bool CBlock::SetBestChain(LLD::CIndexDB& indexdb, CBlockIndex* pindexNew)
+	bool SetBestChain(LLD::CIndexDB& indexdb, CBlockIndex* pindexNew, LLP::CNode* pfrom)
 	{
-		uint1024 hash = GetHash();
+		uint1024 hash = pindexNew->GetBlockHash();
 		if (pindexGenesisBlock == NULL && hash == hashGenesisBlock)
 		{
 			indexdb.WriteHashBestChain(hash);
@@ -356,27 +361,28 @@ namespace Core
 			}
 
 			
-			/** List of what to Disconnect. **/
+			/* List of what to Disconnect. */
 			vector<CBlockIndex*> vDisconnect;
 			for (CBlockIndex* pindex = pindexBest; pindex != pfork; pindex = pindex->pprev)
 				vDisconnect.push_back(pindex);
 
 			
-			/** List of what to Connect. **/
+			/* List of what to Connect. */
 			vector<CBlockIndex*> vConnect;
 			for (CBlockIndex* pindex = pindexNew; pindex != pfork; pindex = pindex->pprev)
 				vConnect.push_back(pindex);
 			reverse(vConnect.begin(), vConnect.end());
 
 			
-			/** Debug output if there is a fork. **/
+			/* Debug output if there is a fork. */
 			if(vDisconnect.size() > 0 && GetArg("-verbose", 0) >= 1)
 			{
 				printf("REORGANIZE: Disconnect %i blocks; %s..%s\n", vDisconnect.size(), pfork->GetBlockHash().ToString().substr(0,20).c_str(), pindexBest->GetBlockHash().ToString().substr(0,20).c_str());
 				printf("REORGANIZE: Connect %i blocks; %s..%s\n", vConnect.size(), pfork->GetBlockHash().ToString().substr(0,20).c_str(), pindexNew->GetBlockHash().ToString().substr(0,20).c_str());
 			}
 			
-			/** Disconnect the Shorter Branch. **/
+			
+			/* Disconnect the Shorter Branch. */
 			vector<CTransaction> vResurrect;
 			BOOST_FOREACH(CBlockIndex* pindex, vDisconnect)
 			{
@@ -407,38 +413,43 @@ namespace Core
 				if (!block.ReadFromDisk(pindex))
 					return error("CBlock::SetBestChain() : ReadFromDisk for connect failed");
 				
-				if (!block.ConnectBlock(indexdb, pindex))
+				
+				if (!block.ConnectBlock(indexdb, pindex, pfrom))
 				{
 					indexdb.TxnAbort();
 					return error("CBlock::SetBestChain() : ConnectBlock %s Height %u failed", pindex->GetBlockHash().ToString().substr(0,20).c_str(), pindex->nHeight);
 				}
 				
+				
 				/* Harden a pending checkpoint if this is the case. */
 				if(pindex->pprev && IsNewTimespan(pindex))
 					HardenCheckpoint(pindex);
 				
-				/** Add Transaction to Current Trust Keys **/
+				
+				/* Add Transaction to Current Trust Keys */
 				if(block.IsProofOfStake() && !cTrustPool.Accept(block))
 					return error("CBlock::SetBestChain() : Failed To Accept Trust Key Block.");
 
+				
 				/* Delete Memory Pool Transactions contained already. **/
 				BOOST_FOREACH(const CTransaction& tx, block.vtx)
 					if (!(tx.IsCoinBase() || tx.IsCoinStake()))
 						vDelete.push_back(tx);
 			}
 			
-			/** Write the Best Chain to the Index Database LLD. **/
+			
+			/* Write the Best Chain to the Index Database LLD. */
 			if (!indexdb.WriteHashBestChain(pindexNew->GetBlockHash()))
 				return error("CBlock::SetBestChain() : WriteHashBestChain failed");
 
 			
-			/** Disconnect Shorter Branch in Memory. **/
+			/* Disconnect Shorter Branch in Memory. */
 			BOOST_FOREACH(CBlockIndex* pindex, vDisconnect)
 				if (pindex->pprev)
 					pindex->pprev->pnext = NULL;
 
 
-			/** Conenct the Longer Branch in Memory. **/
+			/* Conenct the Longer Branch in Memory. */
 			BOOST_FOREACH(CBlockIndex* pindex, vConnect)
 				if (pindex->pprev)
 					pindex->pprev->pnext = pindex;
@@ -454,7 +465,7 @@ namespace Core
 		}
 		
 		
-		/** Update the Best Block in the Wallet. **/
+		/* Update the Best Block in the Wallet. */
 		bool fIsInitialDownload = IsInitialBlockDownload();
 		if (!fIsInitialDownload)
 		{
@@ -464,61 +475,16 @@ namespace Core
 		}
 
 		
-		/** Establish the Best Variables for the Height of the Block-chain. **/
+		/* Establish the Best Variables for the Height of the Block-chain. */
 		hashBestChain = hash;
 		pindexBest = pindexNew;
 		nBestHeight = pindexBest->nHeight;
 		nBestChainTrust = pindexNew->nChainTrust;
 		nTimeBestReceived = GetUnifiedTimestamp();
 		
+		
 		if(GetArg("-verbose", 0) >= 0)
 			printf("SetBestChain: new best=%s  height=%d  trust=%"PRIu64"  moneysupply=%s\n", hashBestChain.ToString().substr(0,20).c_str(), nBestHeight, nBestChainTrust, FormatMoney(pindexBest->nMoneySupply).c_str());
-		
-		/** Grab the transactions for the block and set the address balances. **/
-		for(int nTx = 0; nTx < vtx.size(); nTx++)
-		{
-			for(int nOut = 0; nOut < vtx[nTx].vout.size(); nOut++)
-			{	
-				Wallet::NexusAddress cAddress;
-				if(!Wallet::ExtractAddress(vtx[nTx].vout[nOut].scriptPubKey, cAddress))
-					continue;
-							
-				mapAddressTransactions[cAddress.GetHash256()] += (uint64) vtx[nTx].vout[nOut].nValue;
-						
-				if(GetArg("-verbose", 0) >= 2)
-					printf("%s Credited %f Nexus | Balance : %f Nexus\n", cAddress.ToString().c_str(), (double)vtx[nTx].vout[nOut].nValue / COIN, (double)mapAddressTransactions[cAddress.GetHash256()] / COIN);
-			}
-					
-			if(!vtx[nTx].IsCoinBase())
-			{
-				BOOST_FOREACH(const CTxIn& txin, vtx[nTx].vin)
-				{
-					if(txin.prevout.IsNull())
-						continue;
-						
-					CTransaction tx;
-					CTxIndex txind;
-							
-					if(!indexdb.ReadTxIndex(txin.prevout.hash, txind))
-						continue;
-								
-					if(!tx.ReadFromDisk(txind.pos))
-						continue;
-							
-					Wallet::NexusAddress cAddress;
-					if(!Wallet::ExtractAddress(tx.vout[txin.prevout.n].scriptPubKey, cAddress))
-						continue;
-							
-					if(tx.vout[txin.prevout.n].nValue > mapAddressTransactions[cAddress.GetHash256()])
-						mapAddressTransactions[cAddress.GetHash256()] = 0;
-					else
-						mapAddressTransactions[cAddress.GetHash256()] -= (uint64) tx.vout[txin.prevout.n].nValue;
-					
-					if(GetArg("-verbose", 0) >= 2)
-						printf("%s Debited %f Nexus | Balance : %f Nexus\n", cAddress.ToString().c_str(), (double)tx.vout[txin.prevout.n].nValue / COIN, (double)mapAddressTransactions[cAddress.GetHash256()] / COIN);
-				}
-			}
-		}
 
 		
 		std::string strCmd = GetArg("-blocknotify", "");
@@ -534,23 +500,23 @@ namespace Core
 
 	/* AddToBlockIndex: Adds a new Block into the Block Index. 
 		This is where it is categorized and dealt with in the Blockchain. */
-	bool CBlock::AddToBlockIndex(unsigned int nFile, unsigned int nBlockPos)
+	bool AddToBlockIndex(CBlock* pblock, unsigned int nFile, unsigned int nBlockPos)
 	{
 		/* Check for Duplicate. */
-		uint1024 hash = GetHash();
+		uint1024 hash = pblock->GetHash();
 		if (mapBlockIndex.count(hash))
 			return error("AddToBlockIndex() : %s already exists", hash.ToString().substr(0,20).c_str());
 
 			
 		/* Build new Block Index Object. */
-		CBlockIndex* pindexNew = new CBlockIndex(nFile, nBlockPos, *this);
+		CBlockIndex* pindexNew = new CBlockIndex(nFile, nBlockPos, *pblock);
 		if (!pindexNew)
 			return error("AddToBlockIndex() : new CBlockIndex failed");
 
 			
 		/* Find Previous Block. */
 		pindexNew->phashBlock = &hash;
-		map<uint1024, CBlockIndex*>::iterator miPrev = mapBlockIndex.find(hashPrevBlock);
+		map<uint1024, CBlockIndex*>::iterator miPrev = mapBlockIndex.find(pblock->hashPrevBlock);
 		if (miPrev != mapBlockIndex.end())
 			pindexNew->pprev = (*miPrev).second;
 		
@@ -562,11 +528,6 @@ namespace Core
 		/* Compute the Channel Height. */
 		const CBlockIndex* pindexPrev = GetLastChannelIndex(pindexNew->pprev, pindexNew->GetChannel());
 		pindexNew->nChannelHeight = (pindexPrev ? pindexPrev->nChannelHeight : 0) + 1;
-		
-		
-		/* Check the Block Signature. */
-		if (!CheckBlockSignature())
-			return DoS(100, error("CheckBlock() : bad block signature"));
 		
 		
 		/** Compute the Released Reserves. **/
@@ -631,9 +592,9 @@ namespace Core
 		if (pindexNew == pindexBest)
 		{
 			// Notify UI to display prev block's coinbase if it was ours
-			static uint512 hashPrevBestCoinBase;
-			UpdatedTransaction(hashPrevBestCoinBase);
-			hashPrevBestCoinBase = vtx[0].GetHash();
+			//static uint512 hashPrevBestCoinBase;
+			//UpdatedTransaction(hashPrevBestCoinBase);
+			//hashPrevBestCoinBase = pblock->vtx[0].GetHash();
 		}
 
 		MainFrameRepaint();
@@ -696,169 +657,180 @@ namespace Core
 	
 	/** Check Block: These are Checks done before the Block is sunken in the Blockchain.
 		These are done before a block is orphaned to ensure it is valid before trying to obtain its chain. **/
-	bool CBlock::CheckBlock() const
+	bool CheckBlock(CBlock* pblock, LLP::CNode* pfrom = NULL)
 	{
-		/** Check the Size limits of the Current Block. **/
-		if (vtx.empty() || vtx.size() > MAX_BLOCK_SIZE || ::GetSerializeSize(*this, SER_NETWORK, LLP::PROTOCOL_VERSION) > MAX_BLOCK_SIZE)
-			return DoS(100, error("CheckBlock() : size limits failed"));
-			
-			
-		/** Make sure the Block was Created within Active Channel. **/
-		if (GetChannel() > 2)
-			return DoS(50, error("CheckBlock() : Channel out of Range."));
 		
-		if (GetBlockTime() > GetUnifiedTimestamp() + MAX_UNIFIED_DRIFT)
+		/* Check the Size limits of the Current Block. */
+		if (pblock->vtx.empty() || pblock->vtx.size() > MAX_BLOCK_SIZE || ::GetSerializeSize(*pblock, SER_NETWORK, LLP::PROTOCOL_VERSION) > MAX_BLOCK_SIZE)
+			return DoS(pfrom, 100, error("CheckBlock() : size limits failed"));
+			
+		
+		/* Make sure the Block was Created within Active Channel. **/
+		if (pblock->GetChannel() > 2)
+			return DoS(pfrom, 50, error("CheckBlock() : Channel out of Range."));
+		
+		
+		/* Check that the Timestamp isn't made in the future. */
+		if (pblock->GetBlockTime() > GetUnifiedTimestamp() + MAX_UNIFIED_DRIFT)
 			return error("AcceptBlock() : block timestamp too far in the future");
 	
+		
+		/* Do not allow blocks to be accepted above the Current Block Version. */
+		if(pblock->nVersion > (fTestNet ? TESTNET_BLOCK_CURRENT_VERSION : NETWORK_BLOCK_CURRENT_VERSION))
+			return DoS(pfrom, 50, error("CheckBlock() : Invalid Block Version."));
 	
-		/** Do not allow blocks to be accepted above the Current Block Version. **/
-		if(nVersion > (fTestNet ? TESTNET_BLOCK_CURRENT_VERSION : NETWORK_BLOCK_CURRENT_VERSION))
-			return DoS(50, error("CheckBlock() : Invalid Block Version."));
-	
-	
-		/** Only allow POS blocks in Version 4. **/
-		if(IsProofOfStake() && nVersion < 4)
-			return DoS(50, error("CheckBlock() : Proof of Stake Blocks Rejected until Version 4."));
+		
+		/* Only allow POS blocks in Version 4. */
+		if(pblock->IsProofOfStake() && pblock->nVersion < 4)
+			return DoS(pfrom, 50, error("CheckBlock() : Proof of Stake Blocks Rejected until Version 4."));
 			
-			
-		/** Check the Proof of Work Claims. **/
-		if (!IsInitialBlockDownload() && IsProofOfWork() && !VerifyWork())
-			return DoS(50, error("CheckBlock() : Invalid Proof of Work"));
+		
+		/* Check the Proof of Work Claims. */
+		if (pblock->IsProofOfWork() && !pblock->VerifyWork())
+			return DoS(pfrom, 50, error("CheckBlock() : Invalid Proof of Work"));
 
+		
+		/* Check the Network Launch Time-Lock. */
+		if (pblock->nHeight > 0 && pblock->GetBlockTime() <= (fTestNet ? NEXUS_TESTNET_TIMELOCK : NEXUS_NETWORK_TIMELOCK))
+			return DoS(pfrom, 50, ("CheckBlock() : Block Created before Network Time-Lock"));
 			
-		/** Check the Network Launch Time-Lock. **/
-		if (nHeight > 0 && GetBlockTime() <= (fTestNet ? NEXUS_TESTNET_TIMELOCK : NEXUS_NETWORK_TIMELOCK))
-			return error("CheckBlock() : Block Created before Network Time-Lock");
+		
+		/* Check the Current Channel Time-Lock. */
+		if (pblock->nHeight > 0 && pblock->GetBlockTime() < (fTestNet ? CHANNEL_TESTNET_TIMELOCK[pblock->GetChannel()] : CHANNEL_NETWORK_TIMELOCK[pblock->GetChannel()]))
+			return error("CheckBlock() : Block Created before Channel Time-Lock. Channel Opens in %"PRId64" Seconds", (fTestNet ? CHANNEL_TESTNET_TIMELOCK[pblock->GetChannel()] : CHANNEL_NETWORK_TIMELOCK[pblock->GetChannel()]) - GetUnifiedTimestamp());
 			
+		
+		/* Check the Previous Version to Block Time-Lock. llow Version (Current -1) Blocks for 1 Hour after Time Lock. */
+		if (pblock->nVersion > 1 && pblock->nVersion == (fTestNet ? TESTNET_BLOCK_CURRENT_VERSION - 1 : NETWORK_BLOCK_CURRENT_VERSION - 1) && (pblock->GetBlockTime() - 3600) > (fTestNet ? TESTNET_VERSION_TIMELOCK[TESTNET_BLOCK_CURRENT_VERSION - 2] : NETWORK_VERSION_TIMELOCK[NETWORK_BLOCK_CURRENT_VERSION - 2]))
+			return error("CheckBlock() : Version %u Blocks have been Obsolete for %"PRId64" Seconds\n", pblock->nVersion, (GetUnifiedTimestamp() - (fTestNet ? TESTNET_VERSION_TIMELOCK[TESTNET_BLOCK_CURRENT_VERSION - 2] : NETWORK_VERSION_TIMELOCK[TESTNET_BLOCK_CURRENT_VERSION - 2])));	
 			
-		/** Check the Current Channel Time-Lock. **/
-		if (nHeight > 0 && GetBlockTime() < (fTestNet ? CHANNEL_TESTNET_TIMELOCK[GetChannel()] : CHANNEL_NETWORK_TIMELOCK[GetChannel()]))
-			return error("CheckBlock() : Block Created before Channel Time-Lock. Channel Opens in %"PRId64" Seconds", (fTestNet ? CHANNEL_TESTNET_TIMELOCK[GetChannel()] : CHANNEL_NETWORK_TIMELOCK[GetChannel()]) - GetUnifiedTimestamp());
-			
-			
-		/* Check the Current Version Block Time-Lock. Allow Version (Current -1) Blocks for 1 Hour after Time Lock. */
-		if (nVersion > 1 && nVersion == (fTestNet ? TESTNET_BLOCK_CURRENT_VERSION - 1 : NETWORK_BLOCK_CURRENT_VERSION - 1) && (GetBlockTime() - 3600) > (fTestNet ? TESTNET_VERSION_TIMELOCK[TESTNET_BLOCK_CURRENT_VERSION - 2] : NETWORK_VERSION_TIMELOCK[NETWORK_BLOCK_CURRENT_VERSION - 2]))
-			return error("CheckBlock() : Version %u Blocks have been Obsolete for %"PRId64" Seconds\n", nVersion, (GetUnifiedTimestamp() - (fTestNet ? TESTNET_VERSION_TIMELOCK[TESTNET_BLOCK_CURRENT_VERSION - 2] : NETWORK_VERSION_TIMELOCK[TESTNET_BLOCK_CURRENT_VERSION - 2])));	
-			
-			
+		
 		/* Check the Current Version Block Time-Lock. */
-		if (nVersion >= (fTestNet ? TESTNET_BLOCK_CURRENT_VERSION : NETWORK_BLOCK_CURRENT_VERSION) && GetBlockTime() <= (fTestNet ? TESTNET_VERSION_TIMELOCK[TESTNET_BLOCK_CURRENT_VERSION - 2] : NETWORK_VERSION_TIMELOCK[NETWORK_BLOCK_CURRENT_VERSION - 2]))
-			return error("CheckBlock() : Version %u Blocks are not Accepted for %"PRId64" Seconds\n", nVersion, (GetUnifiedTimestamp() - (fTestNet ? TESTNET_VERSION_TIMELOCK[TESTNET_BLOCK_CURRENT_VERSION - 2] : NETWORK_VERSION_TIMELOCK[NETWORK_BLOCK_CURRENT_VERSION - 2])));	
+		if (pblock->nVersion >= (fTestNet ? TESTNET_BLOCK_CURRENT_VERSION : NETWORK_BLOCK_CURRENT_VERSION) && pblock->GetBlockTime() <= (fTestNet ? TESTNET_VERSION_TIMELOCK[TESTNET_BLOCK_CURRENT_VERSION - 2] : NETWORK_VERSION_TIMELOCK[NETWORK_BLOCK_CURRENT_VERSION - 2]))
+			return error("CheckBlock() : Version %u Blocks are not Accepted for %"PRId64" Seconds\n", pblock->nVersion, (GetUnifiedTimestamp() - (fTestNet ? TESTNET_VERSION_TIMELOCK[TESTNET_BLOCK_CURRENT_VERSION - 2] : NETWORK_VERSION_TIMELOCK[NETWORK_BLOCK_CURRENT_VERSION - 2])));	
 			
-			
+		
 		/* Check the Required Mining Outputs. */
-		if (IsProofOfWork() && nVersion >= 3) {
-			unsigned int nSize = vtx[0].vout.size();
+		if (pblock->IsProofOfWork() && pblock->nVersion < 5) {
+			unsigned int nSize = pblock->vtx[0].vout.size();
 
-			/** Check the Coinbase Tx Size. **/
+			/* Check the Coinbase Tx Size. */
 			if(nSize < 3)
 				return error("CheckBlock() : Coinbase Too Small.");
 				
 			if(!fTestNet)
 			{
-				if (!VerifyAddressList(vtx[0].vout[nSize - 2].scriptPubKey, AMBASSADOR_SCRIPT_SIGNATURES))
-					return error("CheckBlock() : Block %u Channel Signature Not Verified.\n", nHeight);
+				if (!VerifyAddressList(pblock->vtx[0].vout[nSize - 2].scriptPubKey, AMBASSADOR_SCRIPT_SIGNATURES))
+					return error("CheckBlock() : Block %u Channel Signature Not Verified.\n", pblock->nHeight);
 
-				if (!VerifyAddressList(vtx[0].vout[nSize - 1].scriptPubKey, DEVELOPER_SCRIPT_SIGNATURES))
-					return error("CheckBlock() :  Block %u Developer Signature Not Verified.\n", nHeight);
+				if (!VerifyAddressList(pblock->vtx[0].vout[nSize - 1].scriptPubKey, DEVELOPER_SCRIPT_SIGNATURES))
+					return error("CheckBlock() :  Block %u Developer Signature Not Verified.\n", pblock->nHeight);
 			}
 			
 			else
 			{
-				if (!VerifyAddress(vtx[0].vout[nSize - 2].scriptPubKey, TESTNET_DUMMY_SIGNATURE))
-					return error("CheckBlock() :  Block %u Channel Signature Not Verified.\n", nHeight);
+				if (!VerifyAddress(pblock->vtx[0].vout[nSize - 2].scriptPubKey, TESTNET_DUMMY_SIGNATURE))
+					return error("CheckBlock() :  Block %u Channel Signature Not Verified.\n", pblock->nHeight);
 
-				if (!VerifyAddress(vtx[0].vout[nSize - 1].scriptPubKey, TESTNET_DUMMY_SIGNATURE))
-					return error("CheckBlock() :  Block %u Developer Signature Not Verified.\n", nHeight);
+				if (!VerifyAddress(pblock->vtx[0].vout[nSize - 1].scriptPubKey, TESTNET_DUMMY_SIGNATURE))
+					return error("CheckBlock() :  Block %u Developer Signature Not Verified.\n", pblock->nHeight);
 			}
 		}
 
+		
+		/* Check the Coinbase Transaction is First, with no repetitions. */
+		if (pblock->vtx.empty() || (!pblock->vtx[0].IsCoinBase() && pblock->nChannel > 0))
+			return DoS(pfrom, 100, error("CheckBlock() : first tx is not coinbase for Proof of Work Block"));
 			
-		/** Check the Coinbase Transaction is First, with no repetitions. **/
-		if (vtx.empty() || (!vtx[0].IsCoinBase() && nChannel > 0))
-			return DoS(100, error("CheckBlock() : first tx is not coinbase for Proof of Work Block"));
+		
+		/* Check the Coinstake Transaction is First, with no repetitions. */
+		if (pblock->vtx.empty() || (!pblock->vtx[0].IsCoinStake() && pblock->nChannel == 0))
+			return DoS(pfrom, 100, error("CheckBlock() : first tx is not coinstake for Proof of Stake Block"));
 			
 			
-		/** Check the Coinstake Transaction is First, with no repetitions. **/
-		if (vtx.empty() || (!vtx[0].IsCoinStake() && nChannel == 0))
-			return DoS(100, error("CheckBlock() : first tx is not coinstake for Proof of Stake Block"));
+		/* Check coinbase/coinstake timestamp is at most 20 minutes before block time */
+		if (pblock->GetBlockTime() > (int64)pblock->vtx[0].nTime + ((pblock->nVersion < 4) ? 1200 : 3600))
+			return DoS(pfrom, 50, error("CheckBlock() : coinbase/coinstake timestamp is too early"));
+		
+		
+		/* Check the Transactions in the Block. */
+		set<uint512> uniqueTx; unsigned int nSigOps = 0;
+		for (unsigned int i = 0; i < pblock->vtx.size(); i++)
+		{
 			
-			
-		/** Check for duplicate Coinbase / Coinstake Transactions. **/
-		for (unsigned int i = 1; i < vtx.size(); i++)
-			if (vtx[i].IsCoinBase() || vtx[i].IsCoinStake())
-				return DoS(100, error("CheckBlock() : more than one coinbase / coinstake"));
-
+			/* Check for duplicate Coinbase / Coinstake Transactions. */
+			if (i > 0 && (pblock->vtx[i].IsCoinBase() || pblock->vtx[i].IsCoinStake()))
+				return DoS(pfrom, 100, error("CheckBlock() : more than one coinbase / coinstake"));
 				
-		/** Check coinbase/coinstake timestamp is at least 20 minutes before block time **/
-		if (GetBlockTime() > (int64)vtx[0].nTime + ((nVersion < 4) ? 1200 : 3600))
-			return DoS(50, error("CheckBlock() : coinbase/coinstake timestamp is too early"));
-		
-		
-		/** Check the Transactions in the Block. **/
-		BOOST_FOREACH(const CTransaction& tx, vtx)
-		{
-			if (!tx.CheckTransaction())
-				return DoS(tx.nDoS, error("CheckBlock() : CheckTransaction failed"));
+			
+			/* Verify Transaction Validity. */
+			if (!pblock->vtx[i].CheckTransaction())
+				return DoS(pfrom, 50, error("CheckBlock() : CheckTransaction failed"));
 				
-			// Nexus: check transaction timestamp
-			if (GetBlockTime() < (int64)tx.nTime)
-				return DoS(50, error("CheckBlock() : block timestamp earlier than transaction timestamp"));
+			
+			/* Transaction timestamp must be less than block timestamp. */
+			if (pblock->GetBlockTime() < (int64)pblock->vtx[i].nTime)
+				return DoS(pfrom, 50, error("CheckBlock() : block timestamp earlier than transaction timestamp"));
+			
+			
+			/* Check for Duplicate txid's. */
+			uniqueTx.insert(pblock->vtx[i].GetHash());
+			
+			
+			/* Calculate Signature Ops. */
+			nSigOps += pblock->vtx[i].GetLegacySigOpCount();
 		}
 
 		
-		// Check for duplicate txids. This is caught by ConnectInputs(),
-		// but catching it earlier avoids a potential DoS attack:
-		set<uint512> uniqueTx;
-		BOOST_FOREACH(const CTransaction& tx, vtx)
-		{
-			uniqueTx.insert(tx.GetHash());
-		}
-		if (uniqueTx.size() != vtx.size())
-			return DoS(100, error("CheckBlock() : duplicate transaction"));
+		/* Reject Block if there are duplicate txid's. */
+		if (uniqueTx.size() != pblock->vtx.size())
+			return DoS(pfrom, 100, error("CheckBlock() : duplicate transaction"));
 
-		unsigned int nSigOps = 0;
-		BOOST_FOREACH(const CTransaction& tx, vtx)
-		{
-			nSigOps += tx.GetLegacySigOpCount();
-		}
 		
+		/* Check the signature operations are within bound. */
 		if (nSigOps > MAX_BLOCK_SIGOPS)
-			return DoS(100, error("CheckBlock() : out-of-bounds SigOpCount"));
+			return DoS(pfrom, 100, error("CheckBlock() : out-of-bounds SigOpCount"));
 
-		// Check merkleroot
-		if (hashMerkleRoot != BuildMerkleTree())
-			return DoS(100, error("CheckBlock() : hashMerkleRoot mismatch"));
+		
+		/* Check the Merkle Root builds as Advertised. */
+		if (pblock->hashMerkleRoot != pblock->BuildMerkleTree())
+			return DoS(pfrom, 100, error("CheckBlock() : hashMerkleRoot mismatch"));
+		
+		
+		/* Check the Block Signature. */
+		if (!pblock->CheckBlockSignature())
+			return DoS(pfrom, 100, error("CheckBlock() : bad block signature"));
 
 		return true;
 	}
 	
 	
-	bool CBlock::AcceptBlock()
+	bool AcceptBlock(CBlock* pblock, LLP::CNode* pfrom)
 	{
 		
 		/** Check for Duplicate Block. **/
-		uint1024 hash = GetHash();
+		uint1024 hash = pblock->GetHash();
 		if (mapBlockIndex.count(hash))
 			return error("AcceptBlock() : block already in mapBlockIndex");
 
 			
 		/** Find the Previous block from hashPrevBlock. **/
-		map<uint1024, CBlockIndex*>::iterator mi = mapBlockIndex.find(hashPrevBlock);
+		map<uint1024, CBlockIndex*>::iterator mi = mapBlockIndex.find(pblock->hashPrevBlock);
 		if (mi == mapBlockIndex.end())
-			return DoS(10, error("AcceptBlock() : prev block not found"));
+			return DoS(pfrom, 10, error("AcceptBlock() : prev block not found"));
+		
 		CBlockIndex* pindexPrev = (*mi).second;
 		int nPrevHeight = pindexPrev->nHeight + 1;
 		
 		
 		/** Check the Height of Block to Previous Block. **/
-		if(nPrevHeight != nHeight)
-			return DoS(100, error("AcceptBlock() : incorrect block height."));
+		if(nPrevHeight != pblock->nHeight)
+			return DoS(pfrom, 100, error("AcceptBlock() : incorrect block height."));
 		
 
 		/** Check that the nBits match the current Difficulty. **/
-		if (nBits != GetNextTargetRequired(pindexPrev, GetChannel(), !IsInitialBlockDownload()))
-			return DoS(100, error("AcceptBlock() : incorrect proof-of-work/proof-of-stake"));
+		if (pblock->nBits != GetNextTargetRequired(pindexPrev, pblock->GetChannel(), !IsInitialBlockDownload()))
+			return DoS(pfrom, 100, error("AcceptBlock() : incorrect proof-of-work/proof-of-stake"));
 			
 			
 		/** Check that Block is Descendant of Hardened Checkpoints. **/
@@ -867,72 +839,72 @@ namespace Core
 
 			
 		/** Check That Block Timestamp is not before previous block. **/
-		if (GetBlockTime() <= pindexPrev->GetBlockTime())
-			return error("AcceptBlock() : block's timestamp too early Block: %"PRId64" Prev: %"PRId64"", GetBlockTime(), pindexPrev->GetBlockTime());
+		if (pblock->GetBlockTime() <= pindexPrev->GetBlockTime())
+			return error("AcceptBlock() : block's timestamp too early Block: %"PRId64" Prev: %"PRId64"", pblock->GetBlockTime(), pindexPrev->GetBlockTime());
 			
 			
 		/** Check the Coinbase Transactions in Block Version 3. **/
-		if(IsProofOfWork() && nHeight > 0 && nVersion >= 3)
+		if(pblock->IsProofOfWork() && pblock->nHeight > 0 && pblock->nVersion >= 3)
 		{
-			unsigned int nSize = vtx[0].vout.size();
+			unsigned int nSize = pblock->vtx[0].vout.size();
 
 			/** Add up the Miner Rewards from Coinbase Tx Outputs. **/
 			int64 nMiningReward = 0;
 			for(int nIndex = 0; nIndex < nSize - 2; nIndex++)
-				nMiningReward += vtx[0].vout[nIndex].nValue;
+				nMiningReward += pblock->vtx[0].vout[nIndex].nValue;
 					
 			/** Check that the Mining Reward Matches the Coinbase Calculations. **/
-			if (nMiningReward != GetCoinbaseReward(pindexPrev, GetChannel(), 0))
-				return error("AcceptBlock() : miner reward mismatch %"PRId64" : %"PRId64"", nMiningReward, GetCoinbaseReward(pindexPrev, GetChannel(), 0));
+			if (nMiningReward != GetCoinbaseReward(pindexPrev, pblock->GetChannel(), 0))
+				return error("AcceptBlock() : miner reward mismatch %"PRId64" : %"PRId64"", nMiningReward, GetCoinbaseReward(pindexPrev, pblock->GetChannel(), 0));
 					
 			/** Check that the Exchange Reward Matches the Coinbase Calculations. **/
-			if (vtx[0].vout[nSize - 2].nValue != GetCoinbaseReward(pindexPrev, GetChannel(), 1))
-				return error("AcceptBlock() : exchange reward mismatch %"PRId64" : %"PRId64"\n", vtx[0].vout[1].nValue, GetCoinbaseReward(pindexPrev, GetChannel(), 1));
+			if (pblock->vtx[0].vout[nSize - 2].nValue != GetCoinbaseReward(pindexPrev, pblock->GetChannel(), 1))
+				return error("AcceptBlock() : exchange reward mismatch %"PRId64" : %"PRId64"\n", pblock->vtx[0].vout[1].nValue, GetCoinbaseReward(pindexPrev, pblock->GetChannel(), 1));
 						
 			/** Check that the Developer Reward Matches the Coinbase Calculations. **/
-			if (vtx[0].vout[nSize - 1].nValue != GetCoinbaseReward(pindexPrev, GetChannel(), 2))
-				return error("AcceptBlock() : developer reward mismatch %"PRId64" : %"PRId64"\n", vtx[0].vout[2].nValue, GetCoinbaseReward(pindexPrev, GetChannel(), 2));
+			if (pblock->vtx[0].vout[nSize - 1].nValue != GetCoinbaseReward(pindexPrev, pblock->GetChannel(), 2))
+				return error("AcceptBlock() : developer reward mismatch %"PRId64" : %"PRId64"\n", pblock->vtx[0].vout[2].nValue, GetCoinbaseReward(pindexPrev, pblock->GetChannel(), 2));
 					
 		}
 		
 		
 		/** Check the Proof of Stake Claims. **/
-		else if (IsProofOfStake())
+		else if (pblock->IsProofOfStake())
 		{
-			if(!cTrustPool.Check(*this))
-				return DoS(50, error("AcceptBlock() : Invalid Trust Key"));
+			if(!cTrustPool.Check(*pblock))
+				return DoS(pfrom, 50, error("AcceptBlock() : Invalid Trust Key"));
 			
 			/** Verify the Stake Kernel. **/
-			if(!VerifyStake())
-				return DoS(50, error("AcceptBlock() : Invalid Proof of Stake"));
+			if(!pblock->VerifyStake())
+				return DoS(pfrom, 50, error("AcceptBlock() : Invalid Proof of Stake"));
 		}
 		
 			
 		/** Check that Transactions are Finalized. **/
-		BOOST_FOREACH(const CTransaction& tx, vtx)
-			if (!tx.IsFinal(nHeight, GetBlockTime()))
-				return DoS(10, error("AcceptBlock() : contains a non-final transaction"));
+		BOOST_FOREACH(const CTransaction& tx, pblock->vtx)
+			if (!tx.IsFinal(pblock->nHeight, pblock->GetBlockTime()))
+				return DoS(pfrom, 10, error("AcceptBlock() : contains a non-final transaction"));
 
 				
 		/** Write new Block to Disk. **/
-		if (!CheckDiskSpace(::GetSerializeSize(*this, SER_DISK, DATABASE_VERSION)))
+		if (!CheckDiskSpace(::GetSerializeSize(*pblock, SER_DISK, DATABASE_VERSION)))
 			return error("AcceptBlock() : out of disk space");
 			
 			
 		unsigned int nFile = -1;
 		unsigned int nBlockPos = 0;
-		if (!WriteToDisk(nFile, nBlockPos))
+		if (!pblock->WriteToDisk(nFile, nBlockPos))
 			return error("AcceptBlock() : WriteToDisk failed");
-		if (!AddToBlockIndex(nFile, nBlockPos))
+		if (!AddToBlockIndex(pblock, nFile, nBlockPos))
 			return error("AcceptBlock() : AddToBlockIndex failed");
 
 			
 		/** Relay the Block to Nexus Network. **/
 		if (hashBestChain == hash && !IsInitialBlockDownload())
 		{
-			LOCK(Net::cs_vNodes);
-			BOOST_FOREACH(Net::CNode* pnode, Net::vNodes)
-				pnode->PushInventory(Net::CInv(Net::MSG_BLOCK, hash));
+			//LOCK(Net::cs_vNodes);
+			//BOOST_FOREACH(Net::CNode* pnode, Net::vNodes)
+				//pnode->PushInventory(Net::CInv(Net::MSG_BLOCK, hash));
 		}
 
 		return true;
@@ -953,7 +925,7 @@ namespace Core
 			// Sign
 			const std::vector<unsigned char>& vchPubKey = vSolutions[0];
 			Wallet::CKey key;
-			if (!keystore.GetKey(LLC::SK256(vchPubKey), key))
+			if (!keystore.GetKey(LLC::HASH::SK256(vchPubKey), key))
 				return false;
 			if (key.GetPubKey() != vchPubKey)
 				return false;
@@ -1056,9 +1028,6 @@ namespace Core
 		{
 			hashGenesisBlock = hashGenesisBlockTestNet;
 			nCoinbaseMaturity = 10;
-			
-			TRUST_KEY_EXPIRE = 60 * 60 * 12;
-			TRUST_KEY_MIN_INTERVAL = 5;
 		}
 
 		if(GetArg("-verbose", 0) >= 0)
@@ -1101,16 +1070,15 @@ namespace Core
 			if(block.GetHash() != hashGenesisBlock)
 				return error("LoadBlockIndex() : genesis hash does not match");
 			
-			if(!block.CheckBlock())
+			if(!CheckBlock(&block))
 				return error("LoadBlockIndex() : genesis block check failed");
-
 			
 			/** Write the New Genesis to Disk. **/
 			unsigned int nFile;
 			unsigned int nBlockPos;
 			if (!block.WriteToDisk(nFile, nBlockPos))
 				return error("LoadBlockIndex() : writing genesis block to disk failed");
-			if (!block.AddToBlockIndex(nFile, nBlockPos))
+			if (!AddToBlockIndex(&block, nFile, nBlockPos))
 				return error("LoadBlockIndex() : genesis block not accepted");
 		}
 
@@ -1141,11 +1109,11 @@ namespace Core
 	
 	
 	/** Constructs a new block **/
+	static int nCoinbaseCounter = 0;
 	CBlock* CreateNewBlock(Wallet::CReserveKey& reservekey, Wallet::CWallet* pwallet, unsigned int nChannel, unsigned int nID, LLP::Coinbase* pCoinbase)
 	{
-		auto_ptr<CBlock> pblock(new CBlock());
-		if (!pblock.get())
-			return NULL;
+		/* Create the new block pointer. */
+		CBlock* pblock = new CBlock();
 		
 		/** Create the block from Previous Best Block. **/
 		CBlockIndex* pindexPrev = pindexBest;
@@ -1262,7 +1230,7 @@ namespace Core
 			
 			/** Set the Proper Addresses for the Coinbase Transaction. **/
 			txNew.vout.resize(txNew.vout.size() + 2);
-			txNew.vout[txNew.vout.size() - 2].scriptPubKey.SetNexusAddress(fTestNet ? TESTNET_DUMMY_ADDRESS : CHANNEL_ADDRESSES[nCoinbaseCounter]);
+			txNew.vout[txNew.vout.size() - 2].scriptPubKey.SetNexusAddress(fTestNet ? TESTNET_DUMMY_ADDRESS : AMBASSADOR_ADDRESSES[nCoinbaseCounter]);
 			txNew.vout[txNew.vout.size() - 1].scriptPubKey.SetNexusAddress(fTestNet ? TESTNET_DUMMY_ADDRESS : DEVELOPER_ADDRESSES[nCoinbaseCounter]);
 			
 			
@@ -1294,7 +1262,7 @@ namespace Core
 		
 		pblock->UpdateTime();
 
-		return pblock.release();
+		return pblock;
 	}
 	
 	
@@ -1545,14 +1513,14 @@ namespace Core
 				return error("Nexus Miner : generated block is stale");
 
 			// Track how many getdata requests this block gets
-			{
-				LOCK(wallet.cs_wallet);
-				wallet.mapRequestCount[pblock->GetHash()] = 0;
-			}
+			//{
+			//	LOCK(wallet.cs_wallet);
+			//	wallet.mapRequestCount[pblock->GetHash()] = 0;
+			//}
 
 			/** Process the Block to see if it gets Accepted into Blockchain. **/
-			if (!ProcessBlock(NULL, pblock))
-				return error("Nexus Miner : ProcessBlock, block not accepted\n");
+			//if (!ProcessBlock(NULL, pblock))
+			//	return error("Nexus Miner : ProcessBlock, block not accepted\n");
 				
 			/** Keep the Reserve Key only if it was used in a block. **/
 			reservekey.KeepKey();

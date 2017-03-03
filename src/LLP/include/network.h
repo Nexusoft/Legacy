@@ -95,15 +95,7 @@ namespace LLP
     Or to allow certain new protocol changes without confusing Old Nodes. **/
 	const int MIN_PROTO_VERSION = 10000;
 	
-
-	
 	static const unsigned char pchIPv4[12] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff };
-	static const char* ppszTypeName[] =
-	{
-		"ERROR",
-		"tx",
-		"block",
-	};
 	
 	/** Services flags */
 	enum

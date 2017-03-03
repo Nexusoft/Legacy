@@ -20,8 +20,7 @@
 #include "../../LLP/include/unifiedtime.h"
 
 #include "../../Wallet/script.h"
-
-class CCriticalSection;
+#include "../../LLU/include/util.h"
 
 namespace LLD 
 {
@@ -31,6 +30,7 @@ namespace LLD
 namespace Core
 {
 	class CTxIndex;
+	class CDiskTxPos;
 	class CTransaction;
 	
 	typedef std::map<uint512, std::pair<CTxIndex, CTransaction> > MapPrevTx;
@@ -521,6 +521,7 @@ namespace Core
 		bool ConnectInputs(LLD::CIndexDB& indexdb, MapPrevTx inputs,
 						   std::map<uint512, CTxIndex>& mapTestPool, const CDiskTxPos& posThisTx,
 						   const CBlockIndex* pindexBlock, bool fBlock, bool fMiner);
+		
 		bool ClientConnectInputs();
 		bool CheckTransaction() const;
 		bool AcceptToMemoryPool(LLD::CIndexDB& indexdb, bool fCheckInputs=true, bool* pfMissingInputs=NULL);

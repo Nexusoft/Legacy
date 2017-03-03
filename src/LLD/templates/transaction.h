@@ -15,6 +15,9 @@
 #include <map>
 #include <vector>
 
+#include "../../LLC/hash/SK.h"
+#include "../../LLC/hash/macro.h"
+
 #define MUTEX_LOCK(a) boost::lock_guard<boost::mutex> lock(a)
 
 namespace LLD

@@ -14,6 +14,9 @@
 #include "keychain.h"
 #include "transaction.h"
 
+#include "../../LLC/hash/SK.h"
+#include "../../LLC/hash/macro.h"
+
 namespace LLD
 {
 

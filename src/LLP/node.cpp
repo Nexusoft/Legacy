@@ -429,18 +429,13 @@ namespace LLP
 
 
 		/* TODO: Change this Algorithm. */
-		else if (strCommand == "getaddr")
+		else if (PACKET.COMMAND == "getaddr")
 		{
 			//pfrom->vAddrToSend.clear();
 			//vector<Net::CAddress> vAddr = Net::addrman.GetAddr();
 			//BOOST_FOREACH(const Net::CAddress &addr, vAddr)
 			//	pfrom->PushAddress(addr);
 		}
-
-		
-		if (fNetworkNode)
-			if (strCommand == "version" || strCommand == "addr" || strCommand == "inv" || strCommand == "getdata" || strCommand == "ping")
-				AddressCurrentlyConnected(addr);
 
 
 		return true;

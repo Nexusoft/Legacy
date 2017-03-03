@@ -12,7 +12,9 @@
 #define NEXUS_CORE_INCLUDE_TRUST_H
 
 #include "../../LLU/templates/serialize.h"
+
 #include "../../LLC/hash/SK.h"
+#include "../../LLC/hash/macro.h"
 
 namespace Core
 {

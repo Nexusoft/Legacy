@@ -134,7 +134,27 @@ namespace LLP
 		
 		/* Send Inventory We have. */
 		void PushInventory(const CInv& inv);
+		
+		
+		/* Send the DoS Score to DDOS Filter. */
+		bool DoS(int nDoS, bool fReturn)
+		{
+			if(fDDOS)
+				DDOS->rScore += nDoS;
+			
+			return fReturn;
+		}
 	};
+	
+	
+	/* DoS Wrapper for Block Level Functions. */
+	inline bool DoS(CNode* pfrom, int nDoS, bool fReturn)
+	{
+		if(pfrom)
+			pfrom->DDOS->rScore += nDoS;
+			
+		return fReturn;
+	}
 }
 
 #endif

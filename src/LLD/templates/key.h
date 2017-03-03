@@ -13,6 +13,10 @@
 
 #include <boost/thread.hpp>
 #include <fstream>
+
+#include "../../LLC/hash/SK.h"
+#include "../../LLC/hash/macro.h"
+
 #include "../../LLU/include/util.h"
 
 #define MUTEX_LOCK(a) boost::lock_guard<boost::mutex> lock(a)

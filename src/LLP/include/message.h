@@ -11,8 +11,8 @@
 #ifndef NEXUS_LLP_INCLUDE_MESSAGE_H
 #define NEXUS_LLP_INCLUDE_MESSAGE_H
 
-#include "templates/types.h"
-#include "Include/network.h"
+#include "../templates/types.h"
+#include "network.h"
 
 namespace LLP
 {
@@ -248,21 +248,21 @@ namespace LLP
 			}
 		}
 		
-		MessagePacket NewMessage(const char* chMessage, CDataStream ssData)
+		MessagePacket NewMessage(const char* chCommand, CDataStream ssData)
 		{
 			MessagePacket RESPONSE;
-			RESPONSE.MESSAGE = chMessage;
+			RESPONSE.COMMAND = chCommand;
 			
 			RESPONSE.SetData(ssData);
 			RESPONSE.SetChecksum();
 		}
 		
-		void PushMessage(const char* chMessage)
+		void PushMessage(const char* chCommand)
 		{
 			try
 			{
 				MessagePacket RESPONSE;
-				RESPONSE.MESSAGE = chMessage;
+				RESPONSE.COMMAND = chCommand;
 			
 				this->WritePacket(RESPONSE);
 			}
