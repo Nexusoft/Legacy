@@ -29,6 +29,8 @@
 #include "../include/allocators.h"
 #include "../Core/include/version.h"
 
+#include "../../LLC/hash/SK.h"
+
 
 /** Linux Specific Work Around (For Now). **/
 #if defined(MAC_OSX) || defined(WIN32)
@@ -1095,7 +1097,18 @@ int main(int argc, char *argv[])
 
 
 
-
+/** Serialize Hash: Used to Serialize a CTransaction class in order to obtain the Tx Hash. Utilizes CDataStream to serialize the class. **/
+template<typename T>
+uint512 SerializeHash(const T& obj, int nType=SER_GETHASH, int nVersion=LLP::PROTOCOL_VERSION)
+{
+    // Most of the time is spent allocating and deallocating CDataStream's
+    // buffer.  If this ever needs to be optimized further, make a CStaticStream
+    // class with its buffer on the stack.
+    CDataStream ss(nType, nVersion);
+    ss.reserve(10000);
+    ss << obj;
+    return LLC::HASH::SK512(ss.begin(), ss.end());
+}
 
 
 

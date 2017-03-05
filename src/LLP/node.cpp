@@ -51,7 +51,7 @@ namespace LLP
 		CAddress addrMe = (fUseProxy || !addrLocalHost.IsRoutable() ? CAddress(CService("0.0.0.0",0)) : addrLocalHost);
 		RAND_bytes((unsigned char*)&nLocalHostNonce, sizeof(nLocalHostNonce));
 		PushMessage("version", LLP::PROTOCOL_VERSION, nLocalServices, nTime, addrYou, addrMe,
-					nLocalHostNonce, FormatSubVersion(CLIENT_NAME, DATABASE_VERSION, std::vector<string>()), Core::nBestHeight);
+					nLocalHostNonce, FormatFullVersion(), Core::nBestHeight);
 	}
 	
 	

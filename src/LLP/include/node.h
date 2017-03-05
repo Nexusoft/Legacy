@@ -19,7 +19,7 @@
 #include "../../Core/include/transaction.h"
 #include "../../Core/include/block.h"
 
-#include "../../LLU/include/mruset.h"
+#include "../../LLU/templates/mruset.h"
 #include "../../LLU/templates/containers.h"
 
 #include "../templates/types.h"
@@ -27,6 +27,7 @@
 
 namespace LLP
 {
+	class CBlock;
 	class CTransaction;
 	
 	class CNode : public MessageConnection
@@ -94,7 +95,7 @@ namespace LLP
 		
 		
 		/* Node Transaction Message Queues. */
-		std::queue<Core:;CTransaction> queueTransaction;
+		std::queue<Core::CTransaction> queueTransaction;
 		
 		
 		/* Node Orphaned Transaction Messages. */

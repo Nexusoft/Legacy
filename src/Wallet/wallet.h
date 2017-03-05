@@ -10,10 +10,16 @@
 #define NEXUS_WALLET_H
 
 #include "../Core/include/transaction.h"
+#include "../Core/include/global.h"
 
 #include "key.h"
 #include "keystore.h"
 #include "script.h"
+
+namespace Core
+{
+	class CBlockLocator;
+}
 
 namespace Wallet
 {
@@ -77,7 +83,7 @@ namespace Wallet
 		int nWalletMaxVersion;
 
 	public:
-		mutable CCriticalSection cs_wallet;
+		mutable Mutex_t cs_wallet;
 
 		bool fFileBacked;
 		std::string strWalletFile;

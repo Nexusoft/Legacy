@@ -110,7 +110,7 @@ namespace LLP
 			Happens with a timeout / error, graceful close, or disconnect command. */
 		void RemoveConnection(int index)
 		{
-			LOCK(CONNECTIONS[index]->MUTEX)
+			LOCK(CONNECTIONS[index]->MUTEX);
 			{
 				CONNECTIONS[index]->Event(EVENT_DISCONNECT);
 				CONNECTIONS[index]->Disconnect();

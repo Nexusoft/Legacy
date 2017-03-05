@@ -57,7 +57,7 @@ typedef unsigned long long  uint64;
 
 #define loop                for (;;)
 #define ARRAYLEN(array)     (sizeof(array)/sizeof((array)[0]))
-#define printf              OutputDebugStringF
+
 #define NULL                0
 
 #ifdef snprintf
@@ -98,7 +98,7 @@ T* alignup(T* p)
 inline std::vector<unsigned char> parse_ip(std::string ip)
 {
 	std::vector<unsigned char> bytes(4, 0);
-	sscanf(ip.c_str(), "%hu.%hu.%hu.%hu", &bytes[0], &bytes[1], &bytes[2], &bytes[3]);
+	sscanf(ip.c_str(), "%hhu.%hhu.%hhu.%hhu", &bytes[0], &bytes[1], &bytes[2], &bytes[3]);
 	
 	return bytes;
 }
@@ -216,57 +216,19 @@ void LogStackTrace();
 /** Gets the UNIX Timestamp from the Nexus Network **/
 extern int64 GetUnifiedTimestamp(bool fAdjusted = false);
 
-
-extern std::map<std::string, std::string> mapArgs;
-extern std::map<std::string, std::vector<std::string> > mapMultiArgs;
-extern bool fDebug;
-extern bool fPrintToConsole;
-extern bool fPrintToDebugger;
-extern bool fRequestShutdown;
-extern bool fShutdown;
-extern bool fDaemon;
-extern bool fServer;
-extern bool fCommandLine;
-extern std::string strMiscWarning;
-extern bool fTestNet;
-extern bool fNoListen;
-extern bool fLogTimestamps;
-
 void RandAddSeed();
 void RandAddSeedPerfmon();
-int OutputDebugStringF(const char* pszFormat, ...);
-int my_snprintf(char* buffer, size_t limit, const char* format, ...);
 
-/* It is not allowed to use va_start with a pass-by-reference argument.
-   (C++ standard, 18.7, paragraph 3). Use a dummy argument to work around this, and use a
-   macro to keep similar semantics.
-*/
-
-/** Global List for Debugging Output. **/
-extern boost::mutex DEBUGGING_MUTEX;
-extern std::vector<std::pair<bool, std::string> > DEBUGGING_OUTPUT;
-
-std::string real_strprintf(const std::string &format, int dummy, ...);
-void debug_server(std::string strOutput, bool fGeneric);
-void DebugThread(void* parg);
-
-#define strprintf(format, ...) real_strprintf(format, 0, __VA_ARGS__)
-#define printd(format, ...) debug_server(real_strprintf(format, 0, __VA_ARGS__), 0)
-#define printg(format, ...) debug_server(real_strprintf(format, 0, __VA_ARGS__), 1)
 
 inline std::string ip_string(std::vector<unsigned char> ip) { return strprintf("%u.%u.%u.%u", ip[0], ip[1], ip[2], ip[3]); }
 
-bool error(const char *format, ...);
-void LogException(std::exception* pex, const char* pszThread);
-void PrintException(std::exception* pex, const char* pszThread);
-void PrintExceptionContinue(std::exception* pex, const char* pszThread);
+
+
 void ParseString(const std::string& str, char c, std::vector<std::string>& v);
 std::string FormatMoney(int64 n, bool fPlus=false);
 bool ParseMoney(const std::string& str, int64& nRet);
 bool ParseMoney(const char* pszIn, int64& nRet);
-std::vector<unsigned char> ParseHex(const char* psz);
-std::vector<unsigned char> ParseHex(const std::string& str);
-bool IsHex(const std::string& str);
+
 std::vector<unsigned char> DecodeBase64(const char* p, bool* pfInvalid = NULL);
 std::string DecodeBase64(const std::string& str);
 std::string EncodeBase64(const unsigned char* pch, size_t len);
@@ -278,22 +240,12 @@ bool WildcardMatch(const std::string& str, const std::string& mask);
 std::vector<std::string> Split(const std::string& strInput, char strDelimiter);
 bool CheckPermissions(std::string strAddress, unsigned int nPort);
 
-int GetFilesize(FILE* file);
-boost::filesystem::path GetDefaultDataDir(std::string strName = "Nexus");
-const boost::filesystem::path &GetDataDir(bool fNetSpecific = true);
-boost::filesystem::path GetConfigFile();
-boost::filesystem::path GetPidFile();
-void CreatePidFile(const boost::filesystem::path &path, pid_t pid);
-void ReadConfigFile(std::map<std::string, std::string>& mapSettingsRet, std::map<std::string, std::vector<std::string> >& mapMultiSettingsRet);
-bool GetStartOnSystemStartup();
-bool SetStartOnSystemStartup(bool fAutoStart);
-void ShrinkDebugFile();
+
 int GetRandInt(int nMax);
 uint64 GetRand(uint64 nMax);
 uint256 GetRand256();
 uint512 GetRand512();
-std::string FormatFullVersion();
-std::string FormatSubVersion(const std::string& name, int nClientVersion, const std::vector<std::string>& comments);
+
 
 bool copyDir(boost::filesystem::path const & source, boost::filesystem::path const & destination);
 
@@ -347,40 +299,7 @@ inline int64 abs64(int64 n)
     return (n >= 0 ? n : -n);
 }
 
-template<typename T>
-std::string HexStr(const T itbegin, const T itend, bool fSpaces=false)
-{
-    std::vector<char> rv;
-    static char hexmap[16] = { '0', '1', '2', '3', '4', '5', '6', '7',
-                               '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
-    rv.reserve((itend-itbegin)*3);
-    for(T it = itbegin; it < itend; ++it)
-    {
-        unsigned char val = (unsigned char)(*it);
-        if(fSpaces && it != itbegin)
-            rv.push_back(' ');
-        rv.push_back(hexmap[val>>4]);
-        rv.push_back(hexmap[val&15]);
-    }
 
-    return std::string(rv.begin(), rv.end());
-}
-
-inline std::string HexStr(const std::vector<unsigned char>& vch, bool fSpaces=false)
-{
-    return HexStr(vch.begin(), vch.end(), fSpaces);
-}
-
-template<typename T>
-void PrintHex(const T pbegin, const T pend, const char* pszFormat="%s", bool fSpaces=true)
-{
-    printf(pszFormat, HexStr(pbegin, pend, fSpaces).c_str());
-}
-
-inline void PrintHex(const std::vector<unsigned char>& vch, const char* pszFormat="%s", bool fSpaces=true)
-{
-    printf(pszFormat, HexStr(vch, fSpaces).c_str());
-}
 
 inline int64 GetPerformanceCounter()
 {
@@ -432,107 +351,7 @@ inline bool IsSwitchChar(char c)
 #endif
 }
 
-
-
-
-
-
-#define IMPLEMENT_RANDOMIZE_STACK(ThreadFn)     \
-    {                                           \
-        static char nLoops;                     \
-        if (nLoops <= 0)                        \
-            nLoops = GetRand(20) + 1;           \
-        if (nLoops-- > 1)                       \
-        {                                       \
-            ThreadFn;                           \
-            return;                             \
-        }                                       \
-    }
-
-
-
-// NOTE: It turns out we might have been able to use boost::thread
-// by using TerminateThread(boost::thread.native_handle(), 0);
-#ifdef WIN32
-typedef HANDLE bitcoin_pthread_t;
-
-inline bitcoin_pthread_t CreateThread(void(*pfn)(void*), void* parg, bool fWantHandle=false)
-{
-    DWORD nUnused = 0;
-    HANDLE hthread =
-        CreateThread(
-            NULL,                        // default security
-            0,                           // inherit stack size from parent
-            (LPTHREAD_START_ROUTINE)pfn, // function pointer
-            parg,                        // argument
-            0,                           // creation option, start immediately
-            &nUnused);                   // thread identifier
-    if (hthread == NULL)
-    {
-        printf("Error: CreateThread() returned %d\n", GetLastError());
-        return (bitcoin_pthread_t)0;
-    }
-    if (!fWantHandle)
-    {
-        CloseHandle(hthread);
-        return (bitcoin_pthread_t)-1;
-    }
-    return hthread;
-}
-
-inline void SetThreadPriority(int nPriority)
-{
-    SetThreadPriority(GetCurrentThread(), nPriority);
-}
-#else
-inline pthread_t CreateThread(void(*pfn)(void*), void* parg, bool fWantHandle=false)
-{
-    pthread_t hthread = 0;
-    int ret = pthread_create(&hthread, NULL, (void*(*)(void*))pfn, parg);
-    if (ret != 0)
-    {
-        printf("Error: pthread_create() returned %d\n", ret);
-        return (pthread_t)0;
-    }
-    if (!fWantHandle)
-    {
-        pthread_detach(hthread);
-        return (pthread_t)-1;
-    }
-    return hthread;
-}
-
-#define THREAD_PRIORITY_LOWEST          PRIO_MAX
-#define THREAD_PRIORITY_BELOW_NORMAL    2
-#define THREAD_PRIORITY_NORMAL          0
-#define THREAD_PRIORITY_ABOVE_NORMAL    0
-
-inline void SetThreadPriority(int nPriority)
-{
-    // It's unclear if it's even possible to change thread priorities on Linux,
-    // but we really and truly need it for the generation threads.
-#ifdef PRIO_THREAD
-    setpriority(PRIO_THREAD, 0, nPriority);
-#else
-    setpriority(PRIO_PROCESS, 0, nPriority);
-#endif
-}
-
-inline void ExitThread(size_t nExitCode)
-{
-    pthread_exit((void*)nExitCode);
-}
 #endif
 
 
-
-
-
-inline uint32_t ByteReverse(uint32_t value)
-{
-    value = ((value & 0xFF00FF00) >> 8) | ((value & 0x00FF00FF) << 8);
-    return (value<<16) | (value>>16);
-}
-
-#endif
 

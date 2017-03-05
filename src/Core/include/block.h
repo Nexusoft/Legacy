@@ -121,13 +121,11 @@ namespace Core
 			nHeight = 0;
 			nBits = 0;
 			nNonce = 0;
-			
 			nTime = 0;
 
 			vtx.clear();
 			vchBlockSig.clear();
 			vMerkleTree.clear();
-			nDoS = 0;
 		}
 		
 		
@@ -459,11 +457,6 @@ namespace Core
 			return 1;
 		}
 
-		bool IsInMainChain() const
-		{
-			return (pnext || this == pindexBest);
-		}
-
 		bool CheckIndex() const
 		{
 			return true;//IsProofOfWork() ? CheckProofOfWork(GetBlockHash(), nBits) : true;
@@ -480,6 +473,7 @@ namespace Core
 		}
 		
 		bool EraseBlockFromDisk();
+		bool IsInMainChain() const;
 		
 		std::string ToString() const;
 		void print() const;

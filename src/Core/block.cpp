@@ -20,7 +20,7 @@
 #include "include/transaction.h"
 #include "include/checkpoints.h"
 
-#include ""../LLU/ui_interface.h"
+#include "../LLU/include/ui_interface.h"
 
 #include "../LLP/include/network.h"
 #include "../LLP/include/mining.h"
@@ -70,10 +70,14 @@ namespace Core
 			
 		return pindex;
 	}
-
+	
+	
+	bool CBlockIndex::IsInMainChain() const
+	{
+		return (pnext || this == pindexBest);
+	}
 	
 	int GetNumBlocksOfPeers() { return cPeerBlockCounts.Majority(); }
-
 	
 	bool IsInitialBlockDownload()
 	{
@@ -129,7 +133,7 @@ namespace Core
 	}
 
 		
-	bool CBlock::ReadFromDisk(unsigned int nFile, unsigned int nBlockPos, bool fReadTransactions=true)
+	bool CBlock::ReadFromDisk(unsigned int nFile, unsigned int nBlockPos, bool fReadTransactions)
 	{
 		SetNull();
 
@@ -568,7 +572,7 @@ namespace Core
 			unsigned int nAge = pindexNew->pprev->GetBlockTime() - mapBlockIndex[pindexNew->PendingCheckpoint.second]->GetBlockTime();
 			
 			if(GetArg("-verbose", 0) >= 2)
-				printg("===== Pending Checkpoint Age = %u Hash = %s Height = %u\n", nAge, pindexNew->PendingCheckpoint.second.ToString().substr(0, 15).c_str(), pindexNew->PendingCheckpoint.first);
+				printf("===== Pending Checkpoint Age = %u Hash = %s Height = %u\n", nAge, pindexNew->PendingCheckpoint.second.ToString().substr(0, 15).c_str(), pindexNew->PendingCheckpoint.first);
 		}								 
 
 		/** Add to the MapBlockIndex **/
@@ -1269,7 +1273,7 @@ namespace Core
 		int64 nFees = 0;
 		{
 			
-			LOCK(mempool.MUTEX);
+			LOCK(mempool.cs);
 			LLD::CIndexDB indexdb("r");
 			
 			// Priority order to process transactions

@@ -18,6 +18,8 @@
 #include "../../LLC/hash/macro.h"
 
 #include "../../LLU/include/args.h"
+#include "../../LLU/include/config.h"
+#include "../../LLU/templates/hex.h"
 
 namespace LLD
 {

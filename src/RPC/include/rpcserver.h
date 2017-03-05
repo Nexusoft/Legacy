@@ -19,6 +19,19 @@
 #define MAINNET_RPC_PORT 9336
 #define TESTNET_RPC_PORT 9336
 
+
+#define IMPLEMENT_RANDOMIZE_STACK(ThreadFn)     \
+    {                                           \
+        static char nLoops;                     \
+        if (nLoops <= 0)                        \
+            nLoops = GetRand(20) + 1;           \
+        if (nLoops-- > 1)                       \
+        {                                       \
+            ThreadFn;                           \
+            return;                             \
+        }                                       \
+    }
+
 namespace Wallet { class CReserveKey; }
 namespace Net
 {

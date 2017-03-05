@@ -11,11 +11,6 @@
 #ifndef NEXUS_CORE_INCLUDE_GLOBAL_H
 #define NEXUS_CORE_INCLUDE_GLOBAL_H
 
-#ifdef WIN32
-#include <io.h> /* for _commit */
-#define __STDC_FORMAT_MACROS 1
-#endif
-
 #include <string>
 #include <map>
 
@@ -33,6 +28,7 @@ namespace Wallet
 
 namespace Core
 {
+	class CBlock;
 	class CBlockIndex;
 
 	

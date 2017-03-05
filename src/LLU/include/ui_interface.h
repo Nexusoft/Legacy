@@ -45,7 +45,7 @@ typedef unsigned long long  uint64;
 // Force blocking, modal message box dialog (not just notification)
 #define wxMODAL                 0x00040000
 
-/* These UI communication functions are implemented in start_qt.cpp (for ui) and noui.cpp (no ui) */
+/* These UI communication functions are implemented in main-qt.cpp (for ui) and noui.cpp (no ui) */
 
 extern int ThreadSafeMessageBox(const std::string& message, const std::string& caption, int style=wxOK);
 extern bool ThreadSafeAskFee(int64 nFeeRequired, const std::string& strCaption);

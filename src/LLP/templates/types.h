@@ -290,8 +290,8 @@ namespace LLP
 		
 		
 		/* Connection Constructors */
-		Connection() : SOCKET(), DDOS(NULL), INCOMING(), fCONNECTED(false), fDDOS(false), fOUTGOING(false) { INCOMING.SetNull(); }
-		Connection( Socket_t SOCKET_IN, DDOS_Filter* DDOS_IN, bool isDDOS = false, bool fOutgoing = false) : SOCKET(SOCKET_IN), fDDOS(isDDOS), fOUTGOING(fOutgoing), DDOS(DDOS_IN), INCOMING(), fCONNECTED(false) { TIMER.Start(); }
+		BaseConnection() : SOCKET(), INCOMING(), DDOS(NULL), fCONNECTED(false), fDDOS(false), fOUTGOING(false) { INCOMING.SetNull(); }
+		BaseConnection( Socket_t SOCKET_IN, DDOS_Filter* DDOS_IN, bool isDDOS = false, bool fOutgoing = false) : SOCKET(SOCKET_IN), INCOMING(), DDOS(DDOS_IN), fCONNECTED(false), fDDOS(isDDOS),  fOUTGOING(fOutgoing) { TIMER.Start(); }
 		
 		
 		/* Checks for any flags in the Error Handle. */
@@ -380,9 +380,9 @@ namespace LLP
 			boost::system::error_code ec;
 			return SOCKET->remote_endpoint(ec).address().to_string();
 		}
+
 		
-		
-	protected:
+	protected:	
 		
 		/* Lower level network communications: Read. Interacts with OS sockets. */
 		size_t Read(std::vector<unsigned char> &DATA, size_t nBytes) { if(Errors()) return 0; TIMER.Reset(); return  boost::asio::read(*SOCKET, boost::asio::buffer(DATA, nBytes), ERROR_HANDLE); }

@@ -11,6 +11,8 @@
 
 #include "crypter.h"
 #include "../LLU/include/util.h"
+#include "../LLU/include/mutex.h"
+
 #include "base58.h"
 
 class CScript;
@@ -21,9 +23,10 @@ namespace Wallet
 	class CKeyStore
 	{
 	protected:
-		mutable CCriticalSection cs_KeyStore;
-
+		mutable Mutex_t cs_KeyStore;
+		
 	public:
+		
 		virtual ~CKeyStore() {}
 
 		// Add a key to the store.

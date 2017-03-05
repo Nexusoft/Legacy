@@ -13,11 +13,6 @@
 
 #include <string>
 
-#define DATABASE_MAJOR       0
-#define DATABASE_MINOR       1
-#define DATABASE_REVISION    1
-#define DATABASE_BUILD       0
-
 
 /** Used to determine the current features available on the local database */
 extern const int DATABASE_VERSION;
@@ -27,6 +22,9 @@ extern const int DATABASE_VERSION;
 extern const std::string CLIENT_NAME;
 extern const std::string CLIENT_BUILD;
 extern const std::string CLIENT_DATE;
+
+std::string FormatFullVersion();
+std::string FormatSubVersion();
 
 
 #endif

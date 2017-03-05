@@ -44,3 +44,5 @@ namespace Core
 	bool Miller_Rabin(CBigNum n, int checks);
 	
 }
+
+#endif

@@ -89,7 +89,7 @@ ifdef USE_LLD
 	DEFS+=-DUSE_LLD
 endif
 
-xCXXFLAGS=-pthread -Wall -Wextra -Wno-sign-compare -Wno-invalid-offsetof -Wno-unused-parameter -Wformat -Wformat-security \
+xCXXFLAGS= -pthread -Wall -Wextra -Wno-sign-compare -Wno-invalid-offsetof -Wno-unused-parameter -Wformat -Wformat-security \
     $(DEBUGFLAGS) $(DEFS) $(HARDENING) $(CXXFLAGS)
 
 HEADERS = $(wildcard *.h)

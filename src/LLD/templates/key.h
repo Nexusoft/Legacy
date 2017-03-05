@@ -17,9 +17,10 @@
 #include "../../LLC/hash/SK.h"
 #include "../../LLC/hash/macro.h"
 
-#include "../../LLU/include/util.h"
 #include "../../LLU/include/args.h"
+#include "../../LLU/include/config.h"
 #include "../../LLU/include/mutex.h"
+#include "../../LLU/templates/hex.h"
 
 namespace LLD
 {
@@ -90,8 +91,8 @@ namespace LLD
 		)
 		
 		/** Constructors. **/
-		SectorKey() : nState(0), nLength(0), nSectorFile(0), nSectorStart(0), nSectorSize(0) { }
-		SectorKey(unsigned char nStateIn, std::vector<unsigned char> vKeyIn, unsigned short nSectorFileIn, unsigned int nSectorStartIn, unsigned short nSectorSizeIn) : nState(nStateIn), nSectorFile(nSectorFileIn), nSectorStart(nSectorStartIn), nSectorSize(nSectorSizeIn)
+		SectorKey() : nState(0), nLength(0), nSectorFile(0), nSectorSize(0), nSectorStart(0) { }
+		SectorKey(unsigned char nStateIn, std::vector<unsigned char> vKeyIn, unsigned short nSectorFileIn, unsigned int nSectorStartIn, unsigned short nSectorSizeIn) : nState(nStateIn), nSectorFile(nSectorFileIn), nSectorSize(nSectorSizeIn), nSectorStart(nSectorStartIn)
 		{ 
 			nLength = vKeyIn.size();
 			vKey    = vKeyIn;
@@ -145,7 +146,7 @@ namespace LLD
 		mutable typename std::map< std::vector<unsigned char>, SectorKey > mapKeysCache;
 		
 		/** The Database Constructor. To determine file location and the Bytes per Record. **/
-		KeyDatabase(std::string strBaseLocationIn, std::string strDatabaseNameIn) : strDatabaseName(strDatabaseNameIn), strBaseLocation(strBaseLocationIn) { strLocation = strBaseLocation + strDatabaseName + ".keys"; }
+		KeyDatabase(std::string strBaseLocationIn, std::string strDatabaseNameIn) : strBaseLocation(strBaseLocationIn), strDatabaseName(strDatabaseNameIn) { strLocation = strBaseLocation + strDatabaseName + ".keys"; }
 		
 		/** Clean up Memory Usage. **/
 		~KeyDatabase() {

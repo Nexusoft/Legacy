@@ -11,6 +11,8 @@
 #ifndef NEXUS_LLP_INCLUDE_MESSAGE_H
 #define NEXUS_LLP_INCLUDE_MESSAGE_H
 
+#include"../../LLU/templates/serialize.h"
+
 #include "../templates/types.h"
 #include "network.h"
 
@@ -114,7 +116,7 @@ namespace LLP
 		
 		
 		/* Packet Null Flag. Length and Checksum both 0. */
-		bool IsNull() { return (LENGTH == 0 && CHECKSUM == 0 && COMMAND == "" && DATA.empty()); }
+		bool IsNull() { return (LENGTH == 0 && CHECKSUM == 0 && DATA.empty()); }
 		
 		
 		/* Determine if a packet is fully read. */
@@ -128,7 +130,7 @@ namespace LLP
 		/* Sets the size of the packet from Byte Vector. */
 		void SetLength(std::vector<unsigned char> BYTES) 
 		{ 
-			CDataStream ssLength(BYTES, SER_NETWORK, MIN_PROTO_VERSION),
+			CDataStream ssLength(BYTES, SER_NETWORK, MIN_PROTO_VERSION);
 			ssLength >> LENGTH;
 		}
 		
@@ -165,15 +167,16 @@ namespace LLP
 			
 			/* Make sure Packet length is within bounds. */
 			if (LENGTH > MAX_SIZE)
-				return error("Message Packet (%s, %u bytes) : Message too Large", COMMAND.c_str(), LENGTH);
+				return error("Message Packet (%s, %u bytes) : Message too Large", COMMAND, LENGTH);
 
 			/* Double check the Message Checksum. */
 			uint512 hash = LLC::HASH::SK512(DATA.begin(), DATA.end());
 			unsigned int nChecksum = 0;
 			memcpy(&nChecksum, &hash, sizeof(nChecksum));
+			
 			if (nChecksum != CHECKSUM)
-				return error("Message Packet (%s, %u bytes) : CHECKSUM MISMATCH nChecksum=%08x hdr.nChecksum=%08x",
-				   COMMAND.c_str(), LENGTH, nChecksum, CHECKSUM);
+				return error("Message Packet (%s, %u bytes) : CHECKSUM MISMATCH nChecksum=%u hdr.nChecksum=%u",
+				   COMMAND, LENGTH, nChecksum, CHECKSUM);
 				
 			return true;
 		}
@@ -182,7 +185,7 @@ namespace LLP
 		/** Serializes class into a Byte Vector. Used to write Packet to Sockets. **/
 		std::vector<unsigned char> GetBytes()
 		{
-			CDataStream ssHeader(SER_NETWORK, MIN_PROTO_VERSION),
+			CDataStream ssHeader(SER_NETWORK, MIN_PROTO_VERSION);
 			ssHeader << *this;
 			
 			std::vector<unsigned char> BYTES(ssHeader.begin(), ssHeader.end());
@@ -208,7 +211,7 @@ namespace LLP
 		virtual void Event(unsigned char EVENT, unsigned int LENGTH = 0){ }
 		
 		/* Virtual Process Function. To be overridden with your own custom packet processing. */
-		virtual bool ProcessPacket(){ }
+		virtual bool ProcessPacket(){ return false; }
 	public:
 		
 		/* Constructors for Message LLP Class. */
@@ -228,7 +231,7 @@ namespace LLP
 					std::vector<unsigned char> BYTES(24, 0);
 					if(Read(BYTES, 24) == 24)
 					{
-						CDataStream ssHeader(BYTES, SER_NETWORK, MIN_PROTO_VERSION),
+						CDataStream ssHeader(BYTES, SER_NETWORK, MIN_PROTO_VERSION);
 						ssHeader >> INCOMING;
 						
 						Event(EVENT_HEADER);
@@ -254,10 +257,12 @@ namespace LLP
 		MessagePacket NewMessage(const char* chCommand, CDataStream ssData)
 		{
 			MessagePacket RESPONSE;
-			memcpy(RESPONSE.COMMAND, chCommand, sizeof(chCommand));
+			memcpy(RESPONSE.COMMAND, chCommand, 12);
 			
 			RESPONSE.SetData(ssData);
 			RESPONSE.SetChecksum();
+			
+			return RESPONSE;
 		}
 		
 		void PushMessage(const char* chCommand)
@@ -265,7 +270,7 @@ namespace LLP
 			try
 			{
 				MessagePacket RESPONSE;
-				memcpy(RESPONSE.COMMAND, chCommand, sizeof(chCommand));
+				memcpy(RESPONSE.COMMAND, chCommand, 12);
 			
 				this->WritePacket(RESPONSE);
 			}

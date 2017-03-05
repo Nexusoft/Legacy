@@ -16,6 +16,8 @@
 
 #include <boost/foreach.hpp>
 
+#include "../LLU/templates/hex.h"
+
 namespace Core { class CTransaction; }
 namespace Wallet 
 {
