@@ -11,6 +11,7 @@
 #ifndef NEXUS_LLD_INCLUDE_INDEX_H
 #define NEXUS_LLD_INCLUDE_INDEX_H
 
+#include "../templates/key.h"
 #include "../templates/sector.h"
 #include "../../Core/include/block.h"
 #include "../../Core/include/trust.h"

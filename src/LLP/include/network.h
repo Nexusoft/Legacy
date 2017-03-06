@@ -53,14 +53,6 @@ typedef int socklen_t;
 #define SOCKET_ERROR        -1
 #endif
 
-#if defined(MAC_OSX) || defined(WIN32)
-typedef int64_t int64;
-typedef uint64_t uint64;
-#else
-typedef long long  int64;
-typedef unsigned long long  uint64;
-#endif
-
 #ifdef WIN32
 // In MSVC, this is defined as a macro, undefine it to prevent a compile and link error
 #undef SetPort
@@ -75,11 +67,13 @@ typedef unsigned long long  uint64;
 #define MAINNET_MINING_LLP_PORT 9325
 #define TESTNET_MINING_LLP_PORT 8325
 
-
 #define PROTOCOL_MAJOR       1
 #define PROTOCOL_MINOR       1
 #define PROTOCOL_REVISION    1
 #define PROTOCOL_BUILD       0
+
+#include "../../LLU/include/args.h"
+#include "../../LLU/templates/serialize.h"
 
 namespace LLP
 {

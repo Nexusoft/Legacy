@@ -67,12 +67,15 @@ namespace LLP
 			
 			CONNECTIONS[nSlot] = new ProtocolType(SOCKET, DDOS, fDDOS);
 			
-			{ LOCK(CONNECTIONS[nSlot]->MUTEX)
+			{ LOCK(CONNECTIONS[nSlot]->MUTEX);
+				
 				CONNECTIONS[nSlot]->Event(EVENT_CONNECT);
 				CONNECTIONS[nSlot]->CONNECTED = true;
 			}
 			
 			nConnections ++;
+			
+			return true;
 		}
 		
 		/* Adds a new connection to current Data Thread */
@@ -82,9 +85,11 @@ namespace LLP
 			if(nSlot == CONNECTIONS.size())
 				CONNECTIONS.push_back(NULL);
 			
+			Socket_t SOCKET;
 			CONNECTIONS[nSlot] = new ProtocolType(SOCKET, DDOS, fDDOS);
 			
-			{ LOCK(CONNECTIONS[nSlot]->MUTEX)
+			{ LOCK(CONNECTIONS[nSlot]->MUTEX);
+				
 				if(!CONNECTIONS[nSlot]->Connect(strAddress, strPort, IO_SERVICE))
 				{
 					delete CONNECTIONS[index];
@@ -158,7 +163,7 @@ namespace LLP
 						}
 						
 						/* Lock the Main Processing of this Thread. */
-						{ LOCK(CONNECTIONS[nIndex]->MUTEX)
+						{ LOCK(CONNECTIONS[nIndex]->MUTEX);
 						
 							/* Handle any DDOS Filters. */
 							boost::system::error_code ec;

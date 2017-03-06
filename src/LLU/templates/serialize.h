@@ -31,22 +31,8 @@
 
 #include "../../LLC/hash/SK.h"
 
-
-/** Linux Specific Work Around (For Now). **/
-#if defined(MAC_OSX) || defined(WIN32)
-typedef int64_t int64;
-typedef uint64_t uint64;
-#else
-typedef long long  int64;
-typedef unsigned long long  uint64;
-#endif
-
-
 namespace Wallet { class CScript; }
 
-class CDataStream;
-class CAutoFile;
-static const unsigned int MAX_SIZE = 0x02000000;
 
 // Used to bypass the rule against non-const reference to temporary
 // where it makes sense with wrappers such as CFlatData or CTxDB
@@ -124,9 +110,6 @@ enum
 
 
 
-
-
-
 //
 // Basic types
 //
@@ -189,6 +172,9 @@ template<typename Stream> inline void Unserialize(Stream& s, bool& a, int, int=0
 }
 void LogStackTrace();
 #endif
+
+
+static const unsigned int MAX_SIZE = 0x02000000;
 
 //
 // Compact size
@@ -1093,24 +1079,6 @@ int main(int argc, char *argv[])
     }
 }
 #endif
-
-
-
-
-/** Serialize Hash: Used to Serialize a CTransaction class in order to obtain the Tx Hash. Utilizes CDataStream to serialize the class. **/
-template<typename T>
-uint512 SerializeHash(const T& obj, int nType=SER_GETHASH, int nVersion=LLP::PROTOCOL_VERSION)
-{
-    // Most of the time is spent allocating and deallocating CDataStream's
-    // buffer.  If this ever needs to be optimized further, make a CStaticStream
-    // class with its buffer on the stack.
-    CDataStream ss(nType, nVersion);
-    ss.reserve(10000);
-    ss << obj;
-    return LLC::HASH::SK512(ss.begin(), ss.end());
-}
-
-
 
 
 

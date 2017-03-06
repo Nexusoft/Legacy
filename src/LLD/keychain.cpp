@@ -18,12 +18,12 @@ namespace LLD
 	std::map<std::string, KeyDatabase*> mapKeychainRegistry;
 	
 	/** Handle the Key Registry. **/
-	boost::mutex REGISTRY_MUTEX;
+	Mutex_t REGISTRY_MUTEX;
 	
 	/** Handle the Registrying of Keychains for LLD Sectors. **/
 	void RegisterKeychain(std::string strRegistryName, std::string strBaseName)
 	{
-		MUTEX_LOCK(REGISTRY_MUTEX);
+		LOCK(REGISTRY_MUTEX);
 		
 		/** Create the New Keychain Database. **/
 		KeyDatabase* SectorKeys = new KeyDatabase(GetDataDir().string() + "/keychain/", strBaseName);

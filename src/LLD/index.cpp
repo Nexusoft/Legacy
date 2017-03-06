@@ -1,5 +1,18 @@
-#include "index.h"
-#include "core.h"
+/*******************************************************************************************
+ 
+			(c) Hash(BEGIN(Satoshi[2010]), END(Sunny[2012])) == Videlicet[2017] ++
+			
+			(c) Copyright Nexus Developers 2014 - 2017
+			
+			http://www.opensource.org/licenses/mit-license.php
+  
+*******************************************************************************************/
+
+#include "include/index.h"
+
+#include "../Core/include/block.h"
+#include "../Core/include/checkpoints.h"
+
 
 /** Lower Level Database Name Space. **/
 namespace LLD
@@ -39,7 +52,7 @@ namespace LLD
 
 	bool CIndexDB::ReadDiskTx(uint512 hash, Core::CTransaction& tx, Core::CTxIndex& txindex)
 	{
-		assert(!Net::fClient);
+		assert(!fClient);
 		tx.SetNull();
 		if (!ReadTxIndex(hash, txindex))
 			return false;
@@ -122,7 +135,7 @@ namespace LLD
 #ifdef USE_LLD
 	bool CIndexDB::LoadBlockIndex()
 	{
-		Core::hashBestChain;
+		
 		if(!ReadHashBestChain(Core::hashBestChain))
 			return error("No Hash Best Chain in Index Database.");
 		
@@ -228,10 +241,8 @@ namespace LLD
 			Core::CBlock block;
 			if (!block.ReadFromDisk(pindex))
 				return error("LoadBlockIndex() : block.ReadFromDisk failed");
-			
-			block.print();
 				
-			if (nCheckLevel > 0 && !block.CheckBlock())
+			if (nCheckLevel > 0 && !Core::CheckBlock(block))
 			{
 				printf("LoadBlockIndex() : *** found bad block at %d, hash=%s\n", pindex->nHeight, pindex->GetBlockHash().ToString().c_str());
 				pindexFork = pindex->pprev;
@@ -249,7 +260,7 @@ namespace LLD
 					if (ReadTxIndex(hashTx, txindex))
 					{
 						
-						// check level 3: checker transaction hashes
+						// check level 3: check transaction hashes
 						if (nCheckLevel>2 || pindex->nFile != txindex.pos.nFile || pindex->nBlockPos != txindex.pos.nBlockPos)
 						{
 							// either an error or a duplicate transaction
@@ -337,8 +348,9 @@ namespace LLD
 			Core::CBlock block;
 			if (!block.ReadFromDisk(pindexFork))
 				return error("LoadBlockIndex() : block.ReadFromDisk failed");
+			
 			CIndexDB txdb;
-			block.SetBestChain(txdb, pindexFork);
+			Core::SetBestChain(txdb, pindexFork);
 		}
 
 		return true;

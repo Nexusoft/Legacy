@@ -13,16 +13,30 @@
 
 #include <string>
 
+#define DATABASE_MAJOR       0
+#define DATABASE_MINOR       1
+#define DATABASE_PATCH       1
+#define DATABASE_BUILD       0
 
-/** Used to determine the current features available on the local database */
+#define CLIENT_MAJOR         0
+#define CLIENT_MINOR         3
+#define CLIENT_PATCH         0
+#define CLIENT_BUILD         0
+
+
+/* Current Database Serialization Version. */
 extern const int DATABASE_VERSION;
+extern const std::string DATABASE_NAME;
 
 
-/** These external variables are the display only variables. They are used to track the updates of Nexus independent of Database and Protocol Upgrades. **/
+/* The current Client Version */
+extern const int CLIENT_VERSION;
 extern const std::string CLIENT_NAME;
-extern const std::string CLIENT_BUILD;
+extern const std::string CLIENT_TYPE;
 extern const std::string CLIENT_DATE;
 
+
+/* Version Specifiers. */
 std::string FormatFullVersion();
 std::string FormatSubVersion();
 

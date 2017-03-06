@@ -18,7 +18,7 @@
 
 #include "../../LLU/templates/serialize.h"
 
-#include "../../LLC/types/uint1024.h"
+#include "../../LLC/hash/SK.h"
 #include "../../LLP/include/network.h"
 #include "../../LLP/include/unifiedtime.h"
 
@@ -52,6 +52,20 @@ namespace Core
 	/* The significcant digits a "COIN" can be broken into. */
 	static const int64 COIN = 1000000;
 	static const int64 CENT = 10000;
+
+	
+	/** Serialize Hash: Used to Serialize a CTransaction class in order to obtain the Tx Hash. Utilizes CDataStream to serialize the class. **/
+	template<typename T>
+	uint512 SerializeHash(const T& obj, int nType=SER_GETHASH, int nVersion=LLP::PROTOCOL_VERSION)
+	{
+		// Most of the time is spent allocating and deallocating CDataStream's
+		// buffer.  If this ever needs to be optimized further, make a CStaticStream
+		// class with its buffer on the stack.
+		CDataStream ss(nType, nVersion);
+		ss.reserve(10000);
+		ss << obj;
+		return LLC::HASH::SK512(ss.begin(), ss.end());
+	}
 
 
 	/** An outpoint - a combination of a transaction hash and an index n into its vout */

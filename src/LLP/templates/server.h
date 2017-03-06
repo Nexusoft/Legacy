@@ -32,8 +32,8 @@ namespace LLP
 		std::vector< DataThread<ProtocolType>* > DATA_THREADS;
 		
 		
-		Server<ProtocolType>(int nPort, int nMaxThreads, bool isDDOS, int cScore, int rScore, int nTimeout, int nPort, int nTimespan, bool fListen = true, bool fMeter = false) : 
-			fDDOS(isDDOS), MAX_THREADS(nMaxThreads), PORT(nPort), DDOS_TIMESPAN(nTimespan), fLISTEN(fListen), fMETER(fMeter), METER_THREAD(boost::bind(&Base::MeterThread, this), LISTEN_THREAD(boost::bind(&Base::ListeningThread, this))
+		Server<ProtocolType>(int nPort, int nMaxThreads, bool isDDOS, int cScore, int rScore, int nTimeout, int nTimespan, bool fListen = true, bool fMeter = false) : 
+			fDDOS(isDDOS), MAX_THREADS(nMaxThreads), PORT(nPort), DDOS_TIMESPAN(nTimespan), fLISTEN(fListen), fMETER(fMeter), METER_THREAD(boost::bind(&Server::MeterThread, this)), LISTEN_THREAD(boost::bind(&Server::ListeningThread, this))
 		{
 			for(int index = 0; index < MAX_THREADS; index++)
 				DATA_THREADS.push_back(new DataThread<ProtocolType>(index, fDDOS, rScore, cScore, nTimeout, fMeter));
@@ -47,7 +47,7 @@ namespace LLP
 			fMETER  = false;
 			
 			for(int index = 0; index < MAX_THREADS; index++)
-				delete DATA_THREADS[index);
+				delete DATA_THREADS[index];
 		}
 		
 		/** Public Wraper to Add a Connection Manually. 

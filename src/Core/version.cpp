@@ -9,48 +9,35 @@
 *******************************************************************************************/
 
 #include <string>
+
 #include "include/version.h"
 
 #include "../LLU/include/debug.h"
+#include "../LLP/include/network.h"
 
-/* Used for Visual Reference Only */
+
+const int DATABASE_VERSION =
+                    1000000 * DATABASE_MAJOR
+                  +   10000 * DATABASE_MINOR 
+                  +     100 * DATABASE_PATCH
+                  +       1 * DATABASE_BUILD;
+
 #ifdef USE_LLD
 const std::string DATABASE_NAME("LLD");
 #else
 const std::string DATABASE_NAME("BDB");
 #endif
 
-#define DATABASE_MAJOR       0
-#define DATABASE_MINOR       1
-#define DATABASE_REVISION    1
-#define DATABASE_BUILD       0
 
-const int DATABASE_VERSION =
-                    1000000 * DATABASE_MAJOR
-                  +   10000 * DATABASE_MINOR 
-                  +     100 * DATABASE_REVISION
-                  +       1 * DATABASE_BUILD;
-
-
-/* Used for Visual Reference Only */
-const std::string CLIENT_NAME("Tritium");
-
-#define CLIENT_MAJOR       0
-#define CLIENT_MINOR       3
-#define CLIENT_REVISION    0
-#define CLIENT_BUILD       0
 
 const int CLIENT_VERSION =
                     1000000 * CLIENT_MAJOR
                   +   10000 * CLIENT_MINOR 
-                  +     100 * CLIENT_REVISION
+                  +     100 * CLIENT_PATCH
                   +       1 * CLIENT_BUILD;
-
-
-const std::string CLIENT_BUILD("Alpha");
-
-
-/* Update Build Time to Be at Compile Time. */
+						
+const std::string CLIENT_NAME("Tritium");
+const std::string CLIENT_TYPE("Alpha");
 const std::string CLIENT_DATE(__DATE__ " " __TIME__);
 
 						
@@ -76,7 +63,6 @@ std::string FormatFullVersion()
 {
     std::ostringstream ss;
     ss << FormatSubVersion();
-	 
     ss << " | DB: "    << FormatVersion(DATABASE_VERSION);
     ss << " | PROTO: " << FormatVersion(LLP::PROTOCOL_VERSION);
     

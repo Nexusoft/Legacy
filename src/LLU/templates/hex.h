@@ -8,8 +8,8 @@
   
 *******************************************************************************************/
 
-#ifndef NEXUS_LLU_INCLUDE_HEX_H
-#define NEXUS_LLU_INCLUDE_HEX_H
+#ifndef NEXUS_LLU_TEMPLATES_HEX_H
+#define NEXUS_LLU_TEMPLATES_HEX_H
 
 #include <string>
 #include <vector>
@@ -36,9 +36,9 @@ static signed char phexdigit[256] =
 
 bool IsHex(const std::string& str)
 {
-    BOOST_FOREACH(unsigned char c, str)
+    for(int i = 0; i < str.size(); i ++)
     {
-        if (phexdigit[c] < 0)
+        if (phexdigit[ (unsigned char) str[i] ] < 0)
             return false;
     }
     return (str.size() > 0) && (str.size()%2 == 0);

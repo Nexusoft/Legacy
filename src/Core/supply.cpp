@@ -8,7 +8,8 @@
   
 *******************************************************************************************/
 
-#include "block.h"
+#include "include/block.h"
+#include "include/supply.h"
 
 using namespace std;
 namespace Core

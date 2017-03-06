@@ -158,7 +158,7 @@ namespace Core
 
 	void CBlock::print() const
 	{
-		printf("CBlock(hash=%s, ver=%d, hashPrevBlock=%s, hashMerkleRoot=%s, nTime=%u, nBits=%08x, nChannel = %u, nHeight = %u, nNonce=%"PRIu64", vtx=%d, vchBlockSig=%s)\n",
+		printf("CBlock(hash=%s, ver=%d, hashPrevBlock=%s, hashMerkleRoot=%s, nTime=%u, nBits=%08x, nChannel = %u, nHeight = %u, nNonce=%" PRIu64 ", vtx=%d, vchBlockSig=%s)\n",
 				GetHash().ToString().substr(0,20).c_str(),
 				nVersion,
 				hashPrevBlock.ToString().substr(0,20).c_str(),
@@ -312,7 +312,7 @@ namespace Core
 		// Nexus: fees are not collected by miners as in bitcoin
 		// Nexus: fees are destroyed to compensate the entire network
 		if(GetArg("-verbose", 0) >= 1)
-			printf("ConnectBlock() : destroy=%s nFees=%"PRI64d"\n", FormatMoney(nFees).c_str(), nFees);
+			printf("ConnectBlock() : destroy=%s nFees=%" PRI64d "\n", FormatMoney(nFees).c_str(), nFees);
 
 		// Update block index on disk without changing it in memory.
 		// The memory index structure will be changed after the db commits.
@@ -489,7 +489,7 @@ namespace Core
 		
 		
 		if(GetArg("-verbose", 0) >= 0)
-			printf("SetBestChain: new best=%s  height=%d  trust=%"PRIu64"  moneysupply=%s\n", hashBestChain.ToString().substr(0,20).c_str(), nBestHeight, nBestChainTrust, FormatMoney(pindexBest->nMoneySupply).c_str());
+			printf("SetBestChain: new best=%s  height=%d  trust=%" PRIu64 "  moneysupply=%s\n", hashBestChain.ToString().substr(0,20).c_str(), nBestHeight, nBestChainTrust, FormatMoney(pindexBest->nMoneySupply).c_str());
 
 		
 		std::string strCmd = GetArg("-blocknotify", "");
@@ -701,17 +701,17 @@ namespace Core
 		
 		/* Check the Current Channel Time-Lock. */
 		if (pblock->nHeight > 0 && pblock->GetBlockTime() < (fTestNet ? CHANNEL_TESTNET_TIMELOCK[pblock->GetChannel()] : CHANNEL_NETWORK_TIMELOCK[pblock->GetChannel()]))
-			return error("CheckBlock() : Block Created before Channel Time-Lock. Channel Opens in %"PRId64" Seconds", (fTestNet ? CHANNEL_TESTNET_TIMELOCK[pblock->GetChannel()] : CHANNEL_NETWORK_TIMELOCK[pblock->GetChannel()]) - GetUnifiedTimestamp());
+			return error("CheckBlock() : Block Created before Channel Time-Lock. Channel Opens in %" PRId64 " Seconds", (fTestNet ? CHANNEL_TESTNET_TIMELOCK[pblock->GetChannel()] : CHANNEL_NETWORK_TIMELOCK[pblock->GetChannel()]) - GetUnifiedTimestamp());
 			
 		
 		/* Check the Previous Version to Block Time-Lock. llow Version (Current -1) Blocks for 1 Hour after Time Lock. */
 		if (pblock->nVersion > 1 && pblock->nVersion == (fTestNet ? TESTNET_BLOCK_CURRENT_VERSION - 1 : NETWORK_BLOCK_CURRENT_VERSION - 1) && (pblock->GetBlockTime() - 3600) > (fTestNet ? TESTNET_VERSION_TIMELOCK[TESTNET_BLOCK_CURRENT_VERSION - 2] : NETWORK_VERSION_TIMELOCK[NETWORK_BLOCK_CURRENT_VERSION - 2]))
-			return error("CheckBlock() : Version %u Blocks have been Obsolete for %"PRId64" Seconds\n", pblock->nVersion, (GetUnifiedTimestamp() - (fTestNet ? TESTNET_VERSION_TIMELOCK[TESTNET_BLOCK_CURRENT_VERSION - 2] : NETWORK_VERSION_TIMELOCK[TESTNET_BLOCK_CURRENT_VERSION - 2])));	
+			return error("CheckBlock() : Version %u Blocks have been Obsolete for %" PRId64 " Seconds\n", pblock->nVersion, (GetUnifiedTimestamp() - (fTestNet ? TESTNET_VERSION_TIMELOCK[TESTNET_BLOCK_CURRENT_VERSION - 2] : NETWORK_VERSION_TIMELOCK[TESTNET_BLOCK_CURRENT_VERSION - 2])));	
 			
 		
 		/* Check the Current Version Block Time-Lock. */
 		if (pblock->nVersion >= (fTestNet ? TESTNET_BLOCK_CURRENT_VERSION : NETWORK_BLOCK_CURRENT_VERSION) && pblock->GetBlockTime() <= (fTestNet ? TESTNET_VERSION_TIMELOCK[TESTNET_BLOCK_CURRENT_VERSION - 2] : NETWORK_VERSION_TIMELOCK[NETWORK_BLOCK_CURRENT_VERSION - 2]))
-			return error("CheckBlock() : Version %u Blocks are not Accepted for %"PRId64" Seconds\n", pblock->nVersion, (GetUnifiedTimestamp() - (fTestNet ? TESTNET_VERSION_TIMELOCK[TESTNET_BLOCK_CURRENT_VERSION - 2] : NETWORK_VERSION_TIMELOCK[NETWORK_BLOCK_CURRENT_VERSION - 2])));	
+			return error("CheckBlock() : Version %u Blocks are not Accepted for %" PRId64 " Seconds\n", pblock->nVersion, (GetUnifiedTimestamp() - (fTestNet ? TESTNET_VERSION_TIMELOCK[TESTNET_BLOCK_CURRENT_VERSION - 2] : NETWORK_VERSION_TIMELOCK[NETWORK_BLOCK_CURRENT_VERSION - 2])));	
 			
 		
 		/* Check the Required Mining Outputs. */
@@ -844,7 +844,7 @@ namespace Core
 			
 		/** Check That Block Timestamp is not before previous block. **/
 		if (pblock->GetBlockTime() <= pindexPrev->GetBlockTime())
-			return error("AcceptBlock() : block's timestamp too early Block: %"PRId64" Prev: %"PRId64"", pblock->GetBlockTime(), pindexPrev->GetBlockTime());
+			return error("AcceptBlock() : block's timestamp too early Block: % " PRId64 " Prev: %" PRId64 "", pblock->GetBlockTime(), pindexPrev->GetBlockTime());
 			
 			
 		/** Check the Coinbase Transactions in Block Version 3. **/
@@ -859,15 +859,15 @@ namespace Core
 					
 			/** Check that the Mining Reward Matches the Coinbase Calculations. **/
 			if (nMiningReward != GetCoinbaseReward(pindexPrev, pblock->GetChannel(), 0))
-				return error("AcceptBlock() : miner reward mismatch %"PRId64" : %"PRId64"", nMiningReward, GetCoinbaseReward(pindexPrev, pblock->GetChannel(), 0));
+				return error("AcceptBlock() : miner reward mismatch %" PRId64 " : %" PRId64 "", nMiningReward, GetCoinbaseReward(pindexPrev, pblock->GetChannel(), 0));
 					
 			/** Check that the Exchange Reward Matches the Coinbase Calculations. **/
 			if (pblock->vtx[0].vout[nSize - 2].nValue != GetCoinbaseReward(pindexPrev, pblock->GetChannel(), 1))
-				return error("AcceptBlock() : exchange reward mismatch %"PRId64" : %"PRId64"\n", pblock->vtx[0].vout[1].nValue, GetCoinbaseReward(pindexPrev, pblock->GetChannel(), 1));
+				return error("AcceptBlock() : exchange reward mismatch %" PRId64 " : %" PRId64 "\n", pblock->vtx[0].vout[1].nValue, GetCoinbaseReward(pindexPrev, pblock->GetChannel(), 1));
 						
 			/** Check that the Developer Reward Matches the Coinbase Calculations. **/
 			if (pblock->vtx[0].vout[nSize - 1].nValue != GetCoinbaseReward(pindexPrev, pblock->GetChannel(), 2))
-				return error("AcceptBlock() : developer reward mismatch %"PRId64" : %"PRId64"\n", pblock->vtx[0].vout[2].nValue, GetCoinbaseReward(pindexPrev, pblock->GetChannel(), 2));
+				return error("AcceptBlock() : developer reward mismatch %" PRId64 " : %" PRId64 "\n", pblock->vtx[0].vout[2].nValue, GetCoinbaseReward(pindexPrev, pblock->GetChannel(), 2));
 					
 		}
 		
@@ -1325,7 +1325,7 @@ namespace Core
 					dPriority += (double) nValueIn * nConf;
 
 					if(GetArg("-verbose", 0) >= 2)
-						printf("priority     nValueIn=%-12"PRI64d" nConf=%-5d dPriority=%-20.1f\n", nValueIn, nConf, dPriority);
+						printf("priority     nValueIn=%-12" PRI64d " nConf=%-5d dPriority=%-20.1f\n", nValueIn, nConf, dPriority);
 				}
 
 				
@@ -1487,7 +1487,6 @@ namespace Core
 	{
 		uint1024 hash = pblock->GetHash();
 		uint1024 hashTarget = CBigNum().SetCompact(pblock->nBits).getuint1024();
-		unsigned int nBits;
 		
 		if(pblock->GetChannel() > 0 && !pblock->VerifyWork())
 			return error("Nexus Miner : proof of work not meeting target.");
@@ -1498,7 +1497,7 @@ namespace Core
 		}
 		
 		if(pblock->GetChannel() == 1)
-			printf("  prime cluster verified of size %f\n", GetDifficulty(nBits, 1));
+			printf("  prime cluster verified of size %f\n", GetDifficulty(pblock->nBits, 1));
 		else
 			printf("  target: %s\n", hashTarget.ToString().substr(0, 30).c_str());
 			

@@ -9,6 +9,7 @@
 *******************************************************************************************/
 
 #include "include/block.h"
+#include "include/trust.h"
 #include "include/transaction.h"
 
 using namespace std;
@@ -65,22 +66,22 @@ namespace Core
 	
 	/* NOTE: For Blocks Version 5 and Above.
 	 *	 The Maximum Grace time before trust begins to be reduced from no trust blocks seen.. **/
-	int TRUST_KEY_MAX_TIMESPAN = 60 * 60 * 12;
+	const int TRUST_KEY_MAX_TIMESPAN = 60 * 60 * 12;
 	
 	
 	/* NOTE: For Blocks Version 5 and Above
 	 * The Maximum tolerance that a trust key can have for inconsistent behavior. */
-	double TRUST_KEY_MIN_CONSISTENCY_TOLERANCE = 0.8;
-	double TRUST_KEY_MAX_CONSISTENCY_TOLERANCE = 1.3;
+	const double TRUST_KEY_MIN_CONSISTENCY_TOLERANCE = 0.8;
+	const double TRUST_KEY_MAX_CONSISTENCY_TOLERANCE = 1.3;
 	
 	
 	/* NOTE: For Blocks Version 5 and Above
 	 * The Maximum Blocks to Check Backwards for Consistency Tolerance. */
-	int TRUST_KEY_CONSISTENCY_HISTORY = 50;
+	const int TRUST_KEY_CONSISTENCY_HISTORY = 50;
 	
 	
 	/** The Minimum Number of Blocks Between Trust Key's Staking Blocks. **/
-	int TRUST_KEY_MIN_INTERVAL = 5;
+	const int TRUST_KEY_MIN_INTERVAL = 5;
 	
 	
 	/** Set the Maximum Output Value of Coinstake Transaction. **/
@@ -234,7 +235,6 @@ namespace Core
 	
 	uint64 nLastBlockTx = 0;
 	uint64 nLastBlockSize = 0;
-
 
 	CMajority<int> cPeerBlockCounts; // Amount of blocks that other nodes claim to have
 

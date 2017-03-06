@@ -109,7 +109,7 @@ namespace Core
 			uint576 cKey;
 			cKey.SetBytes(vchPubKey);
 			
-			printf("CTrustKey(Hash = %s, Key = %s, Genesis = %s, Tx = %s, Time = %u, Age = %"PRIu64", BlockAge = %"PRIu64", Expired = %s)\n", GetHash().ToString().c_str(), cKey.ToString().c_str(), hashGenesisBlock.ToString().c_str(), hashGenesisTx.ToString().c_str(), nGenesisTime, Age(GetUnifiedTimestamp()), BlockAge(GetUnifiedTimestamp()), Expired(GetUnifiedTimestamp()) ? "TRUE" : "FALSE");
+			printf("CTrustKey(Hash = %s, Key = %s, Genesis = %s, Tx = %s, Time = %u, Age = %" PRIu64 ", BlockAge = %" PRIu64 ", Expired = %s)\n", GetHash().ToString().c_str(), cKey.ToString().c_str(), hashGenesisBlock.ToString().c_str(), hashGenesisTx.ToString().c_str(), nGenesisTime, Age(GetUnifiedTimestamp()), BlockAge(GetUnifiedTimestamp()), Expired(GetUnifiedTimestamp()) ? "TRUE" : "FALSE");
 		}
 	};	
 	
@@ -118,10 +118,11 @@ namespace Core
 	class CTrustPool
 	{
 	private:
-		Mutex_t MUTEX;
 		mutable std::map<uint576, CTrustKey> mapTrustKeys;
 
 	public:
+		Mutex_t MUTEX;
+		
 		
 		/* The Trust Key Owned By Current Node. */
 		std::vector<unsigned char>   vchTrustKey;
@@ -132,15 +133,15 @@ namespace Core
 		
 		
 		/* Check the Validity of a Trust Key. */
-		bool Check(CBlock cBlock);
+		bool Check(const CBlock& cBlock);
 		
 		
 		/* Accept a Trust Key into the Trust Pool. */
-		bool Accept(CBlock cBlock, bool fInit = false);
+		bool Accept(const CBlock& cBlock, bool fInit = false);
 		
 		
 		/* Remove a Trust Key from the Trust Pool. */
-		bool Remove(CBlock cBlock);
+		bool Remove(const CBlock& cBlock);
 		
 		
 		/* Check if a Trust Key Exists in the Trust Pool. */

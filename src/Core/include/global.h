@@ -13,6 +13,7 @@
 
 #include <string>
 #include <map>
+#include <set>
 
 #include "../../LLC/types/uint1024.h"
 #include "../../LLU/include/mutex.h"
@@ -30,6 +31,7 @@ namespace Core
 {
 	class CBlock;
 	class CBlockIndex;
+	class CTrustPool;
 
 	
 	/* The Hash of the Genesis Block for the Network. Genesis Blocks are used as the root of a blockchain. */
@@ -161,7 +163,7 @@ namespace Core
 	
 	
 	/* Tritium ++ Rules for Trust Keys. Consistency History shows how consistent a node's block production times are. */
-	extern int TRUST_KEY_CONSISTENCY_HISTORY;
+	extern const int TRUST_KEY_CONSISTENCY_HISTORY;
 	
 	
 	/* Tritium ++ Rules for Trust Keys. Minimum Consistency tolerance is the amount you can fluctuate by speeding up block production without negative trust. */

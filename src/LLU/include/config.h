@@ -11,6 +11,9 @@
 #ifndef NEXUS_LLU_INCLUDE_CONFIG_H
 #define NEXUS_LLU_INCLUDE_CONFIG_H
 
+#include <boost/filesystem.hpp>
+#include <boost/filesystem/path.hpp>
+
 
 /* Read the Config file from the Disk. */
 void ReadConfigFile(std::map<std::string, std::string>& mapSettingsRet, std::map<std::string, std::vector<std::string> >& mapMultiSettingsRet);

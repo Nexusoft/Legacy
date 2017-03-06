@@ -8,14 +8,12 @@
   
 *******************************************************************************************/
 
-#include "../LLP/templates/server.h"
-#include "../LLP/include/protocol.h"
-#include "../LLP/include/hosts.h"
+#include "include/manager.h"
 
-namespace LLP
+namespace Core
 {
 	
-	void Manager::ConnectionManager((void* parg)
+	void NodeManager::ConnectionManager()
 	{
 		
 		/* TODO: Search through all added connections and attempt to make connections withup to max_connection_count nodes. */
@@ -23,10 +21,10 @@ namespace LLP
 	}
 	
 	
-	void Manager::BlockProcessor((void* parg)
+	void NodeManager::BlockProcessor()
 	{
 		
-		/* TODO: Handle a loop of the block queue to handle block processing. */
+		/* TODO: Handle a loop of the block queue to handle block processing.
 		
 		// Check for duplicate
 		uint1024 hash = pblock->GetHash();
@@ -49,8 +47,6 @@ namespace LLP
 			CBlock* pblock2 = new CBlock(*pblock);
 			mapOrphanBlocks.insert(make_pair(hash, pblock2));
 			mapOrphanBlocksByPrev.insert(make_pair(pblock2->hashPrevBlock, pblock2));
-			
-			/** Simple Catch until I finish Checkpoint Syncing. **/
             if(pfrom)
                 pfrom->PushGetBlocks(pindexBest, 0);
 			
@@ -83,15 +79,13 @@ namespace LLP
 		}
 
 		printg("ProcessBlock: ACCEPTED %s\n", pblock->GetHash().ToString().substr(0, 10).c_str());
-
-		return true;
-		
+		*/
 	}
 	
 	
-	void Manager::TransactionManager((void* parg)
+	void NodeManager::TransactionManager()
 	{
-					
+		/* TODO: FINISH			
 		vector<uint512> vWorkQueue;
 		vector<uint512> vEraseQueue;
 				
@@ -101,7 +95,6 @@ namespace LLP
 		Core::CTransaction tx;
 		ssMessage >> tx;
 
-		/* TODO: Change the Inventory system. */
 		CInv inv(MSG_TX, tx.GetHash());
 		AddInventoryKnown(inv);
 
@@ -110,10 +103,8 @@ namespace LLP
 			{
 				Core::SyncWithWallets(tx, NULL, true);
 				
-				/* TODO: Make the Relay Message work properly with new LLP Connections. */
 				RelayMessage(inv, vMsg);
 			
-				/* TODO CHANGE THESE THREE LINES. */
 				mapAlreadyAskedFor.erase(inv);
 				vWorkQueue.push_back(inv.hash.getuint512());
 				vEraseQueue.push_back(inv.hash.getuint512());
@@ -168,5 +159,7 @@ namespace LLP
 						printf("mapOrphan overflow, removed %u tx\n", nEvicted);
 			}	
 		}
+		
+		*/
 	}
 }

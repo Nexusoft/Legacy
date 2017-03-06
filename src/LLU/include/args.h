@@ -15,6 +15,14 @@
 #include <string>
 #include <vector>
 
+#if defined(MAC_OSX) || defined(WIN32)
+typedef int64_t int64;
+typedef uint64_t uint64;
+#else
+typedef long long  int64;
+typedef unsigned long long  uint64;
+#endif
+
 extern std::map<std::string, std::string> mapArgs;
 extern std::map<std::string, std::vector<std::string> > mapMultiArgs;
 extern bool fDebug;
@@ -23,6 +31,7 @@ extern bool fPrintToDebugger;
 extern bool fRequestShutdown;
 extern bool fShutdown;
 extern bool fDaemon;
+extern bool fClient;
 extern bool fServer;
 extern bool fCommandLine;
 extern std::string strMiscWarning;

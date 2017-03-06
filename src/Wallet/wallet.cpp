@@ -638,7 +638,7 @@ namespace Wallet
 					{
 						tx = *mapWalletPrev[hash];
 					}
-					else if (!Net::fClient && indexdb.ReadDiskTx(hash, tx))
+					else if (!fClient && indexdb.ReadDiskTx(hash, tx))
 					{
 					
 					}

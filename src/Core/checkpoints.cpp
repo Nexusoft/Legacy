@@ -92,7 +92,7 @@ namespace Core
 
 		/** Dump the Checkpoint if not Initializing. **/
 		if(!fInit)
-			printg("===== Hardened Checkpoint %s Height = %u\n", 
+			printf("===== Hardened Checkpoint %s Height = %u\n", 
 			pcheckpoint->pprev->PendingCheckpoint.second.ToString().substr(0, 20).c_str(),
 			pcheckpoint->pprev->PendingCheckpoint.first);
 		

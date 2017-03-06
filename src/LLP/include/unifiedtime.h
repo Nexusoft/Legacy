@@ -17,15 +17,15 @@
 #include "network.h"
 #include "../templates/server.h"
 
+#include "../../LLU/include/args.h"
+#include "../../LLU/include/bytes.h"
+
 #include <inttypes.h>
 
 /* TODO: Put in the LLP Namespace. */
 
-/** Carried on from uint1024.h **/
-typedef long long  int64;
 
-
-/** Unified Time Flags **/
+/* Unified Time Flags */
 extern bool fTimeUnified;
 extern bool fIsTimeSeed;
 extern bool fIsSeedNode;
@@ -73,79 +73,15 @@ void ThreadTimeRegulator(void* parg);
 void ThreadUnifiedSamples(void* parg);
 
 
+/* Gets the UNIX Timestamp from the Nexus Network */
+int64 GetUnifiedTimestamp(bool fAdjusted = false);
+
+
 namespace LLP
 {
-
-	class CoreOutbound : public Outbound
-	{
-		Service_t IO_SERVICE;
-		
-	public:
-		CoreOutbound(std::string ip, std::string port) : Outbound(ip, port){}
-		
-		enum
-		{
-			/** DATA PACKETS **/
-			TIME_DATA     = 0,
-			ADDRESS_DATA  = 1,
-			TIME_OFFSET   = 2,
-			
-			/** DATA REQUESTS **/
-			GET_OFFSET    = 64,
-			
-			
-			/** REQUEST PACKETS **/
-			GET_TIME      = 129,
-			GET_ADDRESS   = 130,
-					
-
-			/** GENERIC **/
-			PING          = 253,
-			CLOSE         = 254
-		};
-		
-		inline Packet NewPacket() { return this->INCOMING; }
-		
-		inline Packet GetPacket(unsigned char HEADER)
-		{
-			Packet PACKET;
-			PACKET.HEADER = HEADER;
-			return PACKET;
-		}
-		
-		inline void GetOffset(unsigned int nTimestamp)
-		{
-			Packet REQUEST = GetPacket(GET_OFFSET);
-			REQUEST.LENGTH = 4;
-			REQUEST.DATA   = uint2bytes(nTimestamp);
-			
-			this->WritePacket(REQUEST);
-		}
-		
-		inline void GetTime()
-		{
-			Packet REQUEST = GetPacket(GET_TIME);
-			this->WritePacket(REQUEST);
-		}
-		
-		void Close()
-		{
-			Packet RESPONSE = GetPacket(CLOSE);
-			this->WritePacket(RESPONSE);
-			this->Disconnect();
-		}
-		
-		inline void GetAddress()
-		{
-			Packet REQUEST = GetPacket(GET_ADDRESS);
-			this->WritePacket(REQUEST);
-		}
-	};
 	
 	class CoreLLP : public Connection
 	{	
-		std::vector<unsigned char> ADDRESS;
-		
 		enum
 		{
 			/** DATA PACKETS **/
@@ -169,8 +105,7 @@ namespace LLP
 	
 	public:
 		CoreLLP() : Connection(){ }
-		CoreLLP( Socket_t SOCKET_IN, DDOS_Filter* DDOS_IN, bool isDDOS = false ) : Connection( SOCKET_IN, DDOS_IN ) 
-		{ ADDRESS = parse_ip(SOCKET_IN->remote_endpoint().address().to_string()); }
+		CoreLLP( Socket_t SOCKET_IN, DDOS_Filter* DDOS_IN, bool isDDOS = false ) : Connection( SOCKET_IN, DDOS_IN ) {}
 		
 		/** Handle Event Inheritance. **/
 		void Event(unsigned char EVENT, unsigned int LENGTH = 0)
@@ -237,9 +172,6 @@ namespace LLP
 				RESPONSE.LENGTH = 4;
 				RESPONSE.DATA   = int2bytes(nOffset);
 				
-				if(GetArg("-verbose", 0) >= 3)
-					printf("***** Core LLP: Sent Offset %i | %u.%u.%u.%u | Unified %"PRId64"\n", nOffset, ADDRESS[0], ADDRESS[1], ADDRESS[2], ADDRESS[3], GetUnifiedTimestamp());
-				
 				this->WritePacket(RESPONSE);
 				return true;
 			}
@@ -250,20 +182,6 @@ namespace LLP
 				RESPONSE.HEADER = TIME_DATA;
 				RESPONSE.LENGTH = 4;
 				RESPONSE.DATA = uint2bytes((unsigned int)GetUnifiedTimestamp());
-				
-				if(GetArg("-verbose", 0) >= 3)
-					printf("***** Core LLP: Sent Time Sample %"PRId64" to %u.%u.%u.%u\n", GetUnifiedTimestamp(), ADDRESS[0], ADDRESS[1], ADDRESS[2], ADDRESS[3]);
-				
-				this->WritePacket(RESPONSE);
-				return true;
-			}
-			
-			if(PACKET.HEADER == GET_ADDRESS)
-			{
-				Packet RESPONSE;
-				RESPONSE.HEADER = ADDRESS_DATA;
-				RESPONSE.LENGTH = 4;
-				RESPONSE.DATA   = ADDRESS;
 				
 				this->WritePacket(RESPONSE);
 				return true;

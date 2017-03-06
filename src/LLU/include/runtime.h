@@ -58,7 +58,7 @@ public:
 
 
 
-
+/*
 // NOTE: It turns out we might have been able to use boost::thread
 // by using TerminateThread(boost::thread.native_handle(), 0);
 #ifdef WIN32
@@ -133,7 +133,7 @@ inline void ExitThread(size_t nExitCode)
 #endif
 
 
-
+*/
 
 
 inline uint32_t ByteReverse(uint32_t value)

@@ -58,8 +58,6 @@ typedef unsigned long long  uint64;
 #define loop                for (;;)
 #define ARRAYLEN(array)     (sizeof(array)/sizeof((array)[0]))
 
-#define NULL                0
-
 #ifdef snprintf
 #undef snprintf
 #endif
@@ -94,15 +92,6 @@ T* alignup(T* p)
     return u.ptr;
 }
 
-/** Parse an IP Address into a Byte Vector from Std::String. **/
-inline std::vector<unsigned char> parse_ip(std::string ip)
-{
-	std::vector<unsigned char> bytes(4, 0);
-	sscanf(ip.c_str(), "%hhu.%hhu.%hhu.%hhu", &bytes[0], &bytes[1], &bytes[2], &bytes[3]);
-	
-	return bytes;
-}
-
 /** Create a sorted Multimap for rich lists. **/
 template <typename A, typename B> std::multimap<B, A> flip_map(std::map<A,B> & src) 
 {
@@ -111,74 +100,6 @@ template <typename A, typename B> std::multimap<B, A> flip_map(std::map<A,B> & s
 		dst.insert(std::pair<B, A>(it -> second, it -> first));
 
     return dst;
-}
-
-/** Convert a 32 bit Unsigned Integer to Byte Vector using Bitwise Shifts. **/
-inline std::vector<unsigned char> uint2bytes(unsigned int UINT)
-{
-	std::vector<unsigned char> BYTES(4, 0);
-	BYTES[0] = UINT >> 24;
-	BYTES[1] = UINT >> 16;
-	BYTES[2] = UINT >> 8;
-	BYTES[3] = UINT;
-				
-	return BYTES;
-}
-
-
-/** Convert a byte stream into a signed integer 32 bit. **/	
-inline int bytes2int(std::vector<unsigned char> BYTES, int nOffset = 0) { return (BYTES[0 + nOffset] << 24) + (BYTES[1 + nOffset] << 16) + (BYTES[2 + nOffset] << 8) + BYTES[3 + nOffset]; }
-		
-
-/** Convert a 32 bit signed Integer to Byte Vector using Bitwise Shifts. **/
-inline std::vector<unsigned char> int2bytes(int INT)
-{
-	std::vector<unsigned char> BYTES(4, 0);
-	BYTES[0] = INT >> 24;
-	BYTES[1] = INT >> 16;
-	BYTES[2] = INT >> 8;
-	BYTES[3] = INT;
-				
-	return BYTES;
-}
-			
-			
-/** Convert a byte stream into unsigned integer 32 bit. **/	
-inline unsigned int bytes2uint(std::vector<unsigned char> BYTES, int nOffset = 0) { return (BYTES[0 + nOffset] << 24) + (BYTES[1 + nOffset] << 16) + (BYTES[2 + nOffset] << 8) + BYTES[3 + nOffset]; }		
-			
-			
-/** Convert a 64 bit Unsigned Integer to Byte Vector using Bitwise Shifts. **/
-inline std::vector<unsigned char> uint2bytes64(uint64 UINT)
-{
-	std::vector<unsigned char> INTS[2];
-	INTS[0] = uint2bytes((unsigned int) UINT);
-	INTS[1] = uint2bytes((unsigned int) (UINT >> 32));
-				
-	std::vector<unsigned char> BYTES;
-	BYTES.insert(BYTES.end(), INTS[0].begin(), INTS[0].end());
-	BYTES.insert(BYTES.end(), INTS[1].begin(), INTS[1].end());
-				
-	return BYTES;
-}
-
-			
-/** Convert a byte Vector into unsigned integer 64 bit. **/
-inline uint64 bytes2uint64(std::vector<unsigned char> BYTES, int nOffset = 0) { return (bytes2uint(BYTES, nOffset) | ((uint64)bytes2uint(BYTES, nOffset + 4) << 32)); }
-
-
-/** Convert Standard String into Byte Vector. **/
-inline std::vector<unsigned char> string2bytes(std::string STRING)
-{
-	std::vector<unsigned char> BYTES(STRING.begin(), STRING.end());
-	return BYTES;
-}
-
-
-/** Convert Byte Vector into Standard String. **/
-inline std::string bytes2string(std::vector<unsigned char> BYTES)
-{
-	std::string STRING(BYTES.begin(), BYTES.end());
-	return STRING;
 }
 
 #ifdef WIN32
@@ -195,12 +116,9 @@ inline std::string bytes2string(std::vector<unsigned char> BYTES)
 #define strlwr(psz)         to_lower(psz)
 #define _strlwr(psz)        to_lower(psz)
 #define MAX_PATH            1024
-inline void Sleep(int64 n)
-{
-    /* Boost has a year 2038 problem— if the request sleep time is past epoch+2^31 seconds the sleep returns instantly.
-       So we clamp our sleeps here to 10 years and hope that boost is fixed by 2028.*/
-    boost::thread::sleep(boost::get_system_time() + boost::posix_time::milliseconds(n>315576000000LL?315576000000LL:n));
-}
+
+
+
 #endif
 
 #ifndef THROW_WITH_STACKTRACE
@@ -212,15 +130,12 @@ inline void Sleep(int64 n)
 void LogStackTrace();
 #endif
 
-
-/** Gets the UNIX Timestamp from the Nexus Network **/
-extern int64 GetUnifiedTimestamp(bool fAdjusted = false);
-
 void RandAddSeed();
 void RandAddSeedPerfmon();
 
 
-inline std::string ip_string(std::vector<unsigned char> ip) { return strprintf("%u.%u.%u.%u", ip[0], ip[1], ip[2], ip[3]); }
+
+
 
 
 
@@ -253,7 +168,7 @@ bool copyDir(boost::filesystem::path const & source, boost::filesystem::path con
 
 inline std::string i64tostr(int64 n)
 {
-    return strprintf("%"PRI64d, n);
+    return strprintf("%" PRI64d, n);
 }
 
 inline std::string itostr(int n)

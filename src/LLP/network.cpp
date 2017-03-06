@@ -6,8 +6,10 @@
   
 *******************************************************************************************/
 
-#include "network.h"
-#include "../../LLU/include/util.h"
+#include "include/network.h"
+#include "include/hosts.h"
+
+#include "../LLU/include/debug.h"
 
 #ifndef WIN32
 #include <sys/fcntl.h>

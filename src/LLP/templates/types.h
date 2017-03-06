@@ -20,6 +20,9 @@
 
 #include "../../LLU/include/mutex.h"
 #include "../../LLU/include/runtime.h"
+#include "../../LLU/include/debug.h"
+
+#include "../../LLU/include/util.h"
 	
 namespace LLP
 {
@@ -147,7 +150,7 @@ namespace LLP
 		
 	public:
 		DDOS_Score rSCORE, cSCORE;
-		DDOS_Filter(unsigned int nTimespan) : rSCORE(nTimespan), cSCORE(nTimespan), BANTIME(0), TOTALBANS(0) { }
+		DDOS_Filter(unsigned int nTimespan) : BANTIME(0), TOTALBANS(0), rSCORE(nTimespan), cSCORE(nTimespan) { }
 		Mutex_t MUTEX;
 		
 		/** Ban a Connection, and Flush its Scores. **/
@@ -265,7 +268,7 @@ namespace LLP
 		virtual void Event(unsigned char EVENT, unsigned int LENGTH = 0){ }
 		
 		/* Virtual Process Function. To be overridden with your own custom packet processing. */
-		virtual bool ProcessPacket(){ }
+		virtual bool ProcessPacket(){ return false; }
 	public:
 	
 	
@@ -394,11 +397,9 @@ namespace LLP
 
 	};
 	
-	
-	
-	class Connection : public BaseConnection
+	class Connection : public BaseConnection<Packet>
 	{
-		
+	public:
 		
 		/* Connection Constructors */
 		Connection() : BaseConnection() { }
@@ -446,7 +447,7 @@ namespace LLP
 				}
 			}
 		}	
-	}
+	};
 }
 
 #endif

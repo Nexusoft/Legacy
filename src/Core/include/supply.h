@@ -11,20 +11,12 @@
 #ifndef NEXUS_CORE_INCLUDE_SUPPLY_H
 #define NEXUS_CORE_INCLUDE_SUPPLY_H
 
-#include <stdint.h>
-
-#if defined(MAC_OSX) || defined(WIN32)
-typedef int64_t int64;
-typedef uint64_t uint64;
-#else
-typedef long long  int64;
-typedef unsigned long long  uint64;
-#endif
+#include "../../LLC/types/uint1024.h"
 
 namespace Core
 {
-	class CBlockIndex;
 	
+	class CBlockIndex;
 	
 	/** These values reflect the Three Decay Equations.
 	 * 

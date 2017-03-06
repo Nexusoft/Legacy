@@ -8,15 +8,13 @@
   
 *******************************************************************************************/
 
-#include <boost/assign/list_of.hpp>
+#include "../main.h"
 
-#include "core.h"
-#include "unifiedtime.h"
-#include "../wallet/db.h"
-#include "../wallet/wallet.h"
-#include "../main.h" //for pwalletmain
+#include "include/trust.h"
+#include "include/block.h"
+#include "include/difficulty.h"
 
-#include "../LLD/index.h"
+#include "../LLD/include/index.h"
 
 using namespace std;
 
@@ -179,7 +177,7 @@ namespace Core
 		double nThreshold = ((nTime - vtx[0].nTime) * 100.0) / nNonce;
 		double nRequired  = ((50.0 - nTrustWeight - nBlockWeight) * MAX_STAKE_WEIGHT) / std::min((int64)MAX_STAKE_WEIGHT, vtx[0].vout[0].nValue);
 		if(nThreshold < nRequired)
-			return error("CBlock::VerifyStake() : Coinstake / nNonce threshold too low %f Required %f. Energy efficiency limits Reached Coin Age %"PRIu64" | Trust Age %"PRIu64" | Block Age %"PRIu64, nThreshold, nRequired, nCoinAge, nTrustAge, nBlockAge);
+			return error("CBlock::VerifyStake() : Coinstake / nNonce threshold too low %f Required %f. Energy efficiency limits Reached Coin Age %" PRIu64 " | Trust Age %" PRIu64 " | Block Age %" PRIu64 "", nThreshold, nRequired, nCoinAge, nTrustAge, nBlockAge);
 			
 			
 		/** H] Check the Block Hash with Weighted Hash to Target. **/
@@ -195,9 +193,9 @@ namespace Core
 			cTrustPool.TrustScore(cKey, nTime);
 			printf("CBlock::VerifyStake() : Stake Hash  %s\n", GetHash().ToString().substr(0, 20).c_str());
 			printf("CBlock::VerifyStake() : Target Hash %s\n", hashTarget.ToString().substr(0, 20).c_str());
-			printf("CBlock::VerifyStake() : Coin Age %"PRIu64" Trust Age %"PRIu64" Block Age %"PRIu64"\n", nCoinAge, nTrustAge, nBlockAge);
+			printf("CBlock::VerifyStake() : Coin Age %" PRIu64 " Trust Age %" PRIu64 " Block Age %" PRIu64 "\n", nCoinAge, nTrustAge, nBlockAge);
 			printf("CBlock::VerifyStake() : Trust Weight %f Block Weight %f\n", nTrustWeight, nBlockWeight);
-			printf("CBlock::VerifyStake() : Threshold %f Required %f Time %u nNonce %"PRIu64"\n", nThreshold, nRequired, (unsigned int)(nTime - vtx[0].nTime), nNonce);
+			printf("CBlock::VerifyStake() : Threshold %f Required %f Time %u nNonce %" PRIu64 "\n", nThreshold, nRequired, (unsigned int)(nTime - vtx[0].nTime), nNonce);
 		}
 
 		return true;
@@ -264,7 +262,7 @@ namespace Core
 		cKey.SetBytes(vKeys[0]);
 			
 		/** Output figure to show the amount of coins being staked at their interest rates. **/
-		int64 nTotalCoins = 0, nAverageAge = 0, nValidInputs = 0;
+		int64 nTotalCoins = 0, nAverageAge = 0;
 		nInterest = 0;
 		
 		/** Calculate the Variable Interest Rate for Given Coin Age Input. [0.5% Minimum - 3% Maximum].
@@ -296,7 +294,7 @@ namespace Core
 			
 			if(GetArg("-verbose", 0) >= 2)
 			{
-				printf("CTransaction::GetCoinstakeInterest() : Staking input from Block %u with age of %"PRId64", Rate %f, and value %f\n", block.nHeight, nCoinAge, nInterestRate, (double)nValue / COIN);
+				printf("CTransaction::GetCoinstakeInterest() : Staking input from Block %u with age of %" PRId64 ", Rate %f, and value %f\n", block.nHeight, nCoinAge, nInterestRate, (double)nValue / COIN);
 				
 				if(txPrev.IsCoinStake())
 					printf("CTransaction::GetCoinstakeInterest() : Using Previous Coin Stake Transaction for Block %u ++++++++++++++++++++++++++\n", block.nHeight);
@@ -390,10 +388,10 @@ namespace Core
 		If Key does exist it Must Meet Trust Protocol Requirements. 
 		
 	**/
-	bool CTrustPool::Check(CBlock& cBlock)
+	bool CTrustPool::Check(const CBlock& cBlock)
 	{
 		/** Lock Accepting Trust Keys to Mutex. **/
-		LOCK(cs);
+		LOCK(MUTEX);
 		
 		/** Ensure the Block is for Proof of Stake Only. **/
 		if(!cBlock.IsProofOfStake())
@@ -477,10 +475,10 @@ namespace Core
 		
 		
 	/** Remove a Block from Trust Key. **/
-	bool CTrustPool::Remove(CBlock& cBlock)
+	bool CTrustPool::Remove(const CBlock& cBlock)
 	{
 		/** Lock Accepting Trust Keys to Mutex. **/
-		LOCK(cs);
+		LOCK(MUTEX);
 		
 		/** Extract the Key from the Script Signature. **/
 		vector< std::vector<unsigned char> > vKeys;
@@ -536,10 +534,10 @@ namespace Core
 	
 	/** Accept a Block's Coinstake into the Trust Pool Assigning it to Specified Trust Key.  
 		This Method shouldn't be called before CTrustPool::Check **/
-	bool CTrustPool::Accept(CBlock cBlock&, bool fInit)
+	bool CTrustPool::Accept(const CBlock& cBlock, bool fInit)
 	{
 		/** Lock Accepting Trust Keys to Mutex. **/
-		LOCK(cs);
+		LOCK(MUTEX);
 			
 		/** Extract the Key from the Script Signature. **/
 		vector< std::vector<unsigned char> > vKeys;
@@ -626,7 +624,8 @@ namespace Core
 		double nAverageConsistency = 0.0, nMeanHistory = 0.0, nDifficultyAverage = 0.0, nLastDifficulty = 0;
 		
 		/* The Trust Scores. */
-		double nPositiveTrust = 0.0, nNegativeTrust = 0.0, nHistoryIterations = 0;
+		double nPositiveTrust = 0.0, nNegativeTrust = 0.0;
+		
 		for(int nIndex = 0; nIndex < cTrustKey.hashPrevBlocks.size(); nIndex++)
 		{
 			/* Calculate the Trust Time of Blocks. */
@@ -679,7 +678,7 @@ namespace Core
 	
 	/** Should not be called until key is established in block chain. 
 		Block must have been received and be part of the main chain. **/
-	bool CTrustKey::CheckGenesis(CBlock& cBlock) const
+	bool CTrustKey::CheckGenesis(CBlock cBlock) const
 	{
 		/** Invalid if Null. **/
 		if(IsNull())
@@ -759,7 +758,7 @@ namespace Core
 	void StakeMinter(void* parg)
 	{	
 		printf("Stake Minter Started\n");
-		SetThreadPriority(THREAD_PRIORITY_LOWEST);
+		
 
 		// Each thread has its own key and counter
 		Wallet::CReserveKey reservekey(pwalletMain);
@@ -774,7 +773,7 @@ namespace Core
 			if (pwalletMain->IsLocked())
 				continue;
 
-			if (Net::vNodes.empty() || IsInitialBlockDownload())
+			if (IsInitialBlockDownload())
 				continue;
 				
 			CBlock* pblock = CreateNewBlock(reservekey, pwalletMain, 0);
@@ -847,7 +846,7 @@ namespace Core
 			dBlockWeight = nBlockWeight;
 			
 			if(GetArg("-verbose", 0) >= 1)			
-				printf("Stake Minter : Staking at Trust Weight %f | Block Weight %f | Coin Age %"PRIu64" | Trust Age %"PRIu64"| Block Age %"PRIu64"\n", nTrustWeight, nBlockWeight, nCoinAge, nTrustAge, nBlockAge);
+				printf("Stake Minter : Staking at Trust Weight %f | Block Weight %f | Coin Age %" PRIu64 " | Trust Age %" PRIu64 "| Block Age %" PRIu64 "\n", nTrustWeight, nBlockWeight, nCoinAge, nTrustAge, nBlockAge);
 			
 			CBlockIndex* pindex = pindexBest;
 			while(true)
@@ -858,9 +857,6 @@ namespace Core
 					return;
 				
 				if (pwalletMain->IsLocked())
-					break;
-
-				if (Net::vNodes.empty() || IsInitialBlockDownload())
 					break;
 				
 				if(pindex->GetBlockHash() != pindexBest->GetBlockHash())
@@ -890,7 +886,7 @@ namespace Core
 				hashTarget.SetCompact(pblock->nBits);
 				
 				if(pblock->nNonce % (unsigned int)((nTrustWeight + nBlockWeight) * 5) == 0 && GetArg("-verbose", 0) >= 2)
-					printf("Stake Minter : Below Threshold %f Required %f Incrementing nNonce %"PRIu64"\n", nThreshold, nRequired, pblock->nNonce);
+					printf("Stake Minter : Below Threshold %f Required %f Incrementing nNonce %" PRIu64 "\n", nThreshold, nRequired, pblock->nNonce);
 						
 				if (pblock->GetHash() < hashTarget.getuint1024())
 				{
@@ -915,7 +911,7 @@ namespace Core
 						break;
 					}
 					
-					if (!pblock->CheckBlock())
+					if (!CheckBlock(*pblock, NULL))
 					{
 						if(GetArg("-verbose", 0) >= 1)
 							error("Stake Minter : Check Block Failed...");
@@ -926,9 +922,7 @@ namespace Core
 					if(GetArg("-verbose", 0) >= 1)
 						pblock->print();
 					
-					SetThreadPriority(THREAD_PRIORITY_NORMAL);
 					CheckWork(pblock, *pwalletMain, reservekey);
-					SetThreadPriority(THREAD_PRIORITY_LOWEST);
 					
 					break;
 				}

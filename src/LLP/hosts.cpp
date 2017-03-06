@@ -6,12 +6,11 @@
   
 *******************************************************************************************/
 
-#include "protocol.h"
-#include "../../LLU/util.h"
+#include "include/network.h"
+#include "include/hosts.h"
 
-#ifndef WIN32
-#include <sys/fcntl.h>
-#endif
+#include <vector>
+#include <boost/foreach.hpp>
 
 #include "../LLU/include/strlcpy.h"
 
@@ -19,13 +18,13 @@ namespace LLP
 {
 	
 	/** DNS Query of Domain Names Associated with Seed Nodes **/
-	vector<CAddress> DNS_Lookup(const char* DNS_Seed[])
+	std::vector<CAddress> DNS_Lookup(const char* DNS_Seed[])
 	{
-		vector<CAddress> vNodes;
+		std::vector<CAddress> vNodes;
 		for (unsigned int seed = 0; seed < (fTestNet ? 1 : 41); seed++)
 		{
 			printf("%u Host: %s\n", seed, DNS_Seed[seed]);
-			vector<LLP::CNetAddr> vaddr;
+			std::vector<LLP::CNetAddr> vaddr;
 			if (LookupHost(DNS_Seed[seed], vaddr))
 			{
 				BOOST_FOREACH(CNetAddr& ip, vaddr)
@@ -34,8 +33,6 @@ namespace LLP
 					vNodes.push_back(addr);
 					
 					printf("DNS Seed: %s\n", addr.ToStringIP().c_str());
-					
-					//Net::addrman.Add(addr, ip, true);
 				}
 			}
 		}
@@ -112,6 +109,69 @@ namespace LLP
 		}
 
 		return LookupIntern(pszHost, vIP, nMaxSolutions, fAllowLookup);
+	}
+	
+		bool LookupHostNumeric(const char *pszName, std::vector<CNetAddr>& vIP, unsigned int nMaxSolutions)
+	{
+		return LookupHost(pszName, vIP, nMaxSolutions, false);
+	}
+
+	bool Lookup(const char *pszName, std::vector<CService>& vAddr, int portDefault, bool fAllowLookup, unsigned int nMaxSolutions)
+	{
+		if (pszName[0] == 0)
+			return false;
+		int port = portDefault;
+		char psz[256];
+		char *pszHost = psz;
+		strlcpy(psz, pszName, sizeof(psz));
+		char* pszColon = strrchr(psz+1,':');
+		char *pszPortEnd = NULL;
+		int portParsed = pszColon ? strtoul(pszColon+1, &pszPortEnd, 10) : 0;
+		if (pszColon && pszPortEnd && pszPortEnd[0] == 0)
+		{
+			if (psz[0] == '[' && pszColon[-1] == ']')
+			{
+				pszHost = psz+1;
+				pszColon[-1] = 0;
+			}
+			else
+				pszColon[0] = 0;
+			if (port >= 0 && port <= USHRT_MAX)
+				port = portParsed;
+		}
+		else
+		{
+			if (psz[0] == '[' && psz[strlen(psz)-1] == ']')
+			{
+				pszHost = psz+1;
+				psz[strlen(psz)-1] = 0;
+			}
+
+		}
+
+		std::vector<CNetAddr> vIP;
+		bool fRet = LookupIntern(pszHost, vIP, nMaxSolutions, fAllowLookup);
+		if (!fRet)
+			return false;
+		vAddr.resize(vIP.size());
+		for (unsigned int i = 0; i < vIP.size(); i++)
+			vAddr[i] = CService(vIP[i], port);
+		return true;
+	}
+
+	bool Lookup(const char *pszName, CService& addr, int portDefault, bool fAllowLookup)
+	{
+		std::vector<CService> vService;
+		bool fRet = Lookup(pszName, vService, portDefault, fAllowLookup, 1);
+		if (!fRet)
+			return false;
+		addr = vService[0];
+		return true;
+	}
+
+	bool LookupNumeric(const char *pszName, CService& addr, int portDefault)
+	{
+		return Lookup(pszName, addr, portDefault, false);
 	}
 }
 

@@ -19,6 +19,7 @@ bool fRequestShutdown = false;
 bool fShutdown = false;
 bool fDaemon = false;
 bool fServer = false;
+bool fClient = false;
 bool fCommandLine = false;
 bool fTestNet = false;
 bool fNoListen = false;

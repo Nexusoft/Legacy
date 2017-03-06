@@ -11,6 +11,12 @@
 #ifndef NEXUS_LLP_INCLUDE_MINING_H
 #define NEXUS_LLP_INCLUDE_MINING_H
 
+#include <vector>
+#include <string>
+#include <map>
+
+#include "../../LLU/include/debug.h"
+
 namespace LLP
 {
 	

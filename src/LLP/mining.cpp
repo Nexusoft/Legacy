@@ -1,11 +1,18 @@
+/*******************************************************************************************
+ 
+			(c) Hash(BEGIN(Satoshi[2010]), END(Sunny[2012])) == Videlicet[2017] ++
+			
+			(c) Copyright Nexus Developers 2014 - 2017
+			
+			http://www.opensource.org/licenses/mit-license.php
+  
+*******************************************************************************************/
+
 #include "../main.h"
-#include "unifiedtime.h"
-#include "../LLP/server.h"
 
-#include "../wallet/db.h"
-#include "../util/ui_interface.h"
-
-#include "../LLD/index.h"
+#include "include/mining.h"
+#include "../Core/include/block.h"
+#include "../Core/include/supply.h"
 
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/filesystem.hpp>
@@ -28,12 +35,12 @@ namespace LLP
 		map<uint512, Core::CBlock*> MAP_BLOCKS;
 		unsigned int nChannel, nBestHeight;
 		
-		/** Subscribed To Display how many Blocks connection Subscribed to. **/
+		/* Subscribed To Display how many Blocks connection Subscribed to. */
 		unsigned int nSubscribed = 0;
 		
 		enum
 		{
-			/** DATA PACKETS **/
+			/* DATA PACKETS */
 			BLOCK_DATA   = 0,
 			SUBMIT_BLOCK = 1,
 			BLOCK_HEIGHT = 2,
@@ -44,36 +51,36 @@ namespace LLP
 			ORPHAN_BLOCK = 7,
 			
 			
-			/** DATA REQUESTS **/
+			/* DATA REQUESTS */
 			CHECK_BLOCK  = 64,
 			SUBSCRIBE    = 65,
 					
 					
-			/** REQUEST PACKETS **/
+			/* REQUEST PACKETS */
 			GET_BLOCK    = 129,
 			GET_HEIGHT   = 130,
 			GET_REWARD   = 131,
 			
 			
-			/** SERVER COMMANDS **/
+			/* SERVER COMMANDS */
 			CLEAR_MAP    = 132,
 			GET_ROUND    = 133,
 			
 			
-			/** RESPONSE PACKETS **/
+			/* RESPONSE PACKETS */
 			BLOCK_ACCEPTED       = 200,
 			BLOCK_REJECTED       = 201,
 
 			
-			/** VALIDATION RESPONSES **/
+			/* VALIDATION RESPONSES */
 			COINBASE_SET  = 202,
 			COINBASE_FAIL = 203,
 			
-			/** ROUND VALIDATIONS. **/
+			/* ROUND VALIDATIONS. */
 			NEW_ROUND     = 204,
 			OLD_ROUND     = 205,
 					
-			/** GENERIC **/
+			/* GENERIC */
 			PING     = 253,
 			CLOSE    = 254
 		};
@@ -112,7 +119,7 @@ namespace LLP
 		
 		void Event(unsigned char EVENT, unsigned int LENGTH = 0)
 		{
-			/** Handle any DDOS Packet Filters. **/
+			/* Handle any DDOS Packet Filters. */
 			if(EVENT == EVENT_HEADER)
 			{
 				if(fDDOS)
@@ -170,41 +177,41 @@ namespace LLP
 			}
 			
 			
-			/** Handle for a Packet Data Read. **/
+			/* Handle for a Packet Data Read. */
 			if(EVENT == EVENT_PACKET)
 				return;
 			
 			
-			/** On Generic Event, Broadcast new block if flagged. **/
+			/* On Generic Event, Broadcast new block if flagged. */
 			if(EVENT == EVENT_GENERIC)
 			{
-				/** Skip Generic Event if not Subscribed to Work. **/
+				/* Skip Generic Event if not Subscribed to Work. */
 				if(nSubscribed == 0)
 					return;
 					
-				/** Check the Round Automatically on Subscribed Worker. **/
+				/* Check the Round Automatically on Subscribed Worker. */
 				if(pindexBest == NULL || !pindexBest || pindexBest->GetBlockHash() != Core::pindexBest->GetBlockHash())
 				{
 					pindexBest = Core::pindexBest;
 					ClearMap();
 					
-					/** Construct a response packet by serializing the Block. **/
+					/* Construct a response packet by serializing the Block. */
 					Packet RESPONSE;
 					RESPONSE.HEADER = NEW_ROUND;
 					this->WritePacket(RESPONSE);
 					
-					/** Create all Blocks Worker Subscribed to. **/
+					/* Create all Blocks Worker Subscribed to. */
 					for(int nBlock = 0; nBlock < nSubscribed; nBlock++) {
 						Core::CBlock* NEW_BLOCK = Core::CreateNewBlock(*pMiningKey, pwalletMain, nChannel, MAP_BLOCKS.size() + 1, pCoinbaseTx);
 						
-						/** Fault Tolerance Check. **/
+						/* Fault Tolerance Check. */
 						if(!NEW_BLOCK)
 							continue;
 						
-						/** Handle the Block Key as Merkle Root for Block Submission. **/
+						/* Handle the Block Key as Merkle Root for Block Submission. */
 						MAP_BLOCKS[NEW_BLOCK->hashMerkleRoot] = NEW_BLOCK;
 							
-						/** Construct a response packet by serializing the Block. **/
+						/* Construct a response packet by serializing the Block. */
 						Packet RESPONSE;
 						RESPONSE.HEADER = BLOCK_DATA;
 						RESPONSE.DATA   = SerializeBlock(NEW_BLOCK);
@@ -220,29 +227,22 @@ namespace LLP
 				return;
 			}
 			
-			/** On Connect Event, Assign the Proper Daemon Handle. **/
+			/* On Connect Event, Assign the Proper Daemon Handle. */
 			if(EVENT == EVENT_CONNECT)
 				return;
 			
-			/** On Disconnect Event, Reduce the Connection Count for Daemon **/
+			/* On Disconnect Event, Reduce the Connection Count for Daemon */
 			if(EVENT == EVENT_DISCONNECT)
 				return;
 		
 		}
 		
-		/** This function is necessary for a template LLP server. It handles your 
-			custom messaging system, and how to interpret it from raw packets. **/
+		/* This function is necessary for a template LLP server. It handles your 
+			custom messaging system, and how to interpret it from raw packets. */
 		bool ProcessPacket()
 		{
 			Packet PACKET   = this->INCOMING;
 			
-			
-			/** If There are no Active nodes, or it is Initial Block Download:
-				Send a failed response to the miners. **/
-			if(Net::vNodes.size() == 0 ) 
-			{ 
-				printf("%%%%%%%%%% Mining LLP: Rejected Request...No Connections\n"); return false; 
-			}
 
 			if(Core::IsInitialBlockDownload() ) 
 			{ 
@@ -255,12 +255,12 @@ namespace LLP
 			}
 			
 			
-			/** Set the Mining Channel this Connection will Serve Blocks for. **/
+			/* Set the Mining Channel this Connection will Serve Blocks for. */
 			if(PACKET.HEADER == SET_CHANNEL)
 			{ 
 				nChannel = bytes2uint(PACKET.DATA); 
 				
-				/** Don't allow Mining LLP Requests for Proof of Stake Channel. **/
+				/* Don't allow Mining LLP Requests for Proof of Stake Channel. */
 				if(nChannel == 0)
 					return false; 
 				
@@ -271,11 +271,11 @@ namespace LLP
 			}
 			
 			
-			/** Return a Ping if Requested. **/
+			/* Return a Ping if Requested. */
 			if(PACKET.HEADER == PING){ Packet PACKET; PACKET.HEADER = PING; this->WritePacket(PACKET); return true; }
 			
 			
-			/** Set the Mining Channel this Connection will Serve Blocks for. **/
+			/* Set the Mining Channel this Connection will Serve Blocks for. */
 			if(PACKET.HEADER == SET_COINBASE)
 			{
 				Coinbase* pCoinbase = new Coinbase(PACKET.DATA, GetCoinbaseReward(Core::pindexBest, nChannel, 0));
@@ -302,7 +302,7 @@ namespace LLP
 			}
 			
 			
-			/** Clear the Block Map if Requested by Client. **/
+			/* Clear the Block Map if Requested by Client. */
 			if(PACKET.HEADER == CLEAR_MAP)
 			{
 				ClearMap();
@@ -311,9 +311,9 @@ namespace LLP
 			}
 			
 			
-			/** Get Height Process:
+			/* Get Height Process:
 				Responds to the Miner with the Height of Current Best Block.
-				Used to poll whether a new block needs to be created. **/
+				Used to poll whether a new block needs to be created. */
 			if(PACKET.HEADER == GET_HEIGHT)
 			{
 				Packet RESPONSE;
@@ -323,7 +323,7 @@ namespace LLP
 				
 				this->WritePacket(RESPONSE);
 
-				/** Clear the Maps if Requested Height that is a New Best Block. **/
+				/* Clear the Maps if Requested Height that is a New Best Block. */
 				if(Core::nBestHeight > nBestHeight)
 				{
 					ClearMap();
@@ -366,8 +366,8 @@ namespace LLP
 			}
 			
 			
-			/** Get Reward Process:
-				Responds with the Current Block Reward. **/
+			/* Get Reward Process:
+				Responds with the Current Block Reward. */
 			if(PACKET.HEADER == GET_REWARD)
 			{
 				uint64 nCoinbaseReward = GetCoinbaseReward(Core::pindexBest, nChannel, 0);
@@ -379,17 +379,17 @@ namespace LLP
 				this->WritePacket(RESPONSE);
 				
 				if(GetArg("-verbose", 0) >= 2)
-					printf("%%%%%%%%%% Mining LLP: Sent Coinbase Reward of %"PRIu64"\n", nCoinbaseReward);
+					printf("%%%%%%%%%% Mining LLP: Sent Coinbase Reward of %" PRIu64 "\n", nCoinbaseReward);
 				
 				return true;
 			}
 			
-			/** Allow Block Subscriptions. **/
+			/* Allow Block Subscriptions. */
 			if(PACKET.HEADER == SUBSCRIBE)
 			{
 				nSubscribed = bytes2uint(PACKET.DATA); 
 				
-				/** Don't allow Mining LLP Requests for Proof of Stake Channel. **/
+				/* Don't allow Mining LLP Requests for Proof of Stake Channel. */
 				if(nSubscribed == 0)
 					return false; 
 				
@@ -399,9 +399,9 @@ namespace LLP
 				return true; 
 			}
 			
-			/** New block Process:
+			/* New block Process:
 				Keeps a map of requested blocks for this connection.
-				Clears map once new block is submitted successfully. **/
+				Clears map once new block is submitted successfully. */
 			if(PACKET.HEADER == GET_BLOCK)
 			{
 				Core::CBlock* NEW_BLOCK = Core::CreateNewBlock(*pMiningKey, pwalletMain, nChannel, MAP_BLOCKS.size() + 1, pCoinbaseTx);
@@ -415,7 +415,7 @@ namespace LLP
 				}
 				MAP_BLOCKS[NEW_BLOCK->hashMerkleRoot] = NEW_BLOCK;
 					
-				/** Construct a response packet by serializing the Block. **/
+				/* Construct a response packet by serializing the Block. */
 				Packet RESPONSE;
 				RESPONSE.HEADER = BLOCK_DATA;
 				RESPONSE.DATA   = SerializeBlock(NEW_BLOCK);
@@ -427,10 +427,10 @@ namespace LLP
 			}
 			
 			
-			/** Submit Block Process:
+			/* Submit Block Process:
 				Accepts a new block Merkle and nNonce for submit.
 				This is to correlate where in memory the actual
-				block is from MAP_BLOCKS. **/
+				block is from MAP_BLOCKS. */
 			if(PACKET.HEADER == SUBMIT_BLOCK)
 			{
 				uint512 hashMerkleRoot;
@@ -472,7 +472,7 @@ namespace LLP
 			}
 			
 			
-			/** Check Block Command: Allows Client to Check if a Block is part of the Main Chain. **/
+			/* Check Block Command: Allows Client to Check if a Block is part of the Main Chain. */
 			if(PACKET.HEADER == CHECK_BLOCK)
 			{
 				uint1024 hashBlock;
@@ -491,26 +491,13 @@ namespace LLP
 					
 				return true;
 			}
-			std::vector<unsigned char> DATA;
-			DATA.insert(DATA.end(), VERSION.begin(),   VERSION.end());
-			DATA.insert(DATA.end(), PREVIOUS.begin(), PREVIOUS.end());
-			DATA.insert(DATA.end(), MERKLE.begin(),     MERKLE.end());
-			DATA.insert(DATA.end(), CHANNEL.begin(),   CHANNEL.end());
-			DATA.insert(DATA.end(), HEIGHT.begin(),     HEIGHT.end());
-			DATA.insert(DATA.end(), BITS.begin(),         BITS.end());
-			DATA.insert(DATA.end(), NONCE.begin(),       NONCE.end());
-			
-			return DATA;
-		}
-	};
-}
 			
 			return false;
 		}
 		
 	private:
 	
-		/** Convert the Header of a Block into a Byte Stream for Reading and Writing Across Sockets. **/
+		/* Convert the Header of a Block into a Byte Stream for Reading and Writing Across Sockets. */
 		std::vector<unsigned char> SerializeBlock(Core::CBlock* BLOCK)
 		{
 			std::vector<unsigned char> VERSION  = uint2bytes(BLOCK->nVersion);
@@ -534,4 +521,3 @@ namespace LLP
 		}
 	};
 }
-		

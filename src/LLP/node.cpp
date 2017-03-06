@@ -8,9 +8,14 @@
   
 *******************************************************************************************/
 
-#include "Templates/server.h"
-#include "Include/network.h"
-#include "Include/hosts.h"
+#include "include/network.h"
+#include "include/hosts.h"
+#include "include/node.h"
+#include "include/message.h"
+
+#include "../LLD/include/index.h"
+
+#include "../Core/include/block.h"
 
 namespace LLP
 {
@@ -132,7 +137,7 @@ namespace LLP
 			PushMessage("offset", nOffset);
 				
 			if(GetArg("-verbose", 0) >= 3)
-				printf("***** Node: Sent Offset %i | %u.%u.%u.%u | Unified %"PRId64"\n", nOffset, ADDRESS[0], ADDRESS[1], ADDRESS[2], ADDRESS[3], GetUnifiedTimestamp());
+				printf("***** Node: Sent Offset %i | %hhu.%hhu.%hhu.%hhu | Unified %" PRId64 "\n", nOffset, ADDRESS[0], ADDRESS[1], ADDRESS[2], ADDRESS[3], GetUnifiedTimestamp());
 			
 			return true;
 		}
@@ -233,7 +238,7 @@ namespace LLP
 		 * NOTE: These following methods will be deprecated post Tritium. 
 		 *
 		 * ______________________________________________________________
-		 * /
+		 */
 			
 			
 		/* Message Version is the first message received.

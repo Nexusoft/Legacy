@@ -1,8 +1,10 @@
 /*******************************************************************************************
  
-			Hash(BEGIN(Satoshi[2010]), END(Sunny[2012])) == Videlicet[2014] ++
-   
- [Learn and Create] Viz. http://www.opensource.org/licenses/mit-license.php
+			(c) Hash(BEGIN(Satoshi[2010]), END(Sunny[2012])) == Videlicet[2017] ++
+			
+			(c) Copyright Nexus Developers 2014 - 2017
+			
+			http://www.opensource.org/licenses/mit-license.php
   
 *******************************************************************************************/
 
@@ -13,7 +15,9 @@
 #include <vector>
 #include <openssl/bn.h>
 
-#include "uint1024.h" // for uint64
+#include "../../LLU/templates/serialize.h"
+#include "../../LLP/include/network.h"
+
 
 /** Errors thrown by the bignum class */
 class bignum_error : public std::runtime_error

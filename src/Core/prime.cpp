@@ -8,6 +8,7 @@
   
 *******************************************************************************************/
 
+#include "include/prime.h"
 #include "../LLC/types/bignum.h"
 
 using namespace std;
@@ -41,7 +42,7 @@ namespace Core
 		/* Largest prime gap in cluster can be + 12
 		 * this was determined by previously found clusters 
 		 * up to 17 primes */
-		for( next ; next <= lastPrime + 12; next += 2)
+		for( ; next <= lastPrime + 12 ; next += 2)
 		{
 			if(PrimeCheck(next, checks))
 			{

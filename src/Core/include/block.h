@@ -11,12 +11,11 @@
 #ifndef NEXUS_CORE_INCLUDE_BLOCK_H
 #define NEXUS_CORE_INCLUDE_BLOCK_H
 
-#include <stdint.h>
-
-#include "../../LLC/hash/SK.h"
+#include "transaction.h"
 #include "../../LLC/hash/macro.h"
 
-#include "../../LLU/templates/serialize.h"
+
+class CBigNum;
 
 namespace LLP 
 { 
@@ -38,7 +37,6 @@ namespace Wallet
 namespace Core
 {
 	class CBlockIndex;
-	class CTransaction;
 
 	
 	/** Nodes collect new transactions into a block, hash them into a hash tree,

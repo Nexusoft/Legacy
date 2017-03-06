@@ -358,20 +358,20 @@ namespace Wallet
 
 	bool CTxDB::ReadTxIndex(uint512 hash, Core::CTxIndex& txindex)
 	{
-		assert(!Net::fClient);
+		assert(!fClient);
 		txindex.SetNull();
 		return Read(make_pair(string("tx"), hash), txindex);
 	}
 
 	bool CTxDB::UpdateTxIndex(uint512 hash, const Core::CTxIndex& txindex)
 	{
-		assert(!Net::fClient);
+		assert(!fClient);
 		return Write(make_pair(string("tx"), hash), txindex);
 	}
 
 	bool CTxDB::AddTxIndex(const Core::CTransaction& tx, const Core::CDiskTxPos& pos, int nHeight)
 	{
-		assert(!Net::fClient);
+		assert(!fClient);
 
 		// Add to tx index
 		uint512 hash = tx.GetHash();
@@ -381,7 +381,7 @@ namespace Wallet
 
 	bool CTxDB::EraseTxIndex(const Core::CTransaction& tx)
 	{
-		assert(!Net::fClient);
+		assert(!fClient);
 		uint512 hash = tx.GetHash();
 
 		return Erase(make_pair(string("tx"), hash));
@@ -389,13 +389,13 @@ namespace Wallet
 
 	bool CTxDB::ContainsTx(uint512 hash)
 	{
-		assert(!Net::fClient);
+		assert(!fClient);
 		return Exists(make_pair(string("tx"), hash));
 	}
 
 	bool CTxDB::ReadOwnerTxes(uint512 hash, int nMinHeight, vector<Core::CTransaction>& vtx)
 	{
-		assert(!Net::fClient);
+		assert(!Client);
 		vtx.clear();
 
 		// Get cursor
@@ -455,7 +455,7 @@ namespace Wallet
 
 	bool CTxDB::ReadDiskTx(uint512 hash, Core::CTransaction& tx, Core::CTxIndex& txindex)
 	{
-		assert(!Net::fClient);
+		assert(!Client);
 		tx.SetNull();
 		if (!ReadTxIndex(hash, txindex))
 			return false;

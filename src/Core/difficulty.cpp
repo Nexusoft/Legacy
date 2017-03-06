@@ -9,6 +9,9 @@
 *******************************************************************************************/
 
 #include "include/block.h"
+#include "include/difficulty.h"
+#include "include/supply.h"
+#include "include/prime.h"
 
 using namespace std;
 
@@ -51,7 +54,7 @@ namespace Core
 	
 	
 	/* Break the Chain Age in Minutes into Days, Hours, and Minutes. */
-	void GetChainTimes(unsigned int nAge, unsigned int& nDays, unsigned int& nHours, unsigned int& nMinutes);
+	void GetChainTimes(unsigned int nAge, unsigned int& nDays, unsigned int& nHours, unsigned int& nMinutes)
 	{
 		nDays = nAge / 1440;
 		nHours = (nAge - (nDays * 1440)) / 60;
@@ -61,11 +64,12 @@ namespace Core
 	
 	/* Minimum work required after nTime from last checkpoint
 		Used to compare blocks difficulty to a minimum probable difficulty after nTime */
-	unsigned int ComputeMinWork(const CBlockIndex* pcheckpoint, unsigned int nTime, int nChannel);
+	unsigned int ComputeMinWork(const CBlockIndex* pcheckpoint, unsigned int nTime, int nChannel)
 	{
 	
 		//TODO: Precise Calculation on Maximum Decrease of Difficulty from Version 3 +
 		
+		return 0;
 	}
 	
 	
@@ -192,7 +196,7 @@ namespace Core
 			unsigned int nDays, nHours, nMinutes;
 			GetChainTimes(GetChainAge(pindexFirst->GetBlockTime()), nDays, nHours, nMinutes);
 			
-			printf("RETARGET [TRUST] weighted time=%"PRId64" actual time =%"PRId64"[%f %%]\n\tchain time: [%"PRId64" / %"PRId64"]\n\tdifficulty: [%f to %f]\n\ttrust height: %"PRId64" [AGE %u days, %u hours, %u minutes]\n\n", 
+			printf("RETARGET [TRUST] weighted time=%" PRId64 " actual time =%" PRId64 "[%f %%]\n\tchain time: [%" PRId64 " / %" PRId64 "]\n\tdifficulty: [%f to %f]\n\ttrust height: %" PRId64 " [AGE %u days, %u hours, %u minutes]\n\n", 
 			nBlockTime, max(pindexFirst->GetBlockTime() - pindexLast->GetBlockTime(), (int64) 1), ((100.0 * nLowerBound) / nUpperBound), nBlockTarget, nBlockTime, GetDifficulty(pindexFirst->nBits, 0), GetDifficulty(bnNew.GetCompact(), 0), pindexFirst->nChannelHeight, nDays, nHours, nMinutes);
 		}
 		
@@ -316,7 +320,7 @@ namespace Core
 			unsigned int nDays, nHours, nMinutes;
 			GetChainTimes(GetChainAge(pindexFirst->GetBlockTime()), nDays, nHours, nMinutes);
 			
-			printf("RETARGET [PRIME] weighted time=%"PRId64" actual time %"PRId64", [%f %%]\n\tchain time: [%"PRId64" / %"PRId64"]\n\treleased reward: %"PRId64" [%f %%]\n\tdifficulty: [%f to %f]\n\tprime height: %"PRId64" [AGE %u days, %u hours, %u minutes]\n\n", 
+			printf("RETARGET [PRIME] weighted time=%" PRId64 " actual time %" PRId64 ", [%f %%]\n\tchain time: [%" PRId64 " / %" PRId64 "]\n\treleased reward: %" PRId64 " [%f %%]\n\tdifficulty: [%f to %f]\n\tprime height: %" PRId64 " [AGE %u days, %u hours, %u minutes]\n\n", 
 			nBlockTime, max(pindexFirst->GetBlockTime() - pindexLast->GetBlockTime(), (int64) 1), nMod * 100.0, nBlockTarget, nBlockTime, pindexFirst->nReleasedReserve[0] / COIN, 100.0 * nChainMod, GetDifficulty(pindexFirst->nBits, 1), GetDifficulty(nBits, 1), pindexFirst->nChannelHeight, nDays, nHours, nMinutes);
 		}
 		
@@ -440,7 +444,7 @@ namespace Core
 			unsigned int nDays, nHours, nMinutes;
 			GetChainTimes(GetChainAge(pindexFirst->GetBlockTime()), nDays, nHours, nMinutes);
 			
-			printf("RETARGET [HASH] weighted time=%"PRId64" actual time %"PRId64" [%f %%]\n\tchain time: [%"PRId64" / %"PRId64"]\n\treleased reward: %"PRId64" [%f %%]\n\tdifficulty: [%f to %f]\n\thash height: %"PRId64" [AGE %u days, %u hours, %u minutes]\n\n", 
+			printf("RETARGET [HASH] weighted time=%" PRId64 " actual time %" PRId64 " [%f %%]\n\tchain time: [%" PRId64 " / %" PRId64 "]\n\treleased reward: %" PRId64 " [%f %%]\n\tdifficulty: [%f to %f]\n\thash height: %" PRId64 " [AGE %u days, %u hours, %u minutes]\n\n", 
 			nBlockTime, max(pindexFirst->GetBlockTime() - pindexLast->GetBlockTime(), (int64) 1), (100.0 * nLowerBound) / nUpperBound, nBlockTarget, nBlockTime, pindexFirst->nReleasedReserve[0] / COIN, 100.0 * nChainMod, GetDifficulty(pindexFirst->nBits, 2), GetDifficulty(bnNew.GetCompact(), 2), pindexFirst->nChannelHeight, nDays, nHours, nMinutes);
 		}
 		

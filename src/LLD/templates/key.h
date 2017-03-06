@@ -11,7 +11,6 @@
 #ifndef NEXUS_LLD_TEMPLATES_KEY_H
 #define NEXUS_LLD_TEMPLATES_KEY_H
 
-#include <boost/thread.hpp>
 #include <fstream>
 
 #include "../../LLC/hash/SK.h"
@@ -21,6 +20,7 @@
 #include "../../LLU/include/config.h"
 #include "../../LLU/include/mutex.h"
 #include "../../LLU/templates/hex.h"
+#include "../../LLU/templates/serialize.h"
 
 namespace LLD
 {
@@ -116,7 +116,7 @@ namespace LLD
 	{
 	protected:
 		/** Mutex for Thread Synchronization. **/
-		mutable boost::mutex KEY_MUTEX;
+		mutable Mutex_t KEY_MUTEX;
 		
 		
 		/** The String to hold the Disk Location of Database File. 

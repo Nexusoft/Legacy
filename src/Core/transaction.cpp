@@ -8,12 +8,16 @@
   
 *******************************************************************************************/
 
-#include "../main.h"
+#include "include/transaction.h"
+#include "include/dispatch.h"
 
-#include "../wallet/db.h"
-#include "../util/ui_interface.h"
+#include "../LLU/include/ui_interface.h"
+#include "../LLU/include/args.h"
 
-#include "../LLD/index.h"
+#include "../LLD/include/index.h"
+#include "../LLP/include/node.h"
+
+#include "../Wallet/wallet.h"
 
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/filesystem.hpp>
@@ -201,7 +205,7 @@ namespace Core
 	
 	
 
-	int64 CTransaction::GetMinFee(unsigned int nBlockSize=1, bool fAllowFree=false, enum GetMinFee_mode mode=GMF_BLOCK) const
+	int64 CTransaction::GetMinFee(unsigned int nBlockSize, bool fAllowFree, enum GetMinFee_mode mode) const
 	{
 		if(nVersion >= 2)
 			return 0;
@@ -285,7 +289,7 @@ namespace Core
 	}
 	
 	
-	bool CTransaction::ReadFromDisk(CDiskTxPos pos, FILE** pfileRet=NULL)
+	bool CTransaction::ReadFromDisk(CDiskTxPos pos, FILE** pfileRet)
 	{
 		CAutoFile filein = CAutoFile(OpenBlockFile(pos.nFile, 0, pfileRet ? "rb+" : "rb"), SER_DISK, DATABASE_VERSION);
 		if (!filein)
@@ -446,7 +450,7 @@ namespace Core
 
 	int CMerkleTx::SetMerkleBranch(const CBlock* pblock)
 	{
-		if (Net::fClient)
+		if (fClient)
 		{
 			if (hashBlock == 0)
 				return 0;
@@ -505,13 +509,13 @@ namespace Core
 	{
 		// Basic checks that don't depend on any context
 		if (vin.empty())
-			return DoS(10, error("CTransaction::CheckTransaction() : vin empty"));
+			return LLP::DoS(NULL, 10, error("CTransaction::CheckTransaction() : vin empty"));
 		if (vout.empty())
-			return DoS(10, error("CTransaction::CheckTransaction() : vout empty"));
+			return LLP::DoS(NULL, 10, error("CTransaction::CheckTransaction() : vout empty"));
 			
 		// Size limits
 		if (::GetSerializeSize(*this, SER_NETWORK, LLP::PROTOCOL_VERSION) > MAX_BLOCK_SIZE)
-			return DoS(100, error("CTransaction::CheckTransaction() : size limits failed"));
+			return LLP::DoS(NULL, 100, error("CTransaction::CheckTransaction() : size limits failed"));
 
 		// Check for negative or overflow output values
 		int64 nValueOut = 0;
@@ -519,18 +523,18 @@ namespace Core
 		{
 			const CTxOut& txout = vout[i];
 			if (txout.IsEmpty() && (!IsCoinBase()) && (!IsCoinStake()))
-				return DoS(100, error("CTransaction::CheckTransaction() : txout empty for user transaction"));
+				return LLP::DoS(NULL, 100, error("CTransaction::CheckTransaction() : txout empty for user transaction"));
 				
 			// Nexus: enforce minimum output amount
 			if ((!txout.IsEmpty()) && txout.nValue < MIN_TXOUT_AMOUNT)
-				return DoS(100, error("CTransaction::CheckTransaction() : txout.nValue below minimum"));
+				return LLP::DoS(NULL, 100, error("CTransaction::CheckTransaction() : txout.nValue below minimum"));
 				
 			if (txout.nValue > MAX_TXOUT_AMOUNT)
-				return DoS(100, error("CTransaction::CheckTransaction() : txout.nValue too high"));
+				return LLP::DoS(NULL, 100, error("CTransaction::CheckTransaction() : txout.nValue too high"));
 				
 			nValueOut += txout.nValue;
 			if (!MoneyRange(nValueOut))
-				return DoS(100, error("CTransaction::CheckTransaction() : txout total out of range"));
+				return LLP::DoS(NULL, 100, error("CTransaction::CheckTransaction() : txout total out of range"));
 		}
 
 		// Check for duplicate inputs
@@ -547,13 +551,13 @@ namespace Core
 		if (IsCoinBase() || IsCoinStake())
 		{
 			if (vin[0].scriptSig.size() < 2 || vin[0].scriptSig.size() > 100)
-				return DoS(100, error("CTransaction::CheckTransaction() : coinbase script size"));
+				return LLP::DoS(NULL, 100, error("CTransaction::CheckTransaction() : coinbase script size"));
 		}
 		else
 		{
 			BOOST_FOREACH(const CTxIn& txin, vin)
 				if (txin.prevout.IsNull())
-					return DoS(10, error("CTransaction::CheckTransaction() : prevout is null"));
+					return LLP::DoS(NULL, 10, error("CTransaction::CheckTransaction() : prevout is null"));
 		}
 
 		return true;
@@ -570,11 +574,11 @@ namespace Core
 
 		// Coinbase is only valid in a block, not as a loose transaction
 		if (tx.IsCoinBase())
-			return tx.DoS(100, error("CTxMemPool::accept() : coinbase as individual tx"));
+			return LLP::DoS(NULL, 100, error("CTxMemPool::accept() : coinbase as individual tx"));
 			
 		// Nexus: coinstake is also only valid in a block, not as a loose transaction
 		if (tx.IsCoinStake())
-			return tx.DoS(100, error("CTxMemPool::accept() : coinstake as individual tx"));
+			return LLP::DoS(NULL, 100, error("CTxMemPool::accept() : coinstake as individual tx"));
 
 		// To help v0.1.5 clients who would see it as a negative number
 		if ((int64)tx.nLockTime > std::numeric_limits<int>::max())
@@ -657,7 +661,7 @@ namespace Core
 			// be annoying or make other's transactions take longer to confirm.
 			if (nFees < MIN_RELAY_TX_FEE)
 			{
-				static CCriticalSection cs;
+				static Mutex_t cs;
 				static double dFreeCount;
 				static int64 nLastTime;
 				int64 nNow = GetUnifiedTimestamp();
@@ -785,16 +789,15 @@ namespace Core
 
 	bool CMerkleTx::AcceptToMemoryPool(LLD::CIndexDB& indexdb, bool fCheckInputs)
 	{
-		if (Net::fClient)
+		if (fClient)
 		{
 			if (!IsInMainChain() && !ClientConnectInputs())
 				return false;
+			
 			return CTransaction::AcceptToMemoryPool(indexdb, false);
 		}
-		else
-		{
-			return CTransaction::AcceptToMemoryPool(indexdb, fCheckInputs);
-		}
+
+		return CTransaction::AcceptToMemoryPool(indexdb, fCheckInputs);
 	}
 
 	bool CMerkleTx::AcceptToMemoryPool()
@@ -943,7 +946,7 @@ namespace Core
 				// Revisit this if/when transaction replacement is implemented and allows
 				// adding inputs:
 				fInvalid = true;
-				return DoS(100, error("FetchInputs() : %s prevout.n out of range %d %d %d prev tx %s\n%s", GetHash().ToString().substr(0,10).c_str(), prevout.n, txPrev.vout.size(), txindex.vSpent.size(), prevout.hash.ToString().substr(0,10).c_str(), txPrev.ToString().c_str()));
+				return LLP::DoS(NULL, 100, error("FetchInputs() : %s prevout.n out of range %d %d %d prev tx %s\n%s", GetHash().ToString().substr(0,10).c_str(), prevout.n, txPrev.vout.size(), txindex.vSpent.size(), prevout.hash.ToString().substr(0,10).c_str(), txPrev.ToString().c_str()));
 			}
 		}
 
@@ -1002,7 +1005,6 @@ namespace Core
 		if (!IsCoinBase())
 		{
 			int64 nValueIn = 0;
-			int64 nFees = 0;
 			for (unsigned int i = (int) IsCoinStake(); i < vin.size(); i++)
 			{
 				COutPoint prevout = vin[i].prevout;
@@ -1011,7 +1013,7 @@ namespace Core
 				CTransaction& txPrev = inputs[prevout.hash].second;
 
 				if (prevout.n >= txPrev.vout.size() || prevout.n >= txindex.vSpent.size())
-					return DoS(100, error("ConnectInputs() : %s prevout.n out of range %d %d %d prev tx %s\n%s", GetHash().ToString().substr(0,10).c_str(), prevout.n, txPrev.vout.size(), txindex.vSpent.size(), prevout.hash.ToString().substr(0,10).c_str(), txPrev.ToString().c_str()));
+					return LLP::DoS(NULL, 100, error("ConnectInputs() : %s prevout.n out of range %d %d %d prev tx %s\n%s", GetHash().ToString().substr(0,10).c_str(), prevout.n, txPrev.vout.size(), txindex.vSpent.size(), prevout.hash.ToString().substr(0,10).c_str(), txPrev.ToString().c_str()));
 
 				// If prev is coinbase/coinstake, check that it's matured
 				if (txPrev.IsCoinBase() || txPrev.IsCoinStake())
@@ -1021,12 +1023,12 @@ namespace Core
 
 				// Nexus: check transaction timestamp
 				if (txPrev.nTime > nTime)
-					return DoS(100, error("ConnectInputs() : transaction timestamp earlier than input transaction"));
+					return LLP::DoS(NULL, 100, error("ConnectInputs() : transaction timestamp earlier than input transaction"));
 
 				// Check for negative or overflow input values
 				nValueIn += txPrev.vout[prevout.n].nValue;
 				if (!MoneyRange(txPrev.vout[prevout.n].nValue) || !MoneyRange(nValueIn))
-					return DoS(100, error("ConnectInputs() : txin values out of range"));
+					return LLP::DoS(NULL, 100, error("ConnectInputs() : txin values out of range"));
 
 			}
 			// The first loop above does all the inexpensive checks.
@@ -1068,11 +1070,11 @@ namespace Core
 				
 				printf("ConnectInputs() : %f Value Out, %f Interest, %f Expected\n", (double)vout[0].nValue / COIN, (double)nInterest / COIN, (double)(nInterest + nValueIn) / COIN);
 				if (vout[0].nValue != (nInterest + nValueIn))
-					return DoS(100, error("ConnectInputs() : %s stake reward mismatch", GetHash().ToString().substr(0,10).c_str()));
+					return LLP::DoS(NULL, 100, error("ConnectInputs() : %s stake reward mismatch", GetHash().ToString().substr(0,10).c_str()));
 					
 			}
 			else if (nValueIn < GetValueOut())
-				return DoS(100, error("ConnectInputs() : %s value in < value out", GetHash().ToString().substr(0,10).c_str()));
+				return LLP::DoS(NULL, 100, error("ConnectInputs() : %s value in < value out", GetHash().ToString().substr(0,10).c_str()));
 				
 		}
 

@@ -18,10 +18,10 @@
 #include <boost/interprocess/sync/interprocess_semaphore.hpp>
 #include <boost/interprocess/sync/lock_options.hpp>
 
-#define LOCK(a) boost::lock_guard<boost::mutex> lock(a)
+//#define LOCK(a) boost::lock_guard<boost::mutex> lock(a)
 
 
-typedef boost::mutex                                         Mutex_t;
+
 
 
 /** Wrapped boost mutex: supports recursive locking, but no waiting  */
@@ -30,6 +30,9 @@ typedef boost::interprocess::interprocess_recursive_mutex CCriticalSection;
 
 /** Wrapped boost mutex: supports waiting but not recursive locking */
 typedef boost::interprocess::interprocess_mutex CWaitableCriticalSection;
+
+
+typedef CCriticalSection                                         Mutex_t;
 
 
 #ifdef DEBUG_LOCKORDER
@@ -115,10 +118,9 @@ public:
 
 typedef CMutexLock<CCriticalSection> CCriticalBlock;
 
-
-//#define LOCK(cs) CCriticalBlock criticalblock(cs, #cs, __FILE__, __LINE__)
-//#define LOCK2(cs1,cs2) CCriticalBlock criticalblock1(cs1, #cs1, __FILE__, __LINE__),criticalblock2(cs2, #cs2, __FILE__, __LINE__)
-//#define TRY_LOCK(cs,name) CCriticalBlock name(cs, #cs, __FILE__, __LINE__, true)
+#define LOCK(cs) CCriticalBlock criticalblock(cs, #cs, __FILE__, __LINE__)
+#define LOCK2(cs1,cs2) CCriticalBlock criticalblock1(cs1, #cs1, __FILE__, __LINE__),criticalblock2(cs2, #cs2, __FILE__, __LINE__)
+#define TRY_LOCK(cs,name) CCriticalBlock name(cs, #cs, __FILE__, __LINE__, true)
 
 #define ENTER_CRITICAL_SECTION(cs) \
     { \
@@ -157,7 +159,7 @@ public:
     }
 
     bool try_wait() {
-        LOCK(cs);
+        //LOCK(cs);
         if (val>0) {
             val--;
             return true;
@@ -166,7 +168,7 @@ public:
     }
 
     void post() {
-        LOCK(cs);
+        //LOCK(cs);
         val++;
     }
 };
