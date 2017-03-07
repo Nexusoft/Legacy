@@ -8,98 +8,115 @@
   
 *******************************************************************************************/
 
-#include <cstdio>
-
+#include "include/config.h"
+#include "include/debug.h"
+#include "include/args.h"
 #include "include/mutex.h"
+#include "include/runtime.h"
+#include "include/convert.h"
+
+#include <stdarg.h>
+#include <stdio.h>
+
+#ifndef WIN32
+#include <execinfo.h>
+
+#define _vsnprintf(a,b,c,d) vsnprintf(a,b,c,d)
+#define strlwr(psz)         to_lower(psz)
+#define _strlwr(psz)        to_lower(psz)
+#endif
 
 static FILE* fileout = NULL;
 static Mutex_t DEBUG_MUTEX;
 inline int OutputDebugStringF(const char* pszFormat, ...)
 {
-	DEBUG_MUTEX.lock();
+	LOCK(DEBUG_MUTEX);
 	
-    int ret = 0;
-    if (fPrintToConsole)
-    {
-        // print to console
-        va_list arg_ptr;
-        va_start(arg_ptr, pszFormat);
-        ret = vprintf(pszFormat, arg_ptr);
-        va_end(arg_ptr);
-    }
+	int ret = 0;
+	if (fPrintToConsole)
+	{
+		// print to console
+		va_list arg_ptr;
+		va_start(arg_ptr, pszFormat);
+		ret = vprintf(pszFormat, arg_ptr);
+		va_end(arg_ptr);
+	}
 
-    // print to debug.log
-    if (!fileout)
-    {
-        boost::filesystem::path pathDebug = GetDataDir() / "debug.log";
-        fileout = fopen(pathDebug.string().c_str(), "a");
-        if (fileout) setbuf(fileout, NULL); // unbuffered
-    }
-    if (fileout)
-    {
-        static bool fStartedNewLine = true;
-        static boost::mutex mutexDebugLog;
-        boost::mutex::scoped_lock scoped_lock(mutexDebugLog);
+	// print to debug.log
+	if (!fileout)
+	{
+		boost::filesystem::path pathDebug = GetDataDir() / "debug.log";
+		fileout = fopen(pathDebug.string().c_str(), "a");
+		if (fileout) setbuf(fileout, NULL); // unbuffered
+	}
+	
+	if (fileout)
+	{
+		static bool fStartedNewLine = true;
 
-        // Debug print useful for profiling
-        if (fLogTimestamps && fStartedNewLine)
-            fprintf(fileout, "%s ", DateTimeStrFormat(GetUnifiedTimestamp()).c_str());
-        if (pszFormat[strlen(pszFormat) - 1] == '\n')
-            fStartedNewLine = true;
-        else
-            fStartedNewLine = false;
 
-        va_list arg_ptr;
-        va_start(arg_ptr, pszFormat);
-        ret = vfprintf(fileout, pszFormat, arg_ptr);
-        va_end(arg_ptr);
-    }
+		// Debug print useful for profiling
+		if (fLogTimestamps && fStartedNewLine)
+			fprintf(fileout, "%s ", DateTimeStrFormat(Timestamp()).c_str());
+		
+		if (pszFormat[strlen(pszFormat) - 1] == '\n')
+			fStartedNewLine = true;
+		else
+			fStartedNewLine = false;
+
+		va_list arg_ptr;
+		va_start(arg_ptr, pszFormat);
+		ret = vfprintf(fileout, pszFormat, arg_ptr);
+		va_end(arg_ptr);
+	}
 
 #ifdef WIN32
-    if (fPrintToDebugger)
-    {
-        static CCriticalSection cs_OutputDebugStringF;
-
-        // accumulate a line at a time
-        {
-            LOCK(cs_OutputDebugStringF);
-            static char pszBuffer[50000];
-            static char* pend;
-            if (pend == NULL)
-                pend = pszBuffer;
-            va_list arg_ptr;
-            va_start(arg_ptr, pszFormat);
-            int limit = END(pszBuffer) - pend - 2;
-            int ret = _vsnprintf(pend, limit, pszFormat, arg_ptr);
-            va_end(arg_ptr);
-            if (ret < 0 || ret >= limit)
-            {
-                pend = END(pszBuffer) - 2;
-                *pend++ = '\n';
-            }
-            else
-                pend += ret;
-            *pend = '\0';
-            char* p1 = pszBuffer;
-            char* p2;
-            while ((p2 = strchr(p1, '\n')))
-            {
-                p2++;
-                char c = *p2;
-                *p2 = '\0';
-                OutputDebugStringA(p1);
-                *p2 = c;
-                p1 = p2;
-            }
-            if (p1 != pszBuffer)
-                memmove(pszBuffer, p1, pend - p1 + 1);
-            pend -= (p1 - pszBuffer);
-        }
-    }
+	if (fPrintToDebugger)
+	{
+		// accumulate a line at a time
+		{
+			static char pszBuffer[50000];
+			static char* pend;
+			if (pend == NULL)
+					pend = pszBuffer;
+			va_list arg_ptr;
+			va_start(arg_ptr, pszFormat);
+			int limit = END(pszBuffer) - pend - 2;
+			int ret = _vsnprintf(pend, limit, pszFormat, arg_ptr);
+			va_end(arg_ptr);
+			if (ret < 0 || ret >= limit)
+			{
+					pend = END(pszBuffer) - 2;
+					*pend++ = '\n';
+			}
+			else
+					pend += ret;
+			
+			*pend = '\0';
+			
+			char* p1 = pszBuffer;
+			char* p2;
+			
+			while ((p2 = strchr(p1, '\n')))
+			{
+				p2++;
+				char c = *p2;
+				
+				*p2 = '\0';
+				
+				OutputDebugStringA(p1);
+				*p2 = c;
+				p1 = p2;
+			}
+			
+			if (p1 != pszBuffer)
+				memmove(pszBuffer, p1, pend - p1 + 1);
+			
+			pend -= (p1 - pszBuffer);
+		}
+	}
 #endif
-
-	DEBUG_MUTEX.unlock();
-    return ret;
+	return ret;
 }
 
 // Safer snprintf
@@ -123,7 +140,7 @@ int my_snprintf(char* buffer, size_t limit, const char* format, ...)
 }
 
 
-string real_strprintf(const std::string &format, int dummy, ...)
+std::string real_strprintf(const std::string &format, int dummy, ...)
 {
     char buffer[50000];
     char* p = buffer;
@@ -144,9 +161,10 @@ string real_strprintf(const std::string &format, int dummy, ...)
         if (p == NULL)
             throw std::bad_alloc();
     }
-    string str(p, p+ret);
+    std::string str(p, p+ret);
     if (p != buffer)
         delete[] p;
+	 
     return str;
 }
 

@@ -29,6 +29,10 @@ namespace Core
 		Mutex_t MANAGER_MUTEX;
 		
 		
+		/* Time Seed Manager. */
+		void TimestampManager();
+		
+		
 		/* Connection Manager Thread. */
 		void ConnectionManager();
 		

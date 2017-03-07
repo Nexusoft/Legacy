@@ -42,7 +42,7 @@ void RandAddSeedPerfmon()
     {
         RAND_add(pdata, nSize, nSize/100.0);
         memset(pdata, 0, nSize);
-        printf("%s RandAddSeed() %d bytes\n", DateTimeStrFormat(GetUnifiedTimestamp()).c_str(), nSize);
+        printf("%s RandAddSeed() %d bytes\n", DateTimeStrFormat(LLP::GetUnifiedTimestamp()).c_str(), nSize);
     }
 #endif
 }

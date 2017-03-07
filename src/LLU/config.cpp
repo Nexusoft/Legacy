@@ -8,32 +8,33 @@
   
 *******************************************************************************************/
 
-#ifndef NEXUS_LLU_INCLUDE_CONFIG_H
-#define NEXUS_LLU_INCLUDE_CONFIG_H
-
+#include "include/args.h"
 #include "include/config.h"
+#include "include/mutex.h"
 
-using namespace std;
-
+#include <boost/program_options/detail/config_file.hpp>
+#include <boost/program_options/parsers.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/filesystem/fstream.hpp>
 
 /* Read the Config file from the Disk. */
-void ReadConfigFile(map<string, string>& mapSettingsRet,
-                    map<string, vector<string> >& mapMultiSettingsRet)
+void ReadConfigFile(std::map<std::string, std::string>& mapSettingsRet,
+                    std::map<std::string, std::vector<std::string> >& mapMultiSettingsRet)
 {
     namespace fs = boost::filesystem;
     namespace pod = boost::program_options::detail;
 
     fs::ifstream streamConfig(GetConfigFile());
     if (!streamConfig.good())
-        return; // No bitcoin.conf file is OK
+        return; // No nexus.conf file is OK
 
-    set<string> setOptions;
+    std::set<std::string> setOptions;
     setOptions.insert("*");
 
     for (pod::config_file_iterator it(streamConfig, setOptions), end; it != end; ++it)
     {
         // Don't overwrite existing settings so command line settings override bitcoin.conf
-        string strKey = string("-") + it->string_key;
+        std::string strKey = std::string("-") + it->string_key;
         if (mapSettingsRet.count(strKey) == 0)
         {
             mapSettingsRet[strKey] = it->value[0];
@@ -127,7 +128,7 @@ boost::filesystem::path GetPidFile()
 {
     namespace fs = boost::filesystem;
 
-    fs::path pathPidFile(GetArg("-pid", "Nexus.pid"));
+    fs::path pathPidFile(GetArg("-pid", "nexus.pid"));
     if (!pathPidFile.is_complete()) pathPidFile = GetDataDir() / pathPidFile;
     return pathPidFile;
 }
@@ -139,7 +140,7 @@ const boost::filesystem::path &GetDataDir(bool fNetSpecific)
     namespace fs = boost::filesystem;
 
     static fs::path pathCached[2];
-    static CCriticalSection csPathCached;
+    static Mutex_t csPathCached;
     static bool cachedPath[2] = {false, false};
 
     fs::path &path = pathCached[fNetSpecific];
@@ -161,7 +162,7 @@ const boost::filesystem::path &GetDataDir(bool fNetSpecific)
         path = GetDefaultDataDir();
     }
     if (fNetSpecific && GetBoolArg("-testnet", false))
-        path /= "testnet25";
+        path /= "testnet";
 
     fs::create_directory(path);
 
@@ -173,7 +174,7 @@ const boost::filesystem::path &GetDataDir(bool fNetSpecific)
 #ifdef WIN32
 boost::filesystem::path static StartupShortcutPath()
 {
-    return MyGetSpecialFolderPath(CSIDL_STARTUP, true) / "Nexus.lnk";
+    return MyGetSpecialFolderPath(CSIDL_STARTUP, true) / "nexus.lnk";
 }
 
 
@@ -258,7 +259,7 @@ boost::filesystem::path static GetAutostartDir()
 
 boost::filesystem::path static GetAutostartFilePath()
 {
-    return GetAutostartDir() / "Nexus.desktop";
+    return GetAutostartDir() / "nexus.desktop";
 }
 
 
@@ -298,7 +299,8 @@ bool SetStartOnSystemStartup(bool fAutoStart)
         boost::filesystem::ofstream optionFile(GetAutostartFilePath(), ios_base::out|ios_base::trunc);
         if (!optionFile.good())
             return false;
-        // Write a bitcoin.desktop file to the autostart directory:
+		  
+        // Write a nexus.desktop file to the autostart directory:
         optionFile << "[Desktop Entry]\n";
         optionFile << "Type=Application\n";
         optionFile << "Name=Nexus\n";
@@ -316,8 +318,5 @@ bool SetStartOnSystemStartup(bool fAutoStart)
 
 bool GetStartOnSystemStartup() { return false; }
 bool SetStartOnSystemStartup(bool fAutoStart) { return false; }
-
-#endif
-
 
 #endif

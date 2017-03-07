@@ -13,6 +13,30 @@
 namespace Core
 {
 	
+	void NodeManager::TimestampManager()
+	{
+	
+		/* These checks are for after the first time seed has been established. 
+		if(fTimeUnified)
+		{
+				
+
+			if(nOffset > GetUnifiedAverage() + LLP::MAX_UNIFIED_DRIFT || nOffset < GetUnifiedAverage() - LLP::MAX_UNIFIED_DRIFT ) {
+				printf("***** Core LLP: Unified Samples Out of Drift Scope Current (%u) Samples (%u)\n", GetUnifiedAverage(), nOffset);
+						
+				DDOS->rSCORE += 10;
+						
+				if(mapBadResponse.count("offset"))
+					mapBadResponse["offset"] = 1;
+				else
+					mapBadResponse["offset"] ++ ;
+						
+				return true;
+			}
+		}
+		*/
+	}
+	
 	void NodeManager::ConnectionManager()
 	{
 		

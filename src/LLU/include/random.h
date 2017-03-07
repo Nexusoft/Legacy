@@ -13,6 +13,12 @@
 
 #include <openssl/rand.h>
 
+#include "../LLC/types/uint1024.h"
+
+#ifndef WIN32
+#include <sys/time.h>
+#endif
+
 
 /** Performance counter wrapper for Random Seed Generating. **/
 inline int64 GetPerformanceCounter()

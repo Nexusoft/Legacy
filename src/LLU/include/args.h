@@ -40,7 +40,22 @@ extern bool fNoListen;
 extern bool fLogTimestamps;
 
 
+
+/**
+* Parse the Argument Parameters
+*
+* @param argc Total Number of Arguments
+* @param argv The Arguments Array
+*/
 void ParseParameters(int argc, const char*const argv[]);
+
+
+/**
+* Give Opposite Argument Settings
+*
+* @param strArg Argument (e.g. "-foo")
+*/
+void InterpretNegativeSetting(std::string name, std::map<std::string, std::string>& mapSettingsRet);
 
 
 /**

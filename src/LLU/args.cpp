@@ -31,7 +31,7 @@ bool fTestNet = false;
 bool fNoListen = false;
 bool fLogTimestamps = false;
 
-static void InterpretNegativeSetting(std::string name, std::map<std::string, std::string>& mapSettingsRet)
+void InterpretNegativeSetting(std::string name, std::map<std::string, std::string>& mapSettingsRet)
 {
     // interpret -nofoo as -foo=0 (and -nofoo=0 as -foo=1) as long as -foo not set
     if (name.find("-no") == 0)

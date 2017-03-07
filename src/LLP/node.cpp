@@ -170,7 +170,7 @@ namespace LLP
 			/* Handle the Request ID's. */
 			{ LOCK(NODE_MUTEX);
 				
-				/* Ignore Messages Sent that weren't Requested. */
+				/* Ignore Messages Recieved that weren't Requested. */
 				if(!mapSentRequests.count(nRequestID) || mapSentRequests[nRequestID] != "getoffset") {
 					DDOS->rSCORE += 5;
 					
@@ -186,30 +186,7 @@ namespace LLP
 				
 				/* Remove the Request from the Map. */
 				mapSentRequests.erase(nRequestID);
-				
-				
-				/* These checks are for after the first time seed has been established. 
-					TODO: Look at the possible attack vector of the first time seed being manipulated.
-							This could be easily done by allowing the time seed to be created by X nodes and then check the drift. */
-				if(fTimeUnified)
-				{
-				
-					/* Check that the samples don't violate time changes too drastically. */
-					if(nOffset > GetUnifiedAverage() + LLP::MAX_UNIFIED_DRIFT || nOffset < GetUnifiedAverage() - LLP::MAX_UNIFIED_DRIFT ) {
-						printf("***** Core LLP: Unified Samples Out of Drift Scope Current (%u) Samples (%u)\n", GetUnifiedAverage(), nOffset);
-						
-						DDOS->rSCORE += 10;
-						
-						/* Log the Bad Response about Time Seed. */
-						if(mapBadResponse.count("offset"))
-							mapBadResponse["offset"] = 1;
-						else
-							mapBadResponse["offset"] ++ ;
-						
-						return true;
-					}
-				}
-				
+
 				
 				/* Add the Samples. */
 				setTimeSamples.insert(nOffset);

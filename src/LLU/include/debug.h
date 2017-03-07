@@ -11,6 +11,8 @@
 #ifndef NEXUS_LLU_INCLUDE_DEBUG_H
 #define NEXUS_LLU_INCLUDE_DEBUG_H
 
+#include <string>
+
 #ifdef snprintf
 #undef snprintf
 #endif
