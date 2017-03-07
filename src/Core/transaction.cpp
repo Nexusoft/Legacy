@@ -16,7 +16,9 @@
 #include "../LLU/include/random.h"
 
 #include "../LLD/include/index.h"
+
 #include "../LLP/include/node.h"
+#include "../LLP/include/unifiedtime.h"
 
 #include "../Wallet/wallet.h"
 
@@ -665,7 +667,7 @@ namespace Core
 				static Mutex_t cs;
 				static double dFreeCount;
 				static int64 nLastTime;
-				int64 nNow = GetUnifiedTimestamp();
+				int64 nNow = LLP::GetUnifiedTimestamp();
 
 				{
 					LOCK(cs);

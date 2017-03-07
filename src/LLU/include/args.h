@@ -40,6 +40,9 @@ extern bool fNoListen;
 extern bool fLogTimestamps;
 
 
+void ParseParameters(int argc, const char*const argv[]);
+
+
 /**
 * Return string argument or default value
 *

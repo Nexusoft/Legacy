@@ -14,6 +14,8 @@
 
 #include "../LLU/include/parse.h"
 
+#include "../LLP/include/unifiedtime.h"
+
 #include "key.h"
 #include "keystore.h"
 #include "script.h"
@@ -49,12 +51,12 @@ namespace Wallet
 
 		CKeyPool()
 		{
-			nTime = GetUnifiedTimestamp();
+			nTime = LLP::GetUnifiedTimestamp();
 		}
 
 		CKeyPool(const std::vector<unsigned char>& vchPubKeyIn)
 		{
-			nTime = GetUnifiedTimestamp();
+			nTime = LLP::GetUnifiedTimestamp();
 			vchPubKey = vchPubKeyIn;
 		}
 
@@ -650,7 +652,7 @@ namespace Wallet
 
 		CWalletKey(int64 nExpires=0)
 		{
-			nTimeCreated = (nExpires ? GetUnifiedTimestamp() : 0);
+			nTimeCreated = (nExpires ? LLP::GetUnifiedTimestamp() : 0);
 			nTimeExpires = nExpires;
 		}
 

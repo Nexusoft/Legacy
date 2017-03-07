@@ -8,9 +8,15 @@
   
 *******************************************************************************************/
 
+#include "include/args.h"
+#include "include/convert.h"
+#include "include/runtime.h"
+#include "include/strlcpy.h"
+
+#include <boost/foreach.hpp>
 
 std::map<std::string, std::string> mapArgs;
-std::map<std::string, vector<std::string> > mapMultiArgs;
+std::map<std::string, std::vector<std::string> > mapMultiArgs;
 
 bool fDebug = false;
 bool fPrintToConsole = false;
@@ -25,7 +31,7 @@ bool fTestNet = false;
 bool fNoListen = false;
 bool fLogTimestamps = false;
 
-static void InterpretNegativeSetting(string name, map<string, string>& mapSettingsRet)
+static void InterpretNegativeSetting(std::string name, std::map<std::string, std::string>& mapSettingsRet)
 {
     // interpret -nofoo as -foo=0 (and -nofoo=0 as -foo=1) as long as -foo not set
     if (name.find("-no") == 0)
@@ -67,9 +73,9 @@ void ParseParameters(int argc, const char*const argv[])
     }
 
     // New 0.6 features:
-    BOOST_FOREACH(const PAIRTYPE(string,string)& entry, mapArgs)
+    BOOST_FOREACH(const PAIRTYPE(std::string, std::string)& entry, mapArgs)
     {
-        string name = entry.first;
+        std::string name = entry.first;
 
         //  interpret --foo as -foo (as long as both are not set)
         if (name.find("--") == 0)

@@ -51,14 +51,12 @@ namespace LLP
 		/* Positive: Node Stats. */
 		unsigned int nLastMessageTime;
 		unsigned int nNodeGenesisTime;
-		unsigned int nNodeTotalBlocks;
 		unsigned int nTotalObjectAcks;
 		
 		
 		/* Negative: Node Stats. */
 		unsigned int nTotalBans;
 		unsigned int nTotalRejects;
-		unsigned int nTotalBadSeeds;
 		
 		
 		/* Node Identifier. */
@@ -86,7 +84,7 @@ namespace LLP
 		
 		
 		/* Unified Time Specific Variablesy. */
-		CMajority<int> cTimeSamples;
+		mruset<int> setTimeSamples;
 		unsigned int nLastUnifiedCheck;
 		
 		
@@ -104,6 +102,14 @@ namespace LLP
 		
 		/* Node Orphaned Transaction Messages. */
 		std::queue<Core::CTransaction> queueTransactionOrphan;
+		
+		
+		/* Message ID's of Requests Sent. */
+		std::map<unsigned int, std::string> mapSentRequests;
+		
+		
+		/* Keep track of this nodes bad responses. */
+		std::map<std::string, unsigned int> mapBadResponse;
 		
 		
 		/* Known Inventory to make sure duplicate requests are not called out. */

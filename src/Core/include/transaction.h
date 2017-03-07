@@ -18,6 +18,7 @@
 
 #include "../../LLU/templates/serialize.h"
 #include "../../LLU/include/parse.h"
+#include "../../LLU/include/runtime.h"
 
 #include "../../LLC/hash/SK.h"
 #include "../../LLP/include/network.h"
@@ -291,7 +292,7 @@ namespace Core
 		void SetNull()
 		{
 			nVersion = 1;
-			nTime = GetUnifiedTimestamp();
+			nTime = LLP::GetUnifiedTimestamp();
 			vin.clear();
 			vout.clear();
 			nLockTime = 0;
@@ -315,7 +316,7 @@ namespace Core
 			if (nBlockHeight == 0)
 				nBlockHeight = nBestHeight;
 			if (nBlockTime == 0)
-				nBlockTime = GetUnifiedTimestamp();
+				nBlockTime = Timestamp();
 			if ((int64)nLockTime < ((int64)nLockTime < LOCKTIME_THRESHOLD ? (int64)nBlockHeight : nBlockTime))
 				return true;
 			BOOST_FOREACH(const CTxIn& txin, vin)

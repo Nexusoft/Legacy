@@ -58,7 +58,7 @@ namespace LLP
 		RAND_bytes((unsigned char*)&nSessionID, sizeof(nSessionID));
 		
 		/* Current Unified Timestamp. */
-		int64 nTime = GetUnifiedTimestamp();
+		int64 nTime = LLP::GetUnifiedTimestamp();
 		
 		/* Dummy Variable NOTE: Remove in Tritium ++ */
 		uint64 nLocalServices;
@@ -134,16 +134,23 @@ namespace LLP
 		/* Get a Time Offset from the Connection. */
 		if(INCOMING.GetMessage() == "getoffset")
 		{
+			/* Don't service unified seeds unless time is unified. */
+			if(!LLP::fTimeUnified)
+				return true;
 			
 			/* De-Serialize the Timestamp Sent. */
-			unsigned int nTimestamp;
+			int64 nTimestamp;
 			ssMessage >> nTimestamp;
 			
-			int   nOffset    = (int)(GetUnifiedTimestamp() - nTimestamp);
-			PushMessage("offset", nOffset);
+			/* De-Serialize the Request ID. */
+			unsigned int nRequestID;
+			ssMessage >> nRequestID;
+			
+			int   nOffset    = (int)(LLP::GetUnifiedTimestamp(true) - nTimestamp);
+			PushMessage("offset", nOffset, nRequestID);
 				
 			if(GetArg("-verbose", 0) >= 3)
-				printf("***** Node: Sent Offset %i | %s | Unified %" PRId64 "\n", nOffset, addrThisNode.ToString().c_str(), GetUnifiedTimestamp());
+				printf("***** Node: Sent Offset %i | %s | Unified %" PRId64 "\n", nOffset, addrThisNode.ToString().c_str(), LLP::GetUnifiedTimestamp());
 			
 			return true;
 		}
@@ -152,13 +159,62 @@ namespace LLP
 		else if(INCOMING.GetMessage() == "offset")
 		{
 			
+			/* De-Serialize the Offset. */
+			int nOffset;
+			ssMessage << nOffset;
 			
-		}
-		
-		else if(INCOMING.GetMessage() == "getcheckpoint")
-		{
+			/* De-Serialize the Request ID. */
+			unsigned int nRequestID;
+			ssMessage << nRequestID;
 			
+			/* Handle the Request ID's. */
+			{ LOCK(NODE_MUTEX);
+				
+				/* Ignore Messages Sent that weren't Requested. */
+				if(!mapSentRequests.count(nRequestID) || mapSentRequests[nRequestID] != "getoffset") {
+					DDOS->rSCORE += 5;
+					
+					return true;
+				}
+				
+				/* Reject Samples that are recieved a 30 seconds after last check on this node. */
+				if(GetUnifiedTimestamp() - nLastUnifiedCheck > 30) {
+					DDOS->rSCORE += 15;
+					
+					return true;
+				}
+				
+				/* Remove the Request from the Map. */
+				mapSentRequests.erase(nRequestID);
+				
+				
+				/* These checks are for after the first time seed has been established. 
+					TODO: Look at the possible attack vector of the first time seed being manipulated.
+							This could be easily done by allowing the time seed to be created by X nodes and then check the drift. */
+				if(fTimeUnified)
+				{
+				
+					/* Check that the samples don't violate time changes too drastically. */
+					if(nOffset > GetUnifiedAverage() + LLP::MAX_UNIFIED_DRIFT || nOffset < GetUnifiedAverage() - LLP::MAX_UNIFIED_DRIFT ) {
+						printf("***** Core LLP: Unified Samples Out of Drift Scope Current (%u) Samples (%u)\n", GetUnifiedAverage(), nOffset);
+						
+						DDOS->rSCORE += 10;
+						
+						/* Log the Bad Response about Time Seed. */
+						if(mapBadResponse.count("offset"))
+							mapBadResponse["offset"] = 1;
+						else
+							mapBadResponse["offset"] ++ ;
+						
+						return true;
+					}
+				}
+				
+				
+				/* Add the Samples. */
+				setTimeSamples.insert(nOffset);
 			
+			}
 		}
 		
 		/* Push a transaction into the Node's Recieved Transaction Queue. */
@@ -224,7 +280,7 @@ namespace LLP
 			uint64 nonce = 0;
 			ssMessage >> nonce;
 			
-			nLastPinging = GetUnifiedTimestamp();
+			nLastPinging = LLP::GetUnifiedTimestamp();
 			cLatencyTimer.Start();
 				
 			PushMessage("pong", nonce);
