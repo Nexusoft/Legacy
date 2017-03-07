@@ -22,26 +22,30 @@
 #include "../../LLU/templates/mruset.h"
 #include "../../LLU/templates/containers.h"
 
-#include "../templates/types.h"
-
 
 namespace LLP
 {
-	class CBlock;
-	class CTransaction;
+	static CAddress addrMyNode;
+	
 	
 	class CNode : public MessageConnection
 	{
+		CAddress addrThisNode;
+		
 	public:
 		
 		/* Mutex for handling node inventory messages. */
 		Mutex_t NODE_MUTEX;
 		
 		
+		/* Node Identifier */
+		unsigned int nSessionID;
+		
+		
 		/* Basic Stats. */
-		CAddress addrThisNode;
 		std::string strNodeVersion;
-		unsigned int PROTOCOL_VERSION;
+		int nCurrentVersion;
+		int nStartingHeight;
 		
 		
 		/* Positive: Node Stats. */
@@ -137,6 +141,9 @@ namespace LLP
 			
 			return fReturn;
 		}
+		
+		/* Return the IP address of this node. */
+		CAddress GetAddress() { return addrThisNode; }
 	};
 	
 	

@@ -21,6 +21,8 @@
 #include "include/checkpoints.h"
 
 #include "../LLU/include/ui_interface.h"
+#include "../LLU/include/convert.h"
+#include "../LLU/include/parse.h"
 
 #include "../LLP/include/network.h"
 #include "../LLP/include/mining.h"

@@ -11,6 +11,23 @@
 #ifndef NEXUS_LLU_INCLUDE_DEBUG_H
 #define NEXUS_LLU_INCLUDE_DEBUG_H
 
+#ifdef snprintf
+#undef snprintf
+#endif
+#define snprintf my_snprintf
+
+#ifndef PRI64d
+#if defined(_MSC_VER) || defined(__MSVCRT__)
+#define PRI64d  "I64d"
+#define PRI64u  "I64u"
+#define PRI64x  "I64x"
+#else
+#define PRI64d  "lld"
+#define PRI64u  "llu"
+#define PRI64x  "llx"
+#endif
+#endif
+
 int OutputDebugStringF(const char* pszFormat, ...);
 
 int my_snprintf(char* buffer, size_t limit, const char* format, ...);

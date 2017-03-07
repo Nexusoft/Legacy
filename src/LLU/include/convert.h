@@ -8,10 +8,108 @@
   
 *******************************************************************************************/
 
-#ifndef NEXUS_UTIL_INCLUDE_BYTES_H
-#define NEXUS_UTIL_INCLUDE_BYTES_H
+#ifndef NEXUS_LLU_INCLUDE_CONVERT_H
+#define NEXUS_LLU_INCLUDE_CONVERT_H
+
+#include <cstdlib>
+#include <stdint.h>
+#include <string>
 
 #include "debug.h"
+
+inline std::string i64tostr(int64_t n)
+{
+    return strprintf("%" PRI64d, n);
+}
+
+
+inline std::string itostr(int n)
+{
+    return strprintf("%d", n);
+}
+
+
+inline int64_t atoi64(const char* psz)
+{
+#ifdef _MSC_VER
+    return _atoi64(psz);
+#else
+    return strtoll(psz, NULL, 10);
+#endif
+}
+
+
+inline int64_t atoi64(const std::string& str)
+{
+#ifdef _MSC_VER
+    return _atoi64(str.c_str());
+#else
+    return strtoll(str.c_str(), NULL, 10);
+#endif
+}
+
+
+inline int atoi(const std::string& str)
+{
+    return atoi(str.c_str());
+}
+
+
+inline int roundint(double d)
+{
+    return (int)(d > 0 ? d + 0.5 : d - 0.5);
+}
+
+
+inline int64_t roundint64(double d)
+{
+    return (int64_t)(d > 0 ? d + 0.5 : d - 0.5);
+}
+
+
+inline int64_t abs64(int64_t n)
+{
+    return (n >= 0 ? n : -n);
+}
+
+
+inline std::string DateTimeStrFormat(const char* pszFormat, int64_t nTime)
+{
+    time_t n = nTime;
+    struct tm* ptmTime = gmtime(&n);
+    char pszTime[200];
+    strftime(pszTime, sizeof(pszTime), pszFormat, ptmTime);
+    return pszTime;
+}
+
+
+static const std::string strTimestampFormat = "%Y-%m-%d %H:%M:%S UTC";
+inline std::string DateTimeStrFormat(int64_t nTime)
+{
+    return DateTimeStrFormat(strTimestampFormat.c_str(), nTime);
+}
+
+
+template<typename T>
+void skipspaces(T& it)
+{
+    while (isspace(*it))
+        ++it;
+}
+
+
+inline bool IsSwitchChar(char c)
+{
+#ifdef WIN32
+    return c == '-' || c == '/';
+#else
+    return c == '-';
+#endif
+}
+
+
+inline std::string ip_string(std::vector<unsigned char> ip) { return strprintf("%u.%u.%u.%u", ip[0], ip[1], ip[2], ip[3]); }
+
 
 /* Parse an IP Address into a Byte Vector from Std::String. */
 inline std::vector<unsigned char> parse_ip(std::string ip)
@@ -21,9 +119,6 @@ inline std::vector<unsigned char> parse_ip(std::string ip)
 	
 	return bytes;
 }
-
-
-inline std::string ip_string(std::vector<unsigned char> ip) { return strprintf("%u.%u.%u.%u", ip[0], ip[1], ip[2], ip[3]); }
 
 
 /* Convert a 32 bit Unsigned Integer to Byte Vector using Bitwise Shifts. */
@@ -61,7 +156,7 @@ inline unsigned int bytes2uint(std::vector<unsigned char> BYTES, int nOffset = 0
 			
 			
 /* Convert a 64 bit Unsigned Integer to Byte Vector using Bitwise Shifts. */
-inline std::vector<unsigned char> uint2bytes64(uint64 UINT)
+inline std::vector<unsigned char> uint2bytes64(uint64_t UINT)
 {
 	std::vector<unsigned char> INTS[2];
 	INTS[0] = uint2bytes((unsigned int) UINT);
@@ -76,7 +171,7 @@ inline std::vector<unsigned char> uint2bytes64(uint64 UINT)
 
 			
 /* Convert a byte Vector into unsigned integer 64 bit. */
-inline uint64 bytes2uint64(std::vector<unsigned char> BYTES, int nOffset = 0) { return (bytes2uint(BYTES, nOffset) | ((uint64)bytes2uint(BYTES, nOffset + 4) << 32)); }
+inline uint64_t bytes2uint64(std::vector<unsigned char> BYTES, int nOffset = 0) { return (bytes2uint(BYTES, nOffset) | ((uint64)bytes2uint(BYTES, nOffset + 4) << 32)); }
 
 
 /* Convert Standard String into Byte Vector. */

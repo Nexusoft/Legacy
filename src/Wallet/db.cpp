@@ -7,13 +7,12 @@
 *******************************************************************************************/
 
 #include "db.h"
-#include "../util/util.h"
-#include "../core/core.h"
+
 #include <boost/version.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 
-#include "../LLD/index.h"
+#include "../LLD/include/index.h"
 
 #ifndef WIN32
 #include "sys/stat.h"

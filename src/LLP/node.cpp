@@ -8,14 +8,17 @@
   
 *******************************************************************************************/
 
-#include "include/network.h"
+#include "include/message.h"
 #include "include/hosts.h"
 #include "include/node.h"
-#include "include/message.h"
 
 #include "../LLD/include/index.h"
 
 #include "../Core/include/block.h"
+#include "../Core/include/global.h"
+
+#include "../LLU/include/args.h"
+#include "../LLU/include/random.h"
 
 namespace LLP
 {
@@ -51,34 +54,40 @@ namespace LLP
 	/* Push a Message With Information about This Current Node. */
 	void CNode::PushVersion()
 	{
+		/* Random Session ID */
+		RAND_bytes((unsigned char*)&nSessionID, sizeof(nSessionID));
+		
+		/* Current Unified Timestamp. */
 		int64 nTime = GetUnifiedTimestamp();
-		CAddress addrYou = (fUseProxy ? CAddress(CService("0.0.0.0",0)) : addr);
-		CAddress addrMe = (fUseProxy || !addrLocalHost.IsRoutable() ? CAddress(CService("0.0.0.0",0)) : addrLocalHost);
-		RAND_bytes((unsigned char*)&nLocalHostNonce, sizeof(nLocalHostNonce));
-		PushMessage("version", LLP::PROTOCOL_VERSION, nLocalServices, nTime, addrYou, addrMe,
-					nLocalHostNonce, FormatFullVersion(), Core::nBestHeight);
+		
+		/* Dummy Variable NOTE: Remove in Tritium ++ */
+		uint64 nLocalServices;
+		
+		/* Relay Your Address. */
+		CAddress addrMe   = (fUseProxy || !addrMyNode.IsRoutable() ? CAddress(CService("0.0.0.0",0)) : addrMyNode);
+		
+		/* Push the Message to receiving node. */
+		PushMessage("version", LLP::PROTOCOL_VERSION, nLocalServices, nTime, GetAddress(), addrMe,
+					nSessionID, FormatFullVersion(), Core::nBestHeight);
 	}
 	
 	
 	/** Handle Event Inheritance. **/
-	void CNode::Event(unsigned char EVENT, unsigned int LENGTH = 0)
+	void CNode::Event(unsigned char EVENT, unsigned int LENGTH)
 	{
 		/** Handle any DDOS Packet Filters. **/
 		if(EVENT == EVENT_HEADER)
 		{
 			if(fDDOS)
 			{
-				MessagePacket PACKET   = this->INCOMING;
 				
 				/* Give higher DDOS score if the Node happens to try to send multiple version messages. */
-				if (PACKET.HEADER == "version" && nVersion != 0)
-					DDOS->rScore += 5;
-					
-				/* Check if the Node hit any bans. */
-				if(DDOS->Banned())
-					return;
-					
+				if (INCOMING.GetMessage() == "version" && nCurrentVersion != 0)
+					DDOS->rSCORE += 25;
+				
 			}
+			
+			return;
 		}
 			
 		/** Handle for a Packet Data Read. **/
@@ -87,11 +96,10 @@ namespace LLP
 				
 			/* Check a packet's validity once it is finished being read. */
 			if(fDDOS) {
-				MessagePacket PACKET   = this->INCOMING;
-					
+
 				/* Give higher score for Bad Packets. */
-				if(INCOMING.IsComplete() && !INCOMING.IsValid())
-					DDOS->rScore += 10;
+				if(INCOMING.Complete() && !INCOMING.IsValid())
+					DDOS->rSCORE += 15;
 			}
 				
 			return;
@@ -121,12 +129,10 @@ namespace LLP
 		custom messaging system, and how to interpret it from raw packets. **/
 	bool CNode::ProcessPacket()
 	{
-			
-		MessagePacket PACKET   = this->INCOMING;
-		CDataStream ssMessage(PACKET.DATA, SER_NETWORK, MIN_PROTO_VERSION),
+		CDataStream ssMessage(INCOMING.DATA, SER_NETWORK, MIN_PROTO_VERSION);
 			
 		/* Get a Time Offset from the Connection. */
-		if(PACKET.COMMAND == "getoffset")
+		if(INCOMING.GetMessage() == "getoffset")
 		{
 			
 			/* De-Serialize the Timestamp Sent. */
@@ -137,26 +143,26 @@ namespace LLP
 			PushMessage("offset", nOffset);
 				
 			if(GetArg("-verbose", 0) >= 3)
-				printf("***** Node: Sent Offset %i | %hhu.%hhu.%hhu.%hhu | Unified %" PRId64 "\n", nOffset, ADDRESS[0], ADDRESS[1], ADDRESS[2], ADDRESS[3], GetUnifiedTimestamp());
+				printf("***** Node: Sent Offset %i | %s | Unified %" PRId64 "\n", nOffset, addrThisNode.ToString().c_str(), GetUnifiedTimestamp());
 			
 			return true;
 		}
 		
 		/* Recieve a Time Offset from this Node. */
-		else if(PACKET.HEADER == "offset")
+		else if(INCOMING.GetMessage() == "offset")
 		{
 			
 			
 		}
 		
-		else if(PACKET.HEADER == "getcheckpoint")
+		else if(INCOMING.GetMessage() == "getcheckpoint")
 		{
 			
 			
 		}
 		
 		/* Push a transaction into the Node's Recieved Transaction Queue. */
-		else if (PACKET.COMMAND == "tx")
+		else if (INCOMING.GetMessage() == "tx")
 		{
 			
 			/* Deserialize the Transaction. */
@@ -164,11 +170,11 @@ namespace LLP
 			ssMessage >> tx;
 			
 			if(GetArg("-verbose", 0) >= 3)
-				printf("received transaction %s\n", block.GetHash().ToString().substr(0,20).c_str());
+				printf("received transaction %s\n", tx.GetHash().ToString().substr(0,20).c_str());
 				
 			
-			if(GetArg("-verbose", 0) >= 1)
-				block.print();
+			if(GetArg("-verbose", 0) >= 4)
+				tx.print();
 
 			/* Add the Transaction to Known Inventory. */
 			CInv inv(MSG_TX, tx.GetHash());
@@ -176,22 +182,24 @@ namespace LLP
 			
 			
 			/* Add the Block to the Process Queue. */
-			{  LOCK_GUARD(NODE_MUTEX);
-				queueBlock.insert(block);
+			{  LOCK(NODE_MUTEX);
+				queueTransaction.push(tx);
 			}
+			
+			return true;
 		}
 
 
 		/* Push a block into the Node's Recieved Blocks Queue. */
-		else if (PACKET.COMMAND == "block")
+		else if (INCOMING.GetMessage() == "block")
 		{
 			Core::CBlock block;
-			vRecv >> block;
+			ssMessage >> block;
 
 			if(GetArg("-verbose", 0) >= 3)
 				printf("received block %s\n", block.GetHash().ToString().substr(0,20).c_str());
 				
-			if(GetArg("-verbose", 0) >= 1)
+			if(GetArg("-verbose", 0) >= 4)
 				block.print();
 
 			/* Add the Block to Known Inventory. */
@@ -199,18 +207,19 @@ namespace LLP
 			AddInventoryKnown(inv);
 
 			/* Add the Block to the Process Queue. */
-			{  LOCK_GUARD(NODE_MUTEX);
-				queueBlock.insert(block);
+			{  LOCK(NODE_MUTEX);
+				queueBlock.push(block);
 			}
 			
 			//if (Core::ProcessBlock(pfrom, &block))
 			//	Net::mapAlreadyAskedFor.erase(inv);
 			
+			return true;
 		}
 		
 		
 		/* Send a Ping with a nNonce to get Latency Calculations. */
-		else if (PACKET.COMMAND == "ping")
+		else if (INCOMING.GetMessage() == "ping")
 		{
 			uint64 nonce = 0;
 			ssMessage >> nonce;
@@ -218,17 +227,21 @@ namespace LLP
 			nLastPinging = GetUnifiedTimestamp();
 			cLatencyTimer.Start();
 				
-			pfrom->PushMessage("pong", nonce);
+			PushMessage("pong", nonce);
+			
+			return true;
 		}
 		
 		
-		else if(PACKET.COMMAND == "pong")
+		else if(INCOMING.GetMessage() == "pong")
 		{
 			uint64 nonce = 0;
 			ssMessage >> nonce;
 			
-			nNodeLatency = cLatencyTimer.ElapseMilliseconds();
+			nNodeLatency = cLatencyTimer.ElapsedMilliseconds();
 			cLatencyTimer.Reset();
+			
+			return true;
 		}
 		
 			
@@ -245,20 +258,20 @@ namespace LLP
 		 * It gives you basic stats about the node to know how to
 		 * communicate with it.
 		 */
-		else if (PACKET.COMMAND == "version")
+		else if (INCOMING.GetMessage() == "version")
 		{
 			int64 nTime;
 			CAddress addrMe;
 			CAddress addrFrom;
-			uint64 nNonce    = 1;
 			uint64 nServices = 0;
+			
 				
 			/* Check the Protocol Versions */
-			ssMessage >> LLP::PROTOCOL_VERSION >> nServices >> nTime >> addrMe;
-			if (nVersion < MIN_PROTO_VERSION)
+			ssMessage >> nCurrentVersion >> nServices >> nTime >> addrMe >> addrFrom >> nSessionID >> strNodeVersion >> nStartingHeight;
+			if (nCurrentVersion < MIN_PROTO_VERSION)
 			{
 				if(GetArg("-verbose", 0) >= 1)
-					printf("***** Node %s using obsolete version %i; disconnecting\n", GetIPAddress().c_str(), nVersion);
+					printf("***** Node %s using obsolete version %i; disconnecting\n", GetIPAddress().c_str(), PROTOCOL_VERSION);
 					
 				return false;
 			}
@@ -274,14 +287,14 @@ namespace LLP
 				//	PushPacket("getaddr");
 				
 				if(GetArg("-verbose", 0) >= 1)
-					printf("***** Node version message: version %d, blocks=%d\n", pfrom->nVersion, pfrom->nStartingHeight);
+					printf("***** Node version message: version %d, blocks=%d\n", nCurrentVersion, nStartingHeight);
 
 				/* Add to the Majority Peer Block Count. */
-				cPeerBlockCounts.Add(nStartingHeight);
+				Core::cPeerBlockCounts.Add(nStartingHeight);
 			}
 
 			/* If invalid version message drop the connection. */
-			else if (LLP::PROTOCOL_VERSION == 0)
+			else if (nCurrentVersion == 0)
 				return false;
 		}
 
@@ -289,31 +302,26 @@ namespace LLP
 		/* Handle a new Address Message. 
 		 * This allows the exchanging of addresses on the network.
 		 */
-		else if (PACKET.COMMAND == "addr")
+		else if (INCOMING.GetMessage() == "addr")
 		{
-			vector<CAddress> vAddr;
+			std::vector<CAddress> vAddr;
 			ssMessage >> vAddr;
 
 			/* Don't want addr from older versions unless seeding */
 			if (vAddr.size() > 1000){
-				DDOS.rScore += 20;
+				DDOS->rSCORE += 20;
 				
 				return error("***** Node message addr size() = %d... Dropping Connection", vAddr.size());
 			}
 
 			/* Store the new addresses. */
-			int64 nNow = GetUnifiedTimestamp();
-			int64 nSince = nNow - 10 * 60 * 60;
 			BOOST_FOREACH(CAddress& addr, vAddr)
 			{
-				if (Core::fShutdown)
-					return false;
-				
 				/* ignore IPv6 for now, since it isn't implemented anyway */
 				if (!addr.IsIPv4())
 					continue;
 				
-				setAddrKnown.insert(addr);
+				//setAddrKnown.insert(addr);
 				
 				/* TODO: Relay Address to other nodes. Might be better to have addresses requested by nodes. */
 				//Net::addrman.Add(vAddr, addr, 2 * 60 * 60);
@@ -324,69 +332,61 @@ namespace LLP
 		/* Handle new Inventory Messages.
 		 * This is used to know what other nodes have in their inventory to compare to our own. 
 		 */
-		else if (PACKET.COMMAND == "inv")
+		else if (INCOMING.GetMessage() == "inv")
 		{
-			vector<CInv> vInv;
+			std::vector<CInv> vInv;
 			ssMessage >> vInv;
 			
 			/* Make sure the inventory size is not too large. */
 			if (vInv.size() > 50000)
 			{
-				DDOS.rScore += 20;
+				DDOS->rSCORE += 20;
 				
 				return true;
 			}
 
 			/* Check through all the new inventory and decide what to do with it. */
 			LLD::CIndexDB indexdb("r");
-			for (unsigned int nInv = 0; nInv < vInv.size(); nInv++)
+			for (int i = 0; i < vInv.size(); i++)
 			{
-				const CInv &inv = vInv[nInv];
-
-				if (Core::fShutdown)
-					return false;
-				
 				{
-					LOCK_GUARD(INVENTORY_MUTEX);
-					setInventoryKnown.insert(inv);
+					LOCK(NODE_MUTEX);
+					setInventoryKnown.insert(vInv[i]);
 				}
 
 				//TODO: Move This Function into Proper Place
-				bool fAlreadyHave = AlreadyHave(indexdb, inv);
+				bool fAlreadyHave = AlreadyHave(indexdb, vInv[i]);
 				
 				if(GetArg("-verbose", 0) >= 3)
-					printf("***** Node recieved inventory: %s  %s\n", inv.ToString().c_str(), fAlreadyHave ? "have" : "new");
+					printf("***** Node recieved inventory: %s  %s\n", vInv[i].ToString().c_str(), fAlreadyHave ? "have" : "new");
 
 				if (!fAlreadyHave)
-					AskFor(inv);
+					PushMessage("getdata", vInv[i]);
 			}
 			
 		}
 
 		
 		/* Get the Data for a Specific Command. */
-		else if (PACKET.COMMAND == "getdata")
+		else if (INCOMING.GetMessage() == "getdata")
 		{
-			vector<CInv> vInv;
+			std::vector<CInv> vInv;
 			ssMessage >> vInv;
 			if (vInv.size() > 50000)
 			{
-				DDOS.rScore += 20;
+				DDOS->rSCORE += 20;
 				
 				return true;
 			}
 
-			BOOST_FOREACH(const CInv& inv, vInv)
+			for(int i = 0; i < vInv.size(); i++)
 			{
-				if (Core::fShutdown)
-					return false;
-						
 				if(GetArg("-verbose", 0) >= 3)
-					printf("received getdata for: %s\n", inv.ToString().c_str());
+					printf("received getdata for: %s\n", vInv[i].ToString().c_str());
 
-				if (inv.type == Net::MSG_BLOCK)
+				if (vInv[i].type == MSG_BLOCK)
 				{
-					map<uint1024, Core::CBlockIndex*>::iterator mi = mapBlockIndex.find(inv.hash);
+					std::map<uint1024, Core::CBlockIndex*>::iterator mi = Core::mapBlockIndex.find(vInv[i].hash);
 					if (mi != Core::mapBlockIndex.end())
 					{
 						Core::CBlock block;
@@ -396,12 +396,14 @@ namespace LLP
 						PushMessage("block", block);
 					}
 				}
+				
+				//else if(vInv[i].type == MSG_TX)
 			}
 		}
 
 
 		/* Handle a Request to get a list of Blocks from a Node. */
-		else if (PACKET.COMMAND == "getblocks")
+		else if (INCOMING.GetMessage() == "getblocks")
 		{
 			Core::CBlockLocator locator;
 			uint1024 hashStop;
@@ -415,8 +417,6 @@ namespace LLP
 				pindex = pindex->pnext;
 			
 			int nLimit = 1000 + locator.GetDistanceBack();
-			unsigned int nBytes = 0;
-				
 			if(GetArg("-verbose", 0) >= 3)
 				printf("***** Node Requested getblocks %d to %s limit %d\n", (pindex ? pindex->nHeight : -1), hashStop.ToString().substr(0,20).c_str(), nLimit);
 				
@@ -425,16 +425,19 @@ namespace LLP
 				if (pindex->GetBlockHash() == hashStop)
 				{
 					if(GetArg("-verbose", 0) >= 3)
-						printf("***** Sending getblocks stopping at %d %s (%u bytes)\n", pindex->nHeight, pindex->GetBlockHash().ToString().substr(0,20).c_str(), nBytes);
+						printf("***** Sending getblocks stopping at %d %s \n", pindex->nHeight, pindex->GetBlockHash().ToString().substr(0,20).c_str());
 						
-					PushInventory(CInv(MSG_BLOCK, pindex->GetBlockHash()));
+					if(hashStop != Core::hashBestChain)
+						PushInventory(CInv(MSG_BLOCK, Core::hashBestChain));
 				}
+				
+				PushInventory(CInv(MSG_BLOCK, pindex->GetBlockHash()));
 			}
 		}
 
 
 		/* TODO: Change this Algorithm. */
-		else if (PACKET.COMMAND == "getaddr")
+		else if (INCOMING.GetMessage() == "getaddr")
 		{
 			//pfrom->vAddrToSend.clear();
 			//vector<Net::CAddress> vAddr = Net::addrman.GetAddr();

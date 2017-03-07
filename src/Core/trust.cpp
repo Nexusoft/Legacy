@@ -16,6 +16,8 @@
 
 #include "../LLD/include/index.h"
 
+#include "../LLU/include/runtime.h"
+
 using namespace std;
 
 /** Locate the Add Coinstake Inputs Method Here for access. **/
@@ -34,8 +36,8 @@ namespace Wallet
 			return false;
 			
 		/** Select Coins to Add Inputs. **/
-		set<pair<const CWalletTx*,unsigned int> > setCoins;
-		if (!SelectCoins(std::min((int64)15000, nBalance - nReserveBalance), txNew.nTime, setCoins, nTotalValue))
+		std::set<std::pair<const CWalletTx*,unsigned int> > setCoins;
+		if (!SelectCoins((int64) std::min((int64)15000, nBalance - nReserveBalance), txNew.nTime, setCoins, nTotalValue))
 			return false;
 			
 		/** Return Error if no Coins Selected. **/
@@ -43,7 +45,7 @@ namespace Wallet
 			return false;
 			
 		/** Add Each Input to Transaction. **/
-		vector<const CWalletTx*> vInputs;
+		std::vector<const CWalletTx*> vInputs;
 		txNew.vout[0].nValue = 0;
 			
 		LLD::CIndexDB indexdb("r");

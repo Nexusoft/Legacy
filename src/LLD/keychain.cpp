@@ -14,8 +14,10 @@
 /** Lower Level Database Name Space. **/
 namespace LLD
 {
+	
 	/** Handle the Registry of Shared Keychain Pointer Objects. **/
 	std::map<std::string, KeyDatabase*> mapKeychainRegistry;
+	
 	
 	/** Handle the Key Registry. **/
 	Mutex_t REGISTRY_MUTEX;
@@ -36,6 +38,7 @@ namespace LLD
 		printf("[KEYCHAIN] Registered Keychain For Database %s\n", strRegistryName.c_str());
 	}
 	
+	
 	/** Return the Keychain Pointer Object. **/
 	KeyDatabase* GetKeychain(std::string strRegistryName) {
 		if(!mapKeychainRegistry.count(strRegistryName))
@@ -43,6 +46,7 @@ namespace LLD
 		
 		return mapKeychainRegistry[strRegistryName];
 	}
+	
 	
 	/** TODO:: Break Keychain Registry into another Database that stores the Keychain Registry and States on Disk.
 		This can then be used to remove all memory requirements of the Database if so Desired. **/

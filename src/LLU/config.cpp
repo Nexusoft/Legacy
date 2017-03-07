@@ -57,6 +57,29 @@ void CreatePidFile(const boost::filesystem::path &path, pid_t pid)
 }
 
 
+#ifdef WIN32
+boost::filesystem::path MyGetSpecialFolderPath(int nFolder, bool fCreate)
+{
+    namespace fs = boost::filesystem;
+
+    char pszPath[MAX_PATH] = "";
+    if(SHGetSpecialFolderPathA(NULL, pszPath, nFolder, fCreate))
+    {
+        return fs::path(pszPath);
+    }
+    else if (nFolder == CSIDL_STARTUP)
+    {
+        return fs::path(getenv("USERPROFILE")) / "Start Menu" / "Programs" / "Startup";
+    }
+    else if (nFolder == CSIDL_APPDATA)
+    {
+        return fs::path(getenv("APPDATA"));
+    }
+    return fs::path("");
+}
+#endif
+
+
 /* Get the default directory Nexus data is stored in. */
 boost::filesystem::path GetDefaultDataDir(std::string strName)
 {

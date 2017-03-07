@@ -13,6 +13,7 @@
 
 #include "../LLU/include/ui_interface.h"
 #include "../LLU/include/args.h"
+#include "../LLU/include/random.h"
 
 #include "../LLD/include/index.h"
 #include "../LLP/include/node.h"

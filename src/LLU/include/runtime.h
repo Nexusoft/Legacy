@@ -11,12 +11,28 @@
 #ifndef NEXUS_LLU_INCLUDE_RUNTIME_H
 #define NEXUS_LLU_INCLUDE_RUNTIME_H
 
+#define PAIRTYPE(t1, t2)    std::pair<t1, t2> // This is needed because the foreach macro can't get over the comma in pair<t1, t2>
+
+#define loop                for (;;)
+#define ARRAYLEN(array)     (sizeof(array)/sizeof((array)[0]))
+
+#include <inttypes.h>
+
 #include <boost/thread/thread.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
 
 /* Thread Type for easy reference. */
 typedef boost::thread                                        Thread_t;
+
+
+/* Return the Current UNIX Timestamp. */
+inline int64_t Timestamp(bool fMilliseconds = false)
+{
+    return fMilliseconds ? ((boost::posix_time::ptime(boost::posix_time::microsec_clock::universal_time()) -
+            boost::posix_time::ptime(boost::gregorian::date(1970,1,1))).total_milliseconds()) : ((boost::posix_time::ptime(boost::posix_time::microsec_clock::universal_time()) -
+            boost::posix_time::ptime(boost::gregorian::date(1970,1,1))).total_seconds());
+}
 		
 
 /* Sleep for a duration in Milliseconds. */

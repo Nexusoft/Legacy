@@ -21,8 +21,6 @@
 #include "../../LLU/include/mutex.h"
 #include "../../LLU/include/runtime.h"
 #include "../../LLU/include/debug.h"
-
-#include "../../LLU/include/util.h"
 	
 namespace LLP
 {

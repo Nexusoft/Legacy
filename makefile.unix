@@ -119,8 +119,11 @@ OBJS= \
 	build/network.o \
 	build/node.o \
 	build/unifiedtime.o \
+	build/args.o \
+	build/config.o \
+	build/debug.o \
 	build/noui.o \
-	build/util.o \
+	build/random.o \
 	build/rpcdump.o \
 	build/rpcserver.o \
 	build/crypter.o \

@@ -20,7 +20,7 @@
 namespace LLP
 {
 	
-
+	
 	CAddress::CAddress() : CService()
 	{
 		Init();

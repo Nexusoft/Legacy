@@ -12,6 +12,8 @@
 #include "../Core/include/transaction.h"
 #include "../Core/include/global.h"
 
+#include "../LLU/include/parse.h"
+
 #include "key.h"
 #include "keystore.h"
 #include "script.h"

@@ -18,11 +18,6 @@
 #include <boost/interprocess/sync/interprocess_semaphore.hpp>
 #include <boost/interprocess/sync/lock_options.hpp>
 
-//#define LOCK(a) boost::lock_guard<boost::mutex> lock(a)
-
-
-
-
 
 /** Wrapped boost mutex: supports recursive locking, but no waiting  */
 typedef boost::interprocess::interprocess_recursive_mutex CCriticalSection;
@@ -32,6 +27,7 @@ typedef boost::interprocess::interprocess_recursive_mutex CCriticalSection;
 typedef boost::interprocess::interprocess_mutex CWaitableCriticalSection;
 
 
+/** Location to Change the Global Mutex Object. */
 typedef CCriticalSection                                         Mutex_t;
 
 

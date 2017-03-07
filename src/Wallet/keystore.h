@@ -10,7 +10,6 @@
 #define NEXUS_KEYSTORE_H
 
 #include "crypter.h"
-#include "../LLU/include/util.h"
 #include "../LLU/include/mutex.h"
 
 #include "base58.h"

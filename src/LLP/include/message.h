@@ -75,16 +75,16 @@ namespace LLP
 	public:
 	
 		/* 
-		 * Components of an Nexus LLP Packet.
+		 * Components of a Message LLP Packet.
 		 * BYTE 0 - 4    : Start
-		 * BYTE 5 - 17   : Command
+		 * BYTE 5 - 17   : Message
 		 * BYTE 18 - 22  : Size      
 		 * BYTE 23 - 26  : Checksum
 		 * BYTE 26 - X   : Data
 		 * 
 		 */
 		unsigned char HEADER[4];
-		char 			  COMMAND[12];
+		char 			  MESSAGE[12];
 		unsigned int  LENGTH;
 		unsigned int  CHECKSUM;
 		
@@ -100,19 +100,23 @@ namespace LLP
 		IMPLEMENT_SERIALIZE
 		(
 			READWRITE(FLATDATA(HEADER));
-			READWRITE(FLATDATA(COMMAND));
+			READWRITE(FLATDATA(MESSAGE));
 			READWRITE(LENGTH);
 			READWRITE(CHECKSUM);
 		)
 		
 		/* Set the Packet Null Flags. */
-		inline void SetNull()
+		void SetNull()
 		{
 			LENGTH    = 0;
 			CHECKSUM  = 0;
 			
 			DATA.clear();
 		}
+		
+		
+		/* Get the Command of packet in a std::string type. */
+		std::string GetMessage() { return MESSAGE; }
 		
 		
 		/* Packet Null Flag. Length and Checksum both 0. */
@@ -124,7 +128,7 @@ namespace LLP
 		
 		
 		/* Determine if header is fully read */
-		bool Header()   { return IsNull() ? false : (LENGTH > 0 && CHECKSUM > 0 && sizeof(COMMAND) > 0); }
+		bool Header()   { return IsNull() ? false : (LENGTH > 0 && CHECKSUM > 0 && sizeof(MESSAGE) > 0); }
 		
 		
 		/* Sets the size of the packet from Byte Vector. */
@@ -167,7 +171,7 @@ namespace LLP
 			
 			/* Make sure Packet length is within bounds. */
 			if (LENGTH > MAX_SIZE)
-				return error("Message Packet (%s, %u bytes) : Message too Large", COMMAND, LENGTH);
+				return error("Message Packet (%s, %u bytes) : Message too Large", MESSAGE, LENGTH);
 
 			/* Double check the Message Checksum. */
 			uint512 hash = LLC::HASH::SK512(DATA.begin(), DATA.end());
@@ -176,13 +180,13 @@ namespace LLP
 			
 			if (nChecksum != CHECKSUM)
 				return error("Message Packet (%s, %u bytes) : CHECKSUM MISMATCH nChecksum=%u hdr.nChecksum=%u",
-				   COMMAND, LENGTH, nChecksum, CHECKSUM);
+				   MESSAGE, LENGTH, nChecksum, CHECKSUM);
 				
 			return true;
 		}
 		
 		
-		/** Serializes class into a Byte Vector. Used to write Packet to Sockets. **/
+		/* Serializes class into a Byte Vector. Used to write Packet to Sockets. */
 		std::vector<unsigned char> GetBytes()
 		{
 			CDataStream ssHeader(SER_NETWORK, MIN_PROTO_VERSION);
@@ -254,10 +258,11 @@ namespace LLP
 			}
 		}
 		
+		
 		MessagePacket NewMessage(const char* chCommand, CDataStream ssData)
 		{
 			MessagePacket RESPONSE;
-			memcpy(RESPONSE.COMMAND, chCommand, 12);
+			memcpy(RESPONSE.MESSAGE, chCommand, 12);
 			
 			RESPONSE.SetData(ssData);
 			RESPONSE.SetChecksum();
@@ -265,12 +270,13 @@ namespace LLP
 			return RESPONSE;
 		}
 		
+		
 		void PushMessage(const char* chCommand)
 		{
 			try
 			{
 				MessagePacket RESPONSE;
-				memcpy(RESPONSE.COMMAND, chCommand, 12);
+				memcpy(RESPONSE.MESSAGE, chCommand, 12);
 			
 				this->WritePacket(RESPONSE);
 			}

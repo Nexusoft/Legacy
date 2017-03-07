@@ -17,13 +17,13 @@
 #include "global.h"
 
 #include "../../LLU/templates/serialize.h"
+#include "../../LLU/include/parse.h"
 
 #include "../../LLC/hash/SK.h"
 #include "../../LLP/include/network.h"
 #include "../../LLP/include/unifiedtime.h"
 
 #include "../../Wallet/script.h"
-#include "../../LLU/include/util.h"
 
 namespace LLD 
 {
@@ -47,11 +47,6 @@ namespace Core
 		GMF_RELAY,
 		GMF_SEND,
 	};
-	
-	
-	/* The significcant digits a "COIN" can be broken into. */
-	static const int64 COIN = 1000000;
-	static const int64 CENT = 10000;
 
 	
 	/** Serialize Hash: Used to Serialize a CTransaction class in order to obtain the Tx Hash. Utilizes CDataStream to serialize the class. **/

@@ -12,6 +12,7 @@
 #define NEXUS_LLP_TEMPLATES_SERVER_H
 
 #include "data.h"
+#include "../include/permissions.h"
 
 namespace LLP
 {
