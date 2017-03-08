@@ -67,9 +67,9 @@ typedef int socklen_t;
 #define MAINNET_MINING_LLP_PORT 9325
 #define TESTNET_MINING_LLP_PORT 8325
 
-#define PROTOCOL_MAJOR       1
-#define PROTOCOL_MINOR       1
-#define PROTOCOL_REVISION    1
+#define PROTOCOL_MAJOR       0
+#define PROTOCOL_MINOR       2
+#define PROTOCOL_REVISION    0
 #define PROTOCOL_BUILD       0
 
 #include "../../LLU/include/args.h"

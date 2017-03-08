@@ -152,7 +152,7 @@ namespace LLP
 		Mutex_t MUTEX;
 		
 		/** Ban a Connection, and Flush its Scores. **/
-		void Ban()
+		void Ban(std::string strViolation = "SCORE THRESHOLD")
 		{
 			LOCK(MUTEX);
 			
@@ -164,7 +164,7 @@ namespace LLP
 			
 			BANTIME = std::max(TOTALBANS * (rSCORE.Score() + 1) * (cSCORE.Score() + 1), TOTALBANS * 1200u);
 			
-			printf("XXXXX DDOS Filter cScore = %i rScore = %i Banned for %u Seconds.\n", cSCORE.Score(), rSCORE.Score(), BANTIME);
+			printf("XXXXX DDOS Filter cScore = %i rScore = %i Banned for %u Seconds. [VIOLATION: %s]\n", cSCORE.Score(), rSCORE.Score(), BANTIME, strViolation.c_str());
 			
 			cSCORE.Flush();
 			rSCORE.Flush();

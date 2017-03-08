@@ -108,7 +108,7 @@ void Shutdown(void* parg)
 
 void HandleSIGTERM(int)
 {
-    fRequestShutdown = true;
+    StartShutdown();
 }
 
 

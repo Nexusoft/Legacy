@@ -104,7 +104,7 @@ namespace LLP
 		
 		
 		/* Message ID's of Requests Sent. */
-		std::map<unsigned int, std::string> mapSentRequests;
+		std::map<unsigned int, uint64> mapSentRequests;
 		
 		
 		/* Keep track of this nodes bad responses. */

@@ -222,6 +222,7 @@ namespace LLP
 		MessageConnection() : BaseConnection<MessagePacket>(){ }
 		MessageConnection( Socket_t SOCKET_IN, DDOS_Filter* DDOS_IN, bool isDDOS = false ) : BaseConnection<MessagePacket>( SOCKET_IN, DDOS_IN, isDDOS ) { }
 
+		
 		/* Non-Blocking Packet reader to build a packet from TCP Connection.
 		 * This keeps thread from spending too much time for each Connection. 
 		 */

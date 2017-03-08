@@ -103,6 +103,10 @@ namespace LLP
 				/* Give higher score for Bad Packets. */
 				if(INCOMING.Complete() && !INCOMING.IsValid())
 					DDOS->rSCORE += 15;
+				
+				if((INCOMING.GetMessage() == "getoffset" || INCOMING.GetMessage() == "offset") && INCOMING.LENGTH != 16)
+					DDOS->Ban(strprintf("INVALID PACKET SIZE | OFFSET/GETOFFSET | LENGTH %u", INCOMING.LENGTH));
+
 			}
 				
 			return;
@@ -117,10 +121,12 @@ namespace LLP
 		
 		}
 			
+			
 		/** On Connect Event, Assign the Proper Daemon Handle. **/
 		if(EVENT == EVENT_CONNECT)
 			return;
 			
+		
 		/** On Disconnect Event, Reduce the Connection Count for Daemon **/
 		if(EVENT == EVENT_DISCONNECT)
 			return;
@@ -141,19 +147,19 @@ namespace LLP
 			if(!Core::fTimeUnified)
 				return true;
 			
-			/* De-Serialize the Timestamp Sent. */
-			int64 nTimestamp;
-			ssMessage >> nTimestamp;
-			
 			/* De-Serialize the Request ID. */
 			unsigned int nRequestID;
 			ssMessage >> nRequestID;
 			
+			/* De-Serialize the Timestamp Sent. */
+			uint64 nTimestamp;
+			ssMessage >> nTimestamp;
+			
 			int   nOffset    = (int)(Core::UnifiedTimestamp(true) - nTimestamp);
-			PushMessage("offset", nOffset, nRequestID);
+			PushMessage("offset", nRequestID, Core::UnifiedTimestamp(true), nOffset);
 				
 			if(GetArg("-verbose", 0) >= 3)
-				printf("***** Node: Sent Offset %i | %s | Unified %" PRId64 "\n", nOffset, addrThisNode.ToString().c_str(), Core::UnifiedTimestamp());
+				printf("***** Node: Sent Offset %i | %s | Unified %" PRIu64 "\n", nOffset, addrThisNode.ToString().c_str(), Core::UnifiedTimestamp());
 			
 			return true;
 		}
@@ -162,39 +168,60 @@ namespace LLP
 		else if(INCOMING.GetMessage() == "offset")
 		{
 			
-			/* De-Serialize the Offset. */
-			int nOffset;
-			ssMessage << nOffset;
-			
 			/* De-Serialize the Request ID. */
 			unsigned int nRequestID;
-			ssMessage << nRequestID;
+			ssMessage >> nRequestID;
+			
+			/* De-Serialize the Timestamp Sent. */
+			uint64 nTimestamp;
+			ssMessage >> nTimestamp;
 			
 			/* Handle the Request ID's. */
+			unsigned int nLatencyTime = (Core::UnifiedTimestamp(true) - nTimestamp);
 			{ LOCK(NODE_MUTEX);
 				
 				/* Ignore Messages Recieved that weren't Requested. */
-				if(!mapSentRequests.count(nRequestID) || mapSentRequests[nRequestID] != "getoffset") {
+				if(!mapSentRequests.count(nRequestID)) {
 					DDOS->rSCORE += 5;
 					
+					if(GetArg("-verbose", 0) >= 3)
+						printf("***** Node (%s): Invalid Request : Message Not Requested [%x][%u ms]\n", addrThisNode.ToString().c_str(), nRequestID, nLatencyTime);
+						
 					return true;
 				}
 				
-				/* Reject Samples that are recieved a 30 seconds after last check on this node. */
-				if(Core::UnifiedTimestamp() - nLastUnifiedCheck > 30) {
+				
+				/* Reject Samples that are recieved 30 seconds after last check on this node. */
+				if(Core::UnifiedTimestamp(true) - mapSentRequests[nRequestID] > 30000) {
+					mapSentRequests.erase(nRequestID);
+					
+					if(GetArg("-verbose", 0) >= 3)
+						printf("***** Node (%s): Invalid Request : Message Stale [%x][%u ms]\n", addrThisNode.ToString().c_str(), nRequestID, nLatencyTime);
+						
 					DDOS->rSCORE += 15;
 					
 					return true;
 				}
 				
-				/* Remove the Request from the Map. */
-				mapSentRequests.erase(nRequestID);
 
+				/* De-Serialize the Offset. */
+				int nOffset;
+				ssMessage >> nOffset;
+				
+				if(GetArg("-verbose", 0) >= 3)
+					printf("***** Node (%s): Received Unified Offset %i [%x][%u ms]\n", addrThisNode.ToString().c_str(), nOffset, nRequestID, nLatencyTime);
+				
+				/* Adjust the Offset for Latency. */
+				nOffset -= nLatencyTime;
 				
 				/* Add the Samples. */
 				setTimeSamples.insert(nOffset);
-			
+				
+				/* Remove the Request from the Map. */
+				mapSentRequests.erase(nRequestID);
 			}
+			
+			return true;
 		}
 		
 		/* Push a transaction into the Node's Recieved Transaction Queue. */
@@ -212,13 +239,12 @@ namespace LLP
 			if(GetArg("-verbose", 0) >= 4)
 				tx.print();
 
-			/* Add the Transaction to Known Inventory. */
-			CInv inv(MSG_TX, tx.GetHash());
-			AddInventoryKnown(inv);
-			
 			
 			/* Add the Block to the Process Queue. */
 			{  LOCK(NODE_MUTEX);
+				CInv inv(MSG_TX, tx.GetHash());
+				AddInventoryKnown(inv);
+			
 				queueTransaction.push(tx);
 			}
 			
@@ -231,19 +257,25 @@ namespace LLP
 		{
 			Core::CBlock block;
 			ssMessage >> block;
-
+			
+			/* De-Serialize the Request ID. */
+			if(nCurrentVersion > 20000)
+			{
+				unsigned int nRequestID;
+				ssMessage >> nRequestID;
+			}
+			
 			if(GetArg("-verbose", 0) >= 3)
 				printf("received block %s\n", block.GetHash().ToString().substr(0,20).c_str());
 				
 			if(GetArg("-verbose", 0) >= 4)
 				block.print();
 
-			/* Add the Block to Known Inventory. */
-			CInv inv(MSG_BLOCK, block.GetHash());
-			AddInventoryKnown(inv);
-
 			/* Add the Block to the Process Queue. */
 			{  LOCK(NODE_MUTEX);
+				CInv inv(MSG_BLOCK, block.GetHash());
+				AddInventoryKnown(inv);
+			
 				queueBlock.push(block);
 			}
 			
