@@ -105,8 +105,20 @@ namespace Core
 			}
 		)
 
-		CBlock();
-		CBlock(unsigned int nVersionIn, uint1024 hashPrevBlockIn, unsigned int nChannelIn, unsigned int nHeightIn);
+		CBlock()
+		{
+			SetNull();
+		}
+		
+		CBlock(unsigned int nVersionIn, uint1024 hashPrevBlockIn, unsigned int nChannelIn, unsigned int nHeightIn)
+		{
+			SetNull();
+			
+			nVersion = nVersionIn;
+			hashPrevBlock = hashPrevBlockIn;
+			nChannel = nChannelIn;
+			nHeight  = nHeightIn;
+		}
 
 
 		/* Set block to a NULL state. */
@@ -454,6 +466,11 @@ namespace Core
 			/** Normal Block Trust Increment. **/
 			return 1;
 		}
+		
+		bool IsInMainChain() const
+		{
+			return (pnext || this == pindexBest);
+		}
 
 		bool CheckIndex() const
 		{
@@ -471,7 +488,6 @@ namespace Core
 		}
 		
 		bool EraseBlockFromDisk();
-		bool IsInMainChain() const;
 		
 		std::string ToString() const;
 		void print() const;
@@ -589,14 +605,17 @@ namespace Core
 		{
 		}
 
-		
 		explicit CBlockLocator(const CBlockIndex* pindex)
 		{
 			Set(pindex);
 		}
-		
-		
-		explicit CBlockLocator(uint1024 hashBlock);
+
+		explicit CBlockLocator(uint1024 hashBlock)
+		{
+			std::map<uint1024, CBlockIndex*>::iterator mi = mapBlockIndex.find(hashBlock);
+			if (mi != mapBlockIndex.end())
+				Set((*mi).second);
+		}
 		
 		
 		/* Set by List of Vectors. */

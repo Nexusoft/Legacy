@@ -17,7 +17,7 @@ namespace LLP
 {
 	
 	/* Handle Event Inheritance. */
-	void CoreLLP::Event(unsigned char EVENT, unsigned int LENGTH)
+	void TimeLLP::Event(unsigned char EVENT, unsigned int LENGTH)
 	{
 		
 		/* Handle any DDOS Packet Filters. */
@@ -64,7 +64,7 @@ namespace LLP
 		
 	/** This function is necessary for a template LLP server. It handles your 
 		custom messaging system, and how to interpret it from raw packets. **/
-	bool CoreLLP::ProcessPacket()
+	bool TimeLLP::ProcessPacket()
 	{
 		if(INCOMING.HEADER == GET_OFFSET)
 		{

@@ -36,6 +36,13 @@ namespace Core
 	const unsigned int MAX_BLOCK_SIGOPS = MAX_BLOCK_SIZE/50;
 	const unsigned int MAX_ORPHAN_TRANSACTIONS = MAX_BLOCK_SIZE/100;
 	
+	/* The significcant digits a "COIN" can be broken into. */
+	const int64 COIN = 1000000;
+
+	/* The significiant digits a "CENT" can be broken into. */
+	const int64 CENT = 10000;
+	
+	
 	/** Nexus Transactions are Free for Everyone. **/
 	const int64 MIN_TX_FEE = CENT;
 	const int64 MIN_RELAY_TX_FEE = CENT;

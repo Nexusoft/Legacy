@@ -30,6 +30,7 @@ bool fCommandLine = false;
 bool fTestNet = false;
 bool fNoListen = false;
 bool fUseProxy = false;
+bool fAllowDNS = false;
 bool fLogTimestamps = false;
 
 void InterpretNegativeSetting(std::string name, std::map<std::string, std::string>& mapSettingsRet)

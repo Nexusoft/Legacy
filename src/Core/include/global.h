@@ -114,6 +114,12 @@ namespace Core
 	/* __________________________________________________ (Transaction Constants) __________________________________________________  */
 	
 	
+	/* The significcant digits a "COIN" can be broken into. */
+	extern const int64 COIN;
+
+
+	/* The significiant digits a "CENT" can be broken into. */
+	extern const int64 CENT;
 	
 	
 	/* The Minimum fee Amount for a Transaction (TODO: Going to be eliminated post Tritium). */
@@ -348,7 +354,6 @@ namespace Core
 	/* NOTE: Pre-Tritium Rule. One day expiration. Tritium uses positive and negative trust. (TODO: Remove Post Tritium) */
 	extern int TRUST_KEY_EXPIRE;
 
-	
 }
 
 

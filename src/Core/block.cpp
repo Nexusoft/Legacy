@@ -1529,5 +1529,121 @@ namespace Core
 
 		return true;
 	}
+	
+
+
+	bool CBlockIndex::EraseBlockFromDisk()
+	{
+		// Open history file
+		CAutoFile fileout = CAutoFile(OpenBlockFile(nFile, nBlockPos, "rb+"), SER_DISK, DATABASE_VERSION);
+		if (!fileout)
+			return false;
+
+		// Overwrite with empty null block
+		CBlock block;
+		block.SetNull();
+		fileout << block;
+
+		return true;
+	}
+
+
+	std::string CBlockIndex::ToString() const
+	{
+		return strprintf("CBlockIndex(nprev=%08x, pnext=%08x, nFile=%d, nBlockPos=%-6d nHeight=%d, nMint=%s, nMoneySupply=%s, nFlags=(%s), merkle=%s, hashBlock=%s)",
+			pprev, pnext, nFile, nBlockPos, nHeight,
+			FormatMoney(nMint).c_str(), FormatMoney(nMoneySupply).c_str(),
+			IsProofOfStake() ? "PoS" : "PoW",
+			hashMerkleRoot.ToString().substr(0,10).c_str(),
+			GetBlockHash().ToString().substr(0,20).c_str());
+	}
+
+	void CBlockIndex::print() const
+	{
+		printf("%s\n", ToString().c_str());
+	}
+	
+	
+	
+	
+	
+	void CBlockLocator::Set(const CBlockIndex* pindex)
+	{
+		vHave.clear();
+		int nStep = 1;
+		while (pindex)
+		{
+			vHave.push_back(pindex->GetBlockHash());
+
+			// Exponentially larger steps back
+			for (int i = 0; pindex && i < nStep; i++)
+				pindex = pindex->pprev;
+			if (vHave.size() > 10)
+				nStep *= 2;
+		}
+		vHave.push_back(hashGenesisBlock);
+	}
+
+		
+	int CBlockLocator::GetDistanceBack()
+	{
+		// Retrace how far back it was in the sender's branch
+		int nDistance = 0;
+		int nStep = 1;
+		BOOST_FOREACH(const uint1024& hash, vHave)
+		{
+			std::map<uint1024, CBlockIndex*>::iterator mi = mapBlockIndex.find(hash);
+			if (mi != mapBlockIndex.end())
+			{
+				CBlockIndex* pindex = (*mi).second;
+				if (pindex->IsInMainChain())
+					return nDistance;
+			}
+			nDistance += nStep;
+			if (nDistance > 10)
+				nStep *= 2;
+		}
+		return nDistance;
+	}
+
+	CBlockIndex* CBlockLocator::GetBlockIndex()
+	{
+		// Find the first block the caller has in the main chain
+		BOOST_FOREACH(const uint1024& hash, vHave)
+		{
+			std::map<uint1024, CBlockIndex*>::iterator mi = mapBlockIndex.find(hash);
+			if (mi != mapBlockIndex.end())
+			{
+				CBlockIndex* pindex = (*mi).second;
+				if (pindex->IsInMainChain())
+					return pindex;
+			}
+		}
+		return pindexGenesisBlock;
+	}
+
+	uint1024 CBlockLocator::GetBlockHash()
+	{
+		// Find the first block the caller has in the main chain
+		BOOST_FOREACH(const uint1024& hash, vHave)
+		{
+			std::map<uint1024, CBlockIndex*>::iterator mi = mapBlockIndex.find(hash);
+			if (mi != mapBlockIndex.end())
+			{
+				CBlockIndex* pindex = (*mi).second;
+				if (pindex->IsInMainChain())
+					return hash;
+			}
+		}
+		return hashGenesisBlock;
+	}
+
+	int CBlockLocator::GetHeight()
+	{
+		CBlockIndex* pindex = GetBlockIndex();
+		if (!pindex)
+			return 0;
+		return pindex->nHeight;
+	}
 
 }

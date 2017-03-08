@@ -90,7 +90,7 @@ namespace RPC
 		double dAmount = value.get_real();
 		if (dAmount <= 0.0 || dAmount > Core::MAX_TXOUT_AMOUNT)
 			throw JSONRPCError(-3, "Invalid amount");
-		int64 nAmount = roundint64(dAmount * COIN);
+		int64 nAmount = roundint64(dAmount * Core::COIN);
 		if (!Core::MoneyRange(nAmount))
 			throw JSONRPCError(-3, "Invalid amount");
 		return nAmount;
@@ -98,7 +98,7 @@ namespace RPC
 
 	Value ValueFromAmount(int64 amount)
 	{
-		return (double)amount / (double)COIN;
+		return (double)amount / (double)Core::COIN;
 	}
 
 	std::string
@@ -600,7 +600,7 @@ namespace RPC
 				"Minimum and default transaction fee per KB is 1 cent");
 
 		Core::nTransactionFee = AmountFromValue(params[0]);
-		Core::nTransactionFee = (Core::nTransactionFee / CENT) * CENT;  // round to cent
+		Core::nTransactionFee = (Core::nTransactionFee / Core::CENT) * Core::CENT;  // round to cent
 		return true;
 	}
 
@@ -792,7 +792,7 @@ namespace RPC
 			}
 		}
 
-		return (double)nAmount / (double)COIN;
+		return (double)nAmount / (double)Core::COIN;
 	}
 	
 	Value dumptrustkeys(const Array& params, bool fHelp)
@@ -822,7 +822,7 @@ namespace RPC
 		for(multimap<uint64, uint256>::const_reverse_iterator it = richList.rbegin(); it != richList.rend() && nCount > 0; ++it)
 		{
 			Wallet::NexusAddress cAddress(it->second);
-			entry.push_back(Pair(cAddress.ToString(), (double)it->first / COIN));
+			entry.push_back(Pair(cAddress.ToString(), (double)it->first / Core::COIN));
 			nCount--;
 		}
 		
@@ -842,7 +842,7 @@ namespace RPC
 		
 		/** Dump the Address and Values. **/
 		Object entry;
-		entry.push_back(Pair(strAddress, (double)Core::mapAddressTransactions[cAddress.GetHash256()] / COIN));
+		entry.push_back(Pair(strAddress, (double)Core::mapAddressTransactions[cAddress.GetHash256()] / Core::COIN));
 
 		
 		return entry;
@@ -898,7 +898,7 @@ namespace RPC
 				throw JSONRPCError(-5, "Unable to Extract Output Address");
 			}
 				
-			txoutputs.push_back(strprintf("%s:%f", cAddress.ToString().c_str(), (double) txout.nValue / COIN));
+			txoutputs.push_back(strprintf("%s:%f", cAddress.ToString().c_str(), (double) txout.nValue / Core::COIN));
 		}
 		
 		if(!cTransaction.IsCoinBase())
@@ -927,7 +927,7 @@ namespace RPC
 					throw JSONRPCError(-5, "Unable to Extract Input Address");
 				}
 				
-				txinputs.push_back(strprintf("%s:%f", cAddress.ToString().c_str(), (double) tx.vout[txin.prevout.n].nValue / COIN));
+				txinputs.push_back(strprintf("%s:%f", cAddress.ToString().c_str(), (double) tx.vout[txin.prevout.n].nValue / Core::COIN));
 			}
 			
 			entry.push_back(Pair("inputs", txinputs));
@@ -2047,7 +2047,7 @@ namespace RPC
 				if (params.size() == 1)
 					throw runtime_error("must provide amount to reserve balance.\n");
 				int64 nAmount = AmountFromValue(params[1]);
-				nAmount = (nAmount / CENT) * CENT;  // round to cent
+				nAmount = (nAmount / Core::CENT) * Core::CENT;  // round to cent
 				if (nAmount < 0)
 					throw runtime_error("amount cannot be negative.\n");
 				mapArgs["-reservebalance"] = FormatMoney(nAmount).c_str();
@@ -2202,7 +2202,7 @@ namespace RPC
 			if (Wallet::ExtractAddress(pk, address))
 				printf("address %s |", address.ToString().c_str());
 			
-			printf("amount %f |", (double)nValue / COIN);
+			printf("amount %f |", (double)nValue / Core::COIN);
 			printf("confirmations %u\n",out.nDepth);
 
 			nCredit += nValue;

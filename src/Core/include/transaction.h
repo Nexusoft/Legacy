@@ -18,7 +18,6 @@
 #include "unifiedtime.h"
 
 #include "../../LLU/templates/serialize.h"
-#include "../../LLU/include/parse.h"
 #include "../../LLU/include/runtime.h"
 
 #include "../../LLC/hash/SK.h"
@@ -689,8 +688,16 @@ namespace Core
 			READWRITE(vSpent);
 		)
 
-		void SetNull();
-		bool IsNull();
+		void SetNull()
+		{
+			pos.SetNull();
+			vSpent.clear();
+		}
+
+		bool IsNull()
+		{
+			return pos.IsNull();
+		}
 		
 		int GetDepthInMainChain() const;
 

@@ -11,11 +11,15 @@
 #include "main.h"
 
 #include "Core/include/unifiedtime.h"
+#include "Core/include/dispatch.h"
 
 #include "LLP/include/time.h"
-#include "LLD/include/keychain.h"
-#include "LLU/include//ui_interface.h"
-#include "RPC/rpcserver.h"
+#include "LLP/templates/server.h"
+#include "LLC/include/random.h"
+#include "LLD/templates/keychain.h"
+#include "LLU/include/ui_interface.h"
+
+#include "RPC/include/rpcserver.h"
 
 #include "Wallet/db.h"
 #include "Wallet/walletdb.h"
@@ -34,7 +38,7 @@ using namespace std;
 using namespace boost;
 
 Wallet::CWallet* pwalletMain;
-LLP::Server<LLP::CoreLLP>* LLP_SERVER;
+LLP::Server<LLP::TimeLLP>* LLP_SERVER;
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -52,7 +56,7 @@ void ExitTimeout(void* parg)
 void StartShutdown()
 {
 #ifdef QT_GUI
-    // ensure we leave the Qt main loop for a clean GUI exit (Shutdown() is called in bitcoin.cpp afterwards)
+    // ensure we leave the Qt main loop for a clean GUI exit (Shutdown() is called in nexus.cpp afterwards)
     QueueShutdown();
 #else
     // Without UI, Shutdown() can simply be started in a new thread
@@ -79,7 +83,7 @@ void Shutdown(void* parg)
         fShutdown = true;
 
         Wallet::DBFlush(false);
-        Net::StopNode();
+        //Net::StopNode();
         Wallet::DBFlush(true);
         boost::filesystem::remove(GetPidFile());
         Core::UnregisterWallet(pwalletMain);
@@ -314,7 +318,7 @@ bool AppInit2(int argc, char* argv[])
 
     if (fCommandLine)
     {
-        int ret = Net::CommandLineRPC(argc, argv);
+        int ret = RPC::CommandLineRPC(argc, argv);
         exit(ret);
     }
 #endif
@@ -352,7 +356,7 @@ bool AppInit2(int argc, char* argv[])
 	
 	InitMessage(_("Initializing Unified Time..."));
 	printf("Initializing Unified Time...\n");
-	InitializeUnifiedTime();
+	//TODO: PUT IN NODE MANAGER InitializeUnifiedTime();
 	
 	if (!fDebug)
 		ShrinkDebugFile();
@@ -379,20 +383,11 @@ bool AppInit2(int argc, char* argv[])
     int64 nStart;
 
 	
-	/** Load Peer Addresses from the Address Database. **/
-    InitMessage(_("Loading addresses..."));
-    printf("Loading addresses...\n");
-    nStart = GetTimeMillis();
-    if (!Wallet::LoadAddresses())
-        strErrors << _("Error loading addr.dat") << "\n";
-    printf(" addresses   %15"PRI64d"ms\n", GetTimeMillis() - nStart);
-
-	
 	
 	/** Load the Block Index Database. **/
     InitMessage(_("Loading block index..."));
     printf("Loading block index...\n");
-    nStart = GetTimeMillis();
+    nStart = Timestamp(true);
     if (!Core::LoadBlockIndex())
         strErrors << _("Error loading blkindex.dat") << "\n";
 
@@ -405,12 +400,12 @@ bool AppInit2(int argc, char* argv[])
         printf("Shutdown requested. Exiting.\n");
         return false;
     }
-    printf(" block index %15"PRI64d"ms\n", GetTimeMillis() - nStart);
+    printf(" block index %15" PRI64d "ms\n", Timestamp(true) - nStart);
 	
 	/** Load the Wallet Database. **/
     InitMessage(_("Loading wallet..."));
     printf("Loading wallet...\n");
-    nStart = GetTimeMillis();
+    nStart = Timestamp(true);
     bool fFirstRun;
     pwalletMain = new Wallet::CWallet("wallet.dat");
     int nLoadWalletRet = pwalletMain->LoadWallet(fFirstRun);
@@ -431,22 +426,6 @@ bool AppInit2(int argc, char* argv[])
             strErrors << _("Error loading wallet.dat") << "\n";
     }
 
-    if (GetBoolArg("-upgradewallet", fFirstRun))
-    {
-        int nMaxVersion = GetArg("-upgradewallet", 0);
-        if (nMaxVersion == 0) // the -walletupgrade without argument case
-        {
-            printf("Performing wallet upgrade to %i\n", Wallet::FEATURE_LATEST);
-            nMaxVersion = DATABASE_VERSION;
-            pwalletMain->SetMinVersion(Wallet::FEATURE_LATEST); // permanently upgrade the wallet immediately
-        }
-        else
-            printf("Allowing wallet upgrade up to %i\n", nMaxVersion);
-        if (nMaxVersion < pwalletMain->GetVersion())
-            strErrors << _("Cannot downgrade wallet") << "\n";
-        pwalletMain->SetMaxVersion(nMaxVersion);
-    }
-
     if (fFirstRun)
     {
         // Create new keyUser and set as default key
@@ -461,7 +440,7 @@ bool AppInit2(int argc, char* argv[])
     }
 
     printf("%s", strErrors.str().c_str());
-    printf(" wallet      %15"PRI64d"ms\n", GetTimeMillis() - nStart);
+    printf(" wallet      %15" PRI64d "ms\n", Timestamp(true) - nStart);
 
     Core::RegisterWallet(pwalletMain);
     Core::CBlockIndex *pindexRescan = Core::pindexBest;
@@ -482,9 +461,9 @@ bool AppInit2(int argc, char* argv[])
     {
         InitMessage(_("Rescanning..."));
         printf("Rescanning last %i blocks (from block %i)...\n", Core::pindexBest->nHeight - pindexRescan->nHeight, pindexRescan->nHeight);
-        nStart = GetTimeMillis();
+        nStart = Timestamp(true);
         pwalletMain->ScanForWalletTransactions(pindexRescan, true);
-        printf(" rescan      %15"PRI64d"ms\n", GetTimeMillis() - nStart);
+        printf(" rescan      %15" PRI64d "ms\n", Timestamp(true) - nStart);
     }
 	
 
@@ -512,9 +491,7 @@ bool AppInit2(int argc, char* argv[])
     // the command-line/nexus.conf settings override GUI setting.
     if (mapArgs.count("-timeout"))
     {
-        int nNewTimeout = GetArg("-timeout", 5000);
-        if (nNewTimeout > 0 && nNewTimeout < 600000)
-            Net::nConnectTimeout = nNewTimeout;
+        //TODO: SET THIS AS TIMEOUT IN THE LLP INITIALIZATION
     }
 
     if (mapArgs.count("-printblock"))
@@ -542,16 +519,16 @@ bool AppInit2(int argc, char* argv[])
 
     if (mapArgs.count("-proxy"))
     {
-        Net::fUseProxy = true;
-        Net::addrProxy = Net::CService(mapArgs["-proxy"], 9050);
-        if (!Net::addrProxy.IsValid())
+        fUseProxy = true;
+        LLP::addrProxy = LLP::CService(mapArgs["-proxy"], 9050);
+        if (!LLP::addrProxy.IsValid())
         {
             ThreadSafeMessageBox(_("Invalid -proxy address"), _("Nexus"), wxOK | wxMODAL);
             return false;
         }
     }
 
-    bool fTor = (Net::fUseProxy && Net::addrProxy.GetPort() == 9050);
+    bool fTor = (fUseProxy && LLP::addrProxy.GetPort() == 9050);
     if (fTor)
     {
         // Use SoftSetBoolArg here so user can override any of these if they wish.
@@ -563,27 +540,17 @@ bool AppInit2(int argc, char* argv[])
         SoftSetBoolArg("-dns", false);
     }
 
-    Net::fAllowDNS = GetBoolArg("-dns");
+    fAllowDNS = GetBoolArg("-dns");
     fNoListen = !GetBoolArg("-listen", true);
-
-    if (!fNoListen)
-    {
-        std::string strError;
-        if (!Net::BindListenPort(strError))
-        {
-            ThreadSafeMessageBox(strError, _("Nexus"), wxOK | wxMODAL);
-            return false;
-        }
-    }
 
     if (mapArgs.count("-addnode"))
     {
         BOOST_FOREACH(string strAddr, mapMultiArgs["-addnode"])
         {
-            LLP::CAddress addr(LLP::CService(strAddr, LLP::GetDefaultPort(), LLP::fAllowDNS));
-            addr.nTime = 0; // so it won't relay unless successfully connected
-            if (addr.IsValid())
-                Net::addrman.Add(addr, Net::CNetAddr("127.0.0.1"));
+            //LLP::CAddress addr(LLP::CService(strAddr, LLP::GetDefaultPort(), LLP::fAllowDNS));
+            //addr.nTime = 0; // so it won't relay unless successfully connected
+            //if (addr.IsValid())
+            //    Net::addrman.Add(addr, Net::CNetAddr("127.0.0.1"));
         }
     }
 
@@ -594,7 +561,7 @@ bool AppInit2(int argc, char* argv[])
             ThreadSafeMessageBox(_("Invalid amount for -paytxfee=<amount>"), _("Nexus"), wxOK | wxMODAL);
             return false;
         }
-        if (Core::nTransactionFee > 0.25 * COIN)
+        if (Core::nTransactionFee > 0.25 * Core::COIN)
             ThreadSafeMessageBox(_("Warning: -paytxfee is set very high.  This is the transaction fee you will pay if you send a transaction."), _("Nexus"), wxOK | wxICON_EXCLAMATION | wxMODAL);
     }
 
@@ -614,14 +581,14 @@ bool AppInit2(int argc, char* argv[])
     //
     
 	/** Wait for Unified Time if First Start. **/
-	while(!fTimeUnified)
+	while(!Core::fTimeUnified)
 		Sleep(10);
 	
 	/** Start sending Unified Samples. **/
 	if(GetBoolArg("-unified", false)) {
 		InitMessage(_("Initializing Core LLP..."));
 		printf("Initializing Core LLP...\n");
-		LLP_SERVER = new LLP::Server<LLP::CoreLLP>(fTestNet ? TESTNET_CORE_LLP_PORT : NEXUS_CORE_LLP_PORT, 5, true, 1, 3, 1);
+		//LLP_SERVER = new LLP::Server<LLP::CoreLLP>(fTestNet ? TESTNET_CORE_LLP_PORT : NEXUS_CORE_LLP_PORT, 5, true, 1, 3, 1);
 	}
 	
     if (!Core::CheckDiskSpace())
@@ -629,26 +596,29 @@ bool AppInit2(int argc, char* argv[])
 
     RandAddSeedPerfmon();
 	
-    if (!CreateThread(Net::StartNode, NULL))
-        ThreadSafeMessageBox(_("Error: CreateThread(StartNode) failed"), _("Nexus"), wxOK | wxMODAL);
+    //if (!CreateThread(Net::StartNode, NULL))
+     //   ThreadSafeMessageBox(_("Error: CreateThread(StartNode) failed"), _("Nexus"), wxOK | wxMODAL);
 	
 #ifdef QT_GUI
-	Core::StartStaking(pwalletMain);
+	if(GetBoolArg("-stake", true))
+	{
+		//Core::StartStaking(pwalletMain);
+		printf("%%%%%%%%%%%%%%%%% Qt Client Staking Thread Initialized...\n");
+	}
 #else
 	if(GetBoolArg("-stake", false))
 	{
-		Core::StartStaking(pwalletMain);
+		//Core::StartStaking(pwalletMain);
 		printf("%%%%%%%%%%%%%%%%% Daemon Staking Thread Initialized...\n");
 	}
 #endif
 
-	if(GetBoolArg("-mining", false))
-		Core::StartMiningLLP();
+	//if(GetBoolArg("-mining", false))
+	//	Core::StartMiningLLP();
 	
     if (fServer)
-        CreateThread(Net::ThreadRPCServer, NULL);
+        CreateThread(RPC::ThreadRPCServer, NULL);
 
-	//CreateThread(DebugThread, NULL);
 #ifdef QT_GUI
     if (GetStartOnSystemStartup())
         SetStartOnSystemStartup(true); // Remove startup links

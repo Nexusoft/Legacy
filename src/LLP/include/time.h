@@ -13,11 +13,12 @@
 
 #include "../templates/types.h"
 
+
 namespace LLP
 {	
 	
 	/* Old Core Server. TODO: To Be Removed in Tritium ++ */
-	class CoreLLP : public Connection
+	class TimeLLP : public Connection
 	{	
 		enum
 		{
@@ -42,8 +43,8 @@ namespace LLP
 		};
 	
 	public:
-		CoreLLP() : Connection(){ }
-		CoreLLP( Socket_t SOCKET_IN, DDOS_Filter* DDOS_IN, bool isDDOS = false ) : Connection( SOCKET_IN, DDOS_IN ) {}
+		TimeLLP() : Connection(){ }
+		TimeLLP( Socket_t SOCKET_IN, DDOS_Filter* DDOS_IN, bool isDDOS = false ) : Connection( SOCKET_IN, DDOS_IN ) {}
 		
 		
 		/* Handle Event Inheritance. */

@@ -18,15 +18,9 @@
 #include "debug.h"
 #include "convert.h"
 
+#include "../../Core/include/global.h"
+
 #include "../../LLC/types/uint1024.h"
-
-
-/* The significcant digits a "COIN" can be broken into. */
-static const int64 COIN = 1000000;
-
-
-/* The significiant digits a "CENT" can be broken into. */
-static const int64 CENT = 10000;
 
 
 void ParseString(const std::string& str, char c, std::vector<std::string>& v)
@@ -56,8 +50,8 @@ std::string FormatMoney(int64 n, bool fPlus=false)
 	// Note: not using straight sprintf here because we do NOT want
 	// localized number formatting.
 	int64 n_abs = (n > 0 ? n : -n);
-	int64 quotient = n_abs/COIN;
-	int64 remainder = n_abs%COIN;
+	int64 quotient = n_abs / Core::COIN;
+	int64 remainder = n_abs % Core::COIN;
 	
 	std::string str = strprintf("%" PRI64d ".%06" PRI64d "", quotient, remainder);
 
@@ -94,7 +88,7 @@ bool ParseMoney(const char* pszIn, int64& nRet)
 		if (*p == '.')
 		{
 			p++;
-			int64 nMult = CENT*10;
+			int64 nMult = Core::CENT * 10;
 			while (isdigit(*p) && (nMult > 0))
 			{
 				nUnits += nMult * (*p++ - '0');
@@ -118,11 +112,11 @@ bool ParseMoney(const char* pszIn, int64& nRet)
 			return false;
 	if (strWhole.size() > 10) // guard against 63 bit overflow
 		return false;
-	if (nUnits < 0 || nUnits > COIN)
+	if (nUnits < 0 || nUnits > Core::COIN)
 		return false;
 	
 	int64 nWhole = atoi64(strWhole);
-	int64 nValue = nWhole*COIN + nUnits;
+	int64 nValue = nWhole* Core::COIN + nUnits;
 	
 	nRet = nValue;
 	return true;

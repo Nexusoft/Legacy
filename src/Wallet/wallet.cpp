@@ -1043,7 +1043,7 @@ namespace Wallet
 						nValueRet += coin.first;
 						return true;
 					}
-					else if (n < nTargetValue + CENT)
+					else if (n < nTargetValue + Core::CENT)
 					{
 						vValue.push_back(coin);
 						nTotalLower += n;
@@ -1056,7 +1056,7 @@ namespace Wallet
 			}
 		}
 
-		if (nTotalLower == nTargetValue || nTotalLower == nTargetValue + CENT)
+		if (nTotalLower == nTargetValue || nTotalLower == nTargetValue + Core::CENT)
 		{
 			for (unsigned int i = 0; i < vValue.size(); ++i)
 			{
@@ -1066,7 +1066,7 @@ namespace Wallet
 			return true;
 		}
 
-		if (nTotalLower < nTargetValue + (coinLowestLarger.second.first ? CENT : 0))
+		if (nTotalLower < nTargetValue + (coinLowestLarger.second.first ? Core::CENT : 0))
 		{
 			if (coinLowestLarger.second.first == NULL)
 				return false;
@@ -1075,8 +1075,8 @@ namespace Wallet
 			return true;
 		}
 
-		if (nTotalLower >= nTargetValue + CENT)
-			nTargetValue += CENT;
+		if (nTotalLower >= nTargetValue + Core::CENT)
+			nTargetValue += Core::CENT;
 
 		// Solve subset sum by stochastic approximation
 		sort(vValue.rbegin(), vValue.rend());
@@ -1203,7 +1203,7 @@ namespace Wallet
 					// if sub-cent change is required, the fee must be raised to at least MIN_TX_FEE
 					// or until nChange becomes zero
 					// NOTE: this depends on the exact behaviour of GetMinFee
-					if (nFeeRet < Core::MIN_TX_FEE && nChange > 0 && nChange < CENT)
+					if (nFeeRet < Core::MIN_TX_FEE && nChange > 0 && nChange < Core::CENT)
 					{
 						int64 nMoveToFee = min(nChange, Core::MIN_TX_FEE - nFeeRet);
 						nChange -= nMoveToFee;
