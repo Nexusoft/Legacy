@@ -23,7 +23,7 @@
 #include "../../LLC/types/uint1024.h"
 
 
-void ParseString(const std::string& str, char c, std::vector<std::string>& v)
+inline void ParseString(const std::string& str, char c, std::vector<std::string>& v)
 {
 	if (str.empty())
 		return;
@@ -45,7 +45,7 @@ void ParseString(const std::string& str, char c, std::vector<std::string>& v)
 }
 
 
-std::string FormatMoney(int64 n, bool fPlus=false)
+inline std::string FormatMoney(int64 n, bool fPlus=false)
 {
 	// Note: not using straight sprintf here because we do NOT want
 	// localized number formatting.
@@ -71,12 +71,12 @@ std::string FormatMoney(int64 n, bool fPlus=false)
 }
 
 
-bool ParseMoney(const std::string& str, int64& nRet)
+inline bool ParseMoney(const std::string& str, int64& nRet)
 {
 	return ParseMoney(str.c_str(), nRet);
 }
 
-bool ParseMoney(const char* pszIn, int64& nRet)
+inline bool ParseMoney(const char* pszIn, int64& nRet)
 {
 	std::string strWhole;
 	int64 nUnits = 0;
@@ -126,7 +126,7 @@ bool ParseMoney(const char* pszIn, int64& nRet)
 
 
 /* Split a string into it's components by delimiter. */
-std::vector<std::string> Split(const std::string& strInput, char strDelimiter)
+inline std::vector<std::string> Split(const std::string& strInput, char strDelimiter)
 {
    std::string::size_type nIndex = 0;
    std::string::size_type nFind  = strInput.find(strDelimiter);

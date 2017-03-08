@@ -19,7 +19,7 @@
 #include "../../LLU/include/args.h"
 #include "../../LLU/include/config.h"
 #include "../../LLU/include/mutex.h"
-#include "../../LLU/templates/hex.h"
+#include "../../LLU/include/hex.h"
 #include "../../LLU/templates/serialize.h"
 
 namespace LLD

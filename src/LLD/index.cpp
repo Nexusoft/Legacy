@@ -242,7 +242,7 @@ namespace LLD
 			if (!block.ReadFromDisk(pindex))
 				return error("LoadBlockIndex() : block.ReadFromDisk failed");
 				
-			if (nCheckLevel > 0 && !Core::CheckBlock(block))
+			if (nCheckLevel > 0 && !Core::CheckBlock(&block))
 			{
 				printf("LoadBlockIndex() : *** found bad block at %d, hash=%s\n", pindex->nHeight, pindex->GetBlockHash().ToString().c_str());
 				pindexFork = pindex->pprev;

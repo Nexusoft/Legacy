@@ -703,15 +703,15 @@ namespace Core
 	
 	
 	/* Check a block before it is appended to the blockchain. */
-	bool CheckBlock(CBlock pblock, LLP::CNode* pfrom = NULL);
+	bool CheckBlock(CBlock* pblock, LLP::CNode* pfrom = NULL);
 	
 	
 	/* Accept a block into the block chain without setting it as the leading block. */
-	bool AcceptBlock(CBlock pblock, LLP::CNode* pfrom = NULL);
+	bool AcceptBlock(CBlock* pblock, LLP::CNode* pfrom = NULL);
 	
 	
 	/* Add a block into index memory and give it a location in the chain. */
-	bool AddToBlockIndex(CBlock pblock, unsigned int nFile, unsigned int nBlockPos, LLP::CNode* pfrom = NULL);
+	bool AddToBlockIndex(CBlock* pblock, unsigned int nFile, unsigned int nBlockPos, LLP::CNode* pfrom = NULL);
 	
 	
 	/* Set block as the current leading block of the block chain. */

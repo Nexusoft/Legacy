@@ -75,11 +75,6 @@ namespace Core
 	}
 	
 	
-	bool CBlockIndex::IsInMainChain() const
-	{
-		return (pnext || this == pindexBest);
-	}
-	
 	int GetNumBlocksOfPeers() { return cPeerBlockCounts.Majority(); }
 	
 	bool IsInitialBlockDownload()
@@ -508,7 +503,7 @@ namespace Core
 
 	/* AddToBlockIndex: Adds a new Block into the Block Index. 
 		This is where it is categorized and dealt with in the Blockchain. */
-	bool AddToBlockIndex(CBlock* pblock, unsigned int nFile, unsigned int nBlockPos)
+	bool AddToBlockIndex(CBlock* pblock, unsigned int nFile, unsigned int nBlockPos, LLP::CNode* pfrom)
 	{
 		/* Check for Duplicate. */
 		uint1024 hash = pblock->GetHash();
@@ -590,7 +585,7 @@ namespace Core
 
 		/** Set the Best chain if Highest Trust. **/
 		if (pindexNew->nChainTrust > nBestChainTrust)
-			if (!SetBestChain(indexdb, pindexNew))
+			if (!SetBestChain(indexdb, pindexNew, pfrom))
 				return false;
 			
 		/** Commit the Transaction to the Database. **/
@@ -664,7 +659,7 @@ namespace Core
 	
 	/** Check Block: These are Checks done before the Block is sunken in the Blockchain.
 		These are done before a block is orphaned to ensure it is valid before trying to obtain its chain. **/
-	bool CheckBlock(CBlock* pblock, LLP::CNode* pfrom = NULL)
+	bool CheckBlock(CBlock* pblock, LLP::CNode* pfrom)
 	{
 		
 		/* Check the Size limits of the Current Block. */
@@ -718,7 +713,7 @@ namespace Core
 			
 		
 		/* Check the Required Mining Outputs. */
-		if (pblock->IsProofOfWork() && pblock->nVersion < 5) {
+		if (pblock->nHeight > 0 && pblock->IsProofOfWork() && pblock->nVersion < 5) {
 			unsigned int nSize = pblock->vtx[0].vout.size();
 
 			/* Check the Coinbase Tx Size. */
@@ -902,7 +897,7 @@ namespace Core
 		unsigned int nBlockPos = 0;
 		if (!pblock->WriteToDisk(nFile, nBlockPos))
 			return error("AcceptBlock() : WriteToDisk failed");
-		if (!AddToBlockIndex(pblock, nFile, nBlockPos))
+		if (!AddToBlockIndex(pblock, nFile, nBlockPos, pfrom))
 			return error("AcceptBlock() : AddToBlockIndex failed");
 
 			

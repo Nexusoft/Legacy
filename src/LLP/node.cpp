@@ -46,6 +46,13 @@ namespace LLP
 		return true;
 	}
 	
+        /* Keep Track of the Inventory we Already have. */
+        void CNode::AddInventoryKnown(const CInv& inv) { }
+
+		
+        /* Send Inventory We have. */
+        void CNode::PushInventory(const CInv& inv) {}
+	
 		
 	/* Push a Message With Information about This Current Node. */
 	void CNode::PushVersion()
@@ -57,7 +64,7 @@ namespace LLP
 		int64 nTime = Core::UnifiedTimestamp();
 		
 		/* Dummy Variable NOTE: Remove in Tritium ++ */
-		uint64 nLocalServices;
+		uint64 nLocalServices = 0;
 		
 		/* Relay Your Address. */
 		CAddress addrMe   = (fUseProxy || !addrMyNode.IsRoutable() ? CAddress(CService("0.0.0.0",0)) : addrMyNode);

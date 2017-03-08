@@ -25,7 +25,7 @@ namespace LLP
 	
 	
 	
-	const char* DNS_SeedNodes[] = 
+	static const char* DNS_SeedNodes[] = 
 	{
 		"node1.nexusearth.com",
 		"node1.mercuryminer.com",
@@ -71,7 +71,7 @@ namespace LLP
 	};
 
 	
-	const char* DNS_SeedNodes_Testnet[] = 
+	static const char* DNS_SeedNodes_Testnet[] = 
 	{
 		"test1.nexusoft.io"
 	};	

@@ -15,6 +15,8 @@
 using namespace std;
 namespace Core
 {
+        
+        double decay[3][3] = { {50.0, -0.0000011, 1.0}, {10.0, -0.00000055, 1.0}, {1.0, -0.00000059, 0.032} };
 
 	/* Returns the value of a full minutes reward per channel */
 	int64 GetSubsidy(int nMinutes, int nType) { return (((decay[nType][0] * exp(decay[nType][1] * nMinutes)) + decay[nType][2]) * (COIN / 2.0)); }

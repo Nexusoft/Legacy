@@ -28,7 +28,7 @@
 
 static FILE* fileout = NULL;
 static Mutex_t DEBUG_MUTEX;
-inline int OutputDebugStringF(const char* pszFormat, ...)
+int OutputDebugStringF(const char* pszFormat, ...)
 {
 	LOCK(DEBUG_MUTEX);
 	
@@ -216,7 +216,7 @@ void PrintException(std::exception* pex, const char* pszThread)
     FormatException(pszMessage, pex, pszThread);
     printf("\n\n************************\n%s\n", pszMessage);
     fprintf(stderr, "\n\n************************\n%s\n", pszMessage);
-    strMiscWarning = pszMessage;
+
     throw;
 }
 
@@ -239,7 +239,7 @@ void PrintExceptionContinue(std::exception* pex, const char* pszThread)
     FormatException(pszMessage, pex, pszThread);
     printf("\n\n************************\n%s\n", pszMessage);
     fprintf(stderr, "\n\n************************\n%s\n", pszMessage);
-    strMiscWarning = pszMessage;
+
 }
 
 int GetFilesize(FILE* file)

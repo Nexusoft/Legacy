@@ -913,7 +913,7 @@ namespace Core
 						break;
 					}
 					
-					if (!CheckBlock(*pblock, NULL))
+					if (!CheckBlock(pblock, NULL))
 					{
 						if(GetArg("-verbose", 0) >= 1)
 							error("Stake Minter : Check Block Failed...");

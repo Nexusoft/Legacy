@@ -18,8 +18,13 @@
 
 namespace Core
 {
+    
 	template<typename T1>
-	void RelayMessage(LLP::CInv inv, const T1& obj);
+	void RelayMessage(LLP::CInv inv, const T1& obj)
+        {
+            //TODO: connect with Node Manager / LLP Relay Layer
+            
+        }
 	
 	class NodeManager
 	{

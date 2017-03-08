@@ -8,15 +8,15 @@
   
 *******************************************************************************************/
 
-#ifndef NEXUS_LLU_TEMPLATES_HEX_H
-#define NEXUS_LLU_TEMPLATES_HEX_H
+#ifndef NEXUS_LLU_INCLUDE_HEX_H
+#define NEXUS_LLU_INCLUDE_HEX_H
 
 #include <string>
 #include <vector>
 
-#include "../include/debug.h"
+#include "debug.h"
 
-signed char phexdigit[256] =
+static signed char phexdigit[256] =
 { -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
   -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
   -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
@@ -33,8 +33,8 @@ signed char phexdigit[256] =
   -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
   -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
   -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1, };
-
-bool IsHex(const std::string& str)
+  
+inline bool IsHex(const std::string& str)
 {
     for(int i = 0; i < str.size(); i ++)
     {
@@ -44,7 +44,7 @@ bool IsHex(const std::string& str)
     return (str.size() > 0) && (str.size()%2 == 0);
 }
 
-std::vector<unsigned char> ParseHex(const char* psz)
+inline std::vector<unsigned char> ParseHex(const char* psz)
 {
     // convert hex dump to vector
     std::vector<unsigned char> vch;
@@ -65,7 +65,7 @@ std::vector<unsigned char> ParseHex(const char* psz)
     return vch;
 }
 
-std::vector<unsigned char> ParseHex(const std::string& str)
+inline std::vector<unsigned char> ParseHex(const std::string& str)
 {
     return ParseHex(str.c_str());
 }
@@ -95,7 +95,7 @@ inline std::string HexStr(const std::vector<unsigned char>& vch, bool fSpaces=fa
 }
 
 template<typename T>
-void PrintHex(const T pbegin, const T pend, const char* pszFormat="%s", bool fSpaces=true)
+inline void PrintHex(const T pbegin, const T pend, const char* pszFormat="%s", bool fSpaces=true)
 {
     printf(pszFormat, HexStr(pbegin, pend, fSpaces).c_str());
 }

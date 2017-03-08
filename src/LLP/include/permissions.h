@@ -21,7 +21,7 @@
 /** IP Filtering Definitions
 	IP's are Filtered By Ports.
 	Format is IP and PORT. **/
-bool CheckPermissions(std::string strAddress, unsigned int nPort)
+inline bool CheckPermissions(std::string strAddress, unsigned int nPort)
 {
 	/* Bypass localhost addresses first. */
 	if(strAddress == "127.0.0.1")
@@ -67,7 +67,7 @@ bool CheckPermissions(std::string strAddress, unsigned int nPort)
 
 
 
-bool WildcardMatch(const char* psz, const char* mask)
+inline bool WildcardMatch(const char* psz, const char* mask)
 {
     for(;;)
     {
@@ -91,7 +91,7 @@ bool WildcardMatch(const char* psz, const char* mask)
     }
 }
 
-bool WildcardMatch(const std::string& str, const std::string& mask)
+inline bool WildcardMatch(const std::string& str, const std::string& mask)
 {
     return WildcardMatch(str.c_str(), mask.c_str());
 }

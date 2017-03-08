@@ -1,8 +1,10 @@
 /*******************************************************************************************
  
-			Hash(BEGIN(Satoshi[2010]), END(Sunny[2012])) == Videlicet[2014] ++
-   
- [Learn and Create] Viz. http://www.opensource.org/licenses/mit-license.php
+			(c) Hash(BEGIN(Satoshi[2010]), END(Sunny[2012])) == Videlicet[2017] ++
+			
+			(c) Copyright Nexus Developers 2014 - 2017
+			
+			http://www.opensource.org/licenses/mit-license.php
   
 *******************************************************************************************/
 
@@ -11,12 +13,9 @@
 
 #include "base58.h"
 
-#include <string>
-#include <vector>
-
 #include <boost/foreach.hpp>
 
-#include "../LLU/templates/hex.h"
+#include "../LLU/include/hex.h"
 
 namespace Core { class CTransaction; }
 namespace Wallet 
