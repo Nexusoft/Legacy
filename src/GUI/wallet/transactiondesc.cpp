@@ -34,9 +34,9 @@ QString TransactionDesc::FormatTxStatus(const Wallet::CWalletTx& wtx)
     else
     {
         int nDepth = wtx.GetDepthInMainChain();
-        if (GetUnifiedTimestamp() - wtx.nTimeReceived > 2 * 60 && wtx.GetRequestCount() == 0)
+        if (Core::UnifiedTimestamp() - wtx.nTimeReceived > 2 * 60 && wtx.GetRequestCount() == 0)
             return tr("%1/offline?").arg(nDepth);
-        else if (nDepth < 6)
+        else if (nDepth < 5)
             return tr("%1/unconfirmed").arg(nDepth);
         else
             return tr("%1 confirmations").arg(nDepth);

@@ -8,12 +8,12 @@
   
 *******************************************************************************************/
 
-#ifndef NEXUS_LLU_INCLUDE_RANDOM_H
-#define NEXUS_LLU_INCLUDE_RANDOM_H
+#ifndef NEXUS_LLC_INCLUDE_RANDOM_H
+#define NEXUS_LLC_INCLUDE_RANDOM_H
 
 #include <openssl/rand.h>
 
-#include "../LLC/types/uint1024.h"
+#include "../types/uint1024.h"
 
 #ifndef WIN32
 #include <sys/time.h>

@@ -14,7 +14,7 @@
 #include <string>
 #include <vector>
 
-inline std::string EncodeBase64(const unsigned char* pch, size_t len)
+std::string EncodeBase64(const unsigned char* pch, size_t len)
 {
     static const char *pbase64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
@@ -61,13 +61,13 @@ inline std::string EncodeBase64(const unsigned char* pch, size_t len)
 }
 
 
-std::string EncodeBase64(const string& str)
+std::string EncodeBase64(const std::string& str)
 {
     return EncodeBase64((const unsigned char*)str.c_str(), str.size());
 }
 
 
-std::vector<unsigned char> DecodeBase64(const char* p, bool* pfInvalid)
+std::vector<unsigned char> DecodeBase64(const char* p, bool* pfInvalid = NULL)
 {
     static const int decode64_table[256] =
     {

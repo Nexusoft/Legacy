@@ -13,9 +13,9 @@
 #include "include/trust.h"
 #include "include/block.h"
 #include "include/difficulty.h"
+#include "include/unifiedtime.h"
 
 #include "../LLD/include/index.h"
-#include "../LLP/include/unifiedtime.h"
 #include "../LLU/include/runtime.h"
 
 using namespace std;
@@ -125,7 +125,7 @@ namespace Core
 			return error("CBlock::VerifyStake() : Trust Key must be of Public Key Type Created from Keypool.");
 			
 		/** F] Check the Coinstake Time is before Unified Timestamp. **/
-		if(vtx[0].nTime > (LLP::GetUnifiedTimestamp() + LLP::MAX_UNIFIED_DRIFT))
+		if(vtx[0].nTime > (UnifiedTimestamp() + MAX_UNIFIED_DRIFT))
 			return error("CBlock::VerifyStake() : Coinstake Transaction too far in Future.");
 		
 		/** Set the Public Key Integer Key from Bytes. **/

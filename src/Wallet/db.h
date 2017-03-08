@@ -276,9 +276,6 @@ namespace Wallet
 	};
 
 
-
-
-
 	/** Access to the transaction database (blkindex.dat) */
 	class CTxDB : public CDB
 	{
@@ -306,37 +303,6 @@ namespace Wallet
 		bool WriteCheckpointPubKey(const std::string& strPubKey);
 		bool MigrateToLLD();
 	};
-
-
-	/** Access to the Nexus Time Database (time.dat).
-		This contains the Unified Time Data collected over time. */
-	class CTimeDB : public CDB
-	{
-	public:
-		CTimeDB(const char* pszMode="r+") : CDB("time.dat", pszMode) { }
-	private:
-		CTimeDB(const CTimeDB&);
-		void operator=(const CTimeDB&);
-	public:
-		bool WriteTimeData(int nOffset);
-		bool ReadTimeData(int& nOffset);
-	};
-
-
-	/** Access to the (IP) address database (addr.dat) */
-	class CAddrDB : public CDB
-	{
-	public:
-		CAddrDB(const char* pszMode="r+") : CDB("addr.dat", pszMode) { }
-	private:
-		CAddrDB(const CAddrDB&);
-		void operator=(const CAddrDB&);
-	public:
-		bool WriteAddrman(const Net::CAddrMan& addr);
-		bool LoadAddresses();
-	};
-
-	bool LoadAddresses();
 
 }
 #endif // NEXUS_DB_H

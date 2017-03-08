@@ -12,13 +12,9 @@
 #include "include/hosts.h"
 #include "include/node.h"
 
+#include "../LLC/include/random.h"
 #include "../LLD/include/index.h"
-
-#include "../Core/include/block.h"
-#include "../Core/include/global.h"
-
 #include "../LLU/include/args.h"
-#include "../LLU/include/random.h"
 
 namespace LLP
 {
@@ -58,7 +54,7 @@ namespace LLP
 		RAND_bytes((unsigned char*)&nSessionID, sizeof(nSessionID));
 		
 		/* Current Unified Timestamp. */
-		int64 nTime = LLP::GetUnifiedTimestamp();
+		int64 nTime = Core::UnifiedTimestamp();
 		
 		/* Dummy Variable NOTE: Remove in Tritium ++ */
 		uint64 nLocalServices;
@@ -135,7 +131,7 @@ namespace LLP
 		if(INCOMING.GetMessage() == "getoffset")
 		{
 			/* Don't service unified seeds unless time is unified. */
-			if(!LLP::fTimeUnified)
+			if(!Core::fTimeUnified)
 				return true;
 			
 			/* De-Serialize the Timestamp Sent. */
@@ -146,11 +142,11 @@ namespace LLP
 			unsigned int nRequestID;
 			ssMessage >> nRequestID;
 			
-			int   nOffset    = (int)(LLP::GetUnifiedTimestamp(true) - nTimestamp);
+			int   nOffset    = (int)(Core::UnifiedTimestamp(true) - nTimestamp);
 			PushMessage("offset", nOffset, nRequestID);
 				
 			if(GetArg("-verbose", 0) >= 3)
-				printf("***** Node: Sent Offset %i | %s | Unified %" PRId64 "\n", nOffset, addrThisNode.ToString().c_str(), LLP::GetUnifiedTimestamp());
+				printf("***** Node: Sent Offset %i | %s | Unified %" PRId64 "\n", nOffset, addrThisNode.ToString().c_str(), Core::UnifiedTimestamp());
 			
 			return true;
 		}
@@ -178,7 +174,7 @@ namespace LLP
 				}
 				
 				/* Reject Samples that are recieved a 30 seconds after last check on this node. */
-				if(GetUnifiedTimestamp() - nLastUnifiedCheck > 30) {
+				if(Core::UnifiedTimestamp() - nLastUnifiedCheck > 30) {
 					DDOS->rSCORE += 15;
 					
 					return true;
@@ -257,7 +253,7 @@ namespace LLP
 			uint64 nonce = 0;
 			ssMessage >> nonce;
 			
-			nLastPinging = LLP::GetUnifiedTimestamp();
+			nLastPing = Core::UnifiedTimestamp();
 			cLatencyTimer.Start();
 				
 			PushMessage("pong", nonce);

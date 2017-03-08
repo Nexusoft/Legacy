@@ -33,7 +33,8 @@
     }
 
 namespace Wallet { class CReserveKey; }
-namespace Net
+
+namespace RPC
 {
 	void ThreadRPCServer(void* parg);
 	int CommandLineRPC(int argc, char *argv[]);

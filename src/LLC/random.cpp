@@ -8,9 +8,10 @@
   
 *******************************************************************************************/
 
-#include "include/debug.h"
 #include "include/random.h"
-#include "include/runtime.h"
+
+#include "../LLU/include/debug.h"
+#include "../LLU/include/runtime.h"
 
 void RandAddSeed()
 {
@@ -42,7 +43,7 @@ void RandAddSeedPerfmon()
     {
         RAND_add(pdata, nSize, nSize/100.0);
         memset(pdata, 0, nSize);
-        printf("%s RandAddSeed() %d bytes\n", DateTimeStrFormat(LLP::GetUnifiedTimestamp()).c_str(), nSize);
+        printf("%s RandAddSeed() %d bytes\n", DateTimeStrFormat(Timestamp()).c_str(), nSize);
     }
 #endif
 }

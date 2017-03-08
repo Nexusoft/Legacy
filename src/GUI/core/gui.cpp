@@ -603,7 +603,7 @@ void NexusGUI::setNumBlocks(int count)
         tooltip = tr("Downloaded %1 blocks of transaction history.").arg(count);
     }
 
-    QDateTime now = QDateTime::fromTime_t(GetUnifiedTimestamp());//QDateTime::currentDateTime();
+    QDateTime now = QDateTime::fromTime_t(Timestamp());//QDateTime::currentDateTime();
     QDateTime lastBlockDate = clientModel->getLastBlockDate();
     int secs = lastBlockDate.secsTo(now);
     QString text;

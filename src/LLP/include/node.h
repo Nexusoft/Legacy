@@ -27,7 +27,6 @@ namespace LLP
 {
 	static CAddress addrMyNode;
 	
-	
 	class CNode : public MessageConnection
 	{
 		CAddress addrThisNode;
@@ -76,7 +75,7 @@ namespace LLP
 		
 		/* Network Statistics. */
 		unsigned int nNodeLatency; //milli-seconds
-		unsigned int nLastPinging;
+		unsigned int nLastPing;
 		
 		
 		/* Node Timers (Internal Statistics) */

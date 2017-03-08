@@ -8,15 +8,17 @@
   
 *******************************************************************************************/
 
-#include "wallet/db.h"
-#include "wallet/walletdb.h"
-#include "net/rpcserver.h"
 #include "main.h"
-#include "LLP/coreserver.h"
-#include "LLD/keychain.h"
-#include "core/unifiedtime.h"
-#include "util/util.h"
-#include "util/ui_interface.h"
+
+#include "Core/include/unifiedtime.h"
+
+#include "LLP/include/time.h"
+#include "LLD/include/keychain.h"
+#include "LLU/include//ui_interface.h"
+#include "RPC/rpcserver.h"
+
+#include "Wallet/db.h"
+#include "Wallet/walletdb.h"
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 #include <boost/filesystem/convenience.hpp>

@@ -9,9 +9,13 @@
 #include "wallet.h"
 #include "walletdb.h"
 #include "crypter.h"
-#include "../util/ui_interface.h"
 
-#include "../LLD/index.h"
+#include "../Core/include/manager.h"
+
+#include "../LLC/include/random.h"
+#include "../LLD/include/index.h"
+#include "../LLP/include/message.h"
+#include "../LLU/include/ui_interface.h"
 
 using namespace std;
 
@@ -112,13 +116,13 @@ namespace Wallet
 					return false;
 				if (CCryptoKeyStore::Unlock(vMasterKey))
 				{
-					int64 nStartTime = GetTimeMillis();
+					int64 nStartTime = Timestamp(true);
 					crypter.SetKeyFromPassphrase(strNewWalletPassphrase, pMasterKey.second.vchSalt, pMasterKey.second.nDeriveIterations, pMasterKey.second.nDerivationMethod);
-					pMasterKey.second.nDeriveIterations = pMasterKey.second.nDeriveIterations * (100 / ((double)(GetTimeMillis() - nStartTime)));
+					pMasterKey.second.nDeriveIterations = pMasterKey.second.nDeriveIterations * (100 / ((double)(Timestamp(true) - nStartTime)));
 
-					nStartTime = GetTimeMillis();
+					nStartTime = Timestamp(true);
 					crypter.SetKeyFromPassphrase(strNewWalletPassphrase, pMasterKey.second.vchSalt, pMasterKey.second.nDeriveIterations, pMasterKey.second.nDerivationMethod);
-					pMasterKey.second.nDeriveIterations = (pMasterKey.second.nDeriveIterations + pMasterKey.second.nDeriveIterations * 100 / ((double)(GetTimeMillis() - nStartTime))) / 2;
+					pMasterKey.second.nDeriveIterations = (pMasterKey.second.nDeriveIterations + pMasterKey.second.nDeriveIterations * 100 / ((double)(Timestamp(true) - nStartTime))) / 2;
 
 					if (pMasterKey.second.nDeriveIterations < 25000)
 						pMasterKey.second.nDeriveIterations = 25000;
@@ -213,13 +217,13 @@ namespace Wallet
 		RAND_bytes(&kMasterKey.vchSalt[0], WALLET_CRYPTO_SALT_SIZE);
 
 		CCrypter crypter;
-		int64 nStartTime = GetTimeMillis();
+		int64 nStartTime = Timestamp(true);
 		crypter.SetKeyFromPassphrase(strWalletPassphrase, kMasterKey.vchSalt, 25000, kMasterKey.nDerivationMethod);
-		kMasterKey.nDeriveIterations = 2500000 / ((double)(GetTimeMillis() - nStartTime));
+		kMasterKey.nDeriveIterations = 2500000 / ((double)(Timestamp(true) - nStartTime));
 
-		nStartTime = GetTimeMillis();
+		nStartTime = Timestamp(true);
 		crypter.SetKeyFromPassphrase(strWalletPassphrase, kMasterKey.vchSalt, kMasterKey.nDeriveIterations, kMasterKey.nDerivationMethod);
-		kMasterKey.nDeriveIterations = (kMasterKey.nDeriveIterations + kMasterKey.nDeriveIterations * 100 / ((double)(GetTimeMillis() - nStartTime))) / 2;
+		kMasterKey.nDeriveIterations = (kMasterKey.nDeriveIterations + kMasterKey.nDeriveIterations * 100 / ((double)(Timestamp(true) - nStartTime))) / 2;
 
 		if (kMasterKey.nDeriveIterations < 25000)
 			kMasterKey.nDeriveIterations = 25000;
@@ -317,7 +321,7 @@ namespace Wallet
 			wtx.BindWallet(this);
 			bool fInsertedNew = ret.second;
 			if (fInsertedNew)
-				wtx.nTimeReceived = GetUnifiedTimestamp();
+				wtx.nTimeReceived = Core::UnifiedTimestamp();
 
 			bool fUpdated = false;
 			if (!fInsertedNew)
@@ -768,8 +772,10 @@ namespace Wallet
 			if (!(tx.IsCoinBase() || tx.IsCoinStake()))
 			{
 				uint512 hash = tx.GetHash();
+				
+				//TODO: CHANGE THIS TO NODE MANAGER
 				if (!indexdb.ContainsTx(hash))
-					RelayMessage(Net::CInv(Net::MSG_TX, hash), (Core::CTransaction)tx);
+					Core::RelayMessage(LLP::CInv(LLP::MSG_TX, hash), (Core::CTransaction)tx);
 			}
 		}
 		if (!(IsCoinBase() || IsCoinStake()))
@@ -778,7 +784,9 @@ namespace Wallet
 			if (!indexdb.ContainsTx(hash))
 			{
 				printf("Relaying wtx %s\n", hash.ToString().substr(0,10).c_str());
-				RelayMessage(Net::CInv(Net::MSG_TX, hash), (Core::CTransaction)*this);
+				
+				//TODO: CHANGE THIS TO NODE MANAGER
+				Core::RelayMessage(LLP::CInv(LLP::MSG_TX, hash), (Core::CTransaction)*this);
 			}
 		}
 	}
@@ -794,10 +802,10 @@ namespace Wallet
 		// Do this infrequently and randomly to avoid giving away
 		// that these are our transactions.
 		static int64 nNextTime;
-		if (GetUnifiedTimestamp() < nNextTime)
+		if (Core::UnifiedTimestamp() < nNextTime)
 			return;
 		bool fFirst = (nNextTime == 0);
-		nNextTime = GetUnifiedTimestamp() + GetRand(30 * 60);
+		nNextTime = Core::UnifiedTimestamp() + GetRand(30 * 60);
 		if (fFirst)
 			return;
 
@@ -805,7 +813,7 @@ namespace Wallet
 		static int64 nLastTime;
 		if (Core::nTimeBestReceived < nLastTime)
 			return;
-		nLastTime = GetUnifiedTimestamp();
+		nLastTime = Core::UnifiedTimestamp();
 
 		// Rebroadcast any of our txes that aren't in a block yet
 		printf("ResendWalletTransactions()\n");
@@ -852,7 +860,7 @@ namespace Wallet
 			for (map<uint512, CWalletTx>::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
 			{
 				const CWalletTx* pcoin = &(*it).second;
-				if (!pcoin->IsFinal() || !pcoin->IsConfirmed() || pcoin->nTime > GetUnifiedTimestamp())
+				if (!pcoin->IsFinal() || !pcoin->IsConfirmed() || pcoin->nTime > Core::UnifiedTimestamp())
 					continue;
 				
 				nTotal += pcoin->GetAvailableCredit();
@@ -1511,7 +1519,7 @@ namespace Wallet
 				walletdb.WritePool(nIndex, CKeyPool(GenerateNewKey()));
 				setKeyPool.insert(nIndex);
 			}
-			printf("CWallet::NewKeyPool wrote %"PRI64d" new keys\n", nKeys);
+			printf("CWallet::NewKeyPool wrote %" PRI64d " new keys\n", nKeys);
 		}
 		return true;
 	}
@@ -1536,7 +1544,7 @@ namespace Wallet
 				if (!walletdb.WritePool(nEnd, CKeyPool(GenerateNewKey())))
 					throw runtime_error("TopUpKeyPool() : writing generated key failed");
 				setKeyPool.insert(nEnd);
-				printf("keypool added key %"PRI64d", size=%d\n", nEnd, setKeyPool.size());
+				printf("keypool added key %" PRI64d ", size=%d\n", nEnd, setKeyPool.size());
 			}
 		}
 		return true;
@@ -1568,7 +1576,7 @@ namespace Wallet
 				
 			assert(!keypool.vchPubKey.empty());
 			if (fDebug && GetBoolArg("-printkeypool"))
-				printf("keypool reserve %"PRI64d"\n", nIndex);
+				printf("keypool reserve %" PRI64d "\n", nIndex);
 		}
 	}
 
@@ -1595,7 +1603,7 @@ namespace Wallet
 			CWalletDB walletdb(strWalletFile);
 			walletdb.ErasePool(nIndex);
 		}
-		printf("keypool keep %"PRI64d"\n", nIndex);
+		printf("keypool keep %" PRI64d "\n", nIndex);
 	}
 
 	void CWallet::ReturnKey(int64 nIndex)
@@ -1606,7 +1614,7 @@ namespace Wallet
 			setKeyPool.insert(nIndex);
 		}
 		if (fDebug && GetBoolArg("-printkeypool"))
-			printf("keypool return %"PRI64d"\n", nIndex);
+			printf("keypool return %" PRI64d "\n", nIndex);
 	}
 
 	bool CWallet::GetKeyFromPool(vector<unsigned char>& result, bool fAllowReuse)
@@ -1639,7 +1647,7 @@ namespace Wallet
 		CKeyPool keypool;
 		ReserveKeyFromKeyPool(nIndex, keypool);
 		if (nIndex == -1)
-			return GetUnifiedTimestamp();
+			return Core::UnifiedTimestamp();
 		ReturnKey(nIndex);
 		return keypool.nTime;
 	}

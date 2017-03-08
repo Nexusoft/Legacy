@@ -14,6 +14,9 @@
 
 #include "../LLD/include/index.h"
 
+#include "../Core/include/supply.h"
+#include "../Core/include/checkpoints.h"
+
 #ifndef WIN32
 #include "sys/stat.h"
 #endif
@@ -332,22 +335,6 @@ namespace Wallet
 			}
 		}
 	}
-
-
-
-	bool CTimeDB::ReadTimeData(int& nOffset)
-	{
-		if(!Read(0, nOffset))
-			return false;
-			
-		return true;
-	}
-	
-	bool CTimeDB::WriteTimeData(int nOffset)
-	{
-		if(!Write(0, nOffset))
-			return false;
-	}
 	
 
 
@@ -394,7 +381,7 @@ namespace Wallet
 
 	bool CTxDB::ReadOwnerTxes(uint512 hash, int nMinHeight, vector<Core::CTransaction>& vtx)
 	{
-		assert(!Client);
+		assert(!fClient);
 		vtx.clear();
 
 		// Get cursor
@@ -454,7 +441,7 @@ namespace Wallet
 
 	bool CTxDB::ReadDiskTx(uint512 hash, Core::CTransaction& tx, Core::CTxIndex& txindex)
 	{
-		assert(!Client);
+		assert(!fClient);
 		tx.SetNull();
 		if (!ReadTxIndex(hash, txindex))
 			return false;
@@ -688,72 +675,7 @@ namespace Wallet
 			pindex = pindex->pnext;
 		}
 
-	}
-
-
-	//
-	// CAddrDB
-	//
-
-	bool CAddrDB::WriteAddrman(const Net::CAddrMan& addrman)
-	{
-		return Write(string("addrman"), addrman);
-	}
-
-	bool CAddrDB::LoadAddresses()
-	{
-		if (Read(string("addrman"), Net::addrman))
-		{
-			printf("Loaded %i addresses\n", Net::addrman.size());
-			return true;
-		}
-		
-		// Read pre-0.6 addr records
-
-		vector<LLP::CAddress> vAddr;
-		vector<vector<unsigned char> > vDelete;
-
-		// Get cursor
-		Dbc* pcursor = GetCursor();
-		if (!pcursor)
-			return false;
-
-		loop
-		{
-			// Read next record
-			CDataStream ssKey(SER_DISK, DATABASE_VERSION);
-			CDataStream ssValue(SER_DISK, DATABASE_VERSION);
-			int ret = ReadAtCursor(pcursor, ssKey, ssValue);
-			if (ret == DB_NOTFOUND)
-				break;
-			else if (ret != 0)
-				return false;
-
-			// Unserialize
-			string strType;
-			ssKey >> strType;
-			if (strType == "addr")
-			{
-				LLP::CAddress addr;
-				ssValue >> addr;
-				vAddr.push_back(addr);
-			}
-		}
-		pcursor->close();
-
-		Net::addrman.Add(vAddr, Net::CNetAddr("0.0.0.0"));
-		printf("Loaded %i addresses\n", Net::addrman.size());
-
-		// Note: old records left; we ran into hangs-on-startup
-		// bugs for some users who (we think) were running after
-		// an unclean shutdown.
-
 		return true;
-	}
-
-	bool LoadAddresses()
-	{
-		return CAddrDB("cr+").LoadAddresses();
 	}
 }
 

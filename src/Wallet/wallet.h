@@ -10,11 +10,10 @@
 #define NEXUS_WALLET_H
 
 #include "../Core/include/transaction.h"
+#include "../Core/include/unifiedtime.h"
 #include "../Core/include/global.h"
 
 #include "../LLU/include/parse.h"
-
-#include "../LLP/include/unifiedtime.h"
 
 #include "key.h"
 #include "keystore.h"
@@ -51,12 +50,12 @@ namespace Wallet
 
 		CKeyPool()
 		{
-			nTime = LLP::GetUnifiedTimestamp();
+			nTime = Core::UnifiedTimestamp();
 		}
 
 		CKeyPool(const std::vector<unsigned char>& vchPubKeyIn)
 		{
-			nTime = LLP::GetUnifiedTimestamp();
+			nTime = Core::UnifiedTimestamp();
 			vchPubKey = vchPubKeyIn;
 		}
 
@@ -652,7 +651,7 @@ namespace Wallet
 
 		CWalletKey(int64 nExpires=0)
 		{
-			nTimeCreated = (nExpires ? LLP::GetUnifiedTimestamp() : 0);
+			nTimeCreated = (nExpires ? Core::UnifiedTimestamp() : 0);
 			nTimeExpires = nExpires;
 		}
 

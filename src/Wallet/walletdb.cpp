@@ -8,6 +8,9 @@
 
 #include "walletdb.h"
 #include "wallet.h"
+
+#include "../LLU/include/config.h"
+
 #include <boost/filesystem.hpp>
 
 using namespace std;
@@ -362,7 +365,7 @@ namespace Wallet
 
 		unsigned int nLastSeen = nWalletDBUpdated;
 		unsigned int nLastFlushed = nWalletDBUpdated;
-		int64 nLastWalletUpdate = GetUnifiedTimestamp();
+		int64 nLastWalletUpdate = Timestamp();
 		while (!fShutdown)
 		{
 			Sleep(500);
@@ -370,10 +373,10 @@ namespace Wallet
 			if (nLastSeen != nWalletDBUpdated)
 			{
 				nLastSeen = nWalletDBUpdated;
-				nLastWalletUpdate = GetUnifiedTimestamp();
+				nLastWalletUpdate = Core::UnifiedTimestamp();
 			}
 
-			if (nLastFlushed != nWalletDBUpdated && GetUnifiedTimestamp() - nLastWalletUpdate >= 2)
+			if (nLastFlushed != nWalletDBUpdated && Timestamp() - nLastWalletUpdate >= 2)
 			{
 				TRY_LOCK(cs_db,lockDb);
 				if (lockDb)
@@ -392,10 +395,11 @@ namespace Wallet
 						map<string, int>::iterator mi = mapFileUseCount.find(strFile);
 						if (mi != mapFileUseCount.end())
 						{
-							printf("%s ", DateTimeStrFormat(GetUnifiedTimestamp()).c_str());
+							printf("%s ", DateTimeStrFormat(Timestamp()).c_str());
 							printf("Flushing wallet.dat\n");
+							
 							nLastFlushed = nWalletDBUpdated;
-							int64 nStart = GetTimeMillis();
+							int64 nStart = Timestamp(true);
 
 							// Flush wallet.dat so it's self contained
 							CloseDb(strFile);
@@ -403,7 +407,7 @@ namespace Wallet
 							dbenv.lsn_reset(strFile.c_str(), 0);
 
 							mapFileUseCount.erase(mi++);
-							printf("Flushed wallet.dat %"PRI64d"ms\n", GetTimeMillis() - nStart);
+							printf("Flushed wallet.dat %" PRI64d "ms\n", Timestamp(true) - nStart);
 						}
 					}
 				}

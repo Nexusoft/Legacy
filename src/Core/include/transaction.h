@@ -15,6 +15,7 @@
 #include <stdint.h>
 
 #include "global.h"
+#include "unifiedtime.h"
 
 #include "../../LLU/templates/serialize.h"
 #include "../../LLU/include/parse.h"
@@ -22,7 +23,6 @@
 
 #include "../../LLC/hash/SK.h"
 #include "../../LLP/include/network.h"
-#include "../../LLP/include/unifiedtime.h"
 
 #include "../../Wallet/script.h"
 
@@ -292,7 +292,7 @@ namespace Core
 		void SetNull()
 		{
 			nVersion = 1;
-			nTime = LLP::GetUnifiedTimestamp();
+			nTime = UnifiedTimestamp();
 			vin.clear();
 			vout.clear();
 			nLockTime = 0;

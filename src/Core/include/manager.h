@@ -18,7 +18,9 @@
 
 namespace Core
 {
-
+	template<typename T1>
+	void RelayMessage(LLP::CInv inv, const T1& obj);
+	
 	class NodeManager
 	{
 	public:

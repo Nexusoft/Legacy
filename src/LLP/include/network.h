@@ -284,8 +284,7 @@ namespace LLP
 	
 	
 	/* Proxy Settings for Nexus Core. */
-	int fUseProxy = false;
-	CService addrProxy("127.0.0.1", 9050);
+	static CService addrProxy("127.0.0.1", 9050);
 	
 	
 		/* Get the Main Core LLP Port for Nexus. */

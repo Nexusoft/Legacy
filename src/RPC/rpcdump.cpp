@@ -6,9 +6,14 @@
   
 *******************************************************************************************/
 
+#include "include/rpcserver.h"
+
 #include "../main.h" // for pwalletMain
-#include "../net/rpcserver.h"
-#include "../util/ui_interface.h"
+
+#include "../LLU/include/ui_interface.h"
+#include "../LLU/include/debug.h"
+#include "../LLU/include/base64.h"
+#include "../LLU/include/runtime.h"
 
 #include <boost/lexical_cast.hpp>
 
@@ -16,13 +21,11 @@
 #include "json/json_spirit_writer_template.h"
 #include "json/json_spirit_utils.h"
 
-#define printf OutputDebugStringF
-
 // using namespace boost::asio;
 using namespace json_spirit;
 using namespace std;
 
-namespace Net
+namespace RPC
 {
 	extern Object JSONRPCError(int code, const string& message);
 
@@ -128,54 +131,54 @@ namespace Net
 				"The account and keypair need to \n"
 				"You need to list the imported keys in a JSON array of {[account],[privatekey]}\n");
 			
-			/** Make sure the Wallet is Unlocked fully before proceeding. **/
-			if (pwalletMain->IsLocked())
-				throw JSONRPCError(-13, "Error: Please enter the wallet passphrase with walletpassphrase first.");
-			if (Wallet::fWalletUnlockMintOnly)
-				throw JSONRPCError(-102, "Wallet is unlocked for minting only.");
+		/** Make sure the Wallet is Unlocked fully before proceeding. **/
+		if (pwalletMain->IsLocked())
+			throw JSONRPCError(-13, "Error: Please enter the wallet passphrase with walletpassphrase first.");
+		if (Wallet::fWalletUnlockMintOnly)
+			throw JSONRPCError(-102, "Wallet is unlocked for minting only.");
 				
-			/** Establish the JSON Object from the Parameters. **/
-			Object entry = params[0].get_obj();
+		/** Establish the JSON Object from the Parameters. **/
+		Object entry = params[0].get_obj();
 			
-			/** Establish a return value JSON object for Error Reporting. **/
-			Object response;
+		/** Establish a return value JSON object for Error Reporting. **/
+		Object response;
 			
-			/** Import the Keys one by One. **/
-			for(int nIndex = 0; nIndex < entry.size(); nIndex++) {
+		/** Import the Keys one by One. **/
+		for(int nIndex = 0; nIndex < entry.size(); nIndex++) {
 
-				Wallet::NexusSecret vchSecret;
-				if(!vchSecret.SetString(entry[nIndex].value_.get_str())){
-					response.push_back(Pair(entry[nIndex].name_, "Code -5 Invalid Key"));
+			Wallet::NexusSecret vchSecret;
+			if(!vchSecret.SetString(entry[nIndex].value_.get_str())){
+				response.push_back(Pair(entry[nIndex].name_, "Code -5 Invalid Key"));
 					
-					continue;
-				}
-
-				Wallet::CKey key;
-				bool fCompressed;
-				Wallet::CSecret secret = vchSecret.GetSecret(fCompressed);
-				key.SetSecret(secret, fCompressed);
-				Wallet::NexusAddress vchAddress = Wallet::NexusAddress(key.GetPubKey());
-
-				{
-					LOCK2(Core::cs_main, pwalletMain->cs_wallet);
-
-					pwalletMain->MarkDirty();
-					pwalletMain->SetAddressBookName(vchAddress, entry[nIndex].name_);
-
-					if (!pwalletMain->AddKey(key))
-					{
-						response.push_back(Pair(entry[nIndex].name_, "Code -4 Error Adding to Wallet"));
-						
-						continue;
-					}
-				}
-			
-				response.push_back(Pair(entry[nIndex].name_, "Successfully Imported"));
+				continue;
 			}
 
-			MainFrameRepaint();
+			Wallet::CKey key;
+			bool fCompressed;
+			Wallet::CSecret secret = vchSecret.GetSecret(fCompressed);
+			key.SetSecret(secret, fCompressed);
+			Wallet::NexusAddress vchAddress = Wallet::NexusAddress(key.GetPubKey());
 
-			return response;		
+			{
+				LOCK2(Core::cs_main, pwalletMain->cs_wallet);
+
+				pwalletMain->MarkDirty();
+				pwalletMain->SetAddressBookName(vchAddress, entry[nIndex].name_);
+
+				if (!pwalletMain->AddKey(key))
+				{
+					response.push_back(Pair(entry[nIndex].name_, "Code -4 Error Adding to Wallet"));
+						
+					continue;
+				}
+			}
+		
+			response.push_back(Pair(entry[nIndex].name_, "Successfully Imported"));
+		}
+
+		MainFrameRepaint();
+
+		return response;		
 	}
 	
 	/** Export the private keys of the current UTXO values.
@@ -196,7 +199,7 @@ namespace Net
 		
 		/** Compile the list of available Nexus Addresses and their according Balances. **/
 		map<Wallet::NexusAddress, int64> mapAddresses;
-		if(!pwalletMain->AvailableAddresses((unsigned int)GetUnifiedTimestamp(), mapAddresses))
+		if(!pwalletMain->AvailableAddresses((unsigned int)Timestamp(), mapAddresses))
 			throw JSONRPCError(-3, "Error Extracting the Addresses from Wallet File. Please Try Again.");
 		
 		/** Loop all entries of the memory map to compile the list of account names and their addresses. 

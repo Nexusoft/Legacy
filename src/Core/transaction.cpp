@@ -9,16 +9,17 @@
 *******************************************************************************************/
 
 #include "include/transaction.h"
+#include "include/unifiedtime.h"
 #include "include/dispatch.h"
+
+#include "../LLC/include/random.h"
 
 #include "../LLU/include/ui_interface.h"
 #include "../LLU/include/args.h"
-#include "../LLU/include/random.h"
 
 #include "../LLD/include/index.h"
 
 #include "../LLP/include/node.h"
-#include "../LLP/include/unifiedtime.h"
 
 #include "../Wallet/wallet.h"
 
@@ -667,7 +668,7 @@ namespace Core
 				static Mutex_t cs;
 				static double dFreeCount;
 				static int64 nLastTime;
-				int64 nNow = LLP::GetUnifiedTimestamp();
+				int64 nNow = UnifiedTimestamp();
 
 				{
 					LOCK(cs);

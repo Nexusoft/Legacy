@@ -19,6 +19,7 @@
 #include "include/dispatch.h"
 #include "include/transaction.h"
 #include "include/checkpoints.h"
+#include "include/unifiedtime.h"
 
 #include "../LLU/include/ui_interface.h"
 #include "../LLU/include/convert.h"
@@ -28,7 +29,6 @@
 #include "../LLP/include/mining.h"
 #include "../LLP/include/message.h"
 #include "../LLP/include/node.h"
-#include "../LLP/include/unifiedtime.h"
 
 #include "../LLD/include/index.h"
 
@@ -92,10 +92,10 @@ namespace Core
 		if (pindexBest != pindexLastBest)
 		{
 			pindexLastBest = pindexBest;
-			nLastUpdate = LLP::GetUnifiedTimestamp();
+			nLastUpdate = UnifiedTimestamp();
 		}
-		return (LLP::GetUnifiedTimestamp() - nLastUpdate < 10 &&
-				pindexBest->GetBlockTime() < LLP::GetUnifiedTimestamp() - 24 * 60 * 60);
+		return (UnifiedTimestamp() - nLastUpdate < 10 &&
+				pindexBest->GetBlockTime() < UnifiedTimestamp() - 24 * 60 * 60);
 	}
 	
 			
@@ -196,7 +196,7 @@ namespace Core
 	}
 
 
-	void CBlock::UpdateTime() { nTime = std::max(mapBlockIndex[hashPrevBlock]->GetBlockTime() + 1, LLP::GetUnifiedTimestamp()); }
+	void CBlock::UpdateTime() { nTime = std::max((uint64)mapBlockIndex[hashPrevBlock]->GetBlockTime() + 1, UnifiedTimestamp()); }
 
 	
 	bool CBlock::DisconnectBlock(LLD::CIndexDB& indexdb, CBlockIndex* pindex)
@@ -488,7 +488,7 @@ namespace Core
 		pindexBest = pindexNew;
 		nBestHeight = pindexBest->nHeight;
 		nBestChainTrust = pindexNew->nChainTrust;
-		nTimeBestReceived = LLP::GetUnifiedTimestamp();
+		nTimeBestReceived = UnifiedTimestamp();
 		
 		
 		if(GetArg("-verbose", 0) >= 0)
@@ -678,7 +678,7 @@ namespace Core
 		
 		
 		/* Check that the Timestamp isn't made in the future. */
-		if (pblock->GetBlockTime() > LLP::GetUnifiedTimestamp() + LLP::MAX_UNIFIED_DRIFT)
+		if (pblock->GetBlockTime() > UnifiedTimestamp() + MAX_UNIFIED_DRIFT)
 			return error("AcceptBlock() : block timestamp too far in the future");
 	
 		
@@ -704,17 +704,17 @@ namespace Core
 		
 		/* Check the Current Channel Time-Lock. */
 		if (pblock->nHeight > 0 && pblock->GetBlockTime() < (fTestNet ? CHANNEL_TESTNET_TIMELOCK[pblock->GetChannel()] : CHANNEL_NETWORK_TIMELOCK[pblock->GetChannel()]))
-			return error("CheckBlock() : Block Created before Channel Time-Lock. Channel Opens in %" PRId64 " Seconds", (fTestNet ? CHANNEL_TESTNET_TIMELOCK[pblock->GetChannel()] : CHANNEL_NETWORK_TIMELOCK[pblock->GetChannel()]) - LLP::GetUnifiedTimestamp());
+			return error("CheckBlock() : Block Created before Channel Time-Lock. Channel Opens in %" PRId64 " Seconds", (fTestNet ? CHANNEL_TESTNET_TIMELOCK[pblock->GetChannel()] : CHANNEL_NETWORK_TIMELOCK[pblock->GetChannel()]) - UnifiedTimestamp());
 			
 		
 		/* Check the Previous Version to Block Time-Lock. llow Version (Current -1) Blocks for 1 Hour after Time Lock. */
 		if (pblock->nVersion > 1 && pblock->nVersion == (fTestNet ? TESTNET_BLOCK_CURRENT_VERSION - 1 : NETWORK_BLOCK_CURRENT_VERSION - 1) && (pblock->GetBlockTime() - 3600) > (fTestNet ? TESTNET_VERSION_TIMELOCK[TESTNET_BLOCK_CURRENT_VERSION - 2] : NETWORK_VERSION_TIMELOCK[NETWORK_BLOCK_CURRENT_VERSION - 2]))
-			return error("CheckBlock() : Version %u Blocks have been Obsolete for %" PRId64 " Seconds\n", pblock->nVersion, (LLP::GetUnifiedTimestamp() - (fTestNet ? TESTNET_VERSION_TIMELOCK[TESTNET_BLOCK_CURRENT_VERSION - 2] : NETWORK_VERSION_TIMELOCK[TESTNET_BLOCK_CURRENT_VERSION - 2])));	
+			return error("CheckBlock() : Version %u Blocks have been Obsolete for %" PRId64 " Seconds\n", pblock->nVersion, (UnifiedTimestamp() - (fTestNet ? TESTNET_VERSION_TIMELOCK[TESTNET_BLOCK_CURRENT_VERSION - 2] : NETWORK_VERSION_TIMELOCK[TESTNET_BLOCK_CURRENT_VERSION - 2])));	
 			
 		
 		/* Check the Current Version Block Time-Lock. */
 		if (pblock->nVersion >= (fTestNet ? TESTNET_BLOCK_CURRENT_VERSION : NETWORK_BLOCK_CURRENT_VERSION) && pblock->GetBlockTime() <= (fTestNet ? TESTNET_VERSION_TIMELOCK[TESTNET_BLOCK_CURRENT_VERSION - 2] : NETWORK_VERSION_TIMELOCK[NETWORK_BLOCK_CURRENT_VERSION - 2]))
-			return error("CheckBlock() : Version %u Blocks are not Accepted for %" PRId64 " Seconds\n", pblock->nVersion, (LLP::GetUnifiedTimestamp() - (fTestNet ? TESTNET_VERSION_TIMELOCK[TESTNET_BLOCK_CURRENT_VERSION - 2] : NETWORK_VERSION_TIMELOCK[NETWORK_BLOCK_CURRENT_VERSION - 2])));	
+			return error("CheckBlock() : Version %u Blocks are not Accepted for %" PRId64 " Seconds\n", pblock->nVersion, (UnifiedTimestamp() - (fTestNet ? TESTNET_VERSION_TIMELOCK[TESTNET_BLOCK_CURRENT_VERSION - 2] : NETWORK_VERSION_TIMELOCK[NETWORK_BLOCK_CURRENT_VERSION - 2])));	
 			
 		
 		/* Check the Required Mining Outputs. */
@@ -1122,7 +1122,7 @@ namespace Core
 		CBlockIndex* pindexPrev = pindexBest;
 		
 		/** Modulate the Block Versions if they correspond to their proper time stamp **/
-		if(LLP::GetUnifiedTimestamp() >= (fTestNet ? TESTNET_VERSION_TIMELOCK[TESTNET_BLOCK_CURRENT_VERSION - 2] : NETWORK_VERSION_TIMELOCK[NETWORK_BLOCK_CURRENT_VERSION - 2]))
+		if(UnifiedTimestamp() >= (fTestNet ? TESTNET_VERSION_TIMELOCK[TESTNET_BLOCK_CURRENT_VERSION - 2] : NETWORK_VERSION_TIMELOCK[NETWORK_BLOCK_CURRENT_VERSION - 2]))
 			pblock->nVersion = fTestNet ? TESTNET_BLOCK_CURRENT_VERSION : NETWORK_BLOCK_CURRENT_VERSION; // --> New Block Versin Activation Switch
 		else
 			pblock->nVersion = fTestNet ? TESTNET_BLOCK_CURRENT_VERSION - 1 : NETWORK_BLOCK_CURRENT_VERSION - 1;
@@ -1385,7 +1385,7 @@ namespace Core
 				
 
 				// Timestamp limit
-				if (tx.nTime > LLP::GetUnifiedTimestamp() + LLP::MAX_UNIFIED_DRIFT)
+				if (tx.nTime > UnifiedTimestamp() + MAX_UNIFIED_DRIFT)
 				{
 					if(GetArg("-verbose", 0) >= 2)
 						printf("AddTransactions() : Transaction Time Too Far in Future %s\n", tx.GetHash().ToString().substr(0, 10).c_str());
@@ -1504,7 +1504,7 @@ namespace Core
 		else
 			printf("  target: %s\n", hashTarget.ToString().substr(0, 30).c_str());
 			
-		printf("%s ", DateTimeStrFormat(LLP::GetUnifiedTimestamp()).c_str());
+		printf("%s ", DateTimeStrFormat(UnifiedTimestamp()).c_str());
 		//printf("generated %s\n", FormatMoney(pblock->vtx[0].vout[0].nValue).c_str());
 
 		// Found a solution

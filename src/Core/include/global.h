@@ -203,9 +203,27 @@ namespace Core
 	/* Byte Level data of Testnet non-spendable address for Testing purposes only (NOTE: Tritium does not use these anymore). */
 	extern const unsigned char TESTNET_DUMMY_SIGNATURE[];
 	
+		
+	
+	/* __________________________________________________ (Unified Time Data Externals) __________________________________________________  */
 	
 	
-	/* __________________________________________________ (Block Chain Level Constants) __________________________________________________  */
+
+	/* The Maximum Seconds that a Clock can be Off. This is set to account
+		for Network Propogation Times and Normal Hardware level clock drifting. */
+	extern int MAX_UNIFIED_DRIFT;
+	
+	
+	/* The Maximum Samples to be stored on a moving average for this node. */
+	extern int MAX_UNIFIED_SAMPLES;
+	
+	
+	/* The Maximum Samples to be stored on a moving average per node. */
+	extern int MAX_PER_NODE_SAMPLES;
+
+	
+	
+	/* __________________________________________________ (Mutable Block Chain Level References) __________________________________________________  */
 	
 	
 	
@@ -237,12 +255,6 @@ namespace Core
 	/* Main CWallet registry (wallet.dat) for Core dispatching functions to keep the wallet.dat up to date with what the rest of the transaction history is on the network. */
 	extern std::set<Wallet::CWallet*> setpwalletRegistered;
 
-	
-	
-	/* __________________________________________________ (Mutable Block Chain Level References) __________________________________________________  */
-	
-	
-	
 	
 	/* Mutable Number of blocks for node maturity. For switching TESTNET constants (TODO: Deprecate Post Tritium). */
 	extern int nCoinbaseMaturity;

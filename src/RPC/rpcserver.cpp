@@ -1,20 +1,36 @@
 /*******************************************************************************************
  
-			Hash(BEGIN(Satoshi[2010]), END(Sunny[2012])) == Videlicet[2014] ++
-   
- [Learn and Create] Viz. http://www.opensource.org/licenses/mit-license.php
+			(c) Hash(BEGIN(Satoshi[2010]), END(Sunny[2012])) == Videlicet[2017] ++
+			
+			(c) Copyright Nexus Developers 2014 - 2017
+			
+			http://www.opensource.org/licenses/mit-license.php
   
 *******************************************************************************************/
 
+#include "include/rpcserver.h"
+
 #include "../main.h"
-#include "../wallet/db.h"
-#include "../wallet/walletdb.h"
-#include "../util/ui_interface.h"
 
-#include "rpcserver.h"
-#include "net.h"
+#include "../Core/include/difficulty.h"
+#include "../Core/include/supply.h"
 
-#include "../LLD/index.h"
+#include "../LLC/include/random.h"
+#include "../LLD/include/index.h"
+#include "../LLP/include/permissions.h"
+#include "../LLP/include/node.h"
+#include "../LLU/include/ui_interface.h"
+#include "../LLU/include/debug.h"
+#include "../LLU/include/args.h"
+#include "../LLU/include/base64.h"
+#include "../LLU/include/runtime.h"
+#include "../LLU/include/sorting.h"
+#include "../LLU/templates/serialize.h"
+
+#include "../Wallet/db.h"
+#include "../Wallet/walletdb.h"
+
+
 
 #undef printf
 #include <boost/asio.hpp>
@@ -27,7 +43,6 @@
 #include <boost/filesystem/fstream.hpp>
 
 
-#define printf OutputDebugStringF
 // MinGW 3.4.5 gets "fatal error: had to relocate PCH" if the json headers are
 // precompiled in headers.h.  The problem might be when the pch file goes over
 // a certain size around 145MB.  If we need access to json_spirit outside this
@@ -38,7 +53,7 @@ using namespace boost;
 using namespace boost::asio;
 using namespace json_spirit;
 
-namespace Net
+namespace RPC
 {
 	typedef boost::asio::ssl::stream<boost::asio::ip::tcp::socket> SSLStream;
 	
@@ -260,22 +275,13 @@ namespace Net
 				"getconnectioncount\n"
 				"Returns the number of connections to other nodes.");
 
-		LOCK(cs_vNodes); 
-		return (int)vNodes.size();
+		//TODO: INTEGRATE WITH NODE MANAGER
+		//LOCK(cs_vNodes); 
+		//return (int)vNodes.size();
+			
+		return 0;
 	}
-
-	static void CopyNodeStats(std::vector<CNodeStats>& vstats)
-	{
-		vstats.clear();
-
-		LOCK(cs_vNodes);
-		vstats.reserve(vNodes.size());
-		BOOST_FOREACH(CNode* pnode, vNodes) {
-			CNodeStats stats;
-			pnode->copyStats(stats);
-			vstats.push_back(stats);
-		}
-	}
+	
 
 	Value getpeerinfo(const Array& params, bool fHelp)
 	{
@@ -284,16 +290,14 @@ namespace Net
 				"getpeerinfo\n"
 				"Returns data about each connected network node.");
 
-		vector<CNodeStats> vstats;
-		CopyNodeStats(vstats);
-
 		Array ret;
 
-		BOOST_FOREACH(const CNodeStats& stats, vstats) {
+		/* TODO: NODE MANAGER GRAB ACTIVE NODES AND DUMP STATS
+		BOOST_FOREACH(const CNode& stats, vstats) {
 			Object obj;
 
 			obj.push_back(Pair("addr", stats.addrName));
-			obj.push_back(Pair("services", strprintf("%08"PRI64x, stats.nServices)));
+			obj.push_back(Pair("services", strprintf("%08" PRI64x "", stats.nServices)));
 			obj.push_back(Pair("lastsend", (boost::int64_t)stats.nLastSend));
 			obj.push_back(Pair("lastrecv", (boost::int64_t)stats.nLastRecv));
 			obj.push_back(Pair("conntime", (boost::int64_t)stats.nTimeConnected));
@@ -306,6 +310,7 @@ namespace Net
 
 			ret.push_back(obj);
 		}
+		*/
 		
 		return ret;
 	}
@@ -384,11 +389,13 @@ namespace Net
 		obj.push_back(Pair("blockweight",    (double)Core::dBlockWeight * 100.0  / 20.0));
 
 		obj.push_back(Pair("blocks",        (int)Core::nBestHeight));
-		obj.push_back(Pair("timestamp", (int)GetUnifiedTimestamp()));
+		obj.push_back(Pair("timestamp", (int)Core::UnifiedTimestamp()));
 		
-		obj.push_back(Pair("connections",   (int)vNodes.size()));
-		obj.push_back(Pair("proxy",         (fUseProxy ? addrProxy.ToStringIPPort() : string())));
-		obj.push_back(Pair("ip",            addrSeenByPeer.ToStringIP()));
+		//TODO: INTEGRATE IN MANAGER obj.push_back(Pair("connections",   (int)vNodes.size()));
+		//obj.push_back(Pair("proxy",         (fUseProxy ? addrProxy.ToStringIPPort() : string())));
+		//TODO: fUseProxy is LLP Reverse Proxy
+		
+		obj.push_back(Pair("ip",            LLP::addrMyNode.ToStringIP()));
 		
 		obj.push_back(Pair("testnet",       fTestNet));
 		obj.push_back(Pair("keypoololdest", (boost::int64_t)pwalletMain->GetOldestKeyPoolTime()));
@@ -396,7 +403,7 @@ namespace Net
 		obj.push_back(Pair("paytxfee",      ValueFromAmount(Core::nTransactionFee)));
 		if (pwalletMain->IsCrypted())
 			obj.push_back(Pair("unlocked_until", (boost::int64_t)nWalletUnlockTime / 1000));
-		obj.push_back(Pair("errors",        Core::GetWarnings("statusbar")));
+
 		return obj;
 	}
 
@@ -410,7 +417,7 @@ namespace Net
 
 		Object obj;
 		obj.push_back(Pair("blocks",        (int)Core::nBestHeight));
-		obj.push_back(Pair("timestamp", (int)GetUnifiedTimestamp()));
+		obj.push_back(Pair("timestamp", (int)Core::UnifiedTimestamp()));
 		
 		obj.push_back(Pair("currentblocksize",(uint64_t)Core::nLastBlockSize));
 		obj.push_back(Pair("currentblocktx",(uint64_t)Core::nLastBlockTx));
@@ -794,7 +801,9 @@ namespace Net
 			throw runtime_error(
 				"dumptrustkeys\n"
 				"Outputs Nexus Trust Keys");
-				
+		
+		Object entry;
+		return entry;
 	}
 	
 	/** Dump the top balances of the Rich List to RPC console. **/
@@ -1037,7 +1046,7 @@ namespace Net
 		if (!walletdb.TxnBegin())
 			throw JSONRPCError(-20, "database error");
 
-		int64 nNow = GetUnifiedTimestamp();
+		int64 nNow = Core::UnifiedTimestamp();
 
 		// Debit
 		Wallet::CAccountingEntry debit;
@@ -1751,7 +1760,7 @@ namespace Net
 
 	void ThreadCleanWalletPassphrase(void* parg)
 	{
-		int64 nMyWakeTime = GetTimeMillis() + *((int64*)parg) * 1000;
+		int64 nMyWakeTime = Timestamp(true) + *((int64*)parg) * 1000;
 
 		ENTER_CRITICAL_SECTION(cs_nWalletUnlockTime);
 
@@ -1763,7 +1772,7 @@ namespace Net
 			{
 				if (nWalletUnlockTime==0)
 					break;
-				int64 nToSleep = nWalletUnlockTime - GetTimeMillis();
+				int64 nToSleep = nWalletUnlockTime - Timestamp(true);
 				if (nToSleep <= 0)
 					break;
 
@@ -2169,7 +2178,7 @@ namespace Net
 		}
 
 		vector<Wallet::COutput> vecOutputs;
-		pwalletMain->AvailableCoins((unsigned int)GetUnifiedTimestamp(), vecOutputs, false);
+		pwalletMain->AvailableCoins((unsigned int)Core::UnifiedTimestamp(), vecOutputs, false);
 		
 		int64 nCredit = 0;
 		BOOST_FOREACH(const Wallet::COutput& out, vecOutputs)
@@ -2240,7 +2249,7 @@ namespace Net
 
 		Array results;
 		vector<Wallet::COutput> vecOutputs;
-		pwalletMain->AvailableCoins((unsigned int)GetUnifiedTimestamp(), vecOutputs, false);
+		pwalletMain->AvailableCoins((unsigned int)Core::UnifiedTimestamp(), vecOutputs, false);
 		BOOST_FOREACH(const Wallet::COutput& out, vecOutputs)
 		{
 			if (out.nDepth < nMinDepth || out.nDepth > nMaxDepth)
@@ -2344,9 +2353,9 @@ namespace Net
 		{ "getblockhash",           &getblockhash,           false },
 		{ "gettransaction",         &gettransaction,         false },
 		{ "getglobaltransaction",   &getglobaltransaction,   false },
-		{ "getaddressbalance",   	&getaddressbalance,   	 false },
-		{ "dumprichlist",   	    &dumprichlist,		   	 false },
-		//{ "dumptrustkeys",   	    &dumptrustkeys,		   	 false },
+		{ "getaddressbalance",   	 &getaddressbalance,   	  false },
+		{ "dumprichlist",   	    	 &dumprichlist,		     false },
+		//{ "dumptrustkeys",   	    &dumptrustkeys,		     false },
 		{ "listtransactions",       &listtransactions,       false },
 		{ "signmessage",            &signmessage,            false },
 		{ "verifymessage",          &verifymessage,          false },
@@ -2439,8 +2448,10 @@ namespace Net
 				"</HEAD>\r\n"
 				"<BODY><H1>401 Unauthorized.</H1></BODY>\r\n"
 				"</HTML>\r\n", rfc1123Time().c_str(), FormatFullVersion().c_str());
+			
 		const char *cStatus;
-			 if (nStatus == 200) cStatus = "OK";
+		
+		if (nStatus == 200) cStatus = "OK";
 		else if (nStatus == 400) cStatus = "Bad Request";
 		else if (nStatus == 403) cStatus = "Forbidden";
 		else if (nStatus == 404) cStatus = "Not Found";
@@ -2528,6 +2539,7 @@ namespace Net
 		string strAuth = mapHeaders["authorization"];
 		if (strAuth.substr(0,6) != "Basic ")
 			return false;
+		
 		string strUserPass64 = strAuth.substr(6); boost::trim(strUserPass64);
 		string strUserPass = DecodeBase64(strUserPass64);
 		return strUserPass == strRPCUserColonPass;
@@ -2645,15 +2657,15 @@ namespace Net
 
 		try
 		{
-			vnThreadsRunning[THREAD_RPCSERVER]++;
+
 			ThreadRPCServer2(parg);
-			vnThreadsRunning[THREAD_RPCSERVER]--;
+
 		}
 		catch (std::exception& e) {
-			vnThreadsRunning[THREAD_RPCSERVER]--;
+			//TODO: ADD THREAD MANAGER into Core/manager.cpp 
 			PrintException(&e, "ThreadRPCServer()");
 		} catch (...) {
-			vnThreadsRunning[THREAD_RPCSERVER]--;
+
 			PrintException(NULL, "ThreadRPCServer()");
 		}
 
@@ -2739,9 +2751,12 @@ namespace Net
 			iostreams::stream<SSLIOStreamDevice> stream(d);
 
 			ip::tcp::endpoint peer;
-			vnThreadsRunning[THREAD_RPCSERVER]--;
+			//ADD THREAD MANAGER
 			acceptor.accept(sslStream.lowest_layer(), peer);
-			vnThreadsRunning[4]++;
+			
+			//TODO: THREAD MANAGER
+			//vnThreadsRunning[4]++;
+			
 			if (fShutdown)
 				return;
 
@@ -2842,7 +2857,7 @@ namespace Net
 			throw JSONRPCError(-32601, "Method not found");
 
 		// Observe safe mode
-		string strWarning = Core::GetWarnings("rpc");
+		string strWarning = "";//Core::GetWarnings("rpc");
 		if (strWarning != "" && !GetBoolArg("-disablesafemode") &&
 			!pcmd->okSafeMode)
 			throw JSONRPCError(-2, string("Safe mode: ") + strWarning);

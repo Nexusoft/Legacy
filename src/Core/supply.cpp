@@ -10,8 +10,7 @@
 
 #include "include/block.h"
 #include "include/supply.h"
-
-#include "../LLP/include/unifiedtime.h"
+#include "include/unifiedtime.h"
 
 using namespace std;
 namespace Core
@@ -171,6 +170,6 @@ namespace Core
 		if(!pindexLast->pprev)
 			return true;
 			
-		return !(GetChainAge(LLP::GetUnifiedTimestamp()) == GetChainAge(pindexLast->GetBlockTime()));
+		return !(GetChainAge(UnifiedTimestamp()) == GetChainAge(pindexLast->GetBlockTime()));
 	}
 }

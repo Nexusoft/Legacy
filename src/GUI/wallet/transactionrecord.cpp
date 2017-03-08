@@ -207,7 +207,7 @@ void TransactionRecord::updateStatus(const Wallet::CWalletTx &wtx)
     }
     else
     {
-        if (GetUnifiedTimestamp() - wtx.nTimeReceived > 2 * 60 && wtx.GetRequestCount() == 0)
+        if (Core::UnifiedTimestamp() - wtx.nTimeReceived > 2 * 60 && wtx.GetRequestCount() == 0)
         {
             status.status = TransactionStatus::Offline;
         }
@@ -234,7 +234,7 @@ void TransactionRecord::updateStatus(const Wallet::CWalletTx &wtx)
                 status.matures_in = wtx.GetBlocksToMaturity();
 
                 // Check if the block was requested by anyone
-                if (GetUnifiedTimestamp() - wtx.nTimeReceived > 2 * 60 && wtx.GetRequestCount() == 0)
+                if (Core::UnifiedTimestamp() - wtx.nTimeReceived > 2 * 60 && wtx.GetRequestCount() == 0)
                     status.maturity = TransactionStatus::MaturesWarning;
             }
             else
