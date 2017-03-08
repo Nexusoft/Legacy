@@ -346,7 +346,7 @@ bool AppInit2(int argc, char* argv[])
 #endif
 
 	printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
-	printf("Nexus version %s (%s)\n", FormatFullVersion().c_str(), CLIENT_DATE.c_str());
+	printf("%s (%s)\n", FormatFullVersion().c_str(), CLIENT_DATE.c_str());
 	printf("Default data directory %s\n", GetDefaultDataDir().string().c_str());
 
 #ifdef USE_LLD

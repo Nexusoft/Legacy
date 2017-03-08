@@ -53,7 +53,7 @@ std::string FormatVersion(int nVersion)
 std::string FormatSubVersion()
 {
 	 std::ostringstream ss;
-	 ss << "Nexus " << FormatVersion(CLIENT_VERSION) << " - " << CLIENT_NAME << " " << CLIENT_BUILD << " [" << DATABASE_NAME << "]";
+	 ss << "Nexus Version " << FormatVersion(CLIENT_VERSION) << " - " << CLIENT_NAME << " [" << DATABASE_NAME << "]";
 	 
     return ss.str();
 }
