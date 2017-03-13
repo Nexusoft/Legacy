@@ -601,7 +601,7 @@ bool AppInit2(int argc, char* argv[])
 	/** Compile the Seed Nodes into a set of Vectors. **/
 	std::vector<LLP::CAddress> SEED_NODES    = LLP::DNS_Lookup(fTestNet ? LLP::DNS_SeedNodes_Testnet : LLP::DNS_SeedNodes);
 	
-	NODE_SERVER = new LLP::Server<LLP::CNode>(9323, 5, true, 2, 50, 30, 30, false, true);
+	NODE_SERVER = new LLP::Server<LLP::CNode>(9323, 5, true, 2, 50, 30, 30, true, true);
 	while (!fShutdown)
 	{
 		for(int i = 0; i < SEED_NODES.size(); i ++)
