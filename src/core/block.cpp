@@ -556,6 +556,10 @@ namespace Core
 		if(GetChannel() == 1)
 		{
 			unsigned int nPrimeBits = GetPrimeBits(GetPrime());
+			if (GetBoolArg("-regtest",false))
+				if (nPrimeBits < bnProofOfWorkLimitRegtest[1])
+					return error("VerifyWork() : prime below minimum work");
+
 			if (nPrimeBits < bnProofOfWorkLimit[1])
 				return error("VerifyWork() : prime below minimum work");
 			

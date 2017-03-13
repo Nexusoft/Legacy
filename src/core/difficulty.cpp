@@ -184,9 +184,15 @@ namespace Core
 		
 		
 		/** Don't allow Difficulty to decrease below minimum. **/
-		if (bnNew > bnProofOfWorkLimit[0])
-			bnNew = bnProofOfWorkLimit[0];
-			
+		if (GetBoolArg("-regtest",false)) {
+			if (bnNew > bnProofOfWorkLimitRegtest[0])
+				bnNew = bnProofOfWorkLimitRegtest[0];
+		}
+		else {
+			if (bnNew > bnProofOfWorkLimit[0])
+				bnNew = bnProofOfWorkLimit[0];
+		}
+
 			
 		if(GetArg("-verbose", 0) >= 1 && output)
 		{
@@ -208,6 +214,11 @@ namespace Core
 		will decrease keeping the time difference in difficulty jumps the same from diff 1 - 100. **/
 	unsigned int RetargetCPU(const CBlockIndex* pindex, bool output)
 	{
+		/** For regression testing only, allow low difficulty. **/
+		if (GetBoolArg("-regtest",false)) {
+			return bnProofOfWorkStartRegtest[1].getuint();
+		}
+
 		/** Get Last Block Index [1st block back in Channel]. **/
 		const CBlockIndex* pindexFirst = GetLastChannelIndex(pindex, 1);
 		if (!pindexFirst->pprev)
