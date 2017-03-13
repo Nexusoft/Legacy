@@ -60,21 +60,27 @@ typedef int socklen_t;
 
 #ifndef MAINNET_PORT
 #define MAINNET_PORT 9323
+#endif
 
 #ifndef TESTNET_PORT
 #define TESTNET_PORT 8313
+#endif
 
 #ifndef MAINNET_CORE_LLP_PORT
 #define MAINNET_CORE_LLP_PORT 9324
+#endif
 
 #ifndef TESTNET_CORE_LLP_PORT
 #define TESTNET_CORE_LLP_PORT 8329
+#endif
 
 #ifndef MAINNET_MINING_LLP_PORT
 #define MAINNET_MINING_LLP_PORT 9325
+#endif
 
 #ifndef TESTNET_MINING_LLP_PORT
 #define TESTNET_MINING_LLP_PORT 8325
+#endif
 
 #define PROTOCOL_MAJOR       0
 #define PROTOCOL_MINOR       2

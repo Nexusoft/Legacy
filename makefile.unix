@@ -88,6 +88,11 @@ ifdef USE_LLD
 	DEFS+=-DUSE_LLD
 endif
 
+#add build support to compile with any chosen port flag
+ifdef USE_PORT
+	DEFS += -DPROTOCOL_VERSION=USE_PORT
+endif
+
 CFLAGS= -O2 -pthread -Wall -Wextra -Wno-sign-compare -Wno-unused-parameter -Wformat -Wformat-security \
 	$(DEBUGFLAGS) $(DEFS) $(HARDENING)
 
