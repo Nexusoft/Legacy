@@ -547,7 +547,7 @@ namespace LLD
 			/** Exit the Loop on the Best Block. **/
 			if(pindex->GetBlockHash() == Core::hashBestChain)
 			{
-				printf("LoadBlockIndex(): hashBestChain=%s  height=%d  trust=%"PRIu64"\n", Core::hashBestChain.ToString().substr(0,20).c_str(), Core::nBestHeight, Core::nBestChainTrust);
+				printf("LoadBlockIndex(): hashBestChain=%s  height=%d  trust=%" PRIu64 "\n", Core::hashBestChain.ToString().substr(0,20).c_str(), Core::nBestHeight, Core::nBestChainTrust);
 				break;
 			}
 			

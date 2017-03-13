@@ -31,10 +31,8 @@
 #include "../Wallet/walletdb.h"
 
 
-
-#undef printf
 #include <boost/asio.hpp>
-#include <boost/filesystem.hpp>
+
 #include <boost/iostreams/concepts.hpp>
 #include <boost/iostreams/stream.hpp>
 #include <boost/algorithm/string.hpp>

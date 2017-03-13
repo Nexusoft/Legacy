@@ -14,6 +14,9 @@
 #include "Core/include/dispatch.h"
 
 #include "LLP/include/time.h"
+#include "LLP/include/node.h"
+#include "LLP/include/hosts.h"
+#include "LLP/include/network.h"
 #include "LLP/templates/server.h"
 #include "LLC/include/random.h"
 #include "LLD/templates/keychain.h"
@@ -23,7 +26,7 @@
 
 #include "Wallet/db.h"
 #include "Wallet/walletdb.h"
-#include <boost/filesystem.hpp>
+
 #include <boost/filesystem/fstream.hpp>
 #include <boost/filesystem/convenience.hpp>
 #include <boost/interprocess/sync/file_lock.hpp>
@@ -39,6 +42,8 @@ using namespace boost;
 
 Wallet::CWallet* pwalletMain;
 LLP::Server<LLP::TimeLLP>* LLP_SERVER;
+
+LLP::Server<LLP::CNode>* NODE_SERVER;
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -574,47 +579,12 @@ bool AppInit2(int argc, char* argv[])
             return false;
         }
     }
-    
-	
-    //
-    // Start the node
-    //
-    
-	/** Wait for Unified Time if First Start. **/
-	while(!Core::fTimeUnified)
-		Sleep(10);
-	
-	/** Start sending Unified Samples. **/
-	if(GetBoolArg("-unified", false)) {
-		InitMessage(_("Initializing Core LLP..."));
-		printf("Initializing Core LLP...\n");
-		//LLP_SERVER = new LLP::Server<LLP::CoreLLP>(fTestNet ? TESTNET_CORE_LLP_PORT : NEXUS_CORE_LLP_PORT, 5, true, 1, 3, 1);
-	}
 	
     if (!Core::CheckDiskSpace())
         return false;
 
     RandAddSeedPerfmon();
 	
-    //if (!CreateThread(Net::StartNode, NULL))
-     //   ThreadSafeMessageBox(_("Error: CreateThread(StartNode) failed"), _("Nexus"), wxOK | wxMODAL);
-	
-#ifdef QT_GUI
-	if(GetBoolArg("-stake", true))
-	{
-		//Core::StartStaking(pwalletMain);
-		printf("%%%%%%%%%%%%%%%%% Qt Client Staking Thread Initialized...\n");
-	}
-#else
-	if(GetBoolArg("-stake", false))
-	{
-		//Core::StartStaking(pwalletMain);
-		printf("%%%%%%%%%%%%%%%%% Daemon Staking Thread Initialized...\n");
-	}
-#endif
-
-	//if(GetBoolArg("-mining", false))
-	//	Core::StartMiningLLP();
 	
     if (fServer)
         CreateThread(RPC::ThreadRPCServer, NULL);
@@ -625,8 +595,26 @@ bool AppInit2(int argc, char* argv[])
 #endif
 
 #if !defined(QT_GUI)
-    while (!fShutdown)
-        Sleep(5000);
+	
+	printf("Starting Node Server...\n");
+	
+	/** Compile the Seed Nodes into a set of Vectors. **/
+	std::vector<LLP::CAddress> SEED_NODES    = LLP::DNS_Lookup(fTestNet ? LLP::DNS_SeedNodes_Testnet : LLP::DNS_SeedNodes);
+	
+	NODE_SERVER = new LLP::Server<LLP::CNode>(9323, 5, true, 2, 50, 30, 30, false, true);
+	while (!fShutdown)
+	{
+		for(int i = 0; i < SEED_NODES.size(); i ++)
+		{
+			printf("Trying Connection %s...\n", SEED_NODES[i].ToStringIP().c_str());
+			if(!NODE_SERVER->AddConnection(SEED_NODES[i].ToStringIP(), "9323"))
+			{
+				printf("Success (%s)!\n", SEED_NODES[i].ToStringIP().c_str());
+			}
+		
+			Sleep(1000);
+		}
+	}
 #endif
 
     return true;

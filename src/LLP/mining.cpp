@@ -17,7 +17,7 @@
 #include "../Core/include/supply.h"
 
 #include <boost/algorithm/string/replace.hpp>
-#include <boost/filesystem.hpp>
+
 #include <boost/filesystem/fstream.hpp>
 #include <boost/thread.hpp>
 

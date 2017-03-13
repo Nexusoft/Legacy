@@ -34,14 +34,15 @@ namespace LLP
 		
 		
 		Server<ProtocolType>(int nPort, int nMaxThreads, bool isDDOS, int cScore, int rScore, int nTimeout, int nTimespan, bool fListen = true, bool fMeter = false) : 
-			fDDOS(isDDOS), MAX_THREADS(nMaxThreads), PORT(nPort), DDOS_TIMESPAN(nTimespan), fLISTEN(fListen), fMETER(fMeter), METER_THREAD(boost::bind(&Server::MeterThread, this)), LISTEN_THREAD(boost::bind(&Server::ListeningThread, this))
+			fDDOS(isDDOS), fLISTEN(fListen), fMETER(fMeter), PORT(nPort), MAX_THREADS(nMaxThreads), DDOS_TIMESPAN(nTimespan), DATA_THREADS(0), LISTENER(SERVICE), LISTEN_THREAD(boost::bind(&Server::ListeningThread, this)), METER_THREAD(boost::bind(&Server::MeterThread, this))
 		{
 			for(int index = 0; index < MAX_THREADS; index++)
 				DATA_THREADS.push_back(new DataThread<ProtocolType>(index, fDDOS, rScore, cScore, nTimeout, fMeter));
 			
+			
 		}
 		
-		~Server<ProtocolType>()
+		virtual ~Server<ProtocolType>()
 		{
 		
 			fLISTEN = false;
@@ -61,21 +62,21 @@ namespace LLP
 		{
 			/* Initialize DDOS Protection for Incoming IP Address. */
 			std::vector<unsigned char> vAddress(4, 0);
-			sscanf(strAddress.c_str(), "%u.%u.%u.%u", &vAddress[0], &vAddress[1], &vAddress[2], &vAddress[3]);
+			sscanf(strAddress.c_str(), "%hhu.%hhu.%hhu.%hhu", &vAddress[0], &vAddress[1], &vAddress[2], &vAddress[3]);
 			unsigned int ADDRESS = (vAddress[0] << 24) + (vAddress[1] << 16) + (vAddress[2] << 8) + vAddress[3];
 					
 			/* Handle the DDOS Checking. */
-			LOCK(DDOS_MUTEX);
-			{
-				/* Create new DDOS Filter if NEeded. */
-				if(!DDOS_MAP.count(ADDRESS))
-					DDOS_MAP[ADDRESS] = new DDOS_Filter(DDOS_TIMESPAN);
+			//LOCK(DDOS_MUTEX);
+			//{
+			/* Create new DDOS Filter if NEeded. */
+			if(!DDOS_MAP.count(ADDRESS))
+				DDOS_MAP[ADDRESS] = new DDOS_Filter(DDOS_TIMESPAN);
 								
-				/* DDOS Operations: Only executed when DDOS is enabled. */
-				if((fDDOS && DDOS_MAP[ADDRESS]->Banned()))
-					return false;
+			/* DDOS Operations: Only executed when DDOS is enabled. */
+			if((fDDOS && DDOS_MAP[ADDRESS]->Banned()))
+				return false;
 				
-			}
+			//}
 			
 			/* Find a balanced Data Thread to Add Connection to. */
 			int nThread = FindThread();
@@ -113,20 +114,21 @@ namespace LLP
 			return nIndex;
 		}
 		
-		/* Main Listening Thread of LLP Server. Handles new Connections and DDOS associated with Connection if enabled. */
+		
+		/** Main Listening Thread of LLP Server. Handles new Connections and DDOS associated with Connection if enabled. **/
 		void ListeningThread()
 		{
-			/* Don't listen until all data threads are created. */
-			while(DATA_THREADS.size() < MAX_THREADS && fLISTEN)
+			/** Don't listen until all data threads are created. **/
+			while(DATA_THREADS.size() < MAX_THREADS)
 				Sleep(1000);
 				
-			/* Basic Socket Options for Boost ASIO. Allow aborted connections, don't allow lingering. */
-			boost::asio::socket_base::enable_connection_aborted		CONNECTION_ABORT(true);
-			boost::asio::socket_base::linger									CONNECTION_LINGER(false, 0);
-			boost::asio::ip::tcp::acceptor::reuse_address				CONNECTION_REUSE(true);
-			boost::asio::ip::tcp::endpoint									ENDPOINT(boost::asio::ip::tcp::v4(), PORT);
+			/** Basic Socket Options for Boost ASIO. Allow aborted connections, don't allow lingering. **/
+			boost::asio::socket_base::enable_connection_aborted    CONNECTION_ABORT(true);
+			boost::asio::socket_base::linger                       CONNECTION_LINGER(false, 0);
+			boost::asio::ip::tcp::acceptor::reuse_address          CONNECTION_REUSE(true);
+			boost::asio::ip::tcp::endpoint 						  		 ENDPOINT(boost::asio::ip::tcp::v4(), PORT);
 			
-			/* Open the listener with maximum of 1000 queued Connections. */
+			/** Open the listener with maximum of 1000 queued Connections. **/
 			LISTENER.open(ENDPOINT.protocol());
 			LISTENER.set_option(CONNECTION_ABORT);
 			LISTENER.set_option(CONNECTION_REUSE);
@@ -135,30 +137,28 @@ namespace LLP
 			LISTENER.listen(1000, ERROR_HANDLE);
 			
 			//printf("LLP Server Listening on Port %u\n", PORT);
-			while(fLISTEN)
+			for(;;)
 			{
-				/* Limit listener to allow maximum of 100 new connections per second. */
+				/** Limit listener to allow maximum of 100 new connections per second. **/
 				Sleep(10);
 				
 				try
 				{
-					/* Accept a new connection, then process DDOS. */
+					/** Accept a new connection, then process DDOS. **/
 					int nThread = FindThread();
 					Socket_t SOCKET(new boost::asio::ip::tcp::socket(DATA_THREADS[nThread]->IO_SERVICE));
 					LISTENER.accept(*SOCKET);
 					
-					/* Initialize DDOS Protection for Incoming IP Address. */
+					/** Initialize DDOS Protection for Incoming IP Address. **/
 					std::vector<unsigned char> vAddress(4, 0);
-					sscanf(SOCKET->remote_endpoint().address().to_string().c_str(), "%u.%u.%u.%u", &vAddress[0], &vAddress[1], &vAddress[2], &vAddress[3]);
+					sscanf(SOCKET->remote_endpoint().address().to_string().c_str(), "%hhu.%hhu.%hhu.%hhu", &vAddress[0], &vAddress[1], &vAddress[2], &vAddress[3]);
 					unsigned int ADDRESS = (vAddress[0] << 24) + (vAddress[1] << 16) + (vAddress[2] << 8) + vAddress[3];
 					
-					/* Handle the DDOS Code. */
-					LOCK(DDOS_MUTEX);
-					{
+					{ //LOCK(DDOS_MUTEX);
 						if(!DDOS_MAP.count(ADDRESS))
-							DDOS_MAP[ADDRESS] = new DDOS_Filter(DDOS_TIMESPAN);
+							DDOS_MAP[ADDRESS] = new DDOS_Filter(30);
 							
-						/* DDOS Operations: Only executed when DDOS is enabled. */
+						/** DDOS Operations: Only executed when DDOS is enabled. **/
 						if((fDDOS && DDOS_MAP[ADDRESS]->Banned()) || !CheckPermissions(strprintf("%u.%u.%u.%u:%u",vAddress[0], vAddress[1], vAddress[2],vAddress[3]), PORT))
 						{
 							SOCKET -> shutdown(boost::asio::ip::tcp::socket::shutdown_both, ERROR_HANDLE);
@@ -169,12 +169,10 @@ namespace LLP
 							continue;
 						}
 					
+					
+						/** Add new connection if passed all DDOS checks. **/
+						DATA_THREADS[nThread]->AddConnection(SOCKET, DDOS_MAP[ADDRESS]);
 					}
-					
-					
-					/* Add new connection if passed all DDOS checks. */
-					DATA_THREADS[nThread]->AddConnection(SOCKET, DDOS_MAP[ADDRESS]);
-					
 				}
 				catch(std::exception& e)
 				{
@@ -182,6 +180,7 @@ namespace LLP
 				}
 			}
 		}
+
 		
 		/* LLP Meter Thread. Tracks the Requests / Second. */
 		void MeterThread()

@@ -32,7 +32,8 @@ namespace LLP
 		EVENT_PACKET         = 1,
 		EVENT_CONNECT        = 2,
 		EVENT_DISCONNECT     = 3,
-		EVENT_GENERIC        = 4
+		EVENT_GENERIC        = 4,
+		EVENT_FAILED         = 5
 	};
 
 
@@ -251,7 +252,6 @@ namespace LLP
 		Timer         TIMER;
 		Error_t       ERROR_HANDLE;
 		Socket_t      SOCKET;
-		Mutex_t       MUTEX; //TODO: Optional Use Flag to Tune
 		
 		
 		/* 
@@ -263,12 +263,12 @@ namespace LLP
 			LENGTH == 0: General Events
 			LENGTH  > 0 && PACKET: Read nSize Bytes into Data Packet
 		*/
-		virtual void Event(unsigned char EVENT, unsigned int LENGTH = 0){ }
+		virtual void Event(unsigned char EVENT, unsigned int LENGTH = 0){ return; }
 		
 		/* Virtual Process Function. To be overridden with your own custom packet processing. */
 		virtual bool ProcessPacket(){ return false; }
 	public:
-	
+		
 	
 		/* Incoming Packet Being Built. */
 		PacketType        INCOMING;
@@ -293,6 +293,8 @@ namespace LLP
 		/* Connection Constructors */
 		BaseConnection() : SOCKET(), INCOMING(), DDOS(NULL), fCONNECTED(false), fDDOS(false), fOUTGOING(false) { INCOMING.SetNull(); }
 		BaseConnection( Socket_t SOCKET_IN, DDOS_Filter* DDOS_IN, bool isDDOS = false, bool fOutgoing = false) : SOCKET(SOCKET_IN), INCOMING(), DDOS(DDOS_IN), fCONNECTED(false), fDDOS(isDDOS),  fOUTGOING(fOutgoing) { TIMER.Start(); }
+		
+		virtual ~BaseConnection() { Disconnect(); }
 		
 		
 		/* Checks for any flags in the Error Handle. */
@@ -325,7 +327,7 @@ namespace LLP
 
 		
 		/* Connect Socket to a Remote Endpoint. */
-		bool Connect(std::string strAddress, std::string strPort, Service_t IO_SERVICE)
+		bool Connect(std::string strAddress, std::string strPort, Service_t& IO_SERVICE)
 		{
 			try
 			{
@@ -341,16 +343,6 @@ namespace LLP
 				/* Handle a Connection Error. */
 				if(ERROR_HANDLE)
 					return error("Failed to Connect to %s:%s....", strAddress.c_str(), strPort.c_str());
-				
-				/* Set Flags. */
-				fCONNECTED = true;
-				fOUTGOING = true;
-				
-				/* Start Connection Timer. */
-				TIMER.Start();
-				
-				/* Fire the Connection Event. */
-				Event(EVENT_CONNECT);
 				
 				return true;
 			}

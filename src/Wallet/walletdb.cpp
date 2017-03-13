@@ -11,11 +11,8 @@
 
 #include "../LLU/include/config.h"
 
-#include <boost/filesystem.hpp>
-
 using namespace std;
 using namespace boost;
-
 
 namespace Wallet
 {

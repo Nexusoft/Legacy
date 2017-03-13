@@ -124,12 +124,26 @@ namespace LLP
 			
 		/** On Connect Event, Assign the Proper Daemon Handle. **/
 		if(EVENT == EVENT_CONNECT)
-			return;
+		{
+			addrThisNode = CAddress(CService(GetIPAddress(), GetDefaultPort()));
+			if(GetArg("-verbose", 0) >= 1)
+				printf("***** %s Node %s Connected at Timestamp %" PRIu64 "\n", fOUTGOING ? "Ougoing" : "Incoming", addrThisNode.ToString().c_str(), Core::UnifiedTimestamp());
 			
+			if(fOUTGOING)
+				PushVersion();
+			
+			return;
+		}	
+		
 		
 		/** On Disconnect Event, Reduce the Connection Count for Daemon **/
 		if(EVENT == EVENT_DISCONNECT)
+		{
+			if(GetArg("-verbose", 0) >= 1)
+				printf("xxxxx %s Node %s Disconnected at Timestamp %" PRIu64 "\n", fOUTGOING ? "Ougoing" : "Incoming", addrThisNode.ToString().c_str(), Core::UnifiedTimestamp());
+			
 			return;
+		}
 		
 	}
 		
@@ -344,26 +358,26 @@ namespace LLP
 				return false;
 			}
 			
-			/* Push our version back since we just completed getting the version from the other node. */
-			PushVersion();
+			if(GetArg("-verbose", 0) >= 1)
+				printf("***** Node version message: version %d, blocks=%d\n", nCurrentVersion, nStartingHeight);
 			
-			PushMessage("verack");
+			/* Push our version back since we just completed getting the version from the other node. */
 			if (fOUTGOING)
 			{
 				/* Get recent addresses */
 				//if (Net::addrman.size() < 1000)
 				//	PushPacket("getaddr");
-				
-				if(GetArg("-verbose", 0) >= 1)
-					printf("***** Node version message: version %d, blocks=%d\n", nCurrentVersion, nStartingHeight);
+
 
 				/* Add to the Majority Peer Block Count. */
 				Core::cPeerBlockCounts.Add(nStartingHeight);
+				
+				PushMessage("verack");
 			}
+			else
+				PushVersion();
 
-			/* If invalid version message drop the connection. */
-			else if (nCurrentVersion == 0)
-				return false;
+			return true;
 		}
 
 		
