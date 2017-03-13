@@ -1,17 +1,24 @@
 #!/bin/bash
 
+<<<<<<< HEAD
 # Change these values to match your preferences
 # Usually your home dir:
 BASEDIR=${HOME}
 # Default directory which contains nexus:
 NEXUSDEF=${BASEDIR}/code/Nexus
 
+=======
+>>>>>>> Support local test mode for regression/smoke tests
 # Copyright 2017 The Nexus Core Developers
 # Initial Author: Bryan Gmyrek <bryangmyrekcom@gmail.com>
 # License: GPL v2
 
 # Script to test starting nexus on the command line
+<<<<<<< HEAD
 #  NEXUS=/path/to/binary/nexus ./run-start-nexus-test.sh
+=======
+#  ./run-start-nexus-test.sh
+>>>>>>> Support local test mode for regression/smoke tests
 #
 # To auto-kill any existing nexus procs and delete the .lock file use
 #  NEXUS_TEST_AUTOKILL=1 ./run-start-nexus-test.sh
@@ -32,6 +39,7 @@ NEXUSDEF=${BASEDIR}/code/Nexus
 # This is the command i've been using to test using a debugger:
 #  NEXUS_TEST_CLEAR=1 NEXUS_TEST_SETUP_ONLY=1 NEXUS_TEST_NO_DAEMON=1 ./run-start-nexus-test.sh
 #  Then I run nexus from the debugger itself.
+<<<<<<< HEAD
 #
 # To set up multiple nodes for testing, run this script once for each node.
 #   The first node, node 1, will use the 'istimeseed' opiton.
@@ -40,6 +48,8 @@ NEXUSDEF=${BASEDIR}/code/Nexus
 #
 # To run nexus against mainnet use
 #  NEXUS_TEST_MAIN=1 ./run-start-nexus-test.sh
+=======
+>>>>>>> Support local test mode for regression/smoke tests
 
 set -o pipefail  # trace ERR through pipes
 set -o errtrace  # trace ERR through 'time command' and other functions
@@ -53,6 +63,7 @@ trap 'error ${LINENO}' ERR
 set -v
 set -x
 
+<<<<<<< HEAD
 [[ "${NEXUS:-}" == "" ]] && NEXUS="${NEXUSDEF}/nexus"
 echo "NEXUS=${NEXUS}"
 if [[ -x ${NEXUS} ]]; then
@@ -84,6 +95,15 @@ then
     NEXUS_DEBUG_LOG=${NEXUS_DATADIR}/debug.log
     NEXUS_LOCK=${NEXUS_DATADIR}/.lock
 fi
+=======
+NEXUS=/home/dev/code/Nexus/nexus
+NEXUS_DATADIR_BASE=${HOME}/nexustest
+NEXUS_TEST_TESTNET=1
+NEXUS_DATADIR=${NEXUS_DATADIR_BASE}/testnet
+NEXUS_CONF=${NEXUS_DATADIR}/nexus.conf
+NEXUS_DEBUG_LOG=${NEXUS_DATADIR}/testnet25/debug.log
+NEXUS_LOCK=${NEXUS_DATADIR}/testnet25/.lock
+>>>>>>> Support local test mode for regression/smoke tests
 NEXUS_START_SH=${NEXUS_DATADIR}/run-test-nexus.sh
 NEXUS_TEST_STORAGE=${NEXUS_DATADIR_BASE}/persiststorage
 NEXUS_TEST_STORAGE_LLD=${NEXUS_TEST_STORAGE}/LLD
@@ -95,6 +115,7 @@ else
     echo "The existing test datadir will be reused if it exists already."
 fi
 
+<<<<<<< HEAD
 if  ls ${NEXUS_DATADIR} 2>&1 >/dev/null
 then
     echo "Data directory already existed."
@@ -106,6 +127,18 @@ else
         echo "Setting Up Nexus block chain bootstrap file."
         LLD_BOOTSTRAP="recent.rar"
         if [[ -s ${NEXUS_TEST_STORAGE_LLD} ]]
+=======
+if  ls $NEXUS_DATADIR 2>&1 >/dev/null
+then
+    echo "Data directory already existed."
+else
+    mkdir -p $NEXUS_DATADIR
+    cd $NEXUS_DATADIR
+    if [[ "${NEXUS_TEST_TESTNET:-}" != 1 ]]
+    then
+        echo "Setting Up Nexus blockchain bootstrap file."
+        if -e ${NEXUS_TEST_STORAGE_LLD}
+>>>>>>> Support local test mode for regression/smoke tests
         then
             cp ${NEXUS_TEST_STORAGE_LLD}/recent.rar ${NEXUS_DATADIR}
         else
@@ -113,6 +146,7 @@ else
             mkdir -p ${NEXUS_TEST_STORAGE_LLD}
             cd ${NEXUS_TEST_STORAGE_LLD}
             which wget || sudo apt-get -y install wget
+<<<<<<< HEAD
             ls ${LLD_BOOTSTRAP} ||  wget http://nexusearth.com/bootstrap/LLD-Database/${LLD_BOOTSTRAP}
             cp ${LLD_BOOTSTRAP} ${NEXUS_DATADIR}
         fi
@@ -123,6 +157,19 @@ else
 fi
 
 if ls ${NEXUS_LOCK}
+=======
+            LLD_BOOTSTRAP="recent.rar"
+            ls ${LLD_BOOTSTRAP} ||  wget http://nexusearth.com/bootstrap/LLD-Database/${LLD_BOOTSTRAP}
+            cp ${LLD_BOOTSTRAP} ${NEXUS_DATADIR}
+            cd ${NEXUS_DATADIR}
+            unrar x ${LLD_BOOTSTRAP}
+            rm -f ${LLD_BOOTSTRAP}
+        fi
+    fi
+fi
+
+if ls $NEXUS_LOCK
+>>>>>>> Support local test mode for regression/smoke tests
 then
     echo "nexus .lock file existed - view the output of ps to see if it's still running:"
     ps auxww | egrep nexu[s] || grep -v run-start-nexus || true
@@ -139,11 +186,16 @@ then
     killall nexus || true
     echo "Sleeping for 5 seconds to ensure nexus processes finish."
     sleep 5
+<<<<<<< HEAD
     rm -f ${NEXUS_LOCK}
+=======
+    rm -f $NEXUS_LOCK
+>>>>>>> Support local test mode for regression/smoke tests
 fi
 
 echo "Writing/ensuring nexus.conf exists."
 
+<<<<<<< HEAD
 if ! ls ${NEXUS_CONF} 2>&1 >/dev/null
 then
     if [[ "${NEXUS_TEST_TESTNET:-}" == "1" ]]
@@ -201,24 +253,62 @@ then
         echo "rpcpassword=CHANGEME89uhij4903i4ij" >> ${NEXUS_CONF}
         echo "rpcallowip=127.0.0.1" >> ${NEXUS_CONF}
     fi
+=======
+if ! ls $NEXUS_CONF 2>&1 >/dev/null
+then
+    echo "testnet=1" >> ${NEXUS_CONF}
+    echo "regtest=1" >> ${NEXUS_CONF}
+    echo "istimeseed=1" >> ${NEXUS_CONF}
+    echo "debug=1" >> ${NEXUS_CONF}
+    echo "verbose=4" >> ${NEXUS_CONF}
+    echo "unified=0" >> ${NEXUS_CONF}
+    echo "llpallowip=*:18325" >> ${NEXUS_CONF}
+    echo "llpallowip=*.*.*.*:18325" >> ${NEXUS_CONF}
+    echo "llpallowip=127.0.0.1:18325" >> ${NEXUS_CONF}
+    echo "mining=1" >> ${NEXUS_CONF}
+    echo "server=1" >> ${NEXUS_CONF}
+    echo "rpcuser=nxsnode1" >> ${NEXUS_CONF}
+    echo "rpcpassword=nxsnode1pw" >> ${NEXUS_CONF}
+    echo "rpcallowip=127.0.0.1" >> ${NEXUS_CONF}
+    echo "rpcallowip=*.*.*.*" >> ${NEXUS_CONF}
+    echo "rpcport=19336" >> ${NEXUS_CONF}
+    echo "port=18313" >> ${NEXUS_CONF}
+>>>>>>> Support local test mode for regression/smoke tests
     if [[ "${NEXUS_TEST_NO_DAEMON:-}" == "1" ]]
     then
         # NOTE - daemon=0 is important if you want to run nexus in a debugger.
         #        otherwise you might want this to be 1
         echo "daemon=0" >> ${NEXUS_CONF}
+<<<<<<< HEAD
     else
         echo "daemon=1" >> ${NEXUS_CONF}
     fi
+=======
+    fi
+    echo "listen=1" >> ${NEXUS_CONF}
+    echo "stake=0" >> ${NEXUS_CONF}
+    echo "checklevel=0" >> ${NEXUS_CONF}
+    echo "checkbolcks=1" >> ${NEXUS_CONF}
+>>>>>>> Support local test mode for regression/smoke tests
 fi
 
 echo "Clearing previous debug log"
 
+<<<<<<< HEAD
 ls ${NEXUS_DEBUG_LOG} 2>&1 >/dev/null && rm ${NEXUS_DEBUG_LOG}
 
 echo "Saving command used to ${NEXUS_START_SH} in case you want to run that script later to restart without running this whole script."
 
 START_CMD="${NEXUS} -datadir=${NEXUS_DATADIR} "
 echo "#!/bin/bash" > ${NEXUS_START_SH}
+=======
+ls $NEXUS_DEBUG_LOG 2>&1 >/dev/null && rm $NEXUS_DEBUG_LOG
+
+echo "Saving command used to ${NEXUS_START_SH} in case you want to run that script later to restart without running this whole script."
+
+START_CMD="$NEXUS -datadir=$NEXUS_DATADIR -testnet -regtest -istimeseed -debug=1 -verbose=4 -server -keypool=1 -discover=0 -rest -mocktime=0"
+echo "#!/bin/bash" >> ${NEXUS_START_SH}
+>>>>>>> Support local test mode for regression/smoke tests
 echo ${START_CMD} >> ${NEXUS_START_SH}
 chmod 755 ${NEXUS_START_SH} || true
 if [[ "${NEXUS_TEST_SETUP_ONLY:-}" == "1" ]]; then

@@ -255,6 +255,8 @@ bool AppInit2(int argc, char* argv[])
             "  -daemon          \t\t  " + _("Run in the background as a daemon and accept commands") + "\n" +
 #endif
             "  -testnet         \t\t  " + _("Use the test network") + "\n" +
+            "  -regtest         \t\t  " + _("Run nexus in regression test mode for lower difficulty, etc. For local code testing only.") + "\n" +
+            "  -istimeseed      \t\t  " + _("Advanced option. Use to set this as a dns time seed e.g. for bootstraping new test block chain.") + "\n" +
             "  -debug           \t\t  " + _("Output extra debugging information") + "\n" +
             "  -logtimestamps   \t  "   + _("Prepend debug output with timestamp") + "\n" +
             "  -printtoconsole  \t  "   + _("Send trace/debug info to console instead of debug.log file") + "\n" +
@@ -297,6 +299,8 @@ bool AppInit2(int argc, char* argv[])
     }
 
     fTestNet = GetBoolArg("-testnet", false);
+
+    fIsTimeSeed = GetBoolArg("-istimeseed", false);
 
     fDebug = GetBoolArg("-debug", false);
     Wallet::fDetachDB = GetBoolArg("-detachdb", false);
@@ -367,6 +371,7 @@ bool AppInit2(int argc, char* argv[])
 	InitMessage(_("Initializing LLD Keychains..."));
 	LLD::RegisterKeychain("blkindex", "blkindex");
 #endif
+<<<<<<< HEAD
 	
 	InitMessage(_("Initializing Unified Time..."));
 	printf("Initializing Unified Time...\n");
@@ -375,6 +380,18 @@ bool AppInit2(int argc, char* argv[])
 	CreateThread(Core::ThreadUnifiedSamples, NULL);
 	
 	
+=======
+
+    if (GetBoolArg("-regtest",false)) {
+        printf("Regression test mode enabled, not initializing unified time.");
+    }
+    else {
+        InitMessage(_("Initializing Unified Time..."));
+        printf("Initializing Unified Time...\n");
+        InitializeUnifiedTime();
+    }
+
+>>>>>>> Support local test mode for regression/smoke tests
 	if (!fDebug)
 		ShrinkDebugFile();
 	
@@ -580,6 +597,31 @@ bool AppInit2(int argc, char* argv[])
             return false;
         }
     }
+<<<<<<< HEAD
+=======
+    
+	
+    //
+    // Start the node
+    //
+
+    /** Wait for Unified Time if First Start. **/
+    if (GetBoolArg("-istimeseed",false)) {
+        printf("WARNING: -istimeseed Was set, not waiting for unified time.\n");
+    }
+    else {
+        printf("Waiting for unified time...\n");
+        while(!fTimeUnified)
+            Sleep(10);
+    }
+
+	/** Start sending Unified Samples. **/
+	if(GetBoolArg("-unified", false)) {
+		InitMessage(_("Initializing Core LLP..."));
+		printf("Initializing Core LLP...\n");
+		LLP_SERVER = new LLP::Server<LLP::CoreLLP>(fTestNet ? TESTNET_CORE_LLP_PORT : NEXUS_CORE_LLP_PORT, 5, true, 1, 3, 1);
+	}
+>>>>>>> Support local test mode for regression/smoke tests
 	
     if (!Core::CheckDiskSpace())
         return false;

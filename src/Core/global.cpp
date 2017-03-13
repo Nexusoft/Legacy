@@ -31,7 +31,7 @@ namespace Core
 	
 	/** The current Block Version Activating in this Release. **/
 	const unsigned int NETWORK_BLOCK_CURRENT_VERSION = 4;
-	const unsigned int TESTNET_BLOCK_CURRENT_VERSION = 5;
+	const unsigned int TESTNET_BLOCK_CURRENT_VERSION = 4;
 	
 	
 	/** Nexus Max Block size is 2 MB. This is to stay consistent with Nexus's 1 MB limit with 256 bit hashes, where Nexus Transactions are 512 bit. **/
@@ -235,9 +235,17 @@ namespace Core
 	/** Initial Difficulty Adjustments. **/
 	CBigNum bnProofOfWorkLimit[] = { CBigNum(~uint1024(0) >> 5), CBigNum(20000000), CBigNum(~uint1024(0) >> 17) };
 	CBigNum bnProofOfWorkStart[] = { CBigNum(~uint1024(0) >> 7), CBigNum(25000000), CBigNum(~uint1024(0) >> 22) };
+<<<<<<< HEAD:src/Core/global.cpp
 	
 	
 	Mutex_t cs_setpwalletRegistered;
+=======
+
+    /** Alternate Difficulty Adjustments for Regression Tests. **/
+	CBigNum bnProofOfWorkLimitRegtest[] = { CBigNum(~uint1024(0) >> 5), CBigNum(100000), CBigNum(~uint1024(0) >> 17) };
+	CBigNum bnProofOfWorkStartRegtest[] = { CBigNum(~uint1024(0) >> 7), CBigNum(100000), CBigNum(~uint1024(0) >> 22) };
+
+>>>>>>> Support local test mode for regression/smoke tests:src/core/global.cpp
 	int nCoinbaseMaturity = COINBASE_MATURITY;
 	CBlockIndex* pindexGenesisBlock = NULL;
 	unsigned int nBestHeight = 0;

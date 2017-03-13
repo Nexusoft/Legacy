@@ -178,10 +178,23 @@ namespace Core
 		bnNew /= nLowerBound;
 		
 		
+<<<<<<< HEAD:src/Core/difficulty.cpp
 		/* Don't allow Difficulty to decrease below minimum. */
 		if (bnNew > bnProofOfWorkLimit[0])
 			bnNew = bnProofOfWorkLimit[0];
 			
+=======
+		/** Don't allow Difficulty to decrease below minimum. **/
+		if (GetBoolArg("-regtest",false)) {
+			if (bnNew > bnProofOfWorkLimitRegtest[0])
+				bnNew = bnProofOfWorkLimitRegtest[0];
+		}
+		else {
+			if (bnNew > bnProofOfWorkLimit[0])
+				bnNew = bnProofOfWorkLimit[0];
+		}
+
+>>>>>>> Support local test mode for regression/smoke tests:src/core/difficulty.cpp
 			
 		/* Verbose Debug Output. */
 		if(GetArg("-verbose", 0) >= 2)
@@ -201,8 +214,17 @@ namespace Core
 	/* Prime Retargeting: Modulate Difficulty based on production rate. */
 	unsigned int RetargetPrime(const CBlockIndex* pindex)
 	{
+<<<<<<< HEAD:src/Core/difficulty.cpp
 		
 		/* Get Last Block Index [1st block back in Channel]. */
+=======
+		/** For regression testing only, allow low difficulty. **/
+		if (GetBoolArg("-regtest",false)) {
+			return bnProofOfWorkStartRegtest[1].getuint();
+		}
+
+		/** Get Last Block Index [1st block back in Channel]. **/
+>>>>>>> Support local test mode for regression/smoke tests:src/core/difficulty.cpp
 		const CBlockIndex* pindexFirst = GetLastChannelIndex(pindex, 1);
 		if (!pindexFirst->pprev)
 			return bnProofOfWorkStart[1].getuint();
