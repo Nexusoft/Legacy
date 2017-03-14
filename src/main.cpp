@@ -550,7 +550,7 @@ bool AppInit2(int argc, char* argv[])
 
     if (mapArgs.count("-addnode"))
     {
-        BOOST_FOREACH(string strAddr, mapMultiArgs["-addnode"])
+        for(auto strAddr : mapMultiArgs["-addnode"])
         {
             //LLP::CAddress addr(LLP::CService(strAddr, LLP::GetDefaultPort(), LLP::fAllowDNS));
             //addr.nTime = 0; // so it won't relay unless successfully connected
@@ -606,11 +606,8 @@ bool AppInit2(int argc, char* argv[])
 	{
 		for(int i = 0; i < SEED_NODES.size(); i ++)
 		{
-			printf("Trying Connection %s...\n", SEED_NODES[i].ToStringIP().c_str());
-			if(!NODE_SERVER->AddConnection(SEED_NODES[i].ToStringIP(), "9323"))
-			{
-				printf("Success (%s)!\n", SEED_NODES[i].ToStringIP().c_str());
-			}
+			printf("[%i] Trying Connection %s...\n", i, SEED_NODES[i].ToStringIP().c_str());
+			NODE_SERVER->AddConnection(SEED_NODES[i].ToStringIP(), "9323");
 		
 			Sleep(1000);
 		}

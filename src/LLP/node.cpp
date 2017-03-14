@@ -14,7 +14,10 @@
 
 #include "../LLC/include/random.h"
 #include "../LLD/include/index.h"
+
 #include "../LLU/include/args.h"
+#include "../LLU/include/hex.h"
+
 
 namespace LLP
 {
@@ -129,8 +132,11 @@ namespace LLP
 			if(GetArg("-verbose", 0) >= 1)
 				printf("***** %s Node %s Connected at Timestamp %" PRIu64 "\n", fOUTGOING ? "Ougoing" : "Incoming", addrThisNode.ToString().c_str(), Core::UnifiedTimestamp());
 			
-			if(fOUTGOING)
+			if(fOUTGOING) {
 				PushVersion();
+				
+				PushMessage("getblocks", Core::CBlockLocator(Core::pindexGenesisBlock), uint1024(0));
+			}
 			
 			return;
 		}	

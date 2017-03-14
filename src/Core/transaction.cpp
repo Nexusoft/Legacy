@@ -138,7 +138,7 @@ namespace Core
 		}
 
 		mapOrphanTransactions[hash] = pvMsg;
-		BOOST_FOREACH(const CTxIn& txin, tx.vin)
+		for(auto txin : tx.vin)
 			mapOrphanTransactionsByPrev[txin.prevout.hash].insert(make_pair(hash, pvMsg));
 
 		printf("stored orphan tx %s (mapsz %u)\n", hash.ToString().substr(0,10).c_str(),
@@ -153,7 +153,7 @@ namespace Core
 		const CDataStream* pvMsg = mapOrphanTransactions[hash];
 		CTransaction tx;
 		CDataStream(*pvMsg) >> tx;
-		BOOST_FOREACH(const CTxIn& txin, tx.vin)
+		for(auto txin : tx.vin)
 		{
 			mapOrphanTransactionsByPrev[txin.prevout.hash].erase(hash);
 			if (mapOrphanTransactionsByPrev[txin.prevout.hash].empty())
@@ -240,7 +240,7 @@ namespace Core
 		// To limit dust spam, require MIN_TX_FEE/MIN_RELAY_TX_FEE if any output is less than 0.01
 		if (nMinFee < nBaseFee)
 		{
-			BOOST_FOREACH(const CTxOut& txout, vout)
+			for(auto txout : vout)
 				if (txout.nValue < CENT)
 					nMinFee = nBaseFee;
 		}
@@ -350,7 +350,7 @@ namespace Core
 
 	bool CTransaction::IsStandard() const
 	{
-		BOOST_FOREACH(const CTxIn& txin, vin)
+		for(auto txin : vin)
 		{
 			// Biggest 'standard' txin is a 3-signature 3-of-3 CHECKMULTISIG
 			// pay-to-script-hash, which is 3 ~80-byte signatures, 3
@@ -360,7 +360,8 @@ namespace Core
 			if (!txin.scriptSig.IsPushOnly())
 				return false;
 		}
-		BOOST_FOREACH(const CTxOut& txout, vout)
+		
+		for(auto txout : vout)
 			if (!Wallet::IsStandard(txout.scriptPubKey))
 				return false;
 		return true;
@@ -435,7 +436,7 @@ namespace Core
 	CTransaction::GetLegacySigOpCount() const
 	{
 		unsigned int nSigOps = 0;
-		BOOST_FOREACH(const CTxIn& txin, vin)
+		for(auto txin : vin)
 		{
 			/** Don't count stake signature for operations. **/
 			if(txin.IsStakeSig())
@@ -443,7 +444,8 @@ namespace Core
 				
 			nSigOps += txin.scriptSig.GetSigOpCount(false);
 		}
-		BOOST_FOREACH(const CTxOut& txout, vout)
+		
+		for(auto txout : vout)
 		{
 			nSigOps += txout.scriptPubKey.GetSigOpCount(false);
 		}
@@ -542,7 +544,7 @@ namespace Core
 
 		// Check for duplicate inputs
 		set<COutPoint> vInOutPoints;
-		BOOST_FOREACH(const CTxIn& txin, vin)
+		for(auto txin : vin)
 		{
 				
 			if (vInOutPoints.count(txin.prevout))
@@ -558,7 +560,7 @@ namespace Core
 		}
 		else
 		{
-			BOOST_FOREACH(const CTxIn& txin, vin)
+			for(auto txin : vin)
 				if (txin.prevout.IsNull())
 					return LLP::DoS(NULL, 10, error("CTransaction::CheckTransaction() : prevout is null"));
 		}
@@ -742,7 +744,7 @@ namespace Core
 			uint512 hash = tx.GetHash();
 			if (mapTx.count(hash))
 			{
-				BOOST_FOREACH(const CTxIn& txin, tx.vin)
+				for(auto txin : tx.vin)
 					mapNextTx.erase(txin.prevout);
 				mapTx.erase(hash);
 
@@ -1125,9 +1127,9 @@ namespace Core
 
 bool Wallet::CWalletTx::AcceptWalletTransaction(LLD::CIndexDB& indexdb, bool fCheckInputs)
 {
-
 	{
 		LOCK(Core::mempool.cs);
+		
 		// Add previous supporting transactions first
 		BOOST_FOREACH(Core::CMerkleTx& tx, vtxPrev)
 		{

@@ -83,18 +83,24 @@ namespace LLP
 		 * BYTE 26 - X   : Data
 		 * 
 		 */
-		unsigned char HEADER[4];
-		char 			  MESSAGE[12];
-		unsigned int  LENGTH;
-		unsigned int  CHECKSUM;
+		unsigned char 	HEADER[4];
+		char 			MESSAGE[12];
+		unsigned int  	LENGTH;
+		unsigned int  	CHECKSUM;
 		
 		std::vector<unsigned char> DATA;
 		
 		MessagePacket()
 		{ 
 			SetNull();
-			
-			memcpy(HEADER, (fTestNet ? MESSAGE_START_TESTNET : MESSAGE_START_MAINNET), sizeof(HEADER));
+			SetHeader();
+		}
+		
+		MessagePacket(const char* chMessage)
+		{
+			SetNull();
+			SetHeader();
+			SetMessage(chMessage);
 		}
 		
 		IMPLEMENT_SERIALIZE
@@ -104,6 +110,7 @@ namespace LLP
 			READWRITE(LENGTH);
 			READWRITE(CHECKSUM);
 		)
+		
 		
 		/* Set the Packet Null Flags. */
 		void SetNull()
@@ -116,7 +123,7 @@ namespace LLP
 		
 		
 		/* Get the Command of packet in a std::string type. */
-		std::string GetMessage() { return MESSAGE; }
+		std::string GetMessage() { return std::string(MESSAGE, MESSAGE + 12); }
 		
 		
 		/* Packet Null Flag. Length and Checksum both 0. */
@@ -129,6 +136,23 @@ namespace LLP
 		
 		/* Determine if header is fully read */
 		bool Header()   { return IsNull() ? false : (LENGTH > 0 && CHECKSUM > 0 && sizeof(MESSAGE) > 0); }
+		
+		
+		/* Set the first four bytes in the packet headcer to be of the byte series selected. */
+		void SetHeader()
+		{
+			if (fTestNet)
+				memcpy(HEADER, MESSAGE_START_TESTNET, sizeof(MESSAGE_START_TESTNET));
+			else
+				memcpy(HEADER, MESSAGE_START_MAINNET, sizeof(MESSAGE_START_MAINNET));
+		}
+		
+		
+		/* Set the message in the packet header. */
+		void SetMessage(const char* chMessage)
+		{
+			strncpy(MESSAGE, chMessage, 12);
+		}
 		
 		
 		/* Sets the size of the packet from Byte Vector. */
@@ -262,11 +286,8 @@ namespace LLP
 		
 		MessagePacket NewMessage(const char* chCommand, CDataStream ssData)
 		{
-			MessagePacket RESPONSE;
-			memcpy(RESPONSE.MESSAGE, chCommand, 12);
-			
+			MessagePacket RESPONSE(chCommand);
 			RESPONSE.SetData(ssData);
-			RESPONSE.SetChecksum();
 			
 			return RESPONSE;
 		}
@@ -276,8 +297,7 @@ namespace LLP
 		{
 			try
 			{
-				MessagePacket RESPONSE;
-				memcpy(RESPONSE.MESSAGE, chCommand, 12);
+				MessagePacket RESPONSE(chCommand);
 			
 				this->WritePacket(RESPONSE);
 			}

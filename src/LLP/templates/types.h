@@ -21,6 +21,8 @@
 #include "../../LLU/include/mutex.h"
 #include "../../LLU/include/runtime.h"
 #include "../../LLU/include/debug.h"
+#include "../../LLU/include/hex.h"
+#include "../../LLU/include/args.h"
 	
 namespace LLP
 {
@@ -318,7 +320,13 @@ namespace LLP
 		
 		
 		/* Write a single packet to the TCP stream. */
-		void WritePacket(PacketType PACKET) { Write(PACKET.GetBytes()); }
+		void WritePacket(PacketType PACKET) 
+		{ 
+			if(GetArg("-verbose", 0) >= 4)
+				PrintHex(PACKET.GetBytes());
+				
+			Write(PACKET.GetBytes());
+		}
 		
 		
 		/* Non-Blocking Packet reader to build a packet from TCP Connection.
@@ -335,7 +343,7 @@ namespace LLP
 				
 				tcp::resolver					RESOLVER(IO_SERVICE);
 				tcp::resolver::query			QUERY   (tcp::v4(), strAddress.c_str(), strPort.c_str());
-				tcp::resolver::iterator		ADDRESS = RESOLVER.resolve(QUERY);
+				tcp::resolver::iterator			ADDRESS = RESOLVER.resolve(QUERY);
 				
 				SOCKET = Socket_t(new tcp::socket(IO_SERVICE));
 				SOCKET -> connect(*ADDRESS, ERROR_HANDLE);
