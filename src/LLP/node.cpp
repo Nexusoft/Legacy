@@ -143,8 +143,6 @@ namespace LLP
 			
 			if(fOUTGOING) {
 				PushVersion();
-				
-				PushMessage("getblocks", Core::CBlockLocator(Core::pindexGenesisBlock), uint1024(0));
 			}
 			
 			return;
