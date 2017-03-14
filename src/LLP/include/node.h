@@ -38,7 +38,7 @@ namespace LLP
 		
 		
 		/* Node Identifier */
-		unsigned int nSessionID;
+		uint64 nSessionID;
 		
 		
 		/* Basic Stats. */

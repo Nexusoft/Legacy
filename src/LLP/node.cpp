@@ -70,10 +70,11 @@ namespace LLP
 		uint64 nLocalServices = 0;
 		
 		/* Relay Your Address. */
-		CAddress addrMe   = (fUseProxy || !addrMyNode.IsRoutable() ? CAddress(CService("0.0.0.0",0)) : addrMyNode);
+		CAddress addrMe  = CAddress(CService("0.0.0.0",0));
+		CAddress addrYou = CAddress(CService("0.0.0.0",0));
 		
 		/* Push the Message to receiving node. */
-		PushMessage("version", LLP::PROTOCOL_VERSION, nLocalServices, nTime, GetAddress(), addrMe,
+		PushMessage("version", LLP::PROTOCOL_VERSION, nLocalServices, nTime, addrYou, addrMe,
 					nSessionID, FormatFullVersion(), Core::nBestHeight);
 	}
 	
@@ -84,13 +85,15 @@ namespace LLP
 		/** Handle any DDOS Packet Filters. **/
 		if(EVENT == EVENT_HEADER)
 		{
+			if(GetArg("-verbose", 0) >= 3)
+				printf("***** Node recieved Message (%s, %u)\n", INCOMING.GetMessage().c_str(), INCOMING.LENGTH);
+					
 			if(fDDOS)
 			{
 				
 				/* Give higher DDOS score if the Node happens to try to send multiple version messages. */
 				if (INCOMING.GetMessage() == "version" && nCurrentVersion != 0)
 					DDOS->rSCORE += 25;
-				
 			}
 			
 			return;
@@ -99,7 +102,9 @@ namespace LLP
 		/** Handle for a Packet Data Read. **/
 		if(EVENT == EVENT_PACKET)
 		{
-				
+			if(GetArg("-verbose", 0) >= 3)
+				printf("***** Node Read Data for Message (%s, %u)\n", INCOMING.GetMessage().c_str(), LENGTH);
+					
 			/* Check a packet's validity once it is finished being read. */
 			if(fDDOS) {
 
@@ -121,7 +126,11 @@ namespace LLP
 		 */
 		if(EVENT == EVENT_GENERIC)
 		{
-		
+			if(Timeout(5)) {
+				RAND_bytes((unsigned char*)&nSessionID, sizeof(nSessionID));
+				
+				PushMessage("ping", nSessionID);
+			}
 		}
 			
 			

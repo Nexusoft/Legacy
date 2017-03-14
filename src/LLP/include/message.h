@@ -409,7 +409,7 @@ namespace LLP
 			try
 			{
 				CDataStream ssData(SER_NETWORK, MIN_PROTO_VERSION);
-				ssData << t1 << t2 << t3 << t4 << t5 << t6 <<t7;
+				ssData << t1 << t2 << t3 << t4 << t5 << t6 << t7;
 				
 				this->WritePacket(NewMessage(chMessage, ssData));
 			}
@@ -425,7 +425,7 @@ namespace LLP
 			try
 			{
 				CDataStream ssData(SER_NETWORK, MIN_PROTO_VERSION);
-				ssData << t1 << t2 << t3 << t4 << t5 << t6 <<t7 << t8;
+				ssData << t1 << t2 << t3 << t4 << t5 << t6 << t7 << t8;
 				
 				this->WritePacket(NewMessage(chMessage, ssData));
 			}
@@ -441,7 +441,7 @@ namespace LLP
 			try
 			{
 				CDataStream ssData(SER_NETWORK, MIN_PROTO_VERSION);
-				ssData << t1 << t2 << t3 << t4 << t5 << t6 <<t7 << t8 << t9;
+				ssData << t1 << t2 << t3 << t4 << t5 << t6 << t7 << t8 << t9;
 				
 				this->WritePacket(NewMessage(chMessage, ssData));
 			}

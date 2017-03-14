@@ -324,6 +324,8 @@ namespace LLP
 		{ 
 			if(GetArg("-verbose", 0) >= 4)
 				PrintHex(PACKET.GetBytes());
+			else if(GetArg("-verbose", 0) >= 3)
+				printf("***** Node Sent Message (%u, %u)\n", PACKET.LENGTH, PACKET.GetBytes().size());
 				
 			Write(PACKET.GetBytes());
 		}
