@@ -12,6 +12,11 @@ https://github.com/physicsdude/nexusscripts/blob/master/install-cpu-miner-on-ubu
 
 Then, when you're ready to mine blocks on your mini-chain, use the script below.
 
+## setup-two-local-test-nodes.sh
+
+This will set up a fresh local test net with 2 nodes that communicate with each other.
+Look in ~/nexustest after you run this.
+
 ## run-start-nexus-test.sh
 
 <<<<<<< HEAD
