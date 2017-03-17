@@ -77,6 +77,7 @@ const char* DNS_SeedNodes[] =
 /** Declarations for the DNS Seed Nodes. **/
 const char* DNS_SeedNodes_Testnet[] =
 {
+		"localhost"
 };
 
 /** Seed Nodes for Unified Time. **/

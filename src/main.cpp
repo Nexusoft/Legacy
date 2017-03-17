@@ -349,8 +349,8 @@ bool AppInit2(int argc, char* argv[])
 	LLD::RegisterKeychain("blkindex", "blkindex");
 #endif
 
-    if (GetBoolArg("-regtest",false)) {
-        printf("Regression test mode enabled, not initializing unified time.");
+    if (GetBoolArg("-istimeseed",false)) {
+        printf("istimeseed flag set, not initializing unified time.");
     }
     else {
         InitMessage(_("Initializing Unified Time..."));

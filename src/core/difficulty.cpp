@@ -120,6 +120,10 @@ namespace Core
 	/** Proof of Stake Retargeting: Modulate Difficulty based on production rate. **/
 	unsigned int RetargetPOS(const CBlockIndex* pindex, bool output)
 	{
+		/** Do not retarget in regression test mode. **/
+		if (GetBoolArg("-regtest",false)) {
+			return bnProofOfWorkStartRegtest[0].GetCompact();
+		}
 	
 		/** Get Last Block Index [1st block back in Channel]. **/
 		const CBlockIndex* pindexFirst = GetLastChannelIndex(pindex, 0);

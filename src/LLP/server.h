@@ -258,7 +258,7 @@ namespace LLP
 			LISTENER.bind(ENDPOINT);
 			LISTENER.listen(1000, ERROR_HANDLE);
 			
-			//printf("LLP Server Listening on Port %u\n", PORT);
+			printf("LLP Server Listening on Port %u\n", PORT);
 			for(;;)
 			{
 				/** Limit listener to allow maximum of 100 new connections per second. **/
