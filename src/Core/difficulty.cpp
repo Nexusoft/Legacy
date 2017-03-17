@@ -113,8 +113,17 @@ namespace Core
 	/* Trust Retargeting: Modulate Difficulty based on production rate. */
 	unsigned int RetargetTrust(const CBlockIndex* pindex)
 	{
+<<<<<<< HEAD:src/Core/difficulty.cpp
 
 		/* Get Last Block Index [1st block back in Channel]. **/
+=======
+		/** Do not retarget in regression test mode. **/
+		if (GetBoolArg("-regtest",false)) {
+			return bnProofOfWorkStartRegtest[0].GetCompact();
+		}
+	
+		/** Get Last Block Index [1st block back in Channel]. **/
+>>>>>>> core tweaks for tests:src/core/difficulty.cpp
 		const CBlockIndex* pindexFirst = GetLastChannelIndex(pindex, 0);
 		if (pindexFirst->pprev == NULL)
 			return bnProofOfWorkStart[0].GetCompact();

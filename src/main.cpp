@@ -371,27 +371,12 @@ bool AppInit2(int argc, char* argv[])
 	InitMessage(_("Initializing LLD Keychains..."));
 	LLD::RegisterKeychain("blkindex", "blkindex");
 #endif
-<<<<<<< HEAD
-	
+
 	InitMessage(_("Initializing Unified Time..."));
 	printf("Initializing Unified Time...\n");
 	
 	//TODO: PUT IN NODE MANAGER InitializeUnifiedTime();
 	CreateThread(Core::ThreadUnifiedSamples, NULL);
-	
-	
-=======
-
-    if (GetBoolArg("-regtest",false)) {
-        printf("Regression test mode enabled, not initializing unified time.");
-    }
-    else {
-        InitMessage(_("Initializing Unified Time..."));
-        printf("Initializing Unified Time...\n");
-        InitializeUnifiedTime();
-    }
-
->>>>>>> Support local test mode for regression/smoke tests
 	if (!fDebug)
 		ShrinkDebugFile();
 	
@@ -597,8 +582,6 @@ bool AppInit2(int argc, char* argv[])
             return false;
         }
     }
-<<<<<<< HEAD
-=======
     
 	
     //
@@ -621,8 +604,7 @@ bool AppInit2(int argc, char* argv[])
 		printf("Initializing Core LLP...\n");
 		LLP_SERVER = new LLP::Server<LLP::CoreLLP>(fTestNet ? TESTNET_CORE_LLP_PORT : NEXUS_CORE_LLP_PORT, 5, true, 1, 3, 1);
 	}
->>>>>>> Support local test mode for regression/smoke tests
-	
+
     if (!Core::CheckDiskSpace())
         return false;
 
@@ -635,11 +617,6 @@ bool AppInit2(int argc, char* argv[])
 	
 	/* Start the Node Manager */
 	Core::pManager->Start();
-	
-	//Thread_t stake1(Core::StakeMinter);
-	//Thread_t stake2(Core::StakeMinter);
-	//Thread_t stake3(Core::StakeMinter);
-	//Thread_t stake4(Core::StakeMinter);
 	
 
 #ifdef QT_GUI
