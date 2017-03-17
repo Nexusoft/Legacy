@@ -53,6 +53,7 @@ trap 'error ${LINENO}' ERR
 set -v
 set -x
 
+
 [[ "${NEXUS:-}" == "" ]] && NEXUS="${NEXUSDEF}/nexus"
 echo "NEXUS=${NEXUS}"
 if [[ -x ${NEXUS} ]]; then
@@ -104,6 +105,7 @@ else
     if [[ "${NEXUS_TEST_TESTNET:-}" != "1" ]]
     then
         echo "Setting Up Nexus block chain bootstrap file."
+
         LLD_BOOTSTRAP="recent.rar"
         if [[ -s ${NEXUS_TEST_STORAGE_LLD} ]]
         then
