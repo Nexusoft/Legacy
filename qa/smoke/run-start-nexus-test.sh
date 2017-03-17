@@ -5,7 +5,7 @@
 # License: GPL v2
 
 # Script to test starting nexus on the command line
-#  ./run-start-nexus-test.sh
+#  NEXUS=/path/to/binary/nexus ./run-start-nexus-test.sh
 #
 # To auto-kill any existing nexus procs and delete the .lock file use
 #  NEXUS_TEST_AUTOKILL=1 ./run-start-nexus-test.sh
@@ -27,6 +27,11 @@
 #  NEXUS_TEST_CLEAR=1 NEXUS_TEST_SETUP_ONLY=1 NEXUS_TEST_NO_DAEMON=1 ./run-start-nexus-test.sh
 #  Then I run nexus from the debugger itself.
 #
+# To set up multiple nodes for testing, run this script once for each node.
+#   The first node, node 1, will use the 'istimeseed' opiton.
+#   This is the default. To set up the second node, use:
+#  NEXUS_TEST_NODE_NUM=2 ./run-start-nexus-test.sh
+#
 # To run nexus against mainnet use
 #  NEXUS_TEST_MAIN=1 ./run-start-nexus-test.sh
 
@@ -42,17 +47,33 @@ trap 'error ${LINENO}' ERR
 set -v
 set -x
 
-NEXUS=/home/dev/code/Nexus/nexus
+[[ "${NEXUS:-}" == "" ]] && NEXUS="${HOME}/code/Nexus/nexus"
+echo "NEXUS=${NEXUS}"
+if [[ -x ${NEXUS} ]]; then
+	echo "Nexus executable exists."
+else
+	echo "Nexus executable didn't exist or wasn't executable, exiting."
+	echo "Call the script like this to set it NEXUS=/path/to/binary/nexus ./run-start-nexus-test.sh"
+	exit 42
+fi
+
+[[ "${NEXUS_TEST_NODE_NUM:-}" == "" ]] && NEXUS_TEST_NODE_NUM=1
+[[ "${NEXUS_TEST_NODE_NUM:-}" == "0" ]] && NEXUS_TEST_NODE_NUM=1
+echo "NEXUS_TEST_NODE_NUM=${NEXUS_TEST_NODE_NUM}"
+if [[ ${NEXUS_TEST_NODE_NUM:-} > 2 ]]; then
+    echo "NEXUS_TEST_NODE_NUM > 2 is not currently supported."
+fi
+
 NEXUS_DATADIR_BASE=${HOME}/nexustest
 NEXUS_TEST_TESTNET=1
-NEXUS_DATADIR=${NEXUS_DATADIR_BASE}/testnet
+NEXUS_DATADIR=${NEXUS_DATADIR_BASE}/testnet${NEXUS_TEST_NODE_NUM}
 NEXUS_CONF=${NEXUS_DATADIR}/nexus.conf
 NEXUS_DEBUG_LOG=${NEXUS_DATADIR}/testnet25/debug.log
 NEXUS_LOCK=${NEXUS_DATADIR}/testnet25/.lock
 if [[ "${NEXUS_TEST_MAIN:-}" == 1 ]]
 then
     NEXUS_TEST_TESTNET=0
-    NEXUS_DATADIR=${NEXUS_DATADIR_BASE}/mainnet
+    NEXUS_DATADIR=${NEXUS_DATADIR_BASE}/mainnet${NEXUS_TEST_NODE_NUM}
     NEXUS_CONF=${NEXUS_DATADIR}/nexus.conf
     NEXUS_DEBUG_LOG=${NEXUS_DATADIR}/debug.log
     NEXUS_LOCK=${NEXUS_DATADIR}/.lock
@@ -68,16 +89,16 @@ else
     echo "The existing test datadir will be reused if it exists already."
 fi
 
-if  ls $NEXUS_DATADIR 2>&1 >/dev/null
+if  ls ${NEXUS_DATADIR} 2>&1 >/dev/null
 then
     echo "Data directory already existed."
 else
-    mkdir -p $NEXUS_DATADIR
-    cd $NEXUS_DATADIR
-    if [[ "${NEXUS_TEST_TESTNET:-}" != 1 ]]
+    mkdir -p ${NEXUS_DATADIR}
+    cd ${NEXUS_DATADIR}
+    if [[ "${NEXUS_TEST_TESTNET:-}" != "1" ]]
     then
-        echo "Setting Up Nexus blockchain bootstrap file."
-        if -e ${NEXUS_TEST_STORAGE_LLD}
+        echo "Setting Up Nexus block chain bootstrap file."
+        if [[ -s ${NEXUS_TEST_STORAGE_LLD} ]]
         then
             cp ${NEXUS_TEST_STORAGE_LLD}/recent.rar ${NEXUS_DATADIR}
         else
@@ -95,7 +116,7 @@ else
     fi
 fi
 
-if ls $NEXUS_LOCK
+if ls ${NEXUS_LOCK}
 then
     echo "nexus .lock file existed - view the output of ps to see if it's still running:"
     ps auxww | egrep nexu[s] || grep -v run-start-nexus || true
@@ -112,36 +133,68 @@ then
     killall nexus || true
     echo "Sleeping for 5 seconds to ensure nexus processes finish."
     sleep 5
-    rm -f $NEXUS_LOCK
+    rm -f ${NEXUS_LOCK}
 fi
 
 echo "Writing/ensuring nexus.conf exists."
 
-if ! ls $NEXUS_CONF 2>&1 >/dev/null
+if ! ls ${NEXUS_CONF} 2>&1 >/dev/null
 then
-    if [[ "${NEXUS_TEST_TESTNET:-}" == 1 ]]
+    if [[ "${NEXUS_TEST_TESTNET:-}" == "1" ]]
     then
         echo "testnet=1" >> ${NEXUS_CONF}
         echo "regtest=1" >> ${NEXUS_CONF}
-        echo "istimeseed=1" >> ${NEXUS_CONF}
-        echo "unified=0" >> ${NEXUS_CONF}
-        echo "llpallowip=127.0.0.1:18325" >> ${NEXUS_CONF}
-        echo "rpcport=19336" >> ${NEXUS_CONF}
-        echo "port=18313" >> ${NEXUS_CONF}
-        echo "stake=0" >> ${NEXUS_CONF}
+        if [[ "${NEXUS_TEST_NODE_NUM:-}" == "1" ]]
+        then
+            echo "Setting istimeseed=1 in nexus.conf for the first node only."
+            echo "istimeseed=1" >> ${NEXUS_CONF}
+            echo "unified=1" >> ${NEXUS_CONF}
+            echo "llpallowip=*:18325" >> ${NEXUS_CONF}
+            echo "llpallowip=*.*.*.*:18325" >> ${NEXUS_CONF}
+            echo "llpallowip=127.0.0.1:18325" >> ${NEXUS_CONF}
+            echo "rpcport=19336" >> ${NEXUS_CONF}
+            echo "port=18313" >> ${NEXUS_CONF}
+            echo "rpcuser=therpcuser1" >> ${NEXUS_CONF}
+            echo "rpcpassword=CHANGEME89uhij4903i4ij" >> ${NEXUS_CONF}
+            echo "rpcallowip=127.0.0.1" >> ${NEXUS_CONF}
+            echo "daemon=0" >> ${NEXUS_CONF}
+            echo "listen=1" >> ${NEXUS_CONF}
+            echo "stake=0" >> ${NEXUS_CONF}
+            echo "server=1" >> ${NEXUS_CONF}
+            echo "mining=1" >> ${NEXUS_CONF}
+        else
+            echo "istimeseed=0" >> ${NEXUS_CONF}
+            # Don't send unified time samples from second node
+            echo "unified=0" >> ${NEXUS_CONF}
+            echo "llpallowip=*:28325" >> ${NEXUS_CONF}
+            echo "llpallowip=*.*.*.*:28325" >> ${NEXUS_CONF}
+            echo "llpallowip=127.0.0.1:28325" >> ${NEXUS_CONF}
+            echo "rpcport=29336" >> ${NEXUS_CONF}
+            echo "port=28313" >> ${NEXUS_CONF}
+            echo "rpcuser=therpcuser2" >> ${NEXUS_CONF}
+            echo "rpcpassword=CHANGEME89uhij4903i4ij" >> ${NEXUS_CONF}
+            echo "rpcallowip=127.0.0.1" >> ${NEXUS_CONF}
+            echo "daemon=0" >> ${NEXUS_CONF}
+            echo "listen=1" >> ${NEXUS_CONF}
+            echo "stake=1" >> ${NEXUS_CONF}
+            echo "server=0" >> ${NEXUS_CONF}
+            echo "mining=0" >> ${NEXUS_CONF}
+            echo "addnode=127.0.0.1:18313" >> ${NEXUS_CONF}
+        fi
         echo "checklevel=0" >> ${NEXUS_CONF}
         echo "checkbolcks=1" >> ${NEXUS_CONF}
+        echo "debug=1" >> ${NEXUS_CONF}
         echo "verbose=4" >> ${NEXUS_CONF}
     else
+        echo "debug=1" >> ${NEXUS_CONF}
         echo "verbose=3" >> ${NEXUS_CONF}
+        echo "server=1" >> ${NEXUS_CONF}
+        echo "listen=1" >> ${NEXUS_CONF}
+        echo "mining=1" >> ${NEXUS_CONF}
+        echo "rpcuser=therpcuser" >> ${NEXUS_CONF}
+        echo "rpcpassword=CHANGEME89uhij4903i4ij" >> ${NEXUS_CONF}
+        echo "rpcallowip=127.0.0.1" >> ${NEXUS_CONF}
     fi
-    echo "debug=1" >> ${NEXUS_CONF}
-    echo "server=1" >> ${NEXUS_CONF}
-    echo "listen=1" >> ${NEXUS_CONF}
-    echo "mining=1" >> ${NEXUS_CONF}
-    echo "rpcuser=therpcuser" >> ${NEXUS_CONF}
-    echo "rpcpassword=89uhij4903i4ij" >> ${NEXUS_CONF}
-    echo "rpcallowip=127.0.0.1" >> ${NEXUS_CONF}
     if [[ "${NEXUS_TEST_NO_DAEMON:-}" == "1" ]]
     then
         # NOTE - daemon=0 is important if you want to run nexus in a debugger.
@@ -154,12 +207,12 @@ fi
 
 echo "Clearing previous debug log"
 
-ls $NEXUS_DEBUG_LOG 2>&1 >/dev/null && rm $NEXUS_DEBUG_LOG
+ls ${NEXUS_DEBUG_LOG} 2>&1 >/dev/null && rm ${NEXUS_DEBUG_LOG}
 
 echo "Saving command used to ${NEXUS_START_SH} in case you want to run that script later to restart without running this whole script."
 
-START_CMD="$NEXUS -datadir=$NEXUS_DATADIR "
-echo "#!/bin/bash" >> ${NEXUS_START_SH}
+START_CMD="${NEXUS} -datadir=${NEXUS_DATADIR} "
+echo "#!/bin/bash" > ${NEXUS_START_SH}
 echo ${START_CMD} >> ${NEXUS_START_SH}
 chmod 755 ${NEXUS_START_SH} || true
 if [[ "${NEXUS_TEST_SETUP_ONLY:-}" == "1" ]]; then
