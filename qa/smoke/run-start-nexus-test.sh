@@ -98,6 +98,7 @@ else
     if [[ "${NEXUS_TEST_TESTNET:-}" != "1" ]]
     then
         echo "Setting Up Nexus block chain bootstrap file."
+        LLD_BOOTSTRAP="recent.rar"
         if [[ -s ${NEXUS_TEST_STORAGE_LLD} ]]
         then
             cp ${NEXUS_TEST_STORAGE_LLD}/recent.rar ${NEXUS_DATADIR}
@@ -106,13 +107,12 @@ else
             mkdir -p ${NEXUS_TEST_STORAGE_LLD}
             cd ${NEXUS_TEST_STORAGE_LLD}
             which wget || sudo apt-get -y install wget
-            LLD_BOOTSTRAP="recent.rar"
             ls ${LLD_BOOTSTRAP} ||  wget http://nexusearth.com/bootstrap/LLD-Database/${LLD_BOOTSTRAP}
             cp ${LLD_BOOTSTRAP} ${NEXUS_DATADIR}
-            cd ${NEXUS_DATADIR}
-            unrar x ${LLD_BOOTSTRAP}
-            rm -f ${LLD_BOOTSTRAP}
         fi
+        cd ${NEXUS_DATADIR}
+        unrar x ${LLD_BOOTSTRAP}
+        rm -f ${LLD_BOOTSTRAP}
     fi
 fi
 
