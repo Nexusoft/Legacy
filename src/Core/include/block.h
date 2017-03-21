@@ -5,7 +5,7 @@
 			(c) Copyright Nexus Developers 2014 - 2017
 			
 			http://www.opensource.org/licenses/mit-license.php
-  
+
 *******************************************************************************************/
 
 #ifndef NEXUS_CORE_INCLUDE_BLOCK_H
@@ -78,8 +78,7 @@ namespace Core
 		/* Memory Only Data. */
 		mutable std::vector<uint512> vMerkleTree;
 		uint512 hashPrevChecksum;
-		
-		
+
 		IMPLEMENT_SERIALIZE
 		(
 			READWRITE(this->nVersion);
@@ -124,6 +123,7 @@ namespace Core
 		/* Set block to a NULL state. */
 		void SetNull()
 		{
+			/* bdg question: should this use the current version instead of hard coded 3? */
 			nVersion = 3;
 			hashPrevBlock = 0;
 			hashMerkleRoot = 0;
@@ -138,7 +138,8 @@ namespace Core
 			vMerkleTree.clear();
 		}
 		
-		
+
+		/* bdg note: SetChannel is never used */
 		/* Set the Channel for block. */
 		void SetChannel(unsigned int nNewChannel)
 		{
@@ -166,7 +167,8 @@ namespace Core
 			return (int64)nTime;
 		}
 		
-		
+
+		/* bdg question: should this check if the block is in the prime channel first? */
 		/* Get the prime number of the block. */
 		CBigNum GetPrime() const
 		{
@@ -221,7 +223,7 @@ namespace Core
 			BOOST_FOREACH(const CTransaction& tx, vtx)
 				vMerkleTree.push_back(tx.GetHash());
 			int j = 0;
-			for (int nSize = vtx.size(); nSize > 1; nSize = (nSize + 1) / 2)
+			for (int nSize = (int)vtx.size(); nSize > 1; nSize = (nSize + 1) / 2)
 			{
 				for (int i = 0; i < nSize; i += 2)
 				{
@@ -242,7 +244,7 @@ namespace Core
 				BuildMerkleTree();
 			std::vector<uint512> vMerkleBranch;
 			int j = 0;
-			for (int nSize = vtx.size(); nSize > 1; nSize = (nSize + 1) / 2)
+			for (int nSize = (int)vtx.size(); nSize > 1; nSize = (nSize + 1) / 2)
 			{
 				int i = std::min(nIndex^1, nSize-1);
 				vMerkleBranch.push_back(vMerkleTree[j+i]);
@@ -300,7 +302,7 @@ namespace Core
 		/* Verify the Proof of Stake satisfies network requirements. */
 		bool VerifyStake() const;
 		
-		
+		/* bdg note: StakeWeight is not implemented. */
 		/* Determine the Stake Weight of Given Block. */
 		bool StakeWeight();
 		
@@ -406,12 +408,15 @@ namespace Core
 				
 			if (block.IsProofOfWork() && block.nHeight > 0)
 			{
-				unsigned int nSize = block.vtx[0].vout.size();
-				for(int nIndex = 0; nIndex < nSize - 2; nIndex++)
+				int nSize = (int)block.vtx[0].vout.size();
+				int nIter = (nSize > 2) ? nSize - 2 : 1;
+				for(int nIndex = 0; nIndex < nIter; nIndex++)
 					nCoinbaseRewards[0] += block.vtx[0].vout[nIndex].nValue;
-						
-				nCoinbaseRewards[1] = block.vtx[0].vout[nSize - 2].nValue;
-				nCoinbaseRewards[2] = block.vtx[0].vout[nSize - 1].nValue;
+
+				if (nSize > 2) {
+					nCoinbaseRewards[1] = block.vtx[0].vout[nSize - 2].nValue;
+					nCoinbaseRewards[2] = block.vtx[0].vout[nSize - 1].nValue;
+				}
 			}
 
 			nVersion       = block.nVersion;
@@ -458,8 +463,12 @@ namespace Core
 
 		uint64 GetBlockTrust() const
 		{
-				
-			/** Give higher block trust if last block was of different channel **/
+
+			/** bdg thought: what if we look back at the past two blocks
+			 **                 give 3 if last two are different, 2 if only
+			 **                 one of the last two is different.
+			 ** Give higher block trust if last block was of different channel
+			 **/
 			if(pprev && pprev->GetChannel() != GetChannel())
 				return 3;
 			
@@ -472,6 +481,7 @@ namespace Core
 			return (pnext || this == pindexBest);
 		}
 
+		/* bdg question: why is this not checking the proof of work? */
 		bool CheckIndex() const
 		{
 			return true;//IsProofOfWork() ? CheckProofOfWork(GetBlockHash(), nBits) : true;
@@ -486,7 +496,8 @@ namespace Core
 		{
 			return (nChannel == 0);
 		}
-		
+
+		/* bdg note: this is never used */
 		bool EraseBlockFromDisk();
 		
 		std::string ToString() const;
@@ -643,7 +654,7 @@ namespace Core
 		void Set(const CBlockIndex* pindex);
 		
 		
-		/* Find the total blocks back locater determined. */
+		/* Find the total blocks back locator determined. */
 		int GetDistanceBack();
 		
 		
@@ -654,7 +665,8 @@ namespace Core
 		/* Get the hash of block. */
 		uint1024 GetBlockHash();
 		
-		
+
+		/* bdg note: GetHeight is never used. */
 		/* Get the Height of the Locator. */
 		int GetHeight();
 		
@@ -664,24 +676,28 @@ namespace Core
 		
 	
 	/* __________________________________________________ (Block Processing Methods) __________________________________________________  */
-	
-	
-	
-	
-	
-	
+
+
+
+
+
+
+	/* bdg note: never used */
 	/* Find the Nearest Orphan Block down the Chain. */
 	uint1024 GetOrphanRoot(const CBlock* pblock);
 	
-	
+
+	/* bdg note: never used */
 	/* Find the blocks that are required to complete an orphan chain. */
 	uint1024 WantedByOrphan(const CBlock* pblockOrphan);
-	
-	
+
+
+	/* bdg note: never used */
 	/* Get Coinbase Reweards for Given Blocks. */
 	int64 GetProofOfWorkReward(unsigned int nBits);
-	
-	
+
+
+	/* bdg note: never used */
 	/* Get the Stake Reward for Given Blocks. */
 	int64 GetProofOfStakeReward(int64 nCoinAge);
 	
@@ -692,8 +708,9 @@ namespace Core
 	
 	/* Search back for an index of given Mining Channel. */
 	const CBlockIndex* GetLastChannelIndex(const CBlockIndex* pindex, int nChannel);
-	
-	
+
+
+	/* bdg note: never used */
 	/* Calculate the majority of blocks that other peers have. */
 	int GetNumBlocksOfPeers();
 	
@@ -704,8 +721,9 @@ namespace Core
 	
 	/* Check a block before it is appended to the blockchain. */
 	bool CheckBlock(CBlock* pblock, LLP::CNode* pfrom = NULL);
-	
-	
+
+
+	/* bdg note: never used */
 	/* Accept a block into the block chain without setting it as the leading block. */
 	bool AcceptBlock(CBlock* pblock, LLP::CNode* pfrom = NULL);
 	
@@ -722,7 +740,7 @@ namespace Core
 	bool CheckDiskSpace(uint64 nAdditionalBytes = 0);
 	
 	
-	/* Read the block from file and binary postiion (blk0001.dat), */
+	/* Read the block from file and binary position (blk0001.dat), */
 	FILE* OpenBlockFile(unsigned int nFile, unsigned int nBlockPos, const char* pszMode);
 	
 	
@@ -752,5 +770,6 @@ namespace Core
 
 }
 
+/** 2017-03: Reviewed by bdg. **/
 
 #endif

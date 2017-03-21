@@ -5,27 +5,21 @@
 			(c) Copyright Nexus Developers 2014 - 2017
 			
 			http://www.opensource.org/licenses/mit-license.php
-  
+
 *******************************************************************************************/
 
 #include "../Wallet/wallet.h"
 
 #include "include/block.h"
-#include "include/global.h"
 #include "include/trust.h"
 #include "include/supply.h"
 #include "include/prime.h"
 #include "include/difficulty.h"
 #include "include/dispatch.h"
-#include "include/transaction.h"
 #include "include/checkpoints.h"
-#include "include/unifiedtime.h"
 
 #include "../LLU/include/ui_interface.h"
-#include "../LLU/include/convert.h"
-#include "../LLU/include/parse.h"
 
-#include "../LLP/include/network.h"
 #include "../LLP/include/mining.h"
 #include "../LLP/include/message.h"
 #include "../LLP/include/node.h"
@@ -41,6 +35,7 @@ using namespace boost;
 namespace Core
 {
 
+	/* bdg note: never used */
 	uint1024 GetOrphanRoot(const CBlock* pblock)
 	{
 		// Work back to the first block in the orphan chain
@@ -49,6 +44,7 @@ namespace Core
 		return pblock->GetHash();
 	}
 
+	/* bdg note: never used */
 	uint1024 WantedByOrphan(const CBlock* pblockOrphan)
 	{
 		// Work back to the first block in the orphan chain
@@ -57,6 +53,7 @@ namespace Core
 		return pblockOrphan->hashPrevBlock;
 	}
 
+	/* bdg note: never used */
 	const CBlockIndex* GetLastBlockIndex(const CBlockIndex* pindex, bool fProofOfStake)
 	{
 		while (pindex && pindex->pprev && (pindex->IsProofOfStake() != fProofOfStake))
@@ -64,7 +61,7 @@ namespace Core
 			
 		return pindex;
 	}
-	
+
 	const CBlockIndex* GetLastChannelIndex(const CBlockIndex* pindex, int nChannel)
 	{
 		while (pindex && pindex->pprev && (pindex->GetChannel() != nChannel))
@@ -73,7 +70,8 @@ namespace Core
 		return pindex;
 	}
 	
-	
+
+	/* bdg note: never used */
 	int GetNumBlocksOfPeers() { return cPeerBlockCounts.Majority(); }
 	
 	bool IsInitialBlockDownload()
@@ -1632,6 +1630,7 @@ namespace Core
 		return hashGenesisBlock;
 	}
 
+	/* bdg note: GetHeight is never used. */
 	int CBlockLocator::GetHeight()
 	{
 		CBlockIndex* pindex = GetBlockIndex();
@@ -1641,3 +1640,5 @@ namespace Core
 	}
 
 }
+
+/** 2017-03: Reviewed by bdg. **/

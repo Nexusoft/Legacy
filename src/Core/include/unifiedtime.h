@@ -30,7 +30,7 @@ namespace Core
 	extern std::vector<int> UNIFIED_TIME_DATA;
 
 
-	/** Initializes the Unifed Time System. 
+	/** Initializes the Unified Time System.
 		A] Checks Database for Offset Average List
 		B] Gets Periodic Average of 10 Seeds if first Unified Time **/
 	void InitializeUnifiedTime();

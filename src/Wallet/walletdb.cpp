@@ -184,20 +184,20 @@ namespace Wallet
 						wtx.BindWallet(pwallet);
 
 					// Undo serialize changes in 31600
-					if (31404 <= wtx.fTimeReceivedIsTxTime && wtx.fTimeReceivedIsTxTime <= 31703)
+					if (wtx.fTimeReceivedIsTxTime && 31404 <= wtx.nTimeReceived && wtx.nTimeReceived <= 31703)
 					{
 						if (!ssValue.empty())
 						{
 							char fTmp;
 							char fUnused;
 							ssValue >> fTmp >> fUnused >> wtx.strFromAccount;
-							printf("LoadWallet() upgrading tx ver=%d %d '%s' %s\n", wtx.fTimeReceivedIsTxTime, fTmp, wtx.strFromAccount.c_str(), hash.ToString().c_str());
-							wtx.fTimeReceivedIsTxTime = fTmp;
+							printf("LoadWallet() upgrading tx ver=%d %d '%s' %s\n", wtx.nTimeReceived, fTmp, wtx.strFromAccount.c_str(), hash.ToString().c_str());
+							wtx.nTimeReceived = (unsigned int)fTmp;
 						}
 						else
 						{
-							printf("LoadWallet() repairing tx ver=%d %s\n", wtx.fTimeReceivedIsTxTime, hash.ToString().c_str());
-							wtx.fTimeReceivedIsTxTime = 0;
+							printf("LoadWallet() repairing tx ver=%d %s\n", wtx.nTimeReceived, hash.ToString().c_str());
+							wtx.nTimeReceived = 0;
 						}
 						vWalletUpgrade.push_back(hash);
 					}
