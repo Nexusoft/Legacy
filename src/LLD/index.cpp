@@ -10,7 +10,7 @@
 
 #include "include/index.h"
 
-#include "../Core/include/block.h"
+#include "../Core/include/supply.h"
 #include "../Core/include/checkpoints.h"
 
 
@@ -590,8 +590,8 @@ namespace LLD
 			Core::CBlock block;
 			if (!block.ReadFromDisk(pindex))
 				return error("LoadBlockIndex() : block.ReadFromDisk failed");
-				
-			if (nCheckLevel > 0 && !block.CheckBlock())
+
+			if (nCheckLevel > 0 && !Core::CheckBlock(&block))
 			{
 				printf("LoadBlockIndex() : *** found bad block at %d, hash=%s\n", pindex->nHeight, pindex->GetBlockHash().ToString().c_str());
 				pindexFork = pindex->pprev;
@@ -696,7 +696,7 @@ namespace LLD
 			if (!block.ReadFromDisk(pindexFork))
 				return error("LoadBlockIndex() : block.ReadFromDisk failed");
 			CIndexDB txdb;
-			block.SetBestChain(txdb, pindexFork);
+			Core::SetBestChain(txdb, pindexFork);
 		}
 
 		return true;
