@@ -131,7 +131,9 @@ namespace Core
 	/** BigNum Global Externals **/
 	extern CBigNum bnProofOfWorkLimit[];
 	extern CBigNum bnProofOfWorkStart[];
-	
+	extern CBigNum bnProofOfWorkLimitRegtest[];
+	extern CBigNum bnProofOfWorkStartRegtest[];
+
 	/** Chain Trust **/
 	extern uint64 nBestChainTrust;
 	

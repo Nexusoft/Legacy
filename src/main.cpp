@@ -237,6 +237,8 @@ bool AppInit2(int argc, char* argv[])
             "  -daemon          \t\t  " + _("Run in the background as a daemon and accept commands") + "\n" +
 #endif
             "  -testnet         \t\t  " + _("Use the test network") + "\n" +
+            "  -regtest         \t\t  " + _("Run nexus in regression test mode for lower difficulty, etc. For local code testing only.") + "\n" +
+            "  -istimeseed      \t\t  " + _("Advanced option. Use to set this as a dns time seed e.g. for bootstraping new test block chain.") + "\n" +
             "  -debug           \t\t  " + _("Output extra debugging information") + "\n" +
             "  -logtimestamps   \t  "   + _("Prepend debug output with timestamp") + "\n" +
             "  -printtoconsole  \t  "   + _("Send trace/debug info to console instead of debug.log file") + "\n" +
@@ -279,6 +281,8 @@ bool AppInit2(int argc, char* argv[])
     }
 
     fTestNet = GetBoolArg("-testnet", false);
+
+    fIsTimeSeed = GetBoolArg("-istimeseed", false);
 
     fDebug = GetBoolArg("-debug", false);
     Wallet::fDetachDB = GetBoolArg("-detachdb", false);
@@ -344,11 +348,16 @@ bool AppInit2(int argc, char* argv[])
 	InitMessage(_("Initializing LLD Keychains..."));
 	LLD::RegisterKeychain("blkindex", "blkindex");
 #endif
-	
-	InitMessage(_("Initializing Unified Time..."));
-	printf("Initializing Unified Time...\n");
-	InitializeUnifiedTime();
-	
+
+    if (GetBoolArg("-istimeseed",false)) {
+        printf("istimeseed flag set, not initializing unified time.");
+    }
+    else {
+        InitMessage(_("Initializing Unified Time..."));
+        printf("Initializing Unified Time...\n");
+        InitializeUnifiedTime();
+    }
+
 	if (!fDebug)
 		ShrinkDebugFile();
 	
@@ -607,11 +616,17 @@ bool AppInit2(int argc, char* argv[])
     //
     // Start the node
     //
-    
-	/** Wait for Unified Time if First Start. **/
-	while(!fTimeUnified)
-		Sleep(10);
-	
+
+    /** Wait for Unified Time if First Start. **/
+    if (GetBoolArg("-istimeseed",false)) {
+        printf("WARNING: -istimeseed Was set, not waiting for unified time.\n");
+    }
+    else {
+        printf("Waiting for unified time...\n");
+        while(!fTimeUnified)
+            Sleep(10);
+    }
+
 	/** Start sending Unified Samples. **/
 	if(GetBoolArg("-unified", false)) {
 		InitMessage(_("Initializing Core LLP..."));

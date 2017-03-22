@@ -323,8 +323,8 @@ namespace LLP
 			
 			
 			/** If There are no Active nodes, or it is Initial Block Download:
-				Send a failed response to the miners. **/
-			if(Net::vNodes.size() == 0 ) 
+				Send a failed response to the miners, unless this is a regression test. **/
+			if(!GetBoolArg("-regtest",false) && Net::vNodes.size() == 0 )
 			{ 
 				printf("%%%%%%%%%% Mining LLP: Rejected Request...No Connections\n"); return false; 
 			}

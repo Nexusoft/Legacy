@@ -75,9 +75,9 @@ const char* DNS_SeedNodes[] =
 };
 
 /** Declarations for the DNS Seed Nodes. **/
-const char* DNS_SeedNodes_Testnet[] = 
+const char* DNS_SeedNodes_Testnet[] =
 {
-	"test1.nexusoft.io"
+		"localhost"
 };
 
 /** Seed Nodes for Unified Time. **/
