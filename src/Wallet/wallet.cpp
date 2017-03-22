@@ -3,18 +3,16 @@
 			Hash(BEGIN(Satoshi[2010]), END(Sunny[2012])) == Videlicet[2014] ++
    
  [Learn and Create] Viz. http://www.opensource.org/licenses/mit-license.php
-  
+
 *******************************************************************************************/
 
 #include "wallet.h"
 #include "walletdb.h"
-#include "crypter.h"
 
 #include "../Core/include/manager.h"
 
 #include "../LLC/include/random.h"
 #include "../LLD/include/index.h"
-#include "../LLP/include/message.h"
 #include "../LLU/include/ui_interface.h"
 
 using namespace std;
@@ -1784,3 +1782,7 @@ namespace Wallet
 	}
 
 }
+
+
+/** 2017-03: Under review by bdg. **/
+

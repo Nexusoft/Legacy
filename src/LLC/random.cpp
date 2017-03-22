@@ -65,7 +65,7 @@ uint64 GetRand(uint64 nMax)
 
 int GetRandInt(int nMax)
 {
-    return GetRand(nMax);
+    return (int)GetRand(nMax);
 }
 
 /** For Script Support **/

@@ -3,8 +3,8 @@
 			Hash(BEGIN(Satoshi[2010]), END(Sunny[2012])) == Videlicet[2014] ++
    
  [Learn and Create] Viz. http://www.opensource.org/licenses/mit-license.php
-  
-*******************************************************************************************/
+
+ *******************************************************************************************/
 
 #ifndef NEXUS_WALLET_H
 #define NEXUS_WALLET_H
@@ -126,6 +126,7 @@ namespace Wallet
 		std::vector<unsigned char> vchDefaultKey;
 
 		// check whether we are allowed to upgrade (or already support) to the named feature
+		/* bdg note: CanSupportFeature is never used. */
 		bool CanSupportFeature(enum WalletFeature wf) { return nWalletMaxVersion >= wf; }
 
 		// keystore implementation
@@ -155,10 +156,13 @@ namespace Wallet
 		bool EraseFromWallet(uint512 hash);
 		void WalletUpdateSpent(const Core::CTransaction& prevout);
 		int ScanForWalletTransactions(Core::CBlockIndex* pindexStart, bool fUpdate = false);
+		/* bdg note: ScanForWalletTransaction is never used */
 		int ScanForWalletTransaction(const uint512& hashTx);
+		/* bdg note: ReacceptWalletTransactions is never used */
 		void ReacceptWalletTransactions();
 		void ResendWalletTransactions();
 		int64 GetBalance() const;
+		/* bdg note: GetUnconfirmedBalance is never used. */
 		int64 GetUnconfirmedBalance() const;
 		int64 GetStake() const;
 		int64 GetNewMint() const;
@@ -175,14 +179,17 @@ namespace Wallet
 
 		bool NewKeyPool();
 		bool TopUpKeyPool();
+		/* bdg note: AddReserveKey is never used. */
 		int64 AddReserveKey(const CKeyPool& keypool);
 		void ReserveKeyFromKeyPool(int64& nIndex, CKeyPool& keypool);
 		void KeepKey(int64 nIndex);
 		void ReturnKey(int64 nIndex);
 		bool GetKeyFromPool(std::vector<unsigned char> &key, bool fAllowReuse=true);
 		int64 GetOldestKeyPoolTime();
+		/* bdg note: GetAllReserveAddresses is never used. */
 		void GetAllReserveAddresses(std::set<NexusAddress>& setAddress);
 
+		/* bdg note: this version of IsMine is never used */
 		bool IsMine(const Core::CTxIn& txin) const;
 		int64 GetDebit(const Core::CTxIn& txin) const;
 		bool IsMine(const Core::CTxOut& txout) const
@@ -252,6 +259,7 @@ namespace Wallet
 
 		bool SetAddressBookName(const NexusAddress& address, const std::string& strName);
 
+		/* bdg note: this is never used. */
 		bool DelAddressBookName(const NexusAddress& address);
 
 		void UpdatedTransaction(const uint512 &hashTx)
@@ -276,7 +284,7 @@ namespace Wallet
 
 		int GetKeyPoolSize()
 		{
-			return setKeyPool.size();
+			return (int)setKeyPool.size();
 		}
 
 		bool GetTransaction(const uint512 &hashTx, CWalletTx& wtx);
@@ -284,9 +292,11 @@ namespace Wallet
 		bool SetDefaultKey(const std::vector<unsigned char> &vchPubKey);
 
 		// signify that a particular wallet feature is now used. this may change nWalletVersion and nWalletMaxVersion if those are lower
+		/* bdg note: this is never used. */
 		bool SetMinVersion(enum WalletFeature, CWalletDB* pwalletdbIn = NULL, bool fExplicit = false);
 
 		// change which version we're allowed to upgrade to (note that this does not immediately imply upgrading to that format)
+		/* bdg note: this is never used. */
 		bool SetMaxVersion(int nVersion);
 
 		// get the current wallet format (the oldest client version guaranteed to understand this wallet)
@@ -335,7 +345,7 @@ namespace Wallet
 		std::vector<Core::CMerkleTx> vtxPrev;
 		std::map<std::string, std::string> mapValue;
 		std::vector<std::pair<std::string, std::string> > vOrderForm;
-		unsigned int fTimeReceivedIsTxTime;
+		bool fTimeReceivedIsTxTime;
 		unsigned int nTimeReceived;  // time received by this node
 		char fFromMe;
 		std::string strFromAccount;
@@ -344,11 +354,11 @@ namespace Wallet
 		// memory only
 		mutable bool fDebitCached;
 		mutable bool fCreditCached;
-		mutable bool fAvailableCreditCached;
+		mutable bool fAvailableCreditCached; // bdg note: never accessed
 		mutable bool fChangeCached;
 		mutable int64 nDebitCached;
 		mutable int64 nCreditCached;
-		mutable int64 nAvailableCreditCached;
+		mutable int64 nAvailableCreditCached; // bdg note: never accessed
 		mutable int64 nChangeCached;
 
 		CWalletTx()
@@ -499,10 +509,12 @@ namespace Wallet
 
 		bool IsSpent(unsigned int nOut) const
 		{
+			/* bdg question: why are there two checks here? only vfSpent is used. */
 			if (nOut >= vout.size())
 				throw std::runtime_error("CWalletTx::IsSpent() : nOut out of range");
 			if (nOut >= vfSpent.size())
 				return false;
+			/* bdg question: why are there two '!' */
 			return (!!vfSpent[nOut]);
 		}
 
@@ -538,6 +550,7 @@ namespace Wallet
 			if ((IsCoinBase() || IsCoinStake()) && GetBlocksToMaturity() > 0)
 				return 0;
 
+			/* bdg question: why is caching turned off here? */
 			//if (fUseCache && fAvailableCreditCached)
 			//	return nAvailableCreditCached;
 
@@ -559,6 +572,7 @@ namespace Wallet
 		}
 
 
+		/* bdg note: this is never used. */
 		int64 GetChange() const
 		{
 			if (fChangeCached)
@@ -568,6 +582,7 @@ namespace Wallet
 			return nChangeCached;
 		}
 
+		/* bdg note: this is not implemented */
 		void GetAmounts(int64& nGeneratedImmature, int64& nGeneratedMature, std::list<std::pair<NexusAddress, int64> >& listReceived,
 						std::list<std::pair<NexusAddress, int64> >& listSent, int64& nFee, std::string& strSentAccount) const;
 
@@ -594,11 +609,12 @@ namespace Wallet
 			std::map<uint512, const Core::CMerkleTx*> mapPrev;
 			std::vector<const Core::CMerkleTx*> vWorkQueue;
 			vWorkQueue.reserve(vtxPrev.size()+1);
-			vWorkQueue.push_back(this);
-			
+			const Core::CMerkleTx* txThis = this;
+			vWorkQueue.push_back(txThis);
+
 			for (unsigned int i = 0; i < vWorkQueue.size(); i++)
 			{
-				const CMerkleTx* ptx = vWorkQueue[i];
+				const Core::CMerkleTx* ptx = vWorkQueue[i];
 
 				if (!ptx->IsFinal())
 					return false;
@@ -626,12 +642,12 @@ namespace Wallet
 		bool WriteToDisk();
 
 		int64 GetTxTime() const;
-		int GetRequestCount() const;
+		int GetRequestCount() const; // bdg note: this is never used
 
 		void AddSupportingTransactions(LLD::CIndexDB& indexdb);
 
 		bool AcceptWalletTransaction(LLD::CIndexDB& indexdb, bool fCheckInputs=true);
-		bool AcceptWalletTransaction();
+		bool AcceptWalletTransaction(); // bdg note: this is never used
 
 		void RelayWalletTransaction(LLD::CIndexDB& indexdb);
 		void RelayWalletTransaction();
@@ -765,8 +781,11 @@ namespace Wallet
 		)
 	};
 
+	/* bdg note: this is never used */
 	bool GetWalletFile(CWallet* pwallet, std::string &strWalletFileOut);
 
 }
+
+/** 2017-03: Reviewed by bdg. **/
 
 #endif

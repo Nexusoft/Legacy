@@ -27,7 +27,7 @@
 #include <boost/tuple/tuple_io.hpp>
 
 #include "../include/allocators.h"
-#include "../Core/include/version.h"
+#include "../../Core/include/version.h"
 
 #include "../../LLC/hash/SK.h"
 
