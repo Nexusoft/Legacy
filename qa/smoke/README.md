@@ -1,6 +1,25 @@
-# Nexus smoke testing info.
+# Public Testnet Info
 
-The scripts in this directory are designed help you smoke test nexus locally.
+To run a node against the public testnet, you should build nexus from
+scratch using this version of the codebase.
+
+Then, you can use the script named
+
+public-testnet-setup.sh
+
+It will output information on where it puts the config files and how to run it.
+
+Alternatively, you can place the file called
+
+examples/nexus.conf.publictestnet
+
+in your ~/.Nexus/ directory.
+
+If you choose to do this be careful not to run any other instances of nexus on this computer.
+
+# Local Nexus smoke testing info.
+
+The other scripts in this directory are designed help you smoke test nexus locally.
 
 ## Prereq: Install the CPU mining code
 
