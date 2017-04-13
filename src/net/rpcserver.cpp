@@ -1706,6 +1706,80 @@ namespace Net
 		return entry;
 	}
 
+	//
+	// Raw transactions
+	//
+	Value getrawtransaction(const Array& params, bool fHelp)
+	{
+		if (fHelp || params.size() != 1)
+			throw runtime_error(
+				"getrawtransaction <txid>\n"
+				"Returns a string that is serialized,\n"
+				"hex-encoded data for <txid>.");
+
+		uint512 hash;
+		hash.SetHex(params[0].get_str());
+
+		Core::CTransaction tx;
+		uint1024 hashBlock = 0;
+		if (!Core::GetTransaction(hash, tx, hashBlock))
+			throw JSONRPCError(-5, "No information available about transaction");
+
+		CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
+		ssTx << tx;
+		return HexStr(ssTx.begin(), ssTx.end());
+	}
+
+	Value sendrawtransaction(const Array& params, bool fHelp)
+	{
+		if (fHelp || params.size() < 1 || params.size() > 2)
+			throw runtime_error(
+				"sendrawtransaction <hex string> [checkinputs=0]\n"
+				"Submits raw transaction (serialized, hex-encoded) to local node and network.\n"
+				"If checkinputs is non-zero, checks the validity of the inputs of the transaction before sending it.");
+
+		// parse hex string from parameter
+		vector<unsigned char> txData(ParseHex(params[0].get_str()));
+		CDataStream ssData(txData, SER_NETWORK, PROTOCOL_VERSION);
+		bool fCheckInputs = false;
+		if (params.size() > 1)
+			fCheckInputs = (params[1].get_int() != 0);
+		Core::CTransaction tx;
+
+		// deserialize binary data stream
+		try {
+			ssData >> tx;
+		}
+		catch (std::exception &e) {
+			throw JSONRPCError(-22, "TX decode failed");
+		}
+		uint512 hashTx = tx.GetHash();
+
+		// See if the transaction is already in a block
+		// or in the memory pool:
+		Core::CTransaction existingTx;
+		uint1024 hashBlock = 0;
+		if (Core::GetTransaction(hashTx, existingTx, hashBlock))
+		{
+			if (hashBlock != 0)
+				throw JSONRPCError(-5, string("transaction already in block ")+hashBlock.GetHex());
+			// Not in block, but already in the memory pool; will drop
+			// through to re-relay it.
+		}
+		else
+		{
+			// push to local node
+			LLD::CIndexDB txdb("r");
+			if (!tx.AcceptToMemoryPool(txdb, fCheckInputs))
+				throw JSONRPCError(-22, "TX rejected");
+
+			SyncWithWallets(tx, NULL, true);
+		}
+		RelayMessage(CInv(MSG_TX, hashTx), tx);
+
+		return hashTx.GetHex();
+	}
+
 
 	Value backupwallet(const Array& params, bool fHelp)
 	{
@@ -2367,6 +2441,8 @@ namespace Net
 		{ "getblock",               &getblock,               false },
 		{ "getblockhash",           &getblockhash,           false },
 		{ "gettransaction",         &gettransaction,         false },
+		{ "getrawtransaction",      &getrawtransaction,      false },
+		{ "sendrawtransaction",     &sendrawtransaction,     false },
 		{ "getglobaltransaction",   &getglobaltransaction,   false },
 		{ "getaddressbalance",   	&getaddressbalance,   	 false },
 		{ "dumprichlist",   	    &dumprichlist,		   	 false },
