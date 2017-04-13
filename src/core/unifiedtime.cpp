@@ -209,7 +209,7 @@ void ThreadUnifiedSamples(void* parg)
 			/** Read the Samples from the Server. **/
 			while(SERVER.Connected() && !SERVER.Errors() && !SERVER.Timeout(5))
 			{
-				Sleep(1);
+				Sleep(100);
 			
 				SERVER.ReadPacket();
 				if(SERVER.PacketComplete())
