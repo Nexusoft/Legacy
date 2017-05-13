@@ -72,12 +72,15 @@ const char* DNS_SeedNodes[] =
 	"node13.nexusearth.com",
 	"node13.mercuryminer.com",
 	"node13.nxs.efficienthash.com",
+	'\0'
 };
 
 /** Declarations for the DNS Seed Nodes. **/
 const char* DNS_SeedNodes_Testnet[] =
 {
-		"localhost"
+		"nexustestnet.cryptocurrency.ninja",
+		"nexustestnet03.cryptocurrency.ninja",
+		'\0'
 };
 
 /** Seed Nodes for Unified Time. **/
@@ -206,7 +209,7 @@ void ThreadUnifiedSamples(void* parg)
 			/** Read the Samples from the Server. **/
 			while(SERVER.Connected() && !SERVER.Errors() && !SERVER.Timeout(5))
 			{
-				Sleep(1);
+				Sleep(100);
 			
 				SERVER.ReadPacket();
 				if(SERVER.PacketComplete())
@@ -303,9 +306,11 @@ void ThreadUnifiedSamples(void* parg)
 vector<Net::CAddress> DNS_Lookup(const char* DNS_Seed[])
 {
 	vector<Net::CAddress> vNodes;
-    for (unsigned int seed = 0; seed < (fTestNet ? 1 : 41); seed++)
+	int scount = 0;
+	for (int seed = 0; DNS_Seed[seed] != '\0'; seed++)
 	{
 		printf("%u Host: %s\n", seed, DNS_Seed[seed]);
+		scount++;
         vector<Net::CNetAddr> vaddr;
         if (Net::LookupHost(DNS_Seed[seed], vaddr))
         {
@@ -319,6 +324,7 @@ vector<Net::CAddress> DNS_Lookup(const char* DNS_Seed[])
 				Net::addrman.Add(addr, ip, true);
             }
         }
+	printf("DNS Seed Count: %d\n",scount);
     }
 	
 	return vNodes;

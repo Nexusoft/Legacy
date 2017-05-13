@@ -34,6 +34,9 @@
 #
 # To run nexus against mainnet use
 #  NEXUS_TEST_MAIN=1 ./run-start-nexus-test.sh
+#
+# To run nexus against the public testnet use
+#  NEXUS_TEST_PUBLIC=1 ./run-start-nexus-test.sh
 
 set -o pipefail  # trace ERR through pipes
 set -o errtrace  # trace ERR through 'time command' and other functions
@@ -77,6 +80,14 @@ then
     NEXUS_CONF=${NEXUS_DATADIR}/nexus.conf
     NEXUS_DEBUG_LOG=${NEXUS_DATADIR}/debug.log
     NEXUS_LOCK=${NEXUS_DATADIR}/.lock
+fi
+if [[ "${NEXUS_TEST_PUBLIC:-}" == 1 ]]
+then
+    NEXUS_TEST_TESTNET=1
+    NEXUS_DATADIR=${NEXUS_DATADIR_BASE}/pubtestnet${NEXUS_TEST_NODE_NUM}
+    NEXUS_CONF=${NEXUS_DATADIR}/nexus.conf
+    NEXUS_DEBUG_LOG=${NEXUS_DATADIR}/testnet25/debug.log
+    NEXUS_LOCK=${NEXUS_DATADIR}/testnet25/.lock
 fi
 NEXUS_START_SH=${NEXUS_DATADIR}/run-test-nexus.sh
 NEXUS_TEST_STORAGE=${NEXUS_DATADIR_BASE}/persiststorage
@@ -140,7 +151,27 @@ echo "Writing/ensuring nexus.conf exists."
 
 if ! ls ${NEXUS_CONF} 2>&1 >/dev/null
 then
-    if [[ "${NEXUS_TEST_TESTNET:-}" == "1" ]]
+    if [[ "${NEXUS_TEST_PUBLIC:-}" == "1" ]]
+    then
+        echo "testnet=1" >> ${NEXUS_CONF}
+        echo "stake=1" >> ${NEXUS_CONF}
+        echo "istimeseed=0" >> ${NEXUS_CONF}
+        echo "unified=1" >> ${NEXUS_CONF}
+        echo "llpallowip=*:8329" >> ${NEXUS_CONF}
+        echo "llpallowip=*.*.*.*:8329" >> ${NEXUS_CONF}
+        echo "llpallowip=127.0.0.1:8329" >> ${NEXUS_CONF}
+        echo "port=8313" >> ${NEXUS_CONF}
+        echo "checklevel=0" >> ${NEXUS_CONF}
+        echo "checkbolcks=1" >> ${NEXUS_CONF}
+        echo "verbose=4" >> ${NEXUS_CONF}
+        echo "debug=1" >> ${NEXUS_CONF}
+        echo "server=1" >> ${NEXUS_CONF}
+        echo "listen=1" >> ${NEXUS_CONF}
+        echo "mining=1" >> ${NEXUS_CONF}
+        echo "rpcuser=therpcuser" >> ${NEXUS_CONF}
+        echo "rpcpassword=CHANGETHISlksdjfsljdf" >> ${NEXUS_CONF}
+        echo "rpcallowip=127.0.0.1" >> ${NEXUS_CONF}
+    elif [[ "${NEXUS_TEST_TESTNET:-}" == "1" ]]
     then
         echo "testnet=1" >> ${NEXUS_CONF}
         echo "regtest=1" >> ${NEXUS_CONF}
@@ -157,7 +188,6 @@ then
             echo "rpcuser=therpcuser1" >> ${NEXUS_CONF}
             echo "rpcpassword=CHANGEME89uhij4903i4ij" >> ${NEXUS_CONF}
             echo "rpcallowip=127.0.0.1" >> ${NEXUS_CONF}
-            echo "daemon=0" >> ${NEXUS_CONF}
             echo "listen=1" >> ${NEXUS_CONF}
             echo "stake=0" >> ${NEXUS_CONF}
             echo "server=1" >> ${NEXUS_CONF}
@@ -174,7 +204,6 @@ then
             echo "rpcuser=therpcuser2" >> ${NEXUS_CONF}
             echo "rpcpassword=CHANGEME89uhij4903i4ij" >> ${NEXUS_CONF}
             echo "rpcallowip=127.0.0.1" >> ${NEXUS_CONF}
-            echo "daemon=0" >> ${NEXUS_CONF}
             echo "listen=1" >> ${NEXUS_CONF}
             echo "stake=1" >> ${NEXUS_CONF}
             echo "server=0" >> ${NEXUS_CONF}
