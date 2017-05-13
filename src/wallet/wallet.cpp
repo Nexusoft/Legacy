@@ -803,9 +803,11 @@ namespace Wallet
 
 		// Only do it if there's been a new block since last time
 		static int64 nLastTime;
+		nLastTime = GetUnifiedTimestamp();
 		if (Core::nTimeBestReceived < nLastTime)
 			return;
-		nLastTime = GetUnifiedTimestamp();
+
+		int resendTimeout = GetArg("-resendtimeout",3600);
 
 		// Rebroadcast any of our txes that aren't in a block yet
 		printf("ResendWalletTransactions()\n");
@@ -826,7 +828,18 @@ namespace Wallet
 			{
 				CWalletTx& wtx = *item.second;
 				if (wtx.CheckTransaction())
+				{
+					// If the transaction is older than the resend timeout, forget about it. User will have to send it again.
+					if (     !wtx.IsCoinBase() && !wtx.IsCoinStake()
+					      && ( Core::nTimeBestReceived - (int64)wtx.nTimeReceived > resendTimeout )
+					      && !indexdb.ContainsTx(wtx.GetHash()) )
+					{
+						printf("ResendWalletTransactions() : transaction was older than timeout limit, not sending.\n");
+						EraseFromWallet(wtx.GetHash());
+						continue;
+					}
 					wtx.RelayWalletTransaction(indexdb);
+				}
 				else
 					printf("ResendWalletTransactions() : CheckTransaction failed for transaction %s\n", wtx.GetHash().ToString().c_str());
 			}

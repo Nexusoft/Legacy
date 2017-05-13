@@ -175,6 +175,9 @@ then
     then
         echo "testnet=1" >> ${NEXUS_CONF}
         echo "regtest=1" >> ${NEXUS_CONF}
+        echo "banscore=64000" >> ${NEXUS_CONF}
+        echo "bantime=1" >> ${NEXUS_CONF}
+        echo "resendtimeout=1" >> ${NEXUS_CONF}
         if [[ "${NEXUS_TEST_NODE_NUM:-}" == "1" ]]
         then
             echo "Setting istimeseed=1 in nexus.conf for the first node only."
