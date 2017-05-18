@@ -17,6 +17,30 @@ in your ~/.Nexus/ directory.
 
 If you choose to do this be careful not to run any other instances of nexus on this computer.
 
+# Docker
+
+You can run a test environment using Docker.
+
+Change into the directory containing Dockerfile.test - this is currently the root directory of this project (two levels down from this readme).
+
+To build:
+
+```Bash
+docker build -t nexus-test-build -f Dockerfile.test .
+```
+
+To run:
+
+```Bash
+docker run -it  nexus-test-build bash
+```
+
+From inside, run this command to start two nexus daemons and the prime solo miner:
+
+```Bash
+/bin/bash /home/dev/code/Nexus/qa/smoke/start-local-testnet.sh
+```
+
 # Local Nexus smoke testing info.
 
 The other scripts in this directory are designed help you smoke test nexus locally.
