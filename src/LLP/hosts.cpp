@@ -12,7 +12,7 @@
 #include <vector>
 #include <boost/foreach.hpp>
 
-#include "../LLU/include/strlcpy.h"
+#include "../Util/include/strlcpy.h"
 
 namespace LLP
 {

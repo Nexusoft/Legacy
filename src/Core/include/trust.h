@@ -11,9 +11,9 @@
 #ifndef NEXUS_CORE_INCLUDE_TRUST_H
 #define NEXUS_CORE_INCLUDE_TRUST_H
 
-#include "../../LLU/templates/serialize.h"
-#include "../../LLU/include/mutex.h"
-#include "../../LLU/include/runtime.h"
+#include "../../Util/templates/serialize.h"
+#include "../../Util/include/mutex.h"
+#include "../../Util/include/runtime.h"
 
 
 #include "../../LLC/hash/SK.h"

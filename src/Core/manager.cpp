@@ -9,9 +9,37 @@
 *******************************************************************************************/
 
 #include "include/manager.h"
+#include "include/hosts.h"
 
 namespace Core
 {
+        
+
+	void NodeManager::Start()
+	{
+        pServer = new LLP::Server<LLP::CNode>(9323, 5, true, 2, 50, 30, 30, true, true);
+        
+		std::vector<LLP::CAddress> vSeeds    = LLP::DNS_Lookup(fTestNet ? LLP::DNS_SeedNodes_Testnet : LLP::DNS_SeedNodes);
+        for(int nIndex = 0; nIndex < vSeeds.size(); nIndex++)
+            AddAddress(vSeeds[nIndex]);
+        
+	}
+	
+	void NodeManager::AddAddress(LLP::CAddress cAddress)
+    {
+        LOCK(MANAGER_MUTEX);
+        
+        vNew.push_back(cAddress);
+    }
+	
+	
+	void NodeManager::AddNode(LLP::CNode* pnode)
+	{
+		LOCK(MANAGER_MUTEX);
+		
+		vNodes.push_back(pnode);
+	}
+
 	
 	void NodeManager::TimestampManager()
 	{
@@ -39,77 +67,62 @@ namespace Core
 	
 	void NodeManager::ConnectionManager()
 	{
-		
-		/* TODO: Search through all added connections and attempt to make connections withup to max_connection_count nodes. */
-		
+        while(!fShutdown)
+        {
+            if(vNodes.size() == 0){
+                Sleep(1000);
+                
+                continue;
+            }
+            
+        }
 	}
 	
 	
+	/* Blocks are checked in the order they are recieved. */
 	void NodeManager::BlockProcessor()
 	{
-		
-		/* TODO: Handle a loop of the block queue to handle block processing.
-		
-		// Check for duplicate
-		uint1024 hash = pblock->GetHash();
-		if (mapBlockIndex.count(hash))
-			return error("ProcessBlock() : already have block %d %s", mapBlockIndex[hash]->nHeight, hash.ToString().substr(0,20).c_str());
-		if (mapOrphanBlocks.count(hash))
-			return error("ProcessBlock() : already have block (orphan) %s", hash.ToString().substr(0,20).c_str());
-
-		// Preliminary checks
-		if (!pblock->CheckBlock())
-			return error("ProcessBlock() : CheckBlock FAILED");
-		
-
-		// If don't already have its previous block, shunt it off to holding area until we get it
-		if (!mapBlockIndex.count(pblock->hashPrevBlock))
-		{
-			if(GetArg("-verbose", 0) >= 0)
-				printf("ProcessBlock: ORPHAN BLOCK, prev=%s\n", pblock->hashPrevBlock.ToString().substr(0,20).c_str());
-			
-			CBlock* pblock2 = new CBlock(*pblock);
-			mapOrphanBlocks.insert(make_pair(hash, pblock2));
-			mapOrphanBlocksByPrev.insert(make_pair(pblock2->hashPrevBlock, pblock2));
-            if(pfrom)
-                pfrom->PushGetBlocks(pindexBest, 0);
-			
-			return true;
-		}
-
-		// Store to disk
-		if (!pblock->AcceptBlock())
-			return error("ProcessBlock() : AcceptBlock FAILED");
-
-
-		// Recursively process any orphan blocks that depended on this one
-		vector<uint1024> vWorkQueue;
-		vWorkQueue.push_back(hash);
-		for (unsigned int i = 0; i < vWorkQueue.size(); i++)
-		{
-			uint1024 hashPrev = vWorkQueue[i];
-			for (multimap<uint1024, CBlock*>::iterator mi = mapOrphanBlocksByPrev.lower_bound(hashPrev);
-				 mi != mapOrphanBlocksByPrev.upper_bound(hashPrev);
-				 ++mi)
-			{
-				CBlock* pblockOrphan = (*mi).second;
-				if (pblockOrphan->AcceptBlock())
-					vWorkQueue.push_back(pblockOrphan->GetHash());
-					
-				mapOrphanBlocks.erase(pblockOrphan->GetHash());
-				delete pblockOrphan;
-			}
-			mapOrphanBlocksByPrev.erase(hashPrev);
-		}
-
-		printg("ProcessBlock: ACCEPTED %s\n", pblock->GetHash().ToString().substr(0, 10).c_str());
-		*/
+        while(!fShutdown)
+        {
+            if(vNodes.size() == 0){
+                Sleep(1000);
+                
+                continue;
+            }
+            
+            
+            /* Loop the queues of the nodes that are currently connected. */
+            for(int nIndex = 0; nIndex < vNodes.size(); nIndex++)
+            {
+                Sleep(1);
+                
+                { LOCK(MANAGER_MUTEX);
+                
+                    /* If there are no blocks in the queue continue on the loop. */
+                    if(vNodes[nIndex]->queueBlocks.size() == 0)
+                        continue;
+                
+                    /* Extract the block from the queue. */
+                    CBlock* pblock = &vNodes[nIndex]->queueBlocks.front();
+                    vNodes[nIndex]->queueBlocks.pop();
+                
+                    /* Check the Block. */
+                    if (!CheckBlock(pblock, vNodes[nIndex]))
+                        continue;
+                    
+                    /* Accept the Block. */
+                    if (!AcceptBlock(pblock, vNodes[nIndex]))
+                        continue;
+                
+                }
+            }
+        }
 	}
 	
+	/*
 	
 	void NodeManager::TransactionManager()
 	{
-		/* TODO: FINISH			
 		vector<uint512> vWorkQueue;
 		vector<uint512> vEraseQueue;
 				
@@ -183,7 +196,6 @@ namespace Core
 						printf("mapOrphan overflow, removed %u tx\n", nEvicted);
 			}	
 		}
-		
-		*/
 	}
+	*/
 }

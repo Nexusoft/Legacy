@@ -15,8 +15,10 @@
 #include "../LLC/include/random.h"
 #include "../LLD/include/index.h"
 
-#include "../LLU/include/args.h"
-#include "../LLU/include/hex.h"
+#include "../Util/include/args.h"
+#include "../Util/include/hex.h"
+
+#include "../main.h"
 
 
 namespace LLP
@@ -85,7 +87,7 @@ namespace LLP
 		/** Handle any DDOS Packet Filters. **/
 		if(EVENT == EVENT_HEADER)
 		{
-			if(GetArg("-verbose", 0) >= 3)
+			if(GetArg("-verbose", 0) >= 4)
 				printf("***** Node recieved Message (%s, %u)\n", INCOMING.GetMessage().c_str(), INCOMING.LENGTH);
 					
 			if(fDDOS)
@@ -94,6 +96,11 @@ namespace LLP
 				/* Give higher DDOS score if the Node happens to try to send multiple version messages. */
 				if (INCOMING.GetMessage() == "version" && nCurrentVersion != 0)
 					DDOS->rSCORE += 25;
+				
+				
+				/* Check the Packet Sizes to Unified Time Commands. */
+				if((INCOMING.GetMessage() == "getoffset" || INCOMING.GetMessage() == "offset") && INCOMING.LENGTH != 16)
+					DDOS->Ban(strprintf("INVALID PACKET SIZE | OFFSET/GETOFFSET | LENGTH %u", INCOMING.LENGTH));
 			}
 			
 			return;
@@ -102,18 +109,20 @@ namespace LLP
 		/** Handle for a Packet Data Read. **/
 		if(EVENT == EVENT_PACKET)
 		{
-			if(GetArg("-verbose", 0) >= 3)
-				printf("***** Node Read Data for Message (%s, %u)\n", INCOMING.GetMessage().c_str(), LENGTH);
+			if(GetArg("-verbose", 0) >= 5)
+				printf("***** Node Read Data for Message (%s, %u, %s)\n", INCOMING.GetMessage().c_str(), LENGTH, INCOMING.Complete() ? "TRUE" : "FALSE");
 					
 			/* Check a packet's validity once it is finished being read. */
 			if(fDDOS) {
 
 				/* Give higher score for Bad Packets. */
-				if(INCOMING.Complete() && !INCOMING.IsValid())
+				if(INCOMING.Complete() && !INCOMING.IsValid()){
+					
+					if(GetArg("-verbose", 0) >= 3)
+						printf("***** Dropped Packet (Complete: %s - Valid: %s)\n", INCOMING.Complete() ? "Y" : "N" , INCOMING.IsValid() ? "Y" : "N" );
+					
 					DDOS->rSCORE += 15;
-				
-				if((INCOMING.GetMessage() == "getoffset" || INCOMING.GetMessage() == "offset") && INCOMING.LENGTH != 16)
-					DDOS->Ban(strprintf("INVALID PACKET SIZE | OFFSET/GETOFFSET | LENGTH %u", INCOMING.LENGTH));
+				}
 
 			}
 				
@@ -126,8 +135,11 @@ namespace LLP
 		 */
 		if(EVENT == EVENT_GENERIC)
 		{
-			if(Timeout(5)) {
+			if(nLastPing + 10 < Core::UnifiedTimestamp()) {
 				RAND_bytes((unsigned char*)&nSessionID, sizeof(nSessionID));
+				
+				nLastPing = Core::UnifiedTimestamp();
+				cLatencyTimer.Reset();
 				
 				PushMessage("ping", nSessionID);
 			}
@@ -141,9 +153,8 @@ namespace LLP
 			if(GetArg("-verbose", 0) >= 1)
 				printf("***** %s Node %s Connected at Timestamp %" PRIu64 "\n", fOUTGOING ? "Ougoing" : "Incoming", addrThisNode.ToString().c_str(), Core::UnifiedTimestamp());
 			
-			if(fOUTGOING) {
+			if(fOUTGOING)
 				PushVersion();
-			}
 			
 			return;
 		}	
@@ -187,8 +198,7 @@ namespace LLP
 				
 			if(GetArg("-verbose", 0) >= 3)
 				printf("***** Node: Sent Offset %i | %s | Unified %" PRIu64 "\n", nOffset, addrThisNode.ToString().c_str(), Core::UnifiedTimestamp());
-			
-			return true;
+
 		}
 		
 		/* Recieve a Time Offset from this Node. */
@@ -247,8 +257,6 @@ namespace LLP
 				/* Remove the Request from the Map. */
 				mapSentRequests.erase(nRequestID);
 			}
-			
-			return true;
 		}
 		
 		/* Push a transaction into the Node's Recieved Transaction Queue. */
@@ -258,24 +266,48 @@ namespace LLP
 			/* Deserialize the Transaction. */
 			Core::CTransaction tx;
 			ssMessage >> tx;
-			
-			if(GetArg("-verbose", 0) >= 3)
-				printf("received transaction %s\n", tx.GetHash().ToString().substr(0,20).c_str());
-				
-			
-			if(GetArg("-verbose", 0) >= 4)
-				tx.print();
-
-			
-			/* Add the Block to the Process Queue. */
-			{  LOCK(NODE_MUTEX);
-				CInv inv(MSG_TX, tx.GetHash());
-				AddInventoryKnown(inv);
-			
-				queueTransaction.push(tx);
+            
+            
+            /* De-Serialize the Request ID. 
+             TODO: Check Request ID's and Relay KEYS. */
+			if(nCurrentVersion > 20000)
+			{
+				unsigned int nRequestID;
+				ssMessage >> nRequestID;
 			}
 			
-			return true;
+			
+			/* Don't double process what one already has. */
+			if(!pInvManager->Has(tx.GetHash()))
+                return true;
+            
+            
+            /* Valid Transaction. */
+            bool fMissingInputs = false;
+            
+            LLD::CIndexDB indexdb("r");
+            if (tx.AcceptToMemoryPool(indexdb, true, &fMissingInputs))
+                pInvManager->Set(tx.GetHash(), pInvManager->ACCEPTED);
+            
+            
+            /* Orphaned Transaction. */
+            else if (fMissingInputs)
+                pInvManager->Set(tx.GetHash(), pInvManager->ORPHANED);
+            
+            
+            /* Invalid Transaction. */
+            else
+                pInvManager->Set(tx.GetHash(), pInvManager->INVALID);
+            
+            
+            /* Level 3 Debugging: Output Protocol Messages. */
+            if(GetArg("-verbose", 0) >= 3)
+                printf("received transaction %s\n", tx.GetHash().ToString().substr(0,20).c_str());
+				
+            
+            /* Level 4 Debugging: Output Raw Data Dumps. */
+			if(GetArg("-verbose", 0) >= 4)
+				tx.print();
 		}
 
 
@@ -285,31 +317,35 @@ namespace LLP
 			Core::CBlock block;
 			ssMessage >> block;
 			
-			/* De-Serialize the Request ID. */
+            
+			/* De-Serialize the Request ID. 
+             TODO: Check Request ID's and Relay KEYS. */
 			if(nCurrentVersion > 20000)
 			{
 				unsigned int nRequestID;
 				ssMessage >> nRequestID;
 			}
-			
-			if(GetArg("-verbose", 0) >= 3)
-				printf("received block %s\n", block.GetHash().ToString().substr(0,20).c_str());
-				
+            
+            
+            /* Check for Duplicates. */
+            uint1024 hashBlock = block.GetHash();
+            if(pInvManager->Has(hashBlock))
+                return true;
+            
+            /* Add to Inventory. */
+            pInvManager->Set(hashBlock);
+            
+            /* Add the Block to the Process Queue. */
+			{  LOCK(NODE_MUTEX);
+				queueBlocks.push(block);
+			}
+            
+            if(GetArg("-verbose", 0) >= 3)
+            printf("received block %s\n", block.GetHash().ToString().substr(0,20).c_str());
+            
 			if(GetArg("-verbose", 0) >= 4)
 				block.print();
-
-			/* Add the Block to the Process Queue. */
-			{  LOCK(NODE_MUTEX);
-				CInv inv(MSG_BLOCK, block.GetHash());
-				AddInventoryKnown(inv);
-			
-				queueBlock.push(block);
-			}
-			
-			//if (Core::ProcessBlock(pfrom, &block))
-			//	Net::mapAlreadyAskedFor.erase(inv);
-			
-			return true;
+            
 		}
 		
 		
@@ -323,8 +359,6 @@ namespace LLP
 			cLatencyTimer.Start();
 				
 			PushMessage("pong", nonce);
-			
-			return true;
 		}
 		
 		
@@ -336,7 +370,7 @@ namespace LLP
 			nNodeLatency = cLatencyTimer.ElapsedMilliseconds();
 			cLatencyTimer.Reset();
 			
-			return true;
+			printf("***** Node Latency (%u ms)\n", nNodeLatency);
 		}
 		
 			
@@ -355,10 +389,14 @@ namespace LLP
 		 */
 		else if (INCOMING.GetMessage() == "version")
 		{
+			
 			int64 nTime;
 			CAddress addrMe;
 			CAddress addrFrom;
 			uint64 nServices = 0;
+			
+			if(GetArg("-verbose", 0) >= 1)
+				printf("***** Node version message: version %d, blocks=%d\n", nCurrentVersion, nStartingHeight);
 			
 				
 			/* Check the Protocol Versions */
@@ -370,6 +408,9 @@ namespace LLP
 					
 				return false;
 			}
+			
+			/* Send the Version Response to ensure communication channel is open. */
+			PushMessage("verack");
 			
 			if(GetArg("-verbose", 0) >= 1)
 				printf("***** Node version message: version %d, blocks=%d\n", nCurrentVersion, nStartingHeight);
@@ -384,13 +425,10 @@ namespace LLP
 
 				/* Add to the Majority Peer Block Count. */
 				Core::cPeerBlockCounts.Add(nStartingHeight);
-				
-				PushMessage("verack");
 			}
-			else
-				PushVersion();
-
-			return true;
+			//else
+			
+			PushMessage("getblocks", Core::CBlockLocator(Core::pindexBest), uint1024(0));
 		}
 
 		
@@ -432,6 +470,9 @@ namespace LLP
 			std::vector<CInv> vInv;
 			ssMessage >> vInv;
 			
+			if(GetArg("-verbose", 0) >= 3)
+				printf("***** Inventory Message of %u elements\n", vInv.size());
+			
 			/* Make sure the inventory size is not too large. */
 			if (vInv.size() > 50000)
 			{
@@ -442,6 +483,7 @@ namespace LLP
 
 			/* Check through all the new inventory and decide what to do with it. */
 			LLD::CIndexDB indexdb("r");
+			std::vector<CInv> vInvNew;
 			for (int i = 0; i < vInv.size(); i++)
 			{
 				{
@@ -455,14 +497,18 @@ namespace LLP
 				if(GetArg("-verbose", 0) >= 3)
 					printf("***** Node recieved inventory: %s  %s\n", vInv[i].ToString().c_str(), fAlreadyHave ? "have" : "new");
 
-				if (!fAlreadyHave)
-					PushMessage("getdata", vInv[i]);
+				if (!fAlreadyHave) {
+					vInvNew.push_back(vInv[i]);
+				}
 			}
 			
+			PushMessage("getdata", vInvNew);
 		}
 
 		
-		/* Get the Data for a Specific Command. */
+		/* Get the Data for a Specific Command. 
+         TODO: Expand this for the data types. 
+         */
 		else if (INCOMING.GetMessage() == "getdata")
 		{
 			std::vector<CInv> vInv;

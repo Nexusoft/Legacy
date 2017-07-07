@@ -17,8 +17,8 @@
 #include "global.h"
 #include "unifiedtime.h"
 
-#include "../../LLU/templates/serialize.h"
-#include "../../LLU/include/runtime.h"
+#include "../../Util/templates/serialize.h"
+#include "../../Util/include/runtime.h"
 
 #include "../../LLC/hash/SK.h"
 #include "../../LLP/include/network.h"

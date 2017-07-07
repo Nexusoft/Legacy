@@ -10,10 +10,10 @@
 
 #include "../main.h" // for pwalletMain
 
-#include "../LLU/include/ui_interface.h"
-#include "../LLU/include/debug.h"
-#include "../LLU/include/base64.h"
-#include "../LLU/include/runtime.h"
+#include "../Util/include/ui_interface.h"
+#include "../Util/include/debug.h"
+#include "../Util/include/base64.h"
+#include "../Util/include/runtime.h"
 
 #include <boost/lexical_cast.hpp>
 

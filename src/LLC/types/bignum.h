@@ -15,7 +15,7 @@
 #include <vector>
 #include <openssl/bn.h>
 
-#include "../../LLU/templates/serialize.h"
+#include "../../Util/templates/serialize.h"
 #include "../../LLP/include/network.h"
 
 

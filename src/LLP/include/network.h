@@ -87,8 +87,8 @@ typedef int socklen_t;
 #define PROTOCOL_REVISION    0
 #define PROTOCOL_BUILD       0
 
-#include "../../LLU/include/args.h"
-#include "../../LLU/templates/serialize.h"
+#include "../../Util/include/args.h"
+#include "../../Util/templates/serialize.h"
 
 namespace LLP
 {

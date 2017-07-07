@@ -18,11 +18,11 @@
 #include <boost/smart_ptr.hpp>
 #include <boost/asio.hpp>
 
-#include "../../LLU/include/mutex.h"
-#include "../../LLU/include/runtime.h"
-#include "../../LLU/include/debug.h"
-#include "../../LLU/include/hex.h"
-#include "../../LLU/include/args.h"
+#include "../../Util/include/mutex.h"
+#include "../../Util/include/runtime.h"
+#include "../../Util/include/debug.h"
+#include "../../Util/include/hex.h"
+#include "../../Util/include/args.h"
 	
 namespace LLP
 {
@@ -322,9 +322,9 @@ namespace LLP
 		/* Write a single packet to the TCP stream. */
 		void WritePacket(PacketType PACKET) 
 		{ 
-			if(GetArg("-verbose", 0) >= 4)
+			if(GetArg("-verbose", 0) >= 5)
 				PrintHex(PACKET.GetBytes());
-			else if(GetArg("-verbose", 0) >= 3)
+			else if(GetArg("-verbose", 0) >= 4)
 				printf("***** Node Sent Message (%u, %u)\n", PACKET.LENGTH, PACKET.GetBytes().size());
 				
 			Write(PACKET.GetBytes());
@@ -356,9 +356,10 @@ namespace LLP
 				
 				return true;
 			}
-			catch(...){ Disconnect(); }
-			
-			return false;
+			catch(...)
+            {
+                return false;
+            }
 		}
 		
 		

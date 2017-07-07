@@ -16,11 +16,11 @@
 #include "../../LLC/hash/SK.h"
 #include "../../LLC/hash/macro.h"
 
-#include "../../LLU/include/args.h"
-#include "../../LLU/include/config.h"
-#include "../../LLU/include/mutex.h"
-#include "../../LLU/include/hex.h"
-#include "../../LLU/templates/serialize.h"
+#include "../../Util/include/args.h"
+#include "../../Util/include/config.h"
+#include "../../Util/include/mutex.h"
+#include "../../Util/include/hex.h"
+#include "../../Util/templates/serialize.h"
 
 namespace LLD
 {

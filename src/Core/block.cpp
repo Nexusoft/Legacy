@@ -18,7 +18,7 @@
 #include "include/dispatch.h"
 #include "include/checkpoints.h"
 
-#include "../LLU/include/ui_interface.h"
+#include "../Util/include/ui_interface.h"
 
 #include "../LLP/include/mining.h"
 #include "../LLP/include/message.h"

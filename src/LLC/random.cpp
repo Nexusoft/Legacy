@@ -10,8 +10,8 @@
 
 #include "include/random.h"
 
-#include "../LLU/include/debug.h"
-#include "../LLU/include/runtime.h"
+#include "../Util/include/debug.h"
+#include "../Util/include/runtime.h"
 
 void RandAddSeed()
 {

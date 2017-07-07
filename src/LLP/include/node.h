@@ -19,13 +19,15 @@
 #include "../../Core/include/transaction.h"
 #include "../../Core/include/block.h"
 
-#include "../../LLU/templates/mruset.h"
-#include "../../LLU/templates/containers.h"
+#include "../../Util/templates/mruset.h"
+#include "../../Util/templates/containers.h"
 
 
 namespace LLP
 {
 	static CAddress addrMyNode;
+    
+    
 	
 	class CNode : public MessageConnection
 	{
@@ -88,15 +90,15 @@ namespace LLP
 		
 		
 		/* Node Block Message Queues. */
-		std::queue<Core::CBlock> queueBlock;
+		std::queue<Core::CBlock> queueBlocks;
 		
 		
-		/* Node Orphaned Transaction Messages. */
+		/* Node Orphaned Block Messages. */
 		std::queue<Core::CBlock> queueBlockOrphan;
 		
 		
 		/* Node Transaction Message Queues. */
-		std::queue<Core::CTransaction> queueTransaction;
+		std::queue<Core::CTransaction> queueTransactions;
 		
 		
 		/* Node Orphaned Transaction Messages. */
@@ -139,7 +141,7 @@ namespace LLP
 		
 		
 		/* Send the DoS Score to DDOS Filter. */
-		bool DoS(int nDoS, bool fReturn)
+		inline bool DoS(int nDoS, bool fReturn)
 		{
 			if(fDDOS)
 				DDOS->rSCORE += nDoS;
@@ -148,7 +150,7 @@ namespace LLP
 		}
 		
 		/* Return the IP address of this node. */
-		CAddress GetAddress() { return addrThisNode; }
+		inline CAddress GetAddress() { return addrThisNode; }
 	};
 	
 	

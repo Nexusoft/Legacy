@@ -16,8 +16,8 @@
 #include <set>
 
 #include "../../LLC/types/uint1024.h"
-#include "../../LLU/include/mutex.h"
-#include "../../LLU/templates/containers.h"
+#include "../../Util/include/mutex.h"
+#include "../../Util/templates/containers.h"
 
 class CBigNum;
 class CDataStream;

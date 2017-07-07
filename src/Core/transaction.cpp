@@ -14,8 +14,8 @@
 
 #include "../LLC/include/random.h"
 
-#include "../LLU/include/ui_interface.h"
-#include "../LLU/include/args.h"
+#include "../Util/include/ui_interface.h"
+#include "../Util/include/args.h"
 
 #include "../LLD/include/index.h"
 

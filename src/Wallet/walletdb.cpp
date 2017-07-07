@@ -9,7 +9,7 @@
 #include "walletdb.h"
 #include "wallet.h"
 
-#include "../LLU/include/config.h"
+#include "../Util/include/config.h"
 
 using namespace std;
 using namespace boost;

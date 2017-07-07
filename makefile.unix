@@ -199,7 +199,7 @@ build/%.o: src/LLP/%.cpp
 	      -e '/^$$/ d' -e 's/$$/ :/' < $(@:%.o=%.d) >> $(@:%.o=%.P); \
 	  rm -f $(@:%.o=%.d)
 
-build/%.o: src/LLU/%.cpp
+build/%.o: src/Util/%.cpp
 	$(CXX) -c $(CFLAGS) $(CXXFLAGS) -MMD -o $@ $<
 	@cp $(@:%.o=%.d) $(@:%.o=%.P); \
 	  sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \

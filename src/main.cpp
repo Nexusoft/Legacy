@@ -20,7 +20,7 @@
 #include "LLP/templates/server.h"
 #include "LLC/include/random.h"
 #include "LLD/templates/keychain.h"
-#include "LLU/include/ui_interface.h"
+#include "Util/include/ui_interface.h"
 
 #include "RPC/include/rpcserver.h"
 
@@ -41,9 +41,9 @@ using namespace std;
 using namespace boost;
 
 Wallet::CWallet* pwalletMain;
-LLP::Server<LLP::TimeLLP>* LLP_SERVER;
 
-LLP::Server<LLP::CNode>* NODE_SERVER;
+Core::NodeManager* pNodeManager;
+Core::InventoryManager* pInvManager;
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -202,6 +202,8 @@ bool AppInit2(int argc, char* argv[])
 
     if (mapArgs.count("-?") || mapArgs.count("--help"))
     {
+		 
+		 //NOTE: THIS NEEDS TO BE COMPLETED - viz.
         string strUsage = string() +
           _("Nexus version") + " " + FormatFullVersion() + "\n\n" +
           _("Usage:") + "\t\t\t\t\t\t\t\t\t\t\n" +
@@ -588,6 +590,14 @@ bool AppInit2(int argc, char* argv[])
 	
     if (fServer)
         CreateThread(RPC::ThreadRPCServer, NULL);
+    
+    
+    /* Start up the Node. */
+    pInvManager = new Core::InventoryManager();
+    pNodeManager = new Core::NodeManager();
+    
+    
+    pNodeManager->Start();
 
 #ifdef QT_GUI
     if (GetStartOnSystemStartup())
@@ -595,23 +605,8 @@ bool AppInit2(int argc, char* argv[])
 #endif
 
 #if !defined(QT_GUI)
-	
-	printf("Starting Node Server...\n");
-	
-	/** Compile the Seed Nodes into a set of Vectors. **/
-	std::vector<LLP::CAddress> SEED_NODES    = LLP::DNS_Lookup(fTestNet ? LLP::DNS_SeedNodes_Testnet : LLP::DNS_SeedNodes);
-	
-	NODE_SERVER = new LLP::Server<LLP::CNode>(9323, 5, true, 2, 50, 30, 30, true, true);
 	while (!fShutdown)
-	{
-		for(int i = 0; i < SEED_NODES.size(); i ++)
-		{
-			printf("[%i] Trying Connection %s...\n", i, SEED_NODES[i].ToStringIP().c_str());
-			NODE_SERVER->AddConnection(SEED_NODES[i].ToStringIP(), "9323");
-		
-			Sleep(1000);
-		}
-	}
+        Sleep(1000);
 #endif
 
     return true;

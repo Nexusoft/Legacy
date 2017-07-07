@@ -11,7 +11,7 @@
 #ifndef NEXUS_LLP_INCLUDE_MESSAGE_H
 #define NEXUS_LLP_INCLUDE_MESSAGE_H
 
-#include"../../LLU/templates/serialize.h"
+#include"../../Util/templates/serialize.h"
 
 #include "../templates/types.h"
 #include "network.h"
@@ -84,7 +84,7 @@ namespace LLP
 		 * 
 		 */
 		unsigned char 	HEADER[4];
-		char 			MESSAGE[12];
+		char 				MESSAGE[12];
 		unsigned int  	LENGTH;
 		unsigned int  	CHECKSUM;
 		
@@ -117,17 +117,24 @@ namespace LLP
 		{
 			LENGTH    = 0;
 			CHECKSUM  = 0;
+			SetMessage("");
 			
 			DATA.clear();
 		}
 		
 		
 		/* Get the Command of packet in a std::string type. */
-		std::string GetMessage() { return std::string(MESSAGE, MESSAGE + 12); }
+		std::string GetMessage()
+		{ 
+			//if(MESSAGE[11] == 0)
+				return std::string(MESSAGE, MESSAGE + strlen(MESSAGE));
+			
+			//return std::string(MESSAGE, MESSAGE + 12); 
+		}
 		
 		
 		/* Packet Null Flag. Length and Checksum both 0. */
-		bool IsNull() { return (LENGTH == 0 && CHECKSUM == 0 && DATA.empty()); }
+		bool IsNull() { return (std::string(MESSAGE) == "" && LENGTH == 0 && CHECKSUM == 0); }
 		
 		
 		/* Determine if a packet is fully read. */
@@ -135,7 +142,7 @@ namespace LLP
 		
 		
 		/* Determine if header is fully read */
-		bool Header()   { return IsNull() ? false : (LENGTH > 0 && CHECKSUM > 0 && sizeof(MESSAGE) > 0); }
+		bool Header()   { return IsNull() ? false : (CHECKSUM > 0 && std::string(MESSAGE) != ""); }
 		
 		
 		/* Set the first four bytes in the packet headcer to be of the byte series selected. */
@@ -163,12 +170,13 @@ namespace LLP
 		}
 		
 		
-		/*Set the Packet Checksum Data. */
+		/* Set the Packet Checksum Data. */
 		void SetChecksum()
 		{
 			uint512 hash = LLC::HASH::SK512(DATA.begin(), DATA.end());
 			memcpy(&CHECKSUM, &hash, sizeof(CHECKSUM));
 		}
+		
 		
 		/* Set the Packet Data. */
 		void SetData(CDataStream ssData)
@@ -193,8 +201,8 @@ namespace LLP
 			if(memcmp(HEADER, (fTestNet ? MESSAGE_START_TESTNET : MESSAGE_START_TESTNET), sizeof(HEADER)) != 0)
 				return error("Message Packet (Invalid Packet Header");
 			
-			/* Make sure Packet length is within bounds. */
-			if (LENGTH > MAX_SIZE)
+			/* Make sure Packet length is within bounds. (Max 512 MB Packet Size) */
+			if (LENGTH > (1024 * 1024 * 512))
 				return error("Message Packet (%s, %u bytes) : Message too Large", MESSAGE, LENGTH);
 
 			/* Double check the Message Checksum. */
@@ -298,6 +306,7 @@ namespace LLP
 			try
 			{
 				MessagePacket RESPONSE(chCommand);
+				RESPONSE.SetChecksum();
 			
 				this->WritePacket(RESPONSE);
 			}

@@ -72,6 +72,7 @@ namespace LLP
 	{
 		if (!IsKnownType())
 			throw std::out_of_range(strprintf("CInv::GetCommand() : type=%d unknown type", type));
+        
 		return ppszTypeName[type];
 	}
 

@@ -9,13 +9,13 @@
 #include "include/network.h"
 #include "include/hosts.h"
 
-#include "../LLU/include/debug.h"
+#include "../Util/include/debug.h"
 
 #ifndef WIN32
 #include <sys/fcntl.h>
 #endif
 
-#include "../LLU/include/strlcpy.h"
+#include "../Util/include/strlcpy.h"
 
 namespace LLP
 {

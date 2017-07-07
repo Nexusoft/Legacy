@@ -23,7 +23,7 @@ http://creativecommons.org/publicdomain/zero/1.0/
 
 typedef unsigned char UINT8;
 typedef unsigned long long int UINT64;
-typedef unsigned int tSmallUInt; /*INFO It could be more optimized to use "unsigned char" on an 8-bit CPU    */
+typedef unsigned int tSmaUtilInt; /*INFO It could be more optimized to use "unsigned char" on an 8-bit CPU    */
 typedef UINT64 tKeccakLane;
 
 #if defined(__GNUC__)
@@ -74,10 +74,10 @@ const UINT8 KeccakF_Mod5[10] =
 static tKeccakLane KeccakF1600_GetNextRoundConstant( UINT8 *LFSR );
 static tKeccakLane KeccakF1600_GetNextRoundConstant( UINT8 *LFSR )
 {
-    tSmallUInt i;
+    tSmaUtilInt i;
     tKeccakLane    roundConstant;
-    tSmallUInt doXOR;
-    tSmallUInt tempLSFR;
+    tSmaUtilInt doXOR;
+    tSmaUtilInt tempLSFR;
 
     roundConstant = 0;
     tempLSFR = *LFSR;
@@ -111,7 +111,7 @@ void KeccakF1600_StateInitialize(void *argState)
     #if defined(USE_MEMSET)
     memset( argState, 0, 25 * 8 );
     #else
-    tSmallUInt i;
+    tSmaUtilInt i;
     tKeccakLane *state;
 
     state = argState;
@@ -146,13 +146,13 @@ void KeccakF1600_StateXORBytesInLane(void *argState, unsigned int lanePosition, 
 void KeccakF1600_StateXORLanes(void *state, const unsigned char *data, unsigned int laneCount)
 {
 #if (PLATFORM_BYTE_ORDER == IS_LITTLE_ENDIAN)
-    tSmallUInt i;
+    tSmaUtilInt i;
     laneCount *= sizeof(tKeccakLane);
     for( i = 0; i < laneCount; ++i) {
         ((unsigned char*)state)[i] ^= data[i];
     }
 #else
-    tSmallUInt i;
+    tSmaUtilInt i;
     UINT8 *curData = data;
     for(i=0; i<laneCount; i++, curData+=8) {
         tKeccakLane lane = (tKeccakLane)curData[0]
@@ -180,7 +180,7 @@ void KeccakF1600_StateComplementBit(void *state, unsigned int position)
 
 void KeccakF1600_StatePermute(void *argState)
 {
-    tSmallUInt x, y, round;
+    tSmaUtilInt x, y, round;
     tKeccakLane        temp;
     tKeccakLane        BC[5];
     tKeccakLane     *state;
@@ -248,7 +248,7 @@ void KeccakF1600_StateExtractBytesInLane(const void *state, unsigned int lanePos
 #if (PLATFORM_BYTE_ORDER == IS_LITTLE_ENDIAN)
     memcpy(data, ((UINT8*)&((tKeccakLane*)state)[lanePosition])+offset, length);
 #else
-    tSmallUInt i;
+    tSmaUtilInt i;
     tKeccakLane lane = ((tKeccakLane*)state)[lanePosition];
     lane >>= offset*8;
     for(i=0; i<length; i++) {
@@ -265,7 +265,7 @@ void KeccakF1600_StateExtractLanes(const void *state, unsigned char *data, unsig
 #if (PLATFORM_BYTE_ORDER == IS_LITTLE_ENDIAN)
     memcpy(data, state, laneCount*8);
 #else
-    tSmallUInt i, j;
+    tSmaUtilInt i, j;
     for(i=0; i<laneCount; i++)
     {
         for(j=0; j<(64/8); j++)
