@@ -268,8 +268,8 @@ namespace LLP
 			ssMessage >> tx;
             
             
-            /* De-Serialize the Request ID. 
-             TODO: Check Request ID's and Relay KEYS. */
+            		/* De-Serialize the Request ID. 
+            		 TODO: Check Request ID's and Relay KEYS. */
 			if(nCurrentVersion > 20000)
 			{
 				unsigned int nRequestID;
