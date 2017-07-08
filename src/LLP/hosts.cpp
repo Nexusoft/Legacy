@@ -112,7 +112,7 @@ namespace LLP
 		return LookupIntern(pszHost, vIP, nMaxSolutions, fAllowLookup);
 	}
 	
-		bool LookupHostNumeric(const char *pszName, std::vector<CNetAddr>& vIP, unsigned int nMaxSolutions)
+	bool LookupHostNumeric(const char *pszName, std::vector<CNetAddr>& vIP, unsigned int nMaxSolutions)
 	{
 		return LookupHost(pszName, vIP, nMaxSolutions, false);
 	}

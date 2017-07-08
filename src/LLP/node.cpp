@@ -275,8 +275,8 @@ namespace LLP
 			ssMessage >> tx;
             
             
-            		/* De-Serialize the Request ID. 
-            		 TODO: Check Request ID's and Relay KEYS. */
+            /* De-Serialize the Request ID. 
+             TODO: Check Request ID's and Relay KEYS. */
 			if(nCurrentVersion > 20000)
 			{
 				unsigned int nRequestID;
@@ -347,9 +347,12 @@ namespace LLP
 				queueBlocks.push(block);
 			}
             
+            /* Level 3 Debugging: Output Protocol Messages. */
             if(GetArg("-verbose", 0) >= 3)
             printf("received block %s\n", block.GetHash().ToString().substr(0,20).c_str());
             
+			
+			/* Level 4 Debugging: Output raw data dumps. */
 			if(GetArg("-verbose", 0) >= 4)
 				block.print();
             
@@ -362,6 +365,7 @@ namespace LLP
 			uint64 nonce = 0;
 			ssMessage >> nonce;
 			
+			/* Calculate the Average Latency of the Connection. */
 			nLastPing = Core::UnifiedTimestamp();
 			cLatencyTimer.Start();
 				
@@ -374,10 +378,15 @@ namespace LLP
 			uint64 nonce = 0;
 			ssMessage >> nonce;
 			
+			
+			/* Calculate the Average Latency of the Connection. */
 			nNodeLatency = cLatencyTimer.ElapsedMilliseconds();
 			cLatencyTimer.Reset();
 			
-			printf("***** Node Latency (%u ms)\n", nNodeLatency);
+			
+			/* Debug Level 3: output Node Latencies. */
+			if(GetArg("-verbose", 0) >= 3)
+				printf("***** Node Latency (%u ms)\n", nNodeLatency);
 		}
 		
 			

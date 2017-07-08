@@ -100,9 +100,11 @@ namespace LLP
                  +     100 * PROTOCOL_REVISION
                  +       1 * PROTOCOL_BUILD;
 					  
+
 	/** Used to Lock-Out Nodes that are running a protocol version that is too old, 
     Or to allow certain new protocol changes without confusing Old Nodes. **/
 	const int MIN_PROTO_VERSION = 10000;
+	
 	
 	static const unsigned char pchIPv4[12] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff };
 	

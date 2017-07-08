@@ -77,9 +77,9 @@ namespace Core
 	
 	void NodeManager::Start()
 	{
-		pServer = new LLP::Server<LLP::CNode>(9323, 5, true, 2, 50, 30, 30, true, true);
+		pServer = new LLP::Server<LLP::CNode>(LLP::GetDefaultPort(), 5, true, 2, 50, 30, 30, true, true);
 	    
-		std::vector<LLP::CAddress> vSeeds    = LLP::DNS_Lookup(fTestNet ? DNS_SeedNodes_Testnet : DNS_SeedNodes);
+		std::vector<LLP::CAddress> vSeeds = LLP::DNS_Lookup(fTestNet ? DNS_SeedNodes_Testnet : DNS_SeedNodes);
 		for(int nIndex = 0; nIndex < vSeeds.size(); nIndex++)
 			AddAddress(vSeeds[nIndex]);
         
@@ -139,12 +139,22 @@ namespace Core
 	{
         while(!fShutdown)
         {
-            if(vNodes.size() == 0){
+            if(vNew.size() == 0 && vTried.size() == 0){
                 Sleep(1000);
                 
                 continue;
             }
             
+            { LOCK(MANAGER_MUTEX);
+				
+				//TODO: Make this tied to port macros
+				if(!pServer->AddConnection(vNew[0].ToStringIP(), "9323"))
+					vTried.push_back(vNew[0]);
+				
+				//vNew.erase(0);
+			}
+			
+			Sleep(5000);
         }
 	}
 	
