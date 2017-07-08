@@ -66,6 +66,15 @@ namespace Core
 	};
 	
 	
+	bool InventoryManager::Has(LLP::CInv cInv)
+	{
+		if(cInv.type == LLP::MSG_TX)
+			return Has(cInv.hash.getuint512());
+		
+		return Has(cInv.hash);
+	}
+	
+	
 	void NodeManager::Start()
 	{
 		pServer = new LLP::Server<LLP::CNode>(9323, 5, true, 2, 50, 30, 30, true, true);
@@ -157,7 +166,7 @@ namespace Core
             {
                 Sleep(1);
                 
-                { LOCK(MANAGER_MUTEX);
+                { LOCK(vNodes[nIndex]->NODE_MUTEX);
                 
                     /* If there are no blocks in the queue continue on the loop. */
                     if(vNodes[nIndex]->queueBlocks.size() == 0)

@@ -52,8 +52,13 @@ namespace Core
         
         InventoryManager() {}
         
+        
         /* Class Mutex. */
         Mutex_t MUTEX;
+		
+		
+		/* Check based on CInv. */
+		bool Has(LLP::CInv cInv);
         
         
         /* Check for Tranasction. */

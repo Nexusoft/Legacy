@@ -170,6 +170,9 @@ namespace LLP
 			if(GetArg("-verbose", 0) >= 1)
 				printf("xxxxx %s Node %s Disconnected at Timestamp %" PRIu64 "\n", fOUTGOING ? "Ougoing" : "Incoming", addrThisNode.ToString().c_str(), Core::UnifiedTimestamp());
 			
+			/* Remove the Connection in the Node Manager. */
+			pNodeManager->RemoveNode(this);
+			
 			return;
 		}
 		
@@ -474,38 +477,35 @@ namespace LLP
 			std::vector<CInv> vInv;
 			ssMessage >> vInv;
 			
+			
 			if(GetArg("-verbose", 0) >= 3)
 				printf("***** Inventory Message of %u elements\n", vInv.size());
 			
+			
 			/* Make sure the inventory size is not too large. */
-			if (vInv.size() > 50000)
+			if (vInv.size() > 10000)
 			{
 				DDOS->rSCORE += 20;
 				
 				return true;
 			}
 
-			/* Check through all the new inventory and decide what to do with it. */
-			LLD::CIndexDB indexdb("r");
+			
 			std::vector<CInv> vInvNew;
 			for (int i = 0; i < vInv.size(); i++)
 			{
-				{
-					LOCK(NODE_MUTEX);
-					setInventoryKnown.insert(vInv[i]);
-				}
-
-				//TODO: Move This Function into Proper Place
-				bool fAlreadyHave = AlreadyHave(indexdb, vInv[i]);
+				if(pInvManager->Has(vInv[i]))
+					continue;
 				
-				if(GetArg("-verbose", 0) >= 3)
-					printf("***** Node recieved inventory: %s  %s\n", vInv[i].ToString().c_str(), fAlreadyHave ? "have" : "new");
+				/* Log Level 4: Inventory Message (Relay v1.0). */
+				if(GetArg("-verbose", 0) >= 4)
+					printf("***** Node recieved inventory: %s  %s\n", vInv[i].ToString().c_str());
 
-				if (!fAlreadyHave) {
-					vInvNew.push_back(vInv[i]);
-				}
+				/* Add the inventory to new vector. */
+				vInvNew.push_back(vInv[i]);
 			}
 			
+			/* Ask for the data. */
 			PushMessage("getdata", vInvNew);
 		}
 
@@ -517,7 +517,7 @@ namespace LLP
 		{
 			std::vector<CInv> vInv;
 			ssMessage >> vInv;
-			if (vInv.size() > 50000)
+			if (vInv.size() > 10000)
 			{
 				DDOS->rSCORE += 20;
 				
@@ -526,7 +526,11 @@ namespace LLP
 
 			for(int i = 0; i < vInv.size(); i++)
 			{
-				if(GetArg("-verbose", 0) >= 3)
+				if(!pInvManager->Has(vInv[i]))
+					continue;
+				
+				/* Log Level 4: Get data protocol level messages. */
+				if(GetArg("-verbose", 0) >= 4)
 					printf("received getdata for: %s\n", vInv[i].ToString().c_str());
 
 				if (vInv[i].type == MSG_BLOCK)
@@ -536,13 +540,19 @@ namespace LLP
 					{
 						Core::CBlock block;
 						if(!block.ReadFromDisk((*mi).second))
-							return error("ProcessMessage() : Could not read Block.");
+							continue;
 							
 						PushMessage("block", block);
 					}
 				}
 				
-				//else if(vInv[i].type == MSG_TX)
+				else if(vInv[i].type == MSG_TX)
+				{
+					
+					//TODO: Relay Transaction from TransactionDB
+					//Tritium will not use the old methods of raw block dump and transactiond data
+					
+				}
 			}
 		}
 
