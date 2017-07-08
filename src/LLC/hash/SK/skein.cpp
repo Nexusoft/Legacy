@@ -178,7 +178,7 @@ int Skein_256_Update(Skein_256_Ctxt_t *ctx, const u08b_t *msg, size_t msgByteCnt
 /* finalize the hash computation and output the result */
 int Skein_256_Final(Skein_256_Ctxt_t *ctx, u08b_t *hashVal)
     {
-    size_t i,n,byteCnt;
+    size_t n,byteCnt;
     u64b_t X[SKEIN_256_STATE_WORDS];
     Skein_Assert(ctx->h.bCnt <= SKEIN_256_BLOCK_BYTES,SKEIN_FAIL);    /* catch uninitialized context */
 
@@ -194,9 +194,10 @@ int Skein_256_Final(Skein_256_Ctxt_t *ctx, u08b_t *hashVal)
     /* run Threefish in "counter mode" to generate output */
     memset(ctx->b,0,sizeof(ctx->b));  /* zero out b[], so it can hold the counter */
     memcpy(X,ctx->X,sizeof(X));       /* keep a local copy of counter mode "key" */
-    for (i=0;i*SKEIN_256_BLOCK_BYTES < byteCnt;i++)
+	
+    for (size_t i=0;i*SKEIN_256_BLOCK_BYTES < byteCnt;i++)
         {
-        ((u64b_t *)ctx->b)[0]= Skein_Swap64((u64b_t) i); /* build the counter block */
+        ((u64b_t *)ctx->b)[0] = Skein_Swap64((u64b_t) i); /* build the counter block */
         Skein_Start_New_Type(ctx,OUT_FINAL);
         Skein_256_Process_Block(ctx,ctx->b,1,sizeof(u64b_t)); /* run "counter mode" */
         n = byteCnt - i*SKEIN_256_BLOCK_BYTES;   /* number of output bytes left to go */

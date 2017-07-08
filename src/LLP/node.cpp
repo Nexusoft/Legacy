@@ -59,6 +59,7 @@ namespace LLP
         void CNode::PushInventory(const CInv& inv) {}
 	
 		
+		
 	/* Push a Message With Information about This Current Node. */
 	void CNode::PushVersion()
 	{
@@ -155,6 +156,9 @@ namespace LLP
 			
 			if(fOUTGOING)
 				PushVersion();
+			
+			/* Add the Connection to the Node Manager. */
+			pNodeManager->AddNode(this);
 			
 			return;
 		}	

@@ -13,24 +13,76 @@
 
 namespace Core
 {
-        
-
+	
+	std::vector<std::string> DNS_SeedNodes =
+	{
+		"node1.nexusearth.com",
+		"node1.mercuryminer.com",
+		"node1.nexusminingpool.com",
+		"node1.nxs.efficienthash.com",
+		"node2.nexusearth.com",
+		"node2.mercuryminer.com",
+		"node2.nexusminingpool.com",
+		"node2.nxs.efficienthash.com",
+		"node3.nexusearth.com",
+		"node3.mercuryminer.com",
+		"node3.nxs.efficienthash.com",
+		"node4.nexusearth.com",
+		"node4.mercuryminer.com",
+		"node4.nxs.efficienthash.com",
+		"node5.nexusearth.com",
+		"node5.mercuryminer.com",
+		"node5.nxs.efficienthash.com",
+		"node6.nexusearth.com",
+		"node6.mercuryminer.com",
+		"node6.nxs.efficienthash.com",
+		"node7.nexusearth.com",
+		"node7.mercuryminer.com",
+		"node7.nxs.efficienthash.com",
+		"node8.nexusearth.com",
+		"node8.mercuryminer.com",
+		"node8.nxs.efficienthash.com",
+		"node9.nexusearth.com",
+		"node9.mercuryminer.com",
+		"node9.nxs.efficienthash.com",
+		"node10.nexusearth.com",
+		"node10.mercuryminer.com",
+		"node10.nxs.efficienthash.com",
+		"node11.nexusearth.com",
+		"node11.mercuryminer.com",
+		"node11.nxs.efficienthash.com",
+		"node12.nexusearth.com",
+		"node12.mercuryminer.com",
+		"node12.nxs.efficienthash.com",
+		"node13.nexusearth.com",
+		"node13.mercuryminer.com",
+		"node13.nxs.efficienthash.com",
+	};
+	
+	
+	std::vector<std::string> DNS_SeedNodes_Testnet = 
+	{
+		"test1.nexusoft.io"
+	};
+	
+	
 	void NodeManager::Start()
 	{
-        pServer = new LLP::Server<LLP::CNode>(9323, 5, true, 2, 50, 30, 30, true, true);
-        
-		std::vector<LLP::CAddress> vSeeds    = LLP::DNS_Lookup(fTestNet ? LLP::DNS_SeedNodes_Testnet : LLP::DNS_SeedNodes);
-        for(int nIndex = 0; nIndex < vSeeds.size(); nIndex++)
-            AddAddress(vSeeds[nIndex]);
+		pServer = new LLP::Server<LLP::CNode>(9323, 5, true, 2, 50, 30, 30, true, true);
+	    
+		std::vector<LLP::CAddress> vSeeds    = LLP::DNS_Lookup(fTestNet ? DNS_SeedNodes_Testnet : DNS_SeedNodes);
+		for(int nIndex = 0; nIndex < vSeeds.size(); nIndex++)
+			AddAddress(vSeeds[nIndex]);
         
 	}
 	
+	
 	void NodeManager::AddAddress(LLP::CAddress cAddress)
-    {
-        LOCK(MANAGER_MUTEX);
+	{
+		LOCK(MANAGER_MUTEX);
         
-        vNew.push_back(cAddress);
-    }
+		vNew.push_back(cAddress);
+	}
 	
 	
 	void NodeManager::AddNode(LLP::CNode* pnode)
@@ -38,6 +90,15 @@ namespace Core
 		LOCK(MANAGER_MUTEX);
 		
 		vNodes.push_back(pnode);
+	}
+	
+	void NodeManager::RemoveNode(LLP::CNode* pNode)
+	{
+		LOCK(MANAGER_MUTEX);
+		
+		std::vector<LLP::CNode*>::iterator it = find(vNodes.begin(), vNodes.end(), pNode);
+		if(it != vNodes.end())
+			vNodes.erase(it);
 	}
 
 	

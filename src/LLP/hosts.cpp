@@ -18,14 +18,14 @@ namespace LLP
 {
 	
 	/** DNS Query of Domain Names Associated with Seed Nodes **/
-	std::vector<CAddress> DNS_Lookup(const char* DNS_Seed[])
+	std::vector<CAddress> DNS_Lookup(std::vector<std::string> DNS_Seed)
 	{
 		std::vector<CAddress> vNodes;
-		for (unsigned int seed = 0; seed < (fTestNet ? 1 : 41); seed++)
+		for (int nSeed = 0; nSeed < DNS_Seed.size(); nSeed ++ )
 		{
-			printf("%u Host: %s\n", seed, DNS_Seed[seed]);
+			printf("%u Host: %s\n", nSeed, DNS_Seed[nSeed].c_str());
 			std::vector<LLP::CNetAddr> vaddr;
-			if (LookupHost(DNS_Seed[seed], vaddr))
+			if (LookupHost(DNS_Seed[nSeed].c_str(), vaddr))
 			{
 				BOOST_FOREACH(CNetAddr& ip, vaddr)
 				{
@@ -39,6 +39,7 @@ namespace LLP
 		
 		return vNodes;
 	}
+	
 	
 	bool static LookupIntern(const char *pszName, std::vector<CNetAddr>& vIP, unsigned int nMaxSolutions, bool fAllowLookup)
 	{

@@ -132,6 +132,10 @@ namespace Core
 		void AddNode(LLP::CNode* pNode);
 		
 		
+		/* Remove a node from the manager. */
+		void RemoveNode(LLP::CNode* pNode);
+		
+		
 		/* Find a Node in this Manager by Net Address. */
 		LLP::CNode* FindNode(const LLP::CNetAddr& ip);
 
