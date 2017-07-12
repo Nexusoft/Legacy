@@ -39,6 +39,10 @@
 <i>sudo apt-get install libdb-dev libdb++-dev</i>
 
 <b>Install Open SSL:</b><br>
+<i>sudo apt-get install libssl1.0-dev</i>
+
+If this fails to install because your linux system still supports 0.X versions of openssl use this command:
+
 <i>sudo apt-get install libssl-dev</i>
 
 <b>Install Mini UPNP:</b><br>
