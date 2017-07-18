@@ -54,6 +54,10 @@ If this fails to install because your linux system still supports 0.X versions o
 <b>For the Qt, install QT Framework:</b><br>
 <i>sudo apt-get install qt4-qmake libqt4-dev</i>
 
+<b>If you get a filed to build because "-lz" was not found this is due to the fact that your linux operating system is trying to use a 64 bit version of zlib. You can solve this by installing the 32 bit version here:
+<i>sudo apt-get install lib32z1-dev</i>
+
+
 <h2>Build Instructions (Daemon): Ubuntu & Debian</h2>
 
 cd ~<br>
