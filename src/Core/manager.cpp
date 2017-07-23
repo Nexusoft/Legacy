@@ -75,6 +75,13 @@ namespace Core
 	}
 	
 	
+	/* NODE MANAGER NOTE:
+     * 
+     * The Node Manager handles all the connections associated with a specifric node and rates them based on their interactions and trust they have built in th network
+     * It is also intelligent to distinguish the best nodes to connect with and also process blocks in a single location so that there are not more processes that need happen
+     * and that everything can be done in the order it was inteneded.
+     */
+	
 	void NodeManager::Start()
 	{
 		pServer = new LLP::Server<LLP::CNode>(LLP::GetDefaultPort(), 5, true, 2, 50, 30, 30, true, true);
@@ -98,7 +105,9 @@ namespace Core
 	{
 		LOCK(MANAGER_MUTEX);
 		
-		vNodes.push_back(pnode);
+        std::vector<LLP::CNode*>::iterator it = find(vNodes.begin(), vNodes.end(), pNode);
+        if(it != vNodes.end())
+            vNodes.push_back(pnode);
 	}
 	
 	void NodeManager::RemoveNode(LLP::CNode* pNode)
@@ -109,30 +118,38 @@ namespace Core
 		if(it != vNodes.end())
 			vNodes.erase(it);
 	}
+	
+	//TODO: Make the Clock regulator more advanced to do multiple checks on possible clock 
+	void NodeManager::ClockRegulator()
+    {
+        
+
+    }
 
 	
 	void NodeManager::TimestampManager()
 	{
-	
-		/* These checks are for after the first time seed has been established. 
-		if(fTimeUnified)
-		{
-				
-
-			if(nOffset > GetUnifiedAverage() + LLP::MAX_UNIFIED_DRIFT || nOffset < GetUnifiedAverage() - LLP::MAX_UNIFIED_DRIFT ) {
-				printf("***** Core LLP: Unified Samples Out of Drift Scope Current (%u) Samples (%u)\n", GetUnifiedAverage(), nOffset);
-						
-				DDOS->rSCORE += 10;
-						
-				if(mapBadResponse.count("offset"))
-					mapBadResponse["offset"] = 1;
-				else
-					mapBadResponse["offset"] ++ ;
-						
-				return true;
-			}
-		}
-		*/
+        while(!fShutdown)
+        {
+            if(vNodes.size() == 0){
+                Sleep(1000);
+                
+                continue;
+            }
+            
+            
+            /* Loop the queues of the nodes that are currently connected. */
+            for(int nIndex = 0; nIndex < vNodes.size(); nIndex++)
+            {
+                Sleep(1000);
+                
+                { LOCK(vNodes[nIndex]->NODE_MUTEX);
+                    
+                    
+                    
+                }
+            }
+        }
 	}
 	
 	void NodeManager::ConnectionManager()
@@ -151,7 +168,7 @@ namespace Core
 				if(!pServer->AddConnection(vNew[0].ToStringIP(), "9323"))
 					vTried.push_back(vNew[0]);
 				
-				//vNew.erase(0);
+				vNew.erase(vNew.begin());
 			}
 			
 			Sleep(5000);
@@ -185,6 +202,13 @@ namespace Core
                     /* Extract the block from the queue. */
                     CBlock* pblock = &vNodes[nIndex]->queueBlocks.front();
                     vNodes[nIndex]->queueBlocks.pop();
+                    
+                    if(mapBlockIndex.count(pblock->GetHash()))
+                    {
+                        //TODO: Verbose output here verbose > 3 to signal repeat blocks that are already in the blockchain
+                        
+                        continue;
+                    }
                 
                     /* Check the Block. */
                     if (!CheckBlock(pblock, vNodes[nIndex]))

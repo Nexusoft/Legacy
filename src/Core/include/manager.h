@@ -28,6 +28,16 @@ namespace Core
             
 	}
 	
+	
+	/** Inventory Manager Class:
+     * 
+     * This class is responsible for overseeing all of the inventory that has been recieved by a node.
+     * Inventory can be seen as items such as blocks and transactions are accurately reported and understood
+     * by the network to know when to relay or when the request for the data of one needs to be executed.
+     * 
+     * NOTE: This will most likely be deprecated in Tritium ++. It is only here to allow simple integration with
+     * the older protocol versions to allow the backwards communication on older protocol versions.
+     */
 	class InventoryManager
 	{
     public:
@@ -106,7 +116,16 @@ namespace Core
         
     };
 	
-	
+    
+	/** Node Manager Class:
+     * 
+     * This is resonsilbe for the managing of all the nodes in the Tritum Protoco.
+     * It is responsible for overseeing all the connections, processing blocks, and handling the network wide relays.
+     * 
+     * This is necessary to keep all the main processing for a node here in this specifric class so that the other services a node can provide be easy to integrate and extend.
+     * 
+     * This is also where a node will be keeping track of the differences in the time seeking and also the intelligence of the trust that is seen indepent of any of the network wide trust.
+     */
 	class NodeManager
 	{
 	public:
@@ -151,7 +170,14 @@ namespace Core
 		
 		/* Start up the Node Manager. */
 		void Start();
-		
+        
+        
+        /* Variables to set the state of the node manager regarding Tritium Protocol vs the 2.0 protocol previous. */
+		bool fEstablishedTritium;
+        
+        /* Switch to tell if on the Tritium Time servers or the original 2.0 LLP Time server. */
+        bool fUnifiedTimeTritium;
+        
 	private:
 		
 		/* Connected Nodes and their Pointer Reference. */

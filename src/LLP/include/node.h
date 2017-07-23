@@ -60,10 +60,6 @@ namespace LLP
 		unsigned int nTotalRejects;
 		
 		
-		/* Node Identifier. */
-		uint576 cTrustKey;
-		
-		
 		/* Consensus Stats. */
 		uint1024 hashLastCheckpoint;
 		unsigned int nUnifiedOffset;
@@ -73,6 +69,7 @@ namespace LLP
 		bool fClient;
 		bool fInbound;
 		bool fNetworkNode;
+        bool fTritium;
 		
 		
 		/* Network Statistics. */
