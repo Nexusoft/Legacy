@@ -623,6 +623,7 @@ namespace Core
 		/* Get the Trust Key from the Trust Pool. */
 		CTrustKey cTrustKey = Find(cKey);
 		
+		
 		/* The Trust Scores. */
 		double nPositiveTrust = 0.0, nNegativeTrust = 0.0;
 
@@ -640,7 +641,6 @@ namespace Core
 			/* Calculate the Positive Trust Time in the Key. */
 			if(nTrustTime < nMaxTimespan)
 				nPositiveTrust += (double)((nMaxTimespan * log(((3.0 * nTrustTime) / nMaxTimespan) + 1.0)) / log(4));
-			
 			
 			
 			/* Calculate the Negative Trust Time in the Key. */
