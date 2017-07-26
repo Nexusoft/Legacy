@@ -27,7 +27,7 @@ namespace Core
 	/* Returns the value of a full minutes reward per channel */
 	int64 GetSubsidy(int nMinutes, int nType) { return (((decay[nType][0] * exp(decay[nType][1] * nMinutes)) + decay[nType][2]) * (COIN / 2.0)); }
 	
-	 
+
 	/* Compound the subsidy from a start point to an interval point. */
 	int64 CompoundSubsidy(int nMinutes, int nInterval)
 	{
@@ -41,12 +41,13 @@ namespace Core
 		return nMoneySupply;
 	}
 	
-	/* Returns the Calculated Money Supply after nMinutes compounded from the Decay Equations. */
-	int64 CompoundSubsidy(int nMinutes)
-	{
+
+	/** Returns the Calculated Money Supply after nMinutes compounded from the Decay Equations. **/
+	int64 CompoundSubsidy(int nMinutes, int nTypes)
+    {
 		int64 nMoneySupply = 0;
 		for(int nMinute = 1; nMinute <= nMinutes; nMinute++)
-			for(int nType = 0; nType < 3; nType++)
+			for(int nType = (nTypes == 3 ? 0 : nTypes); nType < (nTypes == 3 ? 4 : nTypes + 1); nType++) //nTypes == 3 designates all channels, nTypes == 0, 1, 2 equals miner, ambassador, and developers
 				nMoneySupply += (GetSubsidy(nMinute, nType) * 2);
 				
 		return nMoneySupply;

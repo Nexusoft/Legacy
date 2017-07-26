@@ -603,6 +603,7 @@ namespace Core
 		return min(0.03, (((0.025 * log(((9.0 * (nTime - Find(cKey).nGenesisTime)) / (60 * 60 * 24 * 28 * 13)) + 1.0)) / log(10))) + 0.005);
 	}
 	
+
 	/* Break the Chain Age in Minutes into Days, Hours, and Minutes. */
 	void GetTimes(unsigned int nAge, unsigned int& nDays, unsigned int& nHours, unsigned int& nMinutes)
 	{
@@ -621,10 +622,11 @@ namespace Core
 		
 		/* Get the Trust Key from the Trust Pool. */
 		CTrustKey cTrustKey = Find(cKey);
-
 		
 		/* The Trust Scores. */
 		double nPositiveTrust = 0.0, nNegativeTrust = 0.0;
+
+		
 		for(int nIndex = 1; nIndex < cTrustKey.hashPrevBlocks.size(); nIndex++)
 		{
 			/* Calculate the Trust Time of Blocks. */
@@ -634,10 +636,11 @@ namespace Core
 			/* Calculate Consistency Moving Average over Scope of Consistency History. */
 			unsigned int nMaxTimespan = TRUST_KEY_MAX_TIMESPAN * ((GetDifficulty(mapBlockIndex[cTrustKey.hashPrevBlocks[nIndex]]->nBits, 0)) / TRUST_KEY_DIFFICULTY_THRESHOLD);
 			
-			
+
 			/* Calculate the Positive Trust Time in the Key. */
 			if(nTrustTime < nMaxTimespan)
 				nPositiveTrust += (double)((nMaxTimespan * log(((3.0 * nTrustTime) / nMaxTimespan) + 1.0)) / log(4));
+			
 			
 			
 			/* Calculate the Negative Trust Time in the Key. */

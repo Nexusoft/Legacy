@@ -245,6 +245,51 @@ namespace RPC
 		StartShutdown();
 		return "Nexus server stopping";
 	}
+	
+	Value getnetworkhashps(const Array& params, bool fHelp)
+	{
+		if (fHelp || params.size() != 0)
+			throw runtime_error(
+				"getnetworkhashps\n"
+				"Get network hashrate for the hashing channel.");
+		
+		/* This constant was determined by finding the time it takes to find hash of given difficulty at a given hash rate.
+		 * It is the total hashes per second required to find a hash of difficulty 1.0 every second.
+		 * This can then be used in calculing the network hash rate by block times over average of 1440 blocks.
+		 * */
+		uint64 nTimeConstant = 276758250000;
+		
+		/* Used for determining the average block times. 
+		 * TODO START: Make this its own RPC command */
+		uint64 nTotalTime = 0;
+		
+		const Core::CBlockIndex* pindex = Core::GetLastChannelIndex(Core::pindexBest, 2);
+		unsigned int nAverageTime = 0, nTotal = 0;
+		double nAverageDifficulty = 0.0;
+		
+		for( ; nTotal < 1440 && pindex->pprev; nTotal ++) {
+			
+			nAverageTime += (pindex->GetBlockTime() - Core::GetLastChannelIndex(pindex->pprev, 2)->GetBlockTime());
+			nAverageDifficulty += (Core::GetDifficulty(pindex->nBits, 2));
+			
+			pindex = Core::GetLastChannelIndex(pindex->pprev, 2);
+		}
+		
+		nAverageTime       /= nTotal;
+		nAverageDifficulty /= nTotal;
+		/* TODO END **/
+		
+		Object obj;
+		obj.push_back(Pair("average time", (int) nAverageTime));
+		obj.push_back(Pair("average difficulty", nAverageDifficulty));
+		
+		/* Calculate the hashrate based on nTimeConstant. */
+		uint64 nHashRate = (nTimeConstant / nAverageTime) * nAverageDifficulty;
+		
+		obj.push_back(Pair("hashrate", (boost::uint64_t)nHashRate));
+		
+		return obj;
+	}
 
 
 	Value getblockcount(const Array& params, bool fHelp)
@@ -359,15 +404,34 @@ namespace RPC
 		obj.push_back(Pair("targetsupply",   ValueFromAmount(nTarget)));
 		obj.push_back(Pair("inflationrate",   (nSupply * 100.0) / nTarget));
 		
-		obj.push_back(Pair("minuteSupply",  ValueFromAmount(Core::CompoundSubsidy(nMinutes, 1)))); //1
-		obj.push_back(Pair("hourSupply",    ValueFromAmount(Core::CompoundSubsidy(nMinutes, 60)))); //60
-		obj.push_back(Pair("daySupply",     ValueFromAmount(Core::CompoundSubsidy(nMinutes, 1440)))); //1440
-		obj.push_back(Pair("weekSupply",    ValueFromAmount(Core::CompoundSubsidy(nMinutes, 10080)))); //10080
-		obj.push_back(Pair("monthSupply",   ValueFromAmount(Core::CompoundSubsidy(nMinutes, 40320)))); //40320
-		obj.push_back(Pair("yearSupply",    ValueFromAmount(Core::CompoundSubsidy(nMinutes, 524160)))); //524160
+		obj.push_back(Pair("minuteSupply",  ValueFromAmount(Core::SubsidyInterval(nMinutes, 1)))); //1
+		obj.push_back(Pair("hourSupply",    ValueFromAmount(Core::SubsidyInterval(nMinutes, 60)))); //60
+		obj.push_back(Pair("daySupply",     ValueFromAmount(Core::SubsidyInterval(nMinutes, 1440)))); //1440
+		obj.push_back(Pair("weekSupply",    ValueFromAmount(Core::SubsidyInterval(nMinutes, 10080)))); //10080
+		obj.push_back(Pair("monthSupply",   ValueFromAmount(Core::SubsidyInterval(nMinutes, 40320)))); //40320
+		obj.push_back(Pair("yearSupply",    ValueFromAmount(Core::SubsidyInterval(nMinutes, 524160)))); //524160
 		
 		return obj;
 	}
+	
+	Value getmoneysupply(const Array& params, bool fHelp)
+    {
+        if(fHelp || params.size() != 0)
+            throw runtime_error(
+                "getmoneysupply <timestamp>\n\n"
+                "Returns the total supply of Nexus produced by miners, holdings, developers, and ambassadors.\n"
+                "Default timestamp is the current Unified Timestamp. The timestamp is recorded as a UNIX timestamp");
+            
+        Object obj;
+        unsigned int nMinutes = (GetUnifiedTimestamp() - Core::NEXUS_NETWORK_TIMELOCK) / 60;
+        
+        obj.push_back(Pair("chainage", ValueFromAmount(nMinutes)));
+        obj.push_back(Pair("miners", ValueFromAmount(Core::CompoundSubsidy(nMinutes, 0))));
+        obj.push_back(Pair("ambassadors", ValueFromAmount(Core::CompoundSubsidy(nMinutes, 1))));
+        obj.push_back(Pair("developers", ValueFromAmount(Core::CompoundSubsidy(nMinutes, 2))));
+        
+        return obj;
+    }
 
 	Value getinfo(const Array& params, bool fHelp)
 	{
@@ -2430,6 +2494,8 @@ namespace RPC
 		{ "getaccount",             &getaccount,             false },
 		{ "getaddressesbyaccount",  &getaddressesbyaccount,  true },
 		{ "sendtoaddress",          &sendtoaddress,          false },
+        { "getmoneysupply",         &getmoneysupply,         true },
+		{ "getnetworkhashps",       &getnetworkhashps,       true },
 		{ "getreceivedbyaddress",   &getreceivedbyaddress,   false },
 		{ "getreceivedbyaccount",   &getreceivedbyaccount,   false },
 		{ "listreceivedbyaddress",  &listreceivedbyaddress,  false },
