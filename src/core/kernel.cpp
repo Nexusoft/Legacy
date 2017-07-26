@@ -626,10 +626,6 @@ namespace Core
 		CTrustKey cTrustKey = Find(cKey);
 		
 		
-		/* The Average Block Time of Key. */
-		unsigned int nAverageTime = cTrustKey.Age(nTime) / cTrustKey.hashPrevBlocks.size(), nLastTrustTime = 0;
-		
-		
 		/* The Average Block Consistency. */
 		double nAverageConsistency = 0.0, nMeanHistory = 0.0;
 
@@ -640,32 +636,21 @@ namespace Core
 		{
 			/* Calculate the Trust Time of Blocks. */
 			unsigned int nTrustTime = mapBlockIndex[cTrustKey.hashPrevBlocks[nIndex]]->GetBlockTime() - mapBlockIndex[cTrustKey.hashPrevBlocks[nIndex - 1]]->GetBlockTime();
-			if(nLastTrustTime == 0)
-				nLastTrustTime = nTrustTime;
 			
 				
 			/* Calculate Consistency Moving Average over Scope of Consistency History. */
 			unsigned int nMaxTimespan = TRUST_KEY_MAX_TIMESPAN * ((GetDifficulty(mapBlockIndex[cTrustKey.hashPrevBlocks[nIndex]]->nBits, 0)) / TRUST_KEY_DIFFICULTY_THRESHOLD);
 			
 			
-			if(cTrustKey.hashPrevBlocks.size() - nIndex <= TRUST_KEY_CONSISTENCY_HISTORY){
-				nAverageConsistency 	+= (nAverageTime / nTrustTime);
-				nMeanHistory		  	+= (nLastTrustTime / nTrustTime);
-				
-				nLastTrustTime = nTrustTime;
-			}
-			
-			
 			/* Calculate the Positive Trust Time in the Key. */
-			if(nTrustTime < nMaxTimespan) {
+			if(nTrustTime < nMaxTimespan)
 				nPositiveTrust += (double)((nMaxTimespan * log(((3.0 * nTrustTime) / nMaxTimespan) + 1.0)) / log(4));
-			}
 			
 			
 			/* Calculate the Negative Trust Time in the Key. */
-			else if(nTrustTime > nMaxTimespan) {
+			else if(nTrustTime > nMaxTimespan)
 				nNegativeTrust += (double)((3.0 * nMaxTimespan * log(((3.0 * nTrustTime) / nMaxTimespan) - 2.0)) / log(4));
-			}
+			
 		}
 		
 		/* Final Computation of the Trust Score. */
