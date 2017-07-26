@@ -18,7 +18,7 @@ namespace Core
 	
 	
 	/** Hash to start the Test Net Blockchain. **/
-	const uint1024 hashGenesisBlockTestNet ("0x00002a0ccd35f2e1e9e1c08f5a2109a82834606b121aca891d5862ba12c6987d55d1e789024fcd5b9adaf07f5445d24e78604ea136a0654497ed3db0958d63e72f146fae2794e86323126b8c3d8037b193ce531c909e5222d090099b4d574782d15c135ddd99d183ec14288437563e8a6392f70259e761e62d2ea228977dd2f7");
+	const uint1024 hashGenesisBlockTestNet("0x00002a0ccd35f2e1e9e1c08f5a2109a82834606b121aca891d5862ba12c6987d55d1e789024fcd5b9adaf07f5445d24e78604ea136a0654497ed3db0958d63e72f146fae2794e86323126b8c3d8037b193ce531c909e5222d090099b4d574782d15c135ddd99d183ec14288437563e8a6392f70259e761e62d2ea228977dd2f7");
 
 	
 	/** The current Block Version Activating in this Release. **/
@@ -62,7 +62,11 @@ namespace Core
 	
 	/* NOTE: For Blocks Version 5 and Above.
 	 *	 The Maximum Grace time before trust begins to be reduced from no trust blocks seen.. **/
-	int TRUST_KEY_MAX_TIMESPAN = 60 * 60 * 6;
+	int TRUST_KEY_MAX_TIMESPAN = 60 * 60 * 8;
+	
+	
+	/* Difficulty Trheshold Weight for Trust Keys. MAX_TIMESPAN is influenced linearly with this number. */
+	double TRUST_KEY_DIFFICULTY_THRESHOLD = 8.8;
 	
 	
 	/* NOTE: For Blocks Version 5 and Above

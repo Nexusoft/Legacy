@@ -104,6 +104,7 @@ namespace Core
 	extern int TRUST_KEY_MIN_INTERVAL;
 	extern int TRUST_KEY_CONSISTENCY_HISTORY;
 	
+	extern double TRUST_KEY_DIFFICULTY_THRESHOLD;
 	extern double TRUST_KEY_MIN_CONSISTENCY_TOLERANCE;
 	extern double TRUST_KEY_MAX_CONSISTENCY_TOLERANCE;
 	
@@ -265,8 +266,9 @@ namespace Core
 	
 	/** RELEASE.CPP **/
 	int64 GetSubsidy(int nMinutes, int nType);
-	int64 CompoundSubsidy(int nMinutes, int nInterval);
-	int64 CompoundSubsidy(int nMinutes);
+	int64 SubsidyInterval(int nMinutes, int nInterval);
+	int64 CompoundSubsidy(int nMinutes, int nTypes = 3);
+    
 	int64 GetMoneySupply(CBlockIndex* pindex);
 	int64 GetChainAge(int64 nTime);
 	int64 GetFractionalSubsidy(int nMinutes, int nType, double nFraction);

@@ -606,6 +606,14 @@ namespace Core
 		return min(0.03, (((0.025 * log(((9.0 * (nTime - Find(cKey).nGenesisTime)) / (60 * 60 * 24 * 28 * 13)) + 1.0)) / log(10))) + 0.005);
 	}
 	
+	/** Break the Chain Age in Minutes into Days, Hours, and Minutes. **/
+	void GetTimes(unsigned int nAge, unsigned int& nDays, unsigned int& nHours, unsigned int& nMinutes)
+	{
+		nDays = nAge / 1440;
+		nHours = (nAge - (nDays * 1440)) / 60;
+		nMinutes = nAge % 60;
+	}
+	
 	/* Trust Scoie for Trust Keys:
 		Determines how trusted a key is by score. Age of the Key is determined in combination with the Trust Score and Age. */
 	uint64 CTrustPool::TrustScore(uint576 cKey, unsigned int nTime) const
@@ -617,27 +625,29 @@ namespace Core
 		/* Get the Trust Key from the Trust Pool. */
 		CTrustKey cTrustKey = Find(cKey);
 		
+		
 		/* The Average Block Time of Key. */
 		unsigned int nAverageTime = cTrustKey.Age(nTime) / cTrustKey.hashPrevBlocks.size(), nLastTrustTime = 0;
 		
+		
 		/* The Average Block Consistency. */
 		double nAverageConsistency = 0.0, nMeanHistory = 0.0;
+
 		
 		/* The Trust Scores. */
 		double nPositiveTrust = 0.0, nNegativeTrust = 0.0, nHistoryIterations = 0;
-		for(int nIndex = 0; nIndex < cTrustKey.hashPrevBlocks.size(); nIndex++)
+		for(int nIndex = 1; nIndex < cTrustKey.hashPrevBlocks.size(); nIndex++)
 		{
 			/* Calculate the Trust Time of Blocks. */
-			unsigned int nTrustTime = mapBlockIndex[cTrustKey.hashPrevBlocks[nIndex]]->GetBlockTime() - ((nIndex == 0) ? cTrustKey.nGenesisTime : mapBlockIndex[cTrustKey.hashPrevBlocks[nIndex - 1]]->GetBlockTime());
+			unsigned int nTrustTime = mapBlockIndex[cTrustKey.hashPrevBlocks[nIndex]]->GetBlockTime() - mapBlockIndex[cTrustKey.hashPrevBlocks[nIndex - 1]]->GetBlockTime();
 			if(nLastTrustTime == 0)
 				nLastTrustTime = nTrustTime;
 			
-			/* TODO: Trust Score Forgiveness. Forgive the Decay of trust key if there is a Trust block created within 1 day of Activation Timelock. */
-			//if(mapBlockIndex[cTrustKey.hashPrevBlocks[nIndex]]->GetBlockTime() + TRUST_KEY_EXPIRE < (fTestNet ? TESTNET_VERSION_TIMELOCK[3] : NETWORK_VERSION_TIMELOCK[3])) {
-				
-			//}
 				
 			/* Calculate Consistency Moving Average over Scope of Consistency History. */
+			unsigned int nMaxTimespan = TRUST_KEY_MAX_TIMESPAN * ((GetDifficulty(mapBlockIndex[cTrustKey.hashPrevBlocks[nIndex]]->nBits, 0)) / TRUST_KEY_DIFFICULTY_THRESHOLD);
+			
+			
 			if(cTrustKey.hashPrevBlocks.size() - nIndex <= TRUST_KEY_CONSISTENCY_HISTORY){
 				nAverageConsistency 	+= (nAverageTime / nTrustTime);
 				nMeanHistory		  	+= (nLastTrustTime / nTrustTime);
@@ -645,13 +655,12 @@ namespace Core
 				nLastTrustTime = nTrustTime;
 			}
 			
-			/* Calculate the Weighted Trust Based on weight of trust to difficulty. */
-			unsigned int nMaxTimespan = TRUST_KEY_MAX_TIMESPAN;
-						
+			
 			/* Calculate the Positive Trust Time in the Key. */
 			if(nTrustTime < nMaxTimespan) {
 				nPositiveTrust += (double)((nMaxTimespan * log(((3.0 * nTrustTime) / nMaxTimespan) + 1.0)) / log(4));
 			}
+			
 			
 			/* Calculate the Negative Trust Time in the Key. */
 			else if(nTrustTime > nMaxTimespan) {
@@ -659,15 +668,16 @@ namespace Core
 			}
 		}
 		
-		/* Final Compuatation for Consistency History. */
-		nAverageConsistency 	/= TRUST_KEY_CONSISTENCY_HISTORY;
-		nMeanHistory		  	/= TRUST_KEY_CONSISTENCY_HISTORY;
-		
 		/* Final Computation of the Trust Score. */
 		double nTrustScore = std::max(0.0, (nPositiveTrust - nNegativeTrust));
 		
+		
+		unsigned int nDays, nHours, nMinutes;
+		GetTimes(cTrustKey.Age(nTime) / 60, nDays, nHours, nMinutes);
+		
 		if(GetArg("-verbose", 0) >= 2)
-			printf("CTrustPool::TRUST [%f %%] Score %f Age %u Index %f %% Mean %f %% | Positive %f | Negative %f\n", (nTrustScore * 100.0) / cTrustKey.Age(nTime), nTrustScore, (unsigned int)cTrustKey.Age(nTime), 100.0 * nAverageConsistency, 100.0 * nMeanHistory, nPositiveTrust, nNegativeTrust);
+			printf("CTrustPool::TRUST [%f %%] Score %f | Age %u Days, %u Hours, %u Minutes | Positive %f | Negative %f \n", (nTrustScore * 100.0) / cTrustKey.Age(nTime), nTrustScore,  nDays, nHours, nMinutes, nPositiveTrust, nNegativeTrust);
+		
 		
 		return (uint64)nPositiveTrust - nNegativeTrust;
 	}
