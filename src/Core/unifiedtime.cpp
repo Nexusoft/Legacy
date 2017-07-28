@@ -73,7 +73,7 @@ namespace Core
         /** The Entry Client Loop for Core LLP. **/
         string ADDRESS = "";
         LLP::CoreOutbound SERVER("", strprintf("%u", (fTestNet ? TESTNET_CORE_LLP_PORT : NEXUS_CORE_LLP_PORT)));
-        loop
+        while(
         {
             try
             {

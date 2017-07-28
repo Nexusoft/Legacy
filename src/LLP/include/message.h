@@ -33,42 +33,6 @@ namespace LLP
 	extern const int PROTOCOL_VERSION;
 	
 	
-	/* Inventory Block Messages Switch. */
-	enum
-	{
-		MSG_TX = 1,
-		MSG_BLOCK,
-	};
-	
-	
-	/** inv message data */
-	class CInv
-	{
-		public:
-			CInv();
-			CInv(int typeIn, const uint1024& hashIn);
-			CInv(const std::string& strType, const uint1024& hashIn);
-
-			IMPLEMENT_SERIALIZE
-			(
-				READWRITE(type);
-				READWRITE(hash);
-			)
-
-			friend bool operator<(const CInv& a, const CInv& b);
-
-			bool IsKnownType() const;
-			const char* GetCommand() const;
-			std::string ToString() const;
-			void print() const;
-
-		// TODO: make private (improves encapsulation)
-		public:
-			int type;
-			uint1024 hash;
-	};
-	
-	
 	/* Class to handle sending and receiving of More Complese Message LLP Packets. */
 	class MessagePacket
 	{
@@ -83,10 +47,10 @@ namespace LLP
 		 * BYTE 26 - X   : Data
 		 * 
 		 */
-		unsigned char 	HEADER[4];
-		char 				MESSAGE[12];
-		unsigned int  	LENGTH;
-		unsigned int  	CHECKSUM;
+		unsigned char	HEADER[4];
+		char			MESSAGE[12];
+		unsigned int	LENGTH;
+		unsigned int	CHECKSUM;
 		
 		std::vector<unsigned char> DATA;
 		
@@ -125,11 +89,8 @@ namespace LLP
 		
 		/* Get the Command of packet in a std::string type. */
 		std::string GetMessage()
-		{ 
-			//if(MESSAGE[11] == 0)
-				return std::string(MESSAGE, MESSAGE + strlen(MESSAGE));
-			
-			//return std::string(MESSAGE, MESSAGE + 12); 
+		{
+			return std::string(MESSAGE, MESSAGE + strlen(MESSAGE));
 		}
 		
 		
@@ -164,7 +125,7 @@ namespace LLP
 		
 		/* Sets the size of the packet from Byte Vector. */
 		void SetLength(std::vector<unsigned char> BYTES) 
-		{ 
+		{
 			CDataStream ssLength(BYTES, SER_NETWORK, MIN_PROTO_VERSION);
 			ssLength >> LENGTH;
 		}

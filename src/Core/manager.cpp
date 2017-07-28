@@ -9,108 +9,58 @@
 *******************************************************************************************/
 
 #include "include/manager.h"
+#include "include/inventory.h"
 #include "include/hosts.h"
+
+#include "../LLC/include/random.h"
 
 namespace Core
 {
-	
-	std::vector<std::string> DNS_SeedNodes =
-	{
-		"node1.nexusearth.com",
-		"node1.mercuryminer.com",
-		"node1.nexusminingpool.com",
-		"node1.nxs.efficienthash.com",
-		"node2.nexusearth.com",
-		"node2.mercuryminer.com",
-		"node2.nexusminingpool.com",
-		"node2.nxs.efficienthash.com",
-		"node3.nexusearth.com",
-		"node3.mercuryminer.com",
-		"node3.nxs.efficienthash.com",
-		"node4.nexusearth.com",
-		"node4.mercuryminer.com",
-		"node4.nxs.efficienthash.com",
-		"node5.nexusearth.com",
-		"node5.mercuryminer.com",
-		"node5.nxs.efficienthash.com",
-		"node6.nexusearth.com",
-		"node6.mercuryminer.com",
-		"node6.nxs.efficienthash.com",
-		"node7.nexusearth.com",
-		"node7.mercuryminer.com",
-		"node7.nxs.efficienthash.com",
-		"node8.nexusearth.com",
-		"node8.mercuryminer.com",
-		"node8.nxs.efficienthash.com",
-		"node9.nexusearth.com",
-		"node9.mercuryminer.com",
-		"node9.nxs.efficienthash.com",
-		"node10.nexusearth.com",
-		"node10.mercuryminer.com",
-		"node10.nxs.efficienthash.com",
-		"node11.nexusearth.com",
-		"node11.mercuryminer.com",
-		"node11.nxs.efficienthash.com",
-		"node12.nexusearth.com",
-		"node12.mercuryminer.com",
-		"node12.nxs.efficienthash.com",
-		"node13.nexusearth.com",
-		"node13.mercuryminer.com",
-		"node13.nxs.efficienthash.com",
-	};
-	
-	
-	std::vector<std::string> DNS_SeedNodes_Testnet = 
-	{
-		"test1.nexusoft.io"
-	};
-	
-	
-	bool InventoryManager::Has(LLP::CInv cInv)
-	{
-		if(cInv.type == LLP::MSG_TX)
-			return Has(cInv.hash.getuint512());
-		
-		return Has(cInv.hash);
-	}
-	
-	
 	/* NODE MANAGER NOTE:
-     * 
-     * The Node Manager handles all the connections associated with a specifric node and rates them based on their interactions and trust they have built in th network
-     * It is also intelligent to distinguish the best nodes to connect with and also process blocks in a single location so that there are not more processes that need happen
-     * and that everything can be done in the order it was inteneded.
-     */
+	 * 
+	 * The Node Manager handles all the connections associated with a specifric node and rates them based on their interactions and trust they have built in th network
+	 * It is also intelligent to distinguish the best nodes to connect with and also process blocks in a single location so that there are not more processes that need happen
+	 * and that everything can be done in the order it was inteneded.
+	 */
 	
-	void NodeManager::Start()
-	{
-		pServer = new LLP::Server<LLP::CNode>(LLP::GetDefaultPort(), 5, true, 2, 50, 30, 30, true, true);
-	    
-		std::vector<LLP::CAddress> vSeeds = LLP::DNS_Lookup(fTestNet ? DNS_SeedNodes_Testnet : DNS_SeedNodes);
-		for(int nIndex = 0; nIndex < vSeeds.size(); nIndex++)
-			AddAddress(vSeeds[nIndex]);
-        
-	}
-	
-	
+	/* Time Seed Manager. */
+	void TimestampManager();
+		
+		
+	/* Connection Manager Thread. */
+	void ConnectionManager();
+		
+		
+	/* Handle and Process New Blocks. */
+	void BlockProcessor();
+		
+		
+	/* Add address to the Queue. */
 	void NodeManager::AddAddress(LLP::CAddress cAddress)
 	{
 		LOCK(MANAGER_MUTEX);
-        
+		
 		vNew.push_back(cAddress);
 	}
-	
-	
+		
+		
+	/* Add a node to the manager by pointer reference. This is for if the node has already been connected outside of the class. */
 	void NodeManager::AddNode(LLP::CNode* pnode)
 	{
 		LOCK(MANAGER_MUTEX);
 		
-        std::vector<LLP::CNode*>::iterator it = find(vNodes.begin(), vNodes.end(), pNode);
-        if(it != vNodes.end())
-            vNodes.push_back(pnode);
+		std::vector<LLP::CNode*>::iterator it = find(vNodes.begin(), vNodes.end(), pNode);
+		if(it != vNodes.end())
+			vNodes.push_back(pnode);
 	}
-	
-	void NodeManager::RemoveNode(LLP::CNode* pNode)
+		
+		
+	/* Remove a node from the manager by its address as reference. */
+	void RemoveNode(LLP::CAddress cAddress);
+		
+		
+	/* Remove a node from the manager by its class as reference. */
+	void NodeManager::RemoveNode(LLP::CNode* pnode)
 	{
 		LOCK(MANAGER_MUTEX);
 		
@@ -118,51 +68,102 @@ namespace Core
 		if(it != vNodes.end())
 			vNodes.erase(it);
 	}
+		
+		
+	/* Find a Node in this Manager by Net Address. */
+	LLP::CNode* FindNode(const LLP::CNetAddr& ip);
+		
+		
+	/* Find a Node in this Manager by Sercie Address. */
+	LLP::CNode* FindNode(const LLP::CService& addr); 
+		
+		
+	/* Get a random address from the active connections in the manager. */
+	LLP::CAddress NodeManager::GetRandAddress(bool fNew)
+	{
+		std::vector<LLP::CAddress> vSelect;
+		if(fNew)
+			vSelect.insert(vSelect.begin(), vNew.begin(), vNew.end());
+		
+		
+	}
+		
+		
+	/* Start up the Node Manager. */
+	void NodeManager::Start()
+	{
+		pServer = new LLP::Server<LLP::CNode>(LLP::GetDefaultPort(), 5, true, 2, 50, 30, 30, true, true);
+		
+		std::vector<LLP::CAddress> vSeeds = LLP::DNS_Lookup(fTestNet ? DNS_SeedNodes_Testnet : DNS_SeedNodes);
+		for(int nIndex = 0; nIndex < vSeeds.size(); nIndex++)
+			AddAddress(vSeeds[nIndex]);
+		
+	}
+	
+	
+
+	
+	
+
+	
+	
+
+	
+	
+	/* Remove a node from the manager by its address as reference. */
+	void RemoveNode(LLP::CAddress cAddress) 
+	{ 
+		//TODO: Finish this method
+		
+	}
+	
 	
 	//TODO: Make the Clock regulator more advanced to do multiple checks on possible clock 
 	void NodeManager::ClockRegulator()
-    {
-        
+	{
+		
+		
+	}
+		
 
-    }
-
+	
 	
 	void NodeManager::TimestampManager()
 	{
-        while(!fShutdown)
-        {
-            if(vNodes.size() == 0){
-                Sleep(1000);
-                
-                continue;
-            }
-            
-            
-            /* Loop the queues of the nodes that are currently connected. */
-            for(int nIndex = 0; nIndex < vNodes.size(); nIndex++)
-            {
-                Sleep(1000);
-                
-                { LOCK(vNodes[nIndex]->NODE_MUTEX);
-                    
-                    
-                    
-                }
-            }
-        }
+		while(!fShutdown)
+		{
+			if(vNodes.size() == 0){
+				Sleep(1000);
+				
+				continue;
+			}
+			
+			
+			/* Loop the queues of the nodes that are currently connected. */
+			for(int nIndex = 0; nIndex < vNodes.size(); nIndex++)
+			{
+				Sleep(1000);
+				
+				{ LOCK(vNodes[nIndex]->NODE_MUTEX);
+					
+				
+				
+				}
+			}
+		}
 	}
 	
 	void NodeManager::ConnectionManager()
 	{
-        while(!fShutdown)
-        {
-            if(vNew.size() == 0 && vTried.size() == 0){
-                Sleep(1000);
-                
-                continue;
-            }
-            
-            { LOCK(MANAGER_MUTEX);
+		while(!fShutdown)
+		{
+			if(vNew.size() == 0 && vTried.size() == 0){
+				Sleep(1000);
+				
+				continue;
+			}
+			
+			{ LOCK(MANAGER_MUTEX);
 				
 				//TODO: Make this tied to port macros
 				if(!pServer->AddConnection(vNew[0].ToStringIP(), "9323"))
@@ -172,55 +173,56 @@ namespace Core
 			}
 			
 			Sleep(5000);
-        }
+		}
 	}
 	
 	
 	/* Blocks are checked in the order they are recieved. */
 	void NodeManager::BlockProcessor()
 	{
-        while(!fShutdown)
-        {
-            if(vNodes.size() == 0){
-                Sleep(1000);
+		while(!fShutdown)
+		{
+			if(vNodes.size() == 0){
+				Sleep(1000);
+				
+				continue;
+			}
+			
+			
+			/* Loop the queues of the nodes that are currently connected. */
+			for(int nIndex = 0; nIndex < vNodes.size(); nIndex++)
+			{
+				Sleep(1);
+				
+				{ LOCK(vNodes[nIndex]->NODE_MUTEX);
+				
+					/* If there are no blocks in the queue continue on the loop. */
+					if(vNodes[nIndex]->queueBlocks.size() == 0)
+						continue;
                 
-                continue;
-            }
-            
-            
-            /* Loop the queues of the nodes that are currently connected. */
-            for(int nIndex = 0; nIndex < vNodes.size(); nIndex++)
-            {
-                Sleep(1);
-                
-                { LOCK(vNodes[nIndex]->NODE_MUTEX);
-                
-                    /* If there are no blocks in the queue continue on the loop. */
-                    if(vNodes[nIndex]->queueBlocks.size() == 0)
-                        continue;
-                
-                    /* Extract the block from the queue. */
-                    CBlock* pblock = &vNodes[nIndex]->queueBlocks.front();
-                    vNodes[nIndex]->queueBlocks.pop();
-                    
-                    if(mapBlockIndex.count(pblock->GetHash()))
-                    {
-                        //TODO: Verbose output here verbose > 3 to signal repeat blocks that are already in the blockchain
-                        
-                        continue;
-                    }
-                
-                    /* Check the Block. */
-                    if (!CheckBlock(pblock, vNodes[nIndex]))
-                        continue;
-                    
-                    /* Accept the Block. */
-                    if (!AcceptBlock(pblock, vNodes[nIndex]))
-                        continue;
-                
-                }
-            }
-        }
+					/* Extract the block from the queue. */
+					CBlock* pblock = &vNodes[nIndex]->queueBlocks.front();
+					vNodes[nIndex]->queueBlocks.pop();
+					
+					if(mapBlockIndex.count(pblock->GetHash()))
+					{
+						//TODO: Verbose output here verbose > 3 to signal repeat blocks that are already in the blockchain
+						
+						continue;
+					}
+					
+					
+					/* Check the Block. */
+					if (!CheckBlock(pblock, vNodes[nIndex]))
+						continue;
+					
+					/* Accept the Block. */
+					if (!AcceptBlock(pblock, vNodes[nIndex]))
+						continue;
+					
+				}
+			}
+		}
 	}
 	
 	/*
