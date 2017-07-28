@@ -667,12 +667,17 @@ namespace Core
 		bool Expired(unsigned int nTime) const;
 		bool CheckGenesis(CBlock cBlock) const;
 		
-		void Print()
+		std::string ToString()
 		{
 			uint576 cKey;
 			cKey.SetBytes(vchPubKey);
 			
-			printf("CTrustKey(Hash = %s, Key = %s, Genesis = %s, Tx = %s, Time = %u, Age = %"PRIu64", BlockAge = %"PRIu64", Expired = %s)\n", GetHash().ToString().c_str(), cKey.ToString().c_str(), hashGenesisBlock.ToString().c_str(), hashGenesisTx.ToString().c_str(), nGenesisTime, Age(GetUnifiedTimestamp()), BlockAge(GetUnifiedTimestamp()), Expired(GetUnifiedTimestamp()) ? "TRUE" : "FALSE");
+			return strprintf("Hash = %s, Key = %s, Genesis = %s, Tx = %s, Time = %u, Age = %"PRIu64", BlockAge = %"PRIu64", Expired = %s", GetHash().ToString().c_str(), cKey.ToString().c_str(), hashGenesisBlock.ToString().c_str(), hashGenesisTx.ToString().c_str(), nGenesisTime, Age(GetUnifiedTimestamp()), BlockAge(GetUnifiedTimestamp()), Expired(GetUnifiedTimestamp()) ? "TRUE" : "FALSE");
+		}
+		
+		void Print()
+		{
+			printf("CTrustKey(%s)\n", ToString().c_str());
 		}
 	};
 	
