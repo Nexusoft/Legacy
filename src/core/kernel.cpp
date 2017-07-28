@@ -710,7 +710,7 @@ namespace Core
 	bool CTrustKey::Expired(unsigned int nTime) const
 	{
 		if(BlockAge(nTime) > TRUST_KEY_EXPIRE)
-			return !error("CTrustKey::Expired() : Block Age Beyond Expiration Time.");
+			return true;
 			
 		return false;
 	}
