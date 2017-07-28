@@ -290,6 +290,86 @@ namespace RPC
 		
 		return obj;
 	}
+	
+	
+	Value getnetworkpps(const Array& params, bool fHelp)
+	{
+		if (fHelp || params.size() != 0)
+			throw runtime_error(
+				"getnetworkpps\n"
+				"Get network prime searched per second.");
+		
+		/* This constant was determined by finding the time it takes to find primes at given difficulty and Primes Per Second'
+		 * This constant was found that 2,450 Prime Per Second is required to find 1 3ch Cluster per Second.
+		 * The difficulty changes are exponential or in other words require 50x more work per difficulty increase
+		 */
+		unsigned int nTimeConstant = 2480;
+		
+		/* Used for determining the average block times. 
+		 * TODO START: Make this its own RPC command */
+		uint64 nTotalTime = 0;
+		
+		const Core::CBlockIndex* pindex = Core::GetLastChannelIndex(Core::pindexBest, 1);
+		unsigned int nAverageTime = 0, nTotal = 0;
+		double nAverageDifficulty = 0.0;
+		
+		for( ; nTotal < 1440 && pindex->pprev; nTotal ++) {
+			
+			nAverageTime += (pindex->GetBlockTime() - Core::GetLastChannelIndex(pindex->pprev, 1)->GetBlockTime());
+			nAverageDifficulty += (Core::GetDifficulty(pindex->nBits, 1));
+			
+			pindex = Core::GetLastChannelIndex(pindex->pprev, 1);
+		}
+		
+		nAverageTime       /= nTotal;
+		nAverageDifficulty /= nTotal;
+		/* TODO END **/
+		
+		Object obj;
+		obj.push_back(Pair("average time", (int) nAverageTime));
+		obj.push_back(Pair("average difficulty", nAverageDifficulty));
+		
+		/* Calculate the hashrate based on nTimeConstant. Set the reference from 3ch and 
+		 * Above since 1x and 2x were never useful starting difficulties. */
+		uint64 nHashRate = (nTimeConstant / nAverageTime) * std::pow(50.0, (nAverageDifficulty - 3.0));
+		
+		obj.push_back(Pair("primes per second", (boost::uint64_t)nHashRate));
+		
+		return obj;
+	}
+	
+	Value getnetworktrustkeys(const Array& params, bool fHelp)
+	{
+		if (fHelp || params.size() != 0)
+			throw runtime_error(
+				"getnetworktrustkeys\n"
+				"List all the Trust Keys on the Network");
+			
+			
+		unsigned int nTotalActive = 0;	
+		Object obj;
+		for(std::map<uint576, Core::CTrustKey>::iterator it = Core::cTrustPool.mapTrustKeys.begin(); it != Core::cTrustPool.mapTrustKeys.end(); ++it)
+		{
+			if(it->second.Expired(GetUnifiedTimestamp()))
+				continue;
+				
+			/** Check the Wallet and Trust Keys in Trust Pool to see if we own any keys. **/
+			Wallet::NexusAddress address;
+			address.SetPubKey(it->second.vchPubKey);
+
+			obj.push_back(Pair("address", address.ToString()));
+			obj.push_back(Pair("interest rate", 100.0 * Core::cTrustPool.InterestRate(it->first, GetUnifiedTimestamp())));
+			obj.push_back(Pair("trust key", it->second.ToString()));
+			
+			nTotalActive ++;
+		}
+		
+		
+		obj.push_back(Pair("total active", (int) nTotalActive));
+		obj.push_back(Pair("total expired", (int) (Core::cTrustPool.mapTrustKeys.size() - nTotalActive)));
+		
+		return obj;
+	}
 
 
 	Value getblockcount(const Array& params, bool fHelp)
@@ -2496,6 +2576,8 @@ namespace RPC
 		{ "sendtoaddress",          &sendtoaddress,          false },
         { "getmoneysupply",         &getmoneysupply,         true },
 		{ "getnetworkhashps",       &getnetworkhashps,       true },
+		{ "getnetworkpps",       	&getnetworkpps,          true },
+		{ "getnetworktrustkeys",    &getnetworktrustkeys,    true },
 		{ "getreceivedbyaddress",   &getreceivedbyaddress,   false },
 		{ "getreceivedbyaccount",   &getreceivedbyaccount,   false },
 		{ "listreceivedbyaddress",  &listreceivedbyaddress,  false },
