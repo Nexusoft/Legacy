@@ -10,7 +10,7 @@ What is Nexus?
 --------------
 
 Nexus is a framework of tools that can be used to create most of the applications on
-the internetw as we know it today. The core implementation is of a digital currency
+the internet as we know it today. The core implementation is of a digital currency
 that rides on the backbones of the network and provides a stable storage and transmission
 of value from party to party. 
 
