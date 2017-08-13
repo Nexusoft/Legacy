@@ -16,6 +16,7 @@
 #include <set>
 
 #include "../../LLC/types/uint1024.h"
+
 #include "../../Util/include/mutex.h"
 #include "../../Util/templates/containers.h"
 
@@ -339,6 +340,7 @@ namespace Core
 	
 	/** Small function to ensure the global supply remains within reasonable bounds **/
 	inline bool MoneyRange(int64 nValue) { return (nValue >= 0 && nValue <= MAX_TXOUT_AMOUNT); }
+
 	
 		
 	/* __________________________________________________ (TODO: Post Tritium Deprecation) __________________________________________________  */

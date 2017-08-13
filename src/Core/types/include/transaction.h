@@ -14,16 +14,16 @@
 #include <map>
 #include <stdint.h>
 
-#include "global.h"
-#include "unifiedtime.h"
+#include "../../include/global.h"
+#include "../../include/unifiedtime.h"
 
-#include "../../Util/templates/serialize.h"
-#include "../../Util/include/runtime.h"
+#include "../../../Util/templates/serialize.h"
+#include "../../../Util/include/runtime.h"
 
-#include "../../LLC/hash/SK.h"
-#include "../../LLP/include/network.h"
+#include "../../../LLC/hash/SK.h"
+#include "../../../LLP/include/message.h"
 
-#include "../../Wallet/script.h"
+#include "../../../Wallet/script.h"
 
 namespace LLD 
 {
@@ -51,7 +51,7 @@ namespace Core
 	
 	/** Serialize Hash: Used to Serialize a CTransaction class in order to obtain the Tx Hash. Utilizes CDataStream to serialize the class. **/
 	template<typename T>
-	uint512 SerializeHash(const T& obj, int nType=SER_GETHASH, int nVersion=LLP::PROTOCOL_VERSION)
+	uint512 SerializeHash(const T& obj, int nType=SER_GETHASH, int nVersion=PROTOCOL_VERSION)
 	{
 		// Most of the time is spent allocating and deallocating CDataStream's
 		// buffer.  If this ever needs to be optimized further, make a CStaticStream
@@ -549,7 +549,6 @@ namespace Core
 			@param[in] pindexBlock
 			@param[in] fBlock	true if called from ConnectBlock
 			@param[in] fMiner	true if called from CreateNewBlock
-			@param[in] fStrictPayToScriptHash	true if fully validating p2sh transactions
 			@return Returns true if all checks succeed
 		 */
 		bool ConnectInputs(LLD::CIndexDB& indexdb, MapPrevTx inputs,
@@ -558,7 +557,6 @@ namespace Core
 		
 		bool ClientConnectInputs();
 		bool CheckTransaction() const;
-		bool AcceptToMemoryPool(LLD::CIndexDB& indexdb, bool fCheckInputs=true, bool* pfMissingInputs=NULL);
 	
 
 	protected:
@@ -712,45 +710,6 @@ namespace Core
 			return !(a == b);
 		}
 	};
-	
-	
-	
-	class CTxMemPool
-	{
-	public:
-		mutable Mutex_t cs;
-		
-		std::map<uint512, CTransaction> mapTx;
-		std::map<COutPoint, CInPoint> mapNextTx;
-
-		bool accept(LLD::CIndexDB& indexdb, CTransaction &tx,
-					bool fCheckInputs, bool* pfMissingInputs);
-		bool addUnchecked(CTransaction &tx);
-		bool remove(CTransaction &tx);
-		void queryHashes(std::vector<uint512>& vtxid);
-
-		unsigned long size()
-		{
-			LOCK(cs);
-			return mapTx.size();
-		}
-
-		bool exists(uint512 hash)
-		{
-			return (mapTx.count(hash) != 0);
-		}
-
-		CTransaction& lookup(uint512 hash)
-		{
-			return mapTx[hash];
-		}
-	};
-
-
-	
-	/* The global Memory Pool to Hold New Transactions. */
-	extern CTxMemPool mempool;
-	
 	
 	
 	

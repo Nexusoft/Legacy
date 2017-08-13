@@ -7,10 +7,12 @@
 			http://www.opensource.org/licenses/mit-license.php
   
 *******************************************************************************************/
+#include "../Core/include/manager.h"
 
 #include "include/message.h"
 #include "include/hosts.h"
 #include "include/node.h"
+#include "include/inv.h"
 
 #include "../LLC/include/random.h"
 #include "../LLD/include/index.h"
@@ -24,42 +26,33 @@
 namespace LLP
 {
 	
-	
 	/* Check Inventory to see if already owned. */
 	bool AlreadyHave(LLD::CIndexDB& indexdb, const CInv& inv)
 	{
 		switch (inv.type)
 		{
-		case MSG_TX:
+			case MSG_TX:
 			{
-			bool txInMap = false;
-				{
-				LOCK(Core::mempool.cs);
-				txInMap = (Core::mempool.exists(inv.hash.getuint512()));
-				}
-			return txInMap ||
-				   Core::mapOrphanTransactions.count(inv.hash.getuint512()) ||
-				   indexdb.ContainsTx(inv.hash.getuint512());
+				bool txInMap = Core::pManager->txPool.Has(inv.hash.getuint512());
+				return txInMap || indexdb.ContainsTx(inv.hash.getuint512());
 			}
-
-		case MSG_BLOCK:
-			return Core::mapBlockIndex.count(inv.hash) ||
-					 Core::mapOrphanBlocks.count(inv.hash);
+			case MSG_BLOCK:
+				return Core::pManager->blkPool.Has(inv.hash);
 		}
 		
 		/* Pretend we know what it is even if we don't. */
 		return true;
 	}
 	
-        /* Keep Track of the Inventory we Already have. */
-        void CNode::AddInventoryKnown(const CInv& inv) { }
-
-		
-        /* Send Inventory We have. */
-        void CNode::PushInventory(const CInv& inv) {}
+	
+	/* Keep Track of the Inventory we Already have. */
+	void CNode::AddInventoryKnown(const CInv& inv) { }
 	
 		
-		
+	/* Send Inventory We have. */
+	void CNode::PushInventory(const CInv& inv) {}
+	
+	
 	/* Push a Message With Information about This Current Node. */
 	void CNode::PushVersion()
 	{
@@ -77,7 +70,7 @@ namespace LLP
 		CAddress addrYou = CAddress(CService("0.0.0.0",0));
 		
 		/* Push the Message to receiving node. */
-		PushMessage("version", LLP::PROTOCOL_VERSION, nLocalServices, nTime, addrYou, addrMe,
+		PushMessage("version", PROTOCOL_VERSION, nLocalServices, nTime, addrYou, addrMe,
 					nSessionID, FormatFullVersion(), Core::nBestHeight);
 	}
 	
@@ -129,11 +122,9 @@ namespace LLP
 				
 			return;
 		}
-			
-		/* On Generic Event, Broadcast new block if flagged. 
-		 * 
-		 * NOTE: Replacement for Send Messages
-		 */
+		
+		
+		/* Handle Node Pings on Generic Events */
 		if(EVENT == EVENT_GENERIC)
 		{
 			if(nLastPing + 10 < Core::UnifiedTimestamp()) {
@@ -147,7 +138,7 @@ namespace LLP
 		}
 			
 			
-		/** On Connect Event, Assign the Proper Daemon Handle. **/
+		/** On Connect Event, Assign the Proper Handle. **/
 		if(EVENT == EVENT_CONNECT)
 		{
 			addrThisNode = CAddress(CService(GetIPAddress(), GetDefaultPort()));
@@ -157,21 +148,15 @@ namespace LLP
 			if(fOUTGOING)
 				PushVersion();
 			
-			/* Add the Connection to the Node Manager. */
-			pNodeManager->AddNode(this);
-			
 			return;
-		}	
+		}
 		
 		
-		/** On Disconnect Event, Reduce the Connection Count for Daemon **/
+		/* Handle the Socket Disconnect */
 		if(EVENT == EVENT_DISCONNECT)
 		{
 			if(GetArg("-verbose", 0) >= 1)
 				printf("xxxxx %s Node %s Disconnected at Timestamp %" PRIu64 "\n", fOUTGOING ? "Ougoing" : "Incoming", addrThisNode.ToString().c_str(), Core::UnifiedTimestamp());
-			
-			/* Remove the Connection in the Node Manager. */
-			pNodeManager->RemoveNode(this);
 			
 			return;
 		}
@@ -273,10 +258,10 @@ namespace LLP
 			/* Deserialize the Transaction. */
 			Core::CTransaction tx;
 			ssMessage >> tx;
-            
-            
-            /* De-Serialize the Request ID. 
-             TODO: Check Request ID's and Relay KEYS. */
+			
+			
+			/* De-Serialize the Request ID. 
+			TODO: Check Request ID's and Relay KEYS. */
 			if(nCurrentVersion > 20000)
 			{
 				unsigned int nRequestID;
@@ -285,77 +270,94 @@ namespace LLP
 			
 			
 			/* Don't double process what one already has. */
-			if(!pInvManager->Has(tx.GetHash()))
-                return true;
-            
-            
-            /* Valid Transaction. */
-            bool fMissingInputs = false;
-            
-            LLD::CIndexDB indexdb("r");
-            if (tx.AcceptToMemoryPool(indexdb, true, &fMissingInputs))
-                pInvManager->Set(tx.GetHash(), pInvManager->ACCEPTED);
-            
-            
-            /* Orphaned Transaction. */
-            else if (fMissingInputs)
-                pInvManager->Set(tx.GetHash(), pInvManager->ORPHANED);
-            
-            
-            /* Invalid Transaction. */
-            else
-                pInvManager->Set(tx.GetHash(), pInvManager->INVALID);
-            
-            
-            /* Level 3 Debugging: Output Protocol Messages. */
-            if(GetArg("-verbose", 0) >= 3)
-                printf("received transaction %s\n", tx.GetHash().ToString().substr(0,20).c_str());
+			if(Core::pManager->txPool.Has(tx.GetHash()))
+				return true;
+			
+			
+			/* Valid Transaction. */
+			bool fMissingInputs = false;
+			
+			
+			LLD::CIndexDB indexdb("r");
+			
+			Timer cTimer;
+			cTimer.Start();
+			
+			if(!Core::pManager->txPool.Accept(indexdb, tx, true, &fMissingInputs))
+			{
+				Core::pManager->txPool.Add(tx.GetHash(), tx);
 				
-            
-            /* Level 4 Debugging: Output Raw Data Dumps. */
+				/* Orphaned Transaction. */
+				if (fMissingInputs)
+					Core::pManager->txPool.SetState(tx.GetHash(), Core::pManager->txPool.ORPHANED);
+				
+				else
+					return true;
+				
+				if(GetArg("-verbose", 0) >= 3)
+					printf("PASSED checks in %u ms\n", cTimer.ElapsedMilliseconds());
+			}
+			
+			
+			/* Level 3 Debugging: Output Protocol Messages. */
+			if(GetArg("-verbose", 0) >= 3)
+				printf("received transaction %s\n", tx.GetHash().ToString().substr(0,20).c_str());
+				
+			
+			/* Level 4 Debugging: Output Raw Data Dumps. */
 			if(GetArg("-verbose", 0) >= 4)
 				tx.print();
 		}
-
-
+		
 		/* Push a block into the Node's Recieved Blocks Queue. */
 		else if (INCOMING.GetMessage() == "block")
 		{
 			Core::CBlock block;
 			ssMessage >> block;
 			
-            
+			
 			/* De-Serialize the Request ID. 
-             TODO: Check Request ID's and Relay KEYS. */
+				TODO: Check Request ID's and Relay KEYS. */
 			if(nCurrentVersion > 20000)
 			{
 				unsigned int nRequestID;
 				ssMessage >> nRequestID;
 			}
+			
             
-            
-            /* Check for Duplicates. */
-            uint1024 hashBlock = block.GetHash();
-            if(pInvManager->Has(hashBlock))
-                return true;
-            
-            /* Add to Inventory. */
-            pInvManager->Set(hashBlock);
-            
-            /* Add the Block to the Process Queue. */
-			{  LOCK(NODE_MUTEX);
-				queueBlocks.push(block);
-			}
-            
-            /* Level 3 Debugging: Output Protocol Messages. */
-            if(GetArg("-verbose", 0) >= 3)
-            printf("received block %s\n", block.GetHash().ToString().substr(0,20).c_str());
+			/* Level 3 Debugging: Output Protocol Messages. */
+			if(GetArg("-verbose", 0) >= 3)
+				printf("received block %s\n", block.GetHash().ToString().substr(0,20).c_str());
             
 			
 			/* Level 4 Debugging: Output raw data dumps. */
 			if(GetArg("-verbose", 0) >= 4)
 				block.print();
-            
+			
+			
+			/* Timer object for runtime calculations. */
+			Timer cTimer;
+			cTimer.Start();
+			
+			
+			/* Check the Block validity. TODO: Send process message for Trust Depreciation (LLP:Dos). */
+			if(Core::pManager->blkPool.Check(block, this))
+			{
+				if(GetArg("-verbose", 0) >= 3)
+					printf("PASSED checks in %u ms\n", cTimer.ElapsedMilliseconds());
+			}
+			else
+				return true; //if failed return without terminating the connection
+			
+			cTimer.Reset();
+			if(Core::pManager->blkPool.Accept(block, this))
+			{
+				if(GetArg("-verbose", 0) >= 3)
+					printf("ACCEPTED in %u ms\n", cTimer.ElapsedMilliseconds());
+			}
+			else
+				return true; //if failed return without terminating the connection
+			
 		}
 		
 		
@@ -503,8 +505,11 @@ namespace LLP
 			std::vector<CInv> vInvNew;
 			for (int i = 0; i < vInv.size(); i++)
 			{
-				if(pInvManager->Has(vInv[i]))
+				if(vInv[i].type == MSG_BLOCK && !Core::pManager->blkPool.Has(vInv[i].hash))
 					continue;
+				else if(vInv[i].type == MSG_TX && !Core::pManager->txPool.Has(vInv[i].hash.getuint512()))
+					continue;
+				
 				
 				/* Log Level 4: Inventory Message (Relay v1.0). */
 				if(GetArg("-verbose", 0) >= 4)
@@ -532,22 +537,22 @@ namespace LLP
 				
 				return true;
 			}
-
+			
 			for(int i = 0; i < vInv.size(); i++)
 			{
-				if(!pInvManager->Has(vInv[i]))
-					continue;
-				
-				/* Log Level 4: Get data protocol level messages. */
-				if(GetArg("-verbose", 0) >= 4)
-					printf("received getdata for: %s\n", vInv[i].ToString().c_str());
 
 				if (vInv[i].type == MSG_BLOCK)
 				{
+					Core::CBlock block;
+					if(Core::pManager->blkPool.Get(vInv[i].hash, block)){
+						PushMessage("block", block);
+						
+						continue;
+					}
+							
 					std::map<uint1024, Core::CBlockIndex*>::iterator mi = Core::mapBlockIndex.find(vInv[i].hash);
 					if (mi != Core::mapBlockIndex.end())
 					{
-						Core::CBlock block;
 						if(!block.ReadFromDisk((*mi).second))
 							continue;
 							
@@ -557,11 +562,16 @@ namespace LLP
 				
 				else if(vInv[i].type == MSG_TX)
 				{
-					
-					//TODO: Relay Transaction from TransactionDB
-					//Tritium will not use the old methods of raw block dump and transactiond data
+					Core::CTransaction tx;
+					if(Core::pManager->txPool.Get(vInv[i].hash.getuint512(), tx))
+						PushMessage("tx", tx);
 					
 				}
+				
+				
+				/* Log Level 4: Get data protocol level messages. */
+				if(GetArg("-verbose", 0) >= 4)
+					printf("received getdata for: %s\n", vInv[i].ToString().c_str());
 			}
 		}
 

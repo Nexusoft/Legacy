@@ -12,7 +12,7 @@
 #define NEXUS_CORE_INCLUDE_BLOCK_H
 
 #include "transaction.h"
-#include "../../LLC/hash/macro.h"
+#include "../../../LLC/hash/macro.h"
 
 
 class CBigNum;

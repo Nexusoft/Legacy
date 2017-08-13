@@ -11,7 +11,7 @@
 #include <boost/assign/list_of.hpp> // for 'map_list_of()'
 #include <boost/foreach.hpp>
 
-#include "include/block.h"
+#include "types/include/block.h"
 
 namespace Core
 {	

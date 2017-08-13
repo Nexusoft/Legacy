@@ -35,7 +35,9 @@ namespace LLP
 		EVENT_CONNECT        = 2,
 		EVENT_DISCONNECT     = 3,
 		EVENT_GENERIC        = 4,
-		EVENT_FAILED         = 5
+		EVENT_FAILED         = 5,
+		
+		EVENT_COMMAND        = 6 //For Message Pushing to Server Processors
 	};
 
 
@@ -254,10 +256,9 @@ namespace LLP
 		Timer         TIMER;
 		Error_t       ERROR_HANDLE;
 		Socket_t      SOCKET;
+
 		
-		
-		/* 
-			Virtual Event Function to be Overridden allowing Custom Read Events. 
+		/*  Pure Virtual Event Function to be Overridden allowing Custom Read Events. 
 			Each event fired on Header Complete, and each time data is read to fill packet.
 			Useful to check Header length to maximum size of packet type for DDOS protection, 
 			sending a keep-alive ping while downloading large files, etc.
@@ -265,10 +266,11 @@ namespace LLP
 			LENGTH == 0: General Events
 			LENGTH  > 0 && PACKET: Read nSize Bytes into Data Packet
 		*/
-		virtual void Event(unsigned char EVENT, unsigned int LENGTH = 0){ return; }
+		virtual void Event(unsigned char EVENT, unsigned int LENGTH = 0) = 0;
 		
-		/* Virtual Process Function. To be overridden with your own custom packet processing. */
-		virtual bool ProcessPacket(){ return false; }
+		
+		/* Pure Virtual Process Function. To be overridden with your own custom packet processing. */
+		virtual bool ProcessPacket() = 0;
 	public:
 		
 	
@@ -292,8 +294,11 @@ namespace LLP
 		bool fOUTGOING;
 		
 		
-		/* Connection Constructors */
+		/* Build Base Connection with no parameters */
 		BaseConnection() : SOCKET(), INCOMING(), DDOS(NULL), fCONNECTED(false), fDDOS(false), fOUTGOING(false) { INCOMING.SetNull(); }
+		
+		
+		/* Build Base Connection with all Parameters. */
 		BaseConnection( Socket_t SOCKET_IN, DDOS_Filter* DDOS_IN, bool isDDOS = false, bool fOutgoing = false) : SOCKET(SOCKET_IN), INCOMING(), DDOS(DDOS_IN), fCONNECTED(false), fDDOS(isDDOS),  fOUTGOING(fOutgoing) { TIMER.Start(); }
 		
 		virtual ~BaseConnection() { Disconnect(); }
@@ -324,6 +329,7 @@ namespace LLP
 		{ 
 			if(GetArg("-verbose", 0) >= 5)
 				PrintHex(PACKET.GetBytes());
+			
 			else if(GetArg("-verbose", 0) >= 4)
 				printf("***** Node Sent Message (%u, %u)\n", PACKET.LENGTH, PACKET.GetBytes().size());
 				
@@ -333,7 +339,7 @@ namespace LLP
 		
 		/* Non-Blocking Packet reader to build a packet from TCP Connection.
 			This keeps thread from spending too much time for each Connection. */
-		virtual void ReadPacket() { }
+		virtual void ReadPacket() = 0;
 
 		
 		/* Connect Socket to a Remote Endpoint. */
@@ -397,6 +403,7 @@ namespace LLP
 		void Write(std::vector<unsigned char> DATA) { if(Errors()) return; TIMER.Reset(); boost::asio::write(*SOCKET, boost::asio::buffer(DATA, DATA.size()), ERROR_HANDLE); }
 
 	};
+	
 	
 	class Connection : public BaseConnection<Packet>
 	{

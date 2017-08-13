@@ -12,6 +12,7 @@
 #define NEXUS_CORE_INCLUDE_INVENTORY_H
 
 #include "../../LLP/include/node.h"
+#include "../../LLP/include/inv.h"
 #include "../../Util/include/mutex.h"
 
 #include <boost/thread/thread.hpp>
@@ -44,7 +45,7 @@ namespace Core
 		/* State level messages to hold information about all inventory. */
 		enum
 		{
-			//TODO: Leave room for more valid states (passes basic checks)
+			//Basic Checks
 			UNVERIFIED = 0,
 			ACCEPTED   = 1,
 			ORPHANED   = 2,
@@ -59,7 +60,7 @@ namespace Core
 			
 		};
 		
-		InventoryManager() {}
+		Inventory() {}
 		
 		
 		/* Class Mutex. */
@@ -75,7 +76,7 @@ namespace Core
 		
 		
 		/* Check based on CInv. */
-		bool Inventory::Has(LLP::CInv cInv)
+		bool Has(LLP::CInv cInv)
 		{
 			if(cInv.type == LLP::MSG_TX)
 				return Has(cInv.hash.getuint512());

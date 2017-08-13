@@ -20,17 +20,9 @@ namespace LLP
 {
 	
 	/* Message Packet Leading Bytes. */
-	static unsigned char MESSAGE_START_TESTNET[4] = { 0xe9, 0x59, 0x0d, 0x05 };
-	static unsigned char MESSAGE_START_MAINNET[4] = { 0x05, 0x0d, 0x59, 0xe9 };
-	
-	
-	/** Used to Lock-Out Nodes that are running a protocol version that is too old, 
-    Or to allow certain new protocol changes without confusing Old Nodes. **/
-	extern const int MIN_PROTO_VERSION;
-	
-	
-	/** Used to determine the features available in the Nexus Network **/
-	extern const int PROTOCOL_VERSION;
+	const unsigned char MESSAGE_START_TESTNET[4] = { 0xe9, 0x59, 0x0d, 0x05 };
+	const unsigned char MESSAGE_START_MAINNET[4] = { 0x05, 0x0d, 0x59, 0xe9 };
+
 	
 	
 	/* Class to handle sending and receiving of More Complese Message LLP Packets. */
@@ -55,7 +47,7 @@ namespace LLP
 		std::vector<unsigned char> DATA;
 		
 		MessagePacket()
-		{ 
+		{
 			SetNull();
 			SetHeader();
 		}

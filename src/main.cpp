@@ -42,9 +42,6 @@ using namespace boost;
 
 Wallet::CWallet* pwalletMain;
 
-Core::NodeManager* pNodeManager;
-Core::InventoryManager* pInvManager;
-
 //////////////////////////////////////////////////////////////////////////////
 //
 // Shutdown
@@ -590,14 +587,7 @@ bool AppInit2(int argc, char* argv[])
 	
     if (fServer)
         CreateThread(RPC::ThreadRPCServer, NULL);
-    
-    
-    /* Start up the Node. */
-    pInvManager = new Core::InventoryManager();
-    pNodeManager = new Core::NodeManager();
-    
-    
-    pNodeManager->Start();
+	
 
 #ifdef QT_GUI
     if (GetStartOnSystemStartup())

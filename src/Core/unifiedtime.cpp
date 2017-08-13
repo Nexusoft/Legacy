@@ -12,6 +12,13 @@
 #include "include/unifiedtime.h"
 
 #include "../Util/include/runtime.h"
+#include "../Util/include/args.h"
+#include "../Util/include/convert.h"
+#include "../Util/include/debug.h"
+
+#include "../LLP/include/hosts.h"
+#include "../LLP/include/time.h"
+#include "../LLP/include/network.h"
 
 namespace Core
 {
@@ -54,7 +61,8 @@ namespace Core
     void ThreadUnifiedSamples(void* parg)
     {
         /** Compile the Seed Nodes into a set of Vectors. **/
-        SEED_NODES    = DNS_Lookup(fTestNet ? DNS_SeedNodes_Testnet : DNS_SeedNodes);
+		std::vector<LLP::CAddress> SEED_NODES;
+		//TODO: = LLP::DNS_Lookup(fTestNet ? LLP::DNS_SeedNodes_Testnet : LLP::DNS_SeedNodes);
         
         /* If the node happens to be offline, wait and recursively attempt to get the DNS seeds. */
         if(SEED_NODES.empty()) {
@@ -67,13 +75,11 @@ namespace Core
         /** Iterator to be used to ensure every time seed is giving an equal weight towards the Global Seeds. **/
         int nIterator = -1;
         
-        for(int nIndex = 0; nIndex < SEED_NODES.size(); nIndex++)
-            SEEDS.push_back(SEED_NODES[nIndex].ToStringIP());
-        
+		
         /** The Entry Client Loop for Core LLP. **/
-        string ADDRESS = "";
-        LLP::CoreOutbound SERVER("", strprintf("%u", (fTestNet ? TESTNET_CORE_LLP_PORT : NEXUS_CORE_LLP_PORT)));
-        while(
+        std::string ADDRESS = "";
+        LLP::TimeOutbound SERVER;
+        while(true)
         {
             try
             {
@@ -83,19 +89,18 @@ namespace Core
                 
                 
                 /** Reset the ITerator if out of Seeds. **/
-                if(nIterator == SEEDS.size())
+                if(nIterator == SEED_NODES.size())
                 nIterator = 0;
                     
                     
                 /** Connect to the Next Seed in the Iterator. **/
-                SERVER.IP = SEEDS[nIterator];
-                SERVER.Connect();
+                SERVER.Connect(SEED_NODES[nIterator].ToStringIP(), "9324", SERVER.IO_SERVICE);
                 
                 
                 /** If the Core LLP isn't connected, Retry in 10 Seconds. **/
                 if(!SERVER.Connected())
                 {
-                    printf("***** Core LLP: Failed To Connect To %s:%s\n", SERVER.IP.c_str(), SERVER.PORT.c_str());
+                    printf("***** Core LLP: Failed To Connect To %s\n", SEED_NODES[nIterator].ToStringIP());
                     
                     continue;
                 }
@@ -106,7 +111,7 @@ namespace Core
                 
                 
                 /** Get 10 Samples From Server. **/
-                SERVER.GetOffset((unsigned int)GetLocalTimestamp());
+                SERVER.GetOffset((unsigned int)Timestamp());
                     
                     
                 /** Read the Samples from the Server. **/
@@ -125,10 +130,10 @@ namespace Core
                             int nOffset = bytes2int(PACKET.DATA);
                             nSamples.Add(nOffset);
                             
-                            SERVER.GetOffset((unsigned int)GetLocalTimestamp());
+                            SERVER.GetOffset((unsigned int)Timestamp());
                             
                             if(GetArg("-verbose", 0) >= 2)
-                                printf("***** Core LLP: Added Sample %i | Seed %s\n", nOffset, SERVER.IP.c_str());
+                                printf("***** Core LLP: Added Sample %i | Seed %s\n", nOffset, SEED_NODES[nIterator].ToStringIP());
                         }
                         
                         SERVER.ResetPacket();
@@ -137,7 +142,7 @@ namespace Core
                     /** Close the Connection Gracefully if Received all Packets. **/
                     if(nSamples.Samples() == 9)
                     {
-                        SERVER.Close();
+                        SERVER.Disconnect();
                         break;
                     }
                 }
@@ -147,7 +152,7 @@ namespace Core
                 if(nSamples.Samples() == 0)
                 {
                     printf("***** Core LLP: Failed To Get Time Samples.\n");
-                    SERVER.Close();
+                    SERVER.Disconnect();
                     
                     continue;
                 }
@@ -163,7 +168,7 @@ namespace Core
                         nSamples.Majority() < GetUnifiedAverage() - MAX_UNIFIED_DRIFT ) {
                     
                         printf("***** Core LLP: Unified Samples Out of Drift Scope Current (%u) Samples (%u)\n", GetUnifiedAverage(), nSamples.Majority());
-                        SERVER.Close();
+                        SERVER.Disconnect();
                     
                         continue;
                     }
@@ -195,7 +200,7 @@ namespace Core
                     UNIFIED_AVERAGE_OFFSET = GetUnifiedAverage();
                     
                     if(GetArg("-verbose", 0) >= 1)
-                        printf("***** %i Iterator | %i Offset | %i Current | %"PRId64"\n", UNIFIED_MOVING_ITERATOR, nSamples.Majority(), UNIFIED_AVERAGE_OFFSET, GetUnifiedTimestamp());
+                        printf("***** %i Iterator | %i Offset | %i Current | %" PRId64 "\n", UNIFIED_MOVING_ITERATOR, nSamples.Majority(), UNIFIED_AVERAGE_OFFSET, UnifiedTimestamp());
                 }
                 
                 /* Sleep for 5 Minutes Between Sample. */

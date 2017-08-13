@@ -8,7 +8,7 @@
   
 *******************************************************************************************/
 
-#include "include/block.h"
+#include "types/include/block.h"
 #include "include/difficulty.h"
 #include "include/supply.h"
 #include "include/prime.h"

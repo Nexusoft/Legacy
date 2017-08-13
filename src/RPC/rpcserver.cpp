@@ -14,6 +14,7 @@
 
 #include "../Core/include/difficulty.h"
 #include "../Core/include/supply.h"
+#include "../Core/include/manager.h"
 
 #include "../LLC/include/random.h"
 #include "../LLD/include/index.h"
@@ -137,7 +138,7 @@ namespace RPC
 	{
 		Object result;
 		result.push_back(Pair("hash", block.GetHash().GetHex()));
-		result.push_back(Pair("size", (int)::GetSerializeSize(block, SER_NETWORK, LLP::PROTOCOL_VERSION)));
+		result.push_back(Pair("size", (int)::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION)));
 		result.push_back(Pair("height", (int)blockindex->nHeight));
 		result.push_back(Pair("channel", (int)block.nChannel));
 		result.push_back(Pair("version", (int)block.nVersion));
@@ -374,7 +375,7 @@ namespace RPC
 
 		Object obj;
 		obj.push_back(Pair("version",       FormatFullVersion()));
-		obj.push_back(Pair("protocolversion",(int)LLP::PROTOCOL_VERSION));
+		obj.push_back(Pair("protocolversion",(int)PROTOCOL_VERSION));
 		obj.push_back(Pair("walletversion", pwalletMain->GetVersion()));
 		obj.push_back(Pair("balance",       ValueFromAmount(pwalletMain->GetBalance())));
 		obj.push_back(Pair("newmint",       ValueFromAmount(pwalletMain->GetNewMint())));
@@ -428,7 +429,7 @@ namespace RPC
 		obj.push_back(Pair("hashReserve",        ValueFromAmount(pindexGPU->nReleasedReserve[0])));
 		obj.push_back(Pair("primeValue",       ValueFromAmount(Core::GetCoinbaseReward(Core::pindexBest, 1, 0))));
 		obj.push_back(Pair("hashValue",        ValueFromAmount(Core::GetCoinbaseReward(Core::pindexBest, 2, 0))));
-		obj.push_back(Pair("pooledtx",      (uint64_t)Core::mempool.size()));	
+		obj.push_back(Pair("pooledtx",      (uint64_t)Core::pManager->txPool.Count(Core::pManager->txPool.VERIFIED)));
 		return obj;
 	}
 
@@ -2294,7 +2295,7 @@ namespace RPC
 				"Returns all transaction ids in memory pool.");
 
 		vector<uint512> vtxid;
-		Core::mempool.queryHashes(vtxid);
+		Core::pManager->txPool.GetIndexes(Core::pManager->txPool.VERIFIED, vtxid);
 
 		Array a;
 		BOOST_FOREACH(const uint512& hash, vtxid)

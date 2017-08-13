@@ -15,9 +15,10 @@
 
 #include "network.h"
 #include "message.h"
+#include "inv.h"
 
-#include "../../Core/include/transaction.h"
-#include "../../Core/include/block.h"
+#include "../../Core/types/include/transaction.h"
+#include "../../Core/types/include/block.h"
 
 #include "../../Util/templates/mruset.h"
 #include "../../Util/templates/containers.h"
@@ -86,20 +87,8 @@ namespace LLP
 		unsigned int nLastUnifiedCheck;
 		
 		
-		/* Node Block Message Queues. */
-		std::queue<Core::CBlock> queueBlocks;
-		
-		
-		/* Node Orphaned Block Messages. */
-		std::queue<Core::CBlock> queueBlockOrphan;
-		
-		
-		/* Node Transaction Message Queues. */
-		std::queue<Core::CTransaction> queueTransactions;
-		
-		
-		/* Node Orphaned Transaction Messages. */
-		std::queue<Core::CTransaction> queueTransactionOrphan;
+		/* Node Process Queue. TODO: Make Process Queue Generate std::pair<key_data, data> */
+		std::queue< std::vector<unsigned char> > queueProcessing; //Need this to be able to accept node data pushes into the server (manager) class logic.
 		
 		
 		/* Message ID's of Requests Sent. */
@@ -108,10 +97,7 @@ namespace LLP
 		
 		/* Keep track of this nodes bad responses. */
 		std::map<std::string, unsigned int> mapBadResponse;
-		
-		
-		/* Known Inventory to make sure duplicate requests are not called out. */
-		mruset<CInv> setInventoryKnown;
+
 		
 		
 		/* Constructors for Message LLP Class. */

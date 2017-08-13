@@ -8,7 +8,8 @@
   
 *******************************************************************************************/
 
-#include "include/block.h"
+#include "types/include/block.h"
+
 #include "include/supply.h"
 #include "include/unifiedtime.h"
 
@@ -21,7 +22,7 @@ namespace Core
 	/* Returns the value of a full minutes reward per channel */
 	int64 GetSubsidy(int nMinutes, int nType) { return (((decay[nType][0] * exp(decay[nType][1] * nMinutes)) + decay[nType][2]) * (COIN / 2.0)); }
 	
-	
+	 
 	/* Compound the subsidy from a start point to an interval point. */
 	int64 CompoundSubsidy(int nMinutes, int nInterval)
 	{

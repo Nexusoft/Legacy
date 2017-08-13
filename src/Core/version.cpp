@@ -35,6 +35,20 @@ const int CLIENT_VERSION =
                   +   10000 * CLIENT_MINOR 
                   +     100 * CLIENT_PATCH
                   +       1 * CLIENT_BUILD;
+				  
+				  
+/* Used to determine the features available in the Nexus Network */
+const int PROTOCOL_VERSION =
+                   1000000 * PROTOCOL_MAJOR
+                 +   10000 * PROTOCOL_MINOR
+                 +     100 * PROTOCOL_REVISION
+                 +       1 * PROTOCOL_BUILD;
+					  
+
+/* Used to Lock-Out Nodes that are running a protocol version that is too old, 
+ * Or to allow certain new protocol changes without confusing Old Nodes. */
+const int MIN_PROTO_VERSION = 10000;
+
 						
 const std::string CLIENT_NAME("Tritium");
 const std::string CLIENT_TYPE("Alpha");
@@ -64,7 +78,7 @@ std::string FormatFullVersion()
     std::ostringstream ss;
     ss << FormatSubVersion();
     ss << " | DB: "    << FormatVersion(DATABASE_VERSION);
-    ss << " | PROTO: " << FormatVersion(LLP::PROTOCOL_VERSION);
+    ss << " | PROTO: " << FormatVersion(PROTOCOL_VERSION);
     
     return ss.str();
 }

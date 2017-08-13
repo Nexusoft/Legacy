@@ -11,7 +11,7 @@
 #include "../main.h"
 
 #include "include/trust.h"
-#include "include/block.h"
+#include "types/include/block.h"
 #include "include/difficulty.h"
 #include "include/unifiedtime.h"
 
@@ -64,7 +64,7 @@ namespace Wallet
 				continue;
 			
 			/** Stop adding Inputs if has reached Maximum Transaction Size. **/
-			unsigned int nBytes = ::GetSerializeSize(txNew, SER_NETWORK, LLP::PROTOCOL_VERSION);
+			unsigned int nBytes = ::GetSerializeSize(txNew, SER_NETWORK, PROTOCOL_VERSION);
 			if (nBytes >= Core::MAX_BLOCK_SIZE_GEN / 5)
 				break;
 
@@ -913,13 +913,14 @@ namespace Core
 						break;
 					}
 					
-					if (!CheckBlock(pblock, NULL))
-					{
-						if(GetArg("-verbose", 0) >= 1)
-							error("Stake Minter : Check Block Failed...");
+					//TODO: Integrate with Node Manager
+					//if (!CheckBlock(pblock, NULL))
+					//{
+					//	if(GetArg("-verbose", 0) >= 1)
+					//		error("Stake Minter : Check Block Failed...");
 						
-						break;
-					}
+					//	break;
+					//}
 					
 					if(GetArg("-verbose", 0) >= 1)
 						pblock->print();

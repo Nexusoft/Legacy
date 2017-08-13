@@ -392,21 +392,21 @@ public:
         return pn[2*n] | (uint64)pn[2*n+1] << 32;
     }
 
-//    unsigned int GetSerializeSize(int nType=0, int nVersion=LLP::PROTOCOL_VERSION) const
+//    unsigned int GetSerializeSize(int nType=0, int nVersion=PROTOCOL_VERSION) const
     unsigned int GetSerializeSize(int nType, int nVersion) const
     {
         return sizeof(pn);
     }
 
     template<typename Stream>
-//    void Serialize(Stream& s, int nType=0, int nVersion=LLP::PROTOCOL_VERSION) const
+//    void Serialize(Stream& s, int nType=0, int nVersion=PROTOCOL_VERSION) const
     void Serialize(Stream& s, int nType, int nVersion) const
     {
         s.write((char*)pn, sizeof(pn));
     }
 
     template<typename Stream>
-//    void Unserialize(Stream& s, int nType=0, int nVersion=LLP::PROTOCOL_VERSION)
+//    void Unserialize(Stream& s, int nType=0, int nVersion=PROTOCOL_VERSION)
     void Unserialize(Stream& s, int nType, int nVersion)
     {
         s.read((char*)pn, sizeof(pn));

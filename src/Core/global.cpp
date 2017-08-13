@@ -8,9 +8,10 @@
   
 *******************************************************************************************/
 
-#include "include/block.h"
+#include "types/include/block.h"
+#include "types/include/transaction.h"
+
 #include "include/trust.h"
-#include "include/transaction.h"
 
 using namespace std;
 
@@ -215,9 +216,6 @@ namespace Core
 	
 	/** Main Mutex to enable thread Synchronization and Queueing while working on main Data Objects. **/
 	Mutex_t cs_main;
-
-	/** Transaction Holding Structure to wait to be confirmed in the Network. **/
-	CTxMemPool mempool;
 	
 	/** Trust Key Holding Structure To Verify Trust Keys Seen on Blockchain. **/
 	CTrustPool cTrustPool;
@@ -250,6 +248,11 @@ namespace Core
 	double dTrustWeight = 0.0;
 	double dBlockWeight = 0.0;
 	double dInterestRate = 0.005;
+	
+	
+	int MAX_TRANSACTION_HOLDING_TIME;
+	int MAX_BLOCK_HOLDING_TIME;
+	int MAX_HOLDING_CACHE_SIZE;
 	
 	
 	uint64 nLastBlockTx = 0;

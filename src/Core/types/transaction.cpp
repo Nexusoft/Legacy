@@ -9,19 +9,21 @@
 *******************************************************************************************/
 
 #include "include/transaction.h"
-#include "include/unifiedtime.h"
-#include "include/dispatch.h"
 
-#include "../LLC/include/random.h"
+#include "../include/unifiedtime.h"
+#include "../include/dispatch.h"
+#include "../include/manager.h"
 
-#include "../Util/include/ui_interface.h"
-#include "../Util/include/args.h"
+#include "../../LLC/include/random.h"
 
-#include "../LLD/include/index.h"
+#include "../../Util/include/ui_interface.h"
+#include "../../Util/include/args.h"
 
-#include "../LLP/include/node.h"
+#include "../../LLD/include/index.h"
 
-#include "../Wallet/wallet.h"
+#include "../../LLP/include/node.h"
+
+#include "../../Wallet/wallet.h"
 
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/filesystem/fstream.hpp>
@@ -37,12 +39,11 @@ namespace Core
 		return strprintf("COutPoint(%s, %d)", hash.ToString().substr(0,10).c_str(), n);
 	}
 
+	
 	void COutPoint::print() const
 	{
 		printf("%s\n", ToString().c_str());
 	}
-	
-	
 	
 	
 	std::string CTxIn::ToStringShort() const
@@ -78,8 +79,6 @@ namespace Core
 	}
 	
 	
-	
-	
 	std::string CTxOut::ToStringShort() const
 	{
 		return strprintf(" out %s %s", FormatMoney(nValue).c_str(), scriptPubKey.ToString(true).c_str());
@@ -96,20 +95,6 @@ namespace Core
 	void CTxOut::print() const
 	{
 		printf("%s\n", ToString().c_str());
-	}
-	
-	
-	
-	
-	
-	void CTxMemPool::queryHashes(std::vector<uint512>& vtxid)
-	{
-		vtxid.clear();
-
-		LOCK(cs);
-		vtxid.reserve(mapTx.size());
-		for (map<uint512, CTransaction>::iterator mi = mapTx.begin(); mi != mapTx.end(); ++mi)
-			vtxid.push_back((*mi).first);
 	}
 
 	
@@ -216,7 +201,7 @@ namespace Core
 		// Base fee is either MIN_TX_FEE or MIN_RELAY_TX_FEE
 		int64 nBaseFee = (mode == GMF_RELAY) ? MIN_RELAY_TX_FEE : MIN_TX_FEE;
 		
-		unsigned int nBytes = ::GetSerializeSize(*this, SER_NETWORK, LLP::PROTOCOL_VERSION);
+		unsigned int nBytes = ::GetSerializeSize(*this, SER_NETWORK, PROTOCOL_VERSION);
 		unsigned int nNewBlockSize = nBlockSize + nBytes;
 		int64 nMinFee = (1 + (int64)nBytes / 1000) * nBaseFee;
 
@@ -519,7 +504,7 @@ namespace Core
 			return LLP::DoS(NULL, 10, error("CTransaction::CheckTransaction() : vout empty"));
 			
 		// Size limits
-		if (::GetSerializeSize(*this, SER_NETWORK, LLP::PROTOCOL_VERSION) > MAX_BLOCK_SIZE)
+		if (::GetSerializeSize(*this, SER_NETWORK, PROTOCOL_VERSION) > MAX_BLOCK_SIZE)
 			return LLP::DoS(NULL, 100, error("CTransaction::CheckTransaction() : size limits failed"));
 
 		// Check for negative or overflow output values
@@ -568,195 +553,6 @@ namespace Core
 		return true;
 	}
 
-	bool CTxMemPool::accept(LLD::CIndexDB& indexdb, CTransaction &tx, bool fCheckInputs,
-							bool* pfMissingInputs)
-	{
-		if (pfMissingInputs)
-			*pfMissingInputs = false;
-
-		if (!tx.CheckTransaction())
-			return error("CTxMemPool::accept() : CheckTransaction failed");
-
-		// Coinbase is only valid in a block, not as a loose transaction
-		if (tx.IsCoinBase())
-			return LLP::DoS(NULL, 100, error("CTxMemPool::accept() : coinbase as individual tx"));
-			
-		// Nexus: coinstake is also only valid in a block, not as a loose transaction
-		if (tx.IsCoinStake())
-			return LLP::DoS(NULL, 100, error("CTxMemPool::accept() : coinstake as individual tx"));
-
-		// To help v0.1.5 clients who would see it as a negative number
-		if ((int64)tx.nLockTime > std::numeric_limits<int>::max())
-			return error("CTxMemPool::accept() : not accepting nLockTime beyond 2038 yet");
-
-		// Rather not work on nonstandard transactions (unless -testnet)
-		if (!fTestNet && !tx.IsStandard())
-			return error("CTxMemPool::accept() : nonstandard transaction type");
-
-		// Do we already have it?
-		uint512 hash = tx.GetHash();
-		{
-			LOCK(cs);
-			if (mapTx.count(hash))
-				return false;
-		}
-		if (fCheckInputs)
-			if (indexdb.ContainsTx(hash))
-				return false;
-
-		// Check for conflicts with in-memory transactions
-		CTransaction* ptxOld = NULL;
-		for (unsigned int i = 0; i < tx.vin.size(); i++)
-		{
-			COutPoint outpoint = tx.vin[i].prevout;
-			if (mapNextTx.count(outpoint))
-			{
-				// Disable replacement feature for now
-				return false;
-
-				// Allow replacing with a newer version of the same transaction
-				if (i != 0)
-					return false;
-				ptxOld = mapNextTx[outpoint].ptx;
-				if (ptxOld->IsFinal())
-					return false;
-				if (!tx.IsNewerThan(*ptxOld))
-					return false;
-				for (unsigned int i = 0; i < tx.vin.size(); i++)
-				{
-					COutPoint outpoint = tx.vin[i].prevout;
-					if (!mapNextTx.count(outpoint) || mapNextTx[outpoint].ptx != ptxOld)
-						return false;
-				}
-				break;
-			}
-		}
-
-		if (fCheckInputs)
-		{
-			MapPrevTx mapInputs;
-			map<uint512, CTxIndex> mapUnused;
-			bool fInvalid = false;
-			if (!tx.FetchInputs(indexdb, mapUnused, false, false, mapInputs, fInvalid))
-			{
-				if (fInvalid)
-					return error("CTxMemPool::accept() : FetchInputs found invalid tx %s", hash.ToString().substr(0,10).c_str());
-				if (pfMissingInputs)
-					*pfMissingInputs = true;
-				return error("CTxMemPool::accept() : FetchInputs failed %s", hash.ToString().substr(0,10).c_str());
-			}
-
-			// Check for non-standard pay-to-script-hash in inputs
-			if (!tx.AreInputsStandard(mapInputs) && !fTestNet)
-				return error("CTxMemPool::accept() : nonstandard transaction input");
-
-			// Note: if you modify this code to accept non-standard transactions, then
-			// you should add code here to check that the transaction does a
-			// reasonable number of ECDSA signature verifications.
-
-			int64 nFees = tx.GetValueIn(mapInputs)-tx.GetValueOut();
-			unsigned int nSize = ::GetSerializeSize(tx, SER_NETWORK, LLP::PROTOCOL_VERSION);
-
-			// Don't accept it if it can't get into a block
-			if (nFees < tx.GetMinFee(1000, false, GMF_RELAY))
-				return error("CTxMemPool::accept() : not enough fees");
-
-			// Continuously rate-limit free transactions
-			// This mitigates 'penny-flooding' -- sending thousands of free transactions just to
-			// be annoying or make other's transactions take longer to confirm.
-			if (nFees < MIN_RELAY_TX_FEE)
-			{
-				static Mutex_t cs;
-				static double dFreeCount;
-				static int64 nLastTime;
-				int64 nNow = UnifiedTimestamp();
-
-				{
-					LOCK(cs);
-					// Use an exponentially decaying ~10-minute window:
-					dFreeCount *= pow(1.0 - 1.0/600.0, (double)(nNow - nLastTime));
-					nLastTime = nNow;
-					// -limitfreerelay unit is thousand-bytes-per-minute
-					// At default rate it would take over a month to fill 1GB
-					if (dFreeCount > GetArg("-limitfreerelay", 15)*10*1000 && !IsFromMe(tx))
-						return error("CTxMemPool::accept() : free transaction rejected by rate limiter");
-					if (fDebug)
-						printf("Rate limit dFreeCount: %g => %g\n", dFreeCount, dFreeCount+nSize);
-					dFreeCount += nSize;
-				}
-			}
-
-			// Check against previous transactions
-			// This is done last to help prevent CPU exhaustion denial-of-service attacks.
-			if (!tx.ConnectInputs(indexdb, mapInputs, mapUnused, CDiskTxPos(1,1,1), pindexBest, false, false))
-			{
-				return error("CTxMemPool::accept() : ConnectInputs failed %s", hash.ToString().substr(0,10).c_str());
-			}
-		}
-
-		// Store transaction in memory
-		{
-			LOCK(cs);
-			if (ptxOld)
-			{
-				printf("CTxMemPool::accept() : replacing tx %s with new version\n", ptxOld->GetHash().ToString().c_str());
-				remove(*ptxOld);
-			}
-			addUnchecked(tx);
-		}
-
-		///// are we sure this is ok when loading transactions or restoring block txes
-		// If updated, erase old tx from wallet
-		if (ptxOld)
-			EraseFromWallets(ptxOld->GetHash());
-
-		printf("CTxMemPool::accept() : accepted %s\n", hash.ToString().substr(0,10).c_str());
-		return true;
-	}
-
-	bool CTransaction::AcceptToMemoryPool(LLD::CIndexDB& indexdb, bool fCheckInputs, bool* pfMissingInputs)
-	{
-		return mempool.accept(indexdb, *this, fCheckInputs, pfMissingInputs);
-	}
-
-	bool CTxMemPool::addUnchecked(CTransaction &tx)
-	{
-		printf("addUnchecked(): size %lu\n",  mapTx.size());
-		// Add to memory pool without checking anything.  Don't call this directly,
-		// call CTxMemPool::accept to properly check the transaction first.
-		{
-			LOCK(cs);
-			uint512 hash = tx.GetHash();
-			mapTx[hash] = tx;
-			for (unsigned int i = 0; i < tx.vin.size(); i++)
-				mapNextTx[tx.vin[i].prevout] = CInPoint(&mapTx[hash], i);
-
-		}
-		return true;
-	}
-
-
-	bool CTxMemPool::remove(CTransaction &tx)
-	{
-		// Remove transaction from memory pool
-		{
-			LOCK(cs);
-			uint512 hash = tx.GetHash();
-			if (mapTx.count(hash))
-			{
-				for(auto txin : tx.vin)
-					mapNextTx.erase(txin.prevout);
-				mapTx.erase(hash);
-
-			}
-		}
-		return true;
-	}
-
-
-
-
-
 
 	int CMerkleTx::GetDepthInMainChain(CBlockIndex* &pindexRet) const
 	{
@@ -792,6 +588,7 @@ namespace Core
 	}
 
 
+	//TODO: Assess this function more
 	bool CMerkleTx::AcceptToMemoryPool(LLD::CIndexDB& indexdb, bool fCheckInputs)
 	{
 		if (fClient)
@@ -799,10 +596,12 @@ namespace Core
 			if (!IsInMainChain() && !ClientConnectInputs())
 				return false;
 			
-			return CTransaction::AcceptToMemoryPool(indexdb, false);
+			//return pManager->txPool.Accept(indexdb, false);
 		}
 
-		return CTransaction::AcceptToMemoryPool(indexdb, fCheckInputs);
+		//return pManager->txPool.Accept(indexdb, (CTransaction)this, fCheckInputs);
+		
+		return false;
 	}
 
 	bool CMerkleTx::AcceptToMemoryPool()
@@ -826,23 +625,6 @@ namespace Core
 			return 0;
 		return 1 + nBestHeight - pindex->nHeight;
 	}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -922,12 +704,10 @@ namespace Core
 			if (!fFound || txindex.pos == CDiskTxPos(1,1,1))
 			{
 				// Get prev tx from single transactions in memory
-				{
-					LOCK(mempool.cs);
-					if (!mempool.exists(prevout.hash))
-						return error("FetchInputs() : %s mempool Tx prev not found %s", GetHash().ToString().substr(0,10).c_str(),  prevout.hash.ToString().substr(0,10).c_str());
-					txPrev = mempool.lookup(prevout.hash);
-				}
+				if(!pManager->txPool.Get(prevout.hash, txPrev))
+					return error("FetchInputs() : %s mempool Tx prev not found %s", GetHash().ToString().substr(0,10).c_str(),  prevout.hash.ToString().substr(0,10).c_str());
+
+				
 				if (!fFound)
 					txindex.vSpent.resize(txPrev.vout.size());
 			}
@@ -1094,15 +874,14 @@ namespace Core
 
 		// Take over previous transactions' spent pointers
 		{
-			LOCK(mempool.cs);
 			int64 nValueIn = 0;
 			for (unsigned int i = (int) IsCoinStake(); i < vin.size(); i++)
 			{
 				// Get prev tx from single transactions in memory
 				COutPoint prevout = vin[i].prevout;
-				if (!mempool.exists(prevout.hash))
+				CTransaction txPrev;
+				if(!pManager->txPool.Get(prevout.hash, txPrev))
 					return false;
-				CTransaction& txPrev = mempool.lookup(prevout.hash);
 
 				if (prevout.n >= txPrev.vout.size())
 					return false;
@@ -1127,22 +906,18 @@ namespace Core
 
 bool Wallet::CWalletTx::AcceptWalletTransaction(LLD::CIndexDB& indexdb, bool fCheckInputs)
 {
+	// Add previous supporting transactions first
+	for(auto tx : vtxPrev)
 	{
-		LOCK(Core::mempool.cs);
-		
-		// Add previous supporting transactions first
-		BOOST_FOREACH(Core::CMerkleTx& tx, vtxPrev)
+		if (!(tx.IsCoinBase() || tx.IsCoinStake()))
 		{
-			if (!(tx.IsCoinBase() || tx.IsCoinStake()))
-			{
-				uint512 hash = tx.GetHash();
-				if (!Core::mempool.exists(hash) && !indexdb.ContainsTx(hash))
-					tx.AcceptToMemoryPool(indexdb, fCheckInputs);
-			}
+			uint512 hash = tx.GetHash();
+			if (!Core::pManager->txPool.Has(hash) && !indexdb.ContainsTx(hash))
+				Core::pManager->txPool.Accept(indexdb, tx, fCheckInputs);
 		}
-		return AcceptToMemoryPool(indexdb, fCheckInputs);
 	}
-	return false;
+		
+	return AcceptToMemoryPool(indexdb, fCheckInputs);
 }
 
 bool Wallet::CWalletTx::AcceptWalletTransaction()

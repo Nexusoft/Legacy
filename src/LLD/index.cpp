@@ -242,11 +242,12 @@ namespace LLD
 			if (!block.ReadFromDisk(pindex))
 				return error("LoadBlockIndex() : block.ReadFromDisk failed");
 				
-			if (nCheckLevel > 0 && !Core::CheckBlock(&block))
-			{
-				printf("LoadBlockIndex() : *** found bad block at %d, hash=%s\n", pindex->nHeight, pindex->GetBlockHash().ToString().c_str());
-				pindexFork = pindex->pprev;
-			}
+			//TODO: Integrate with Node Manager
+			//if (nCheckLevel > 0 && !Core::CheckBlock(&block))
+			//{
+			//	printf("LoadBlockIndex() : *** found bad block at %d, hash=%s\n", pindex->nHeight, pindex->GetBlockHash().ToString().c_str());
+			//	pindexFork = pindex->pprev;
+			//}
 			
 			// check level 2: verify transaction index validity
 			if (nCheckLevel>1)
@@ -350,7 +351,9 @@ namespace LLD
 				return error("LoadBlockIndex() : block.ReadFromDisk failed");
 			
 			CIndexDB txdb;
-			Core::SetBestChain(txdb, pindexFork);
+			
+			//TODO: Integrate with Node Manager
+			//Core::SetBestChain(txdb, pindexFork);
 		}
 
 		return true;

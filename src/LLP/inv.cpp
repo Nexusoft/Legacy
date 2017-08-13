@@ -8,7 +8,9 @@
   
 *******************************************************************************************/
 
-#include "include/message.h"
+#include "include/inv.h"
+#include "../Util/include/debug.h"
+#include "../Util/include/runtime.h"
 
 namespace LLP
 {

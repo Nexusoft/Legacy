@@ -19,6 +19,7 @@ namespace LLP
 	
 	class CAddress;
 	class CNetAddr;
+	class CService;
 	
 	
 	/* The DNS Lookup Routine to find the Nodes that are set as DNS seeds. */

@@ -6,7 +6,7 @@
 USE_UPNP:=1
 DEFS=-DBOOST_SPIRIT_THREADSAFE -DBOOST_NO_CXX11_SCOPED_ENUMS
 
-DEFS += $(addprefix -I,$(CURDIR) $(CURDIR)/build $(CURDIR)/src $(CURDIR)/src/Core $(CURDIR)/src/LLC $(CURDIR)/src/LLD $(CURDIR)/src/LLP $(CURDIR)/src/LLU $(CURDIR)/src/RPC $(CURDIR)/src/Wallet $(BOOST_INCLUDE_PATH) $(BDB_INCLUDE_PATH) $(OPENSSL_INCLUDE_PATH))
+DEFS += $(addprefix -I,$(CURDIR) $(CURDIR)/build $(CURDIR)/src $(CURDIR)/src/Core $(CURDIR)/src/LLC $(CURDIR)/src/LLD $(CURDIR)/src/LLP $(CURDIR)/src/Util $(CURDIR)/src/RPC $(CURDIR)/src/Wallet $(BOOST_INCLUDE_PATH) $(BDB_INCLUDE_PATH) $(OPENSSL_INCLUDE_PATH))
 LIBS = $(addprefix -L,$(BOOST_LIB_PATH) $(BDB_LIB_PATH) $(OPENSSL_LIB_PATH))
 
 TESTDEFS = -DTEST_DATA_DIR=$(abspath test/data)
@@ -99,7 +99,10 @@ CFLAGS= -O2 -pthread -Wall -Wextra -Wno-sign-compare -Wno-unused-parameter -Wfor
 HEADERS = $(wildcard *.h)
 OBJS= \
 	build/main.o \
+	build/blkpool.o \
+	build/txpool.o \
 	build/block.o \
+	build/transaction.o \
 	build/checkpoints.o \
 	build/difficulty.o \
 	build/dispatch.o \
@@ -107,7 +110,6 @@ OBJS= \
 	build/manager.o \
 	build/prime.o \
 	build/supply.o \
-	build/transaction.o \
 	build/trust.o \
 	build/unifiedtime.o \
 	build/version.o\
@@ -121,7 +123,7 @@ OBJS= \
 	build/index.o \
 	build/keychain.o \
 	build/hosts.o \
-	build/message.o \
+	build/inv.o \
 	build/mining.o \
 	build/network.o \
 	build/node.o \
@@ -158,6 +160,20 @@ build/%.o: src/%.cpp
 	  rm -f $(@:%.o=%.d)
 
 build/%.o: src/Core/%.cpp
+	$(CXX) -c $(CFLAGS) $(CXXFLAGS) -MMD -o $@ $<
+	@cp $(@:%.o=%.d) $(@:%.o=%.P); \
+	  sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
+	      -e '/^$$/ d' -e 's/$$/ :/' < $(@:%.o=%.d) >> $(@:%.o=%.P); \
+	  rm -f $(@:%.o=%.d)
+
+build/%.o: src/Core/network/%.cpp
+	$(CXX) -c $(CFLAGS) $(CXXFLAGS) -MMD -o $@ $<
+	@cp $(@:%.o=%.d) $(@:%.o=%.P); \
+	  sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
+	      -e '/^$$/ d' -e 's/$$/ :/' < $(@:%.o=%.d) >> $(@:%.o=%.P); \
+	  rm -f $(@:%.o=%.d)
+
+build/%.o: src/Core/types/%.cpp
 	$(CXX) -c $(CFLAGS) $(CXXFLAGS) -MMD -o $@ $<
 	@cp $(@:%.o=%.d) $(@:%.o=%.P); \
 	  sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \

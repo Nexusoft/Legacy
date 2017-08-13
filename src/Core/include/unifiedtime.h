@@ -13,8 +13,6 @@
 
 #include <vector>
 
-#include "../../LLC/types/uint1024.h"
-
 namespace Core
 {
 	

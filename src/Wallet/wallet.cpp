@@ -772,8 +772,8 @@ namespace Wallet
 				uint512 hash = tx.GetHash();
 				
 				//TODO: CHANGE THIS TO NODE MANAGER
-				if (!indexdb.ContainsTx(hash))
-					Core::RelayMessage(LLP::CInv(LLP::MSG_TX, hash), (Core::CTransaction)tx);
+				//if (!indexdb.ContainsTx(hash))
+				//	Core::RelayMessage(LLP::CInv(LLP::MSG_TX, hash), (Core::CTransaction)tx);
 			}
 		}
 		if (!(IsCoinBase() || IsCoinStake()))
@@ -784,7 +784,7 @@ namespace Wallet
 				printf("Relaying wtx %s\n", hash.ToString().substr(0,10).c_str());
 				
 				//TODO: CHANGE THIS TO NODE MANAGER
-				Core::RelayMessage(LLP::CInv(LLP::MSG_TX, hash), (Core::CTransaction)*this);
+				//Core::RelayMessage(LLP::CInv(LLP::MSG_TX, hash), (Core::CTransaction)*this);
 			}
 		}
 	}
@@ -1254,7 +1254,7 @@ namespace Wallet
 							return false;
 
 					// Limit size
-					unsigned int nBytes = ::GetSerializeSize(*(Core::CTransaction*)&wtxNew, SER_NETWORK, LLP::PROTOCOL_VERSION);
+					unsigned int nBytes = ::GetSerializeSize(*(Core::CTransaction*)&wtxNew, SER_NETWORK, PROTOCOL_VERSION);
 					if (nBytes >= Core::MAX_BLOCK_SIZE_GEN/5)
 						return false;
 					dPriority /= nBytes;

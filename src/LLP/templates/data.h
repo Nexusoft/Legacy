@@ -20,22 +20,29 @@ namespace LLP
 		Not to be inherited, only for use by the LLP Server Base Class. **/
 	template <class ProtocolType> class DataThread
 	{
+		//Need Pointer Reference to Object in Server Class to push data from Data Thread Messages into Server Class
+		
 	public:
 	
 		/** Service that is used to handle Connections on this Thread. */
 		Service_t IO_SERVICE;
 		
+		
 		/* Variables to track Connection / Request Count. */
 		bool fDDOS, fACTIVE, fMETER; unsigned int nConnections, ID, REQUESTS, TIMEOUT, DDOS_rSCORE, DDOS_cSCORE;
+		
 		
 		/* Vector to store Connections. */
 		std::vector< ProtocolType* > CONNECTIONS;
 		
+		
 		/* Data Thread. */
 		Thread_t DATA_THREAD;
 		
+		
 		DataThread<ProtocolType>(unsigned int id, bool isDDOS, unsigned int rScore, unsigned int cScore, unsigned int nTimeout, bool fMeter = false) : 
 			fDDOS(isDDOS), fACTIVE(true), fMETER(fMeter), nConnections(0), ID(id), REQUESTS(0), TIMEOUT(nTimeout),  DDOS_rSCORE(rScore), DDOS_cSCORE(cScore), CONNECTIONS(0), DATA_THREAD(boost::bind(&DataThread::Thread, this)) { }
+			
 			
 		virtual ~DataThread<ProtocolType>()
 		{
@@ -43,6 +50,7 @@ namespace LLP
 			fMETER  = false;
 			
 		}
+		
 		
 		/* Returns the index of a component of the CONNECTIONS vector that has been flagged Disconnected */
 		int FindSlot()

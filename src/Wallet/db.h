@@ -9,8 +9,8 @@
 #ifndef NEXUS_WALLET_DB_H
 #define NEXUS_WALLET_DB_H
 
-#include "../Core/include/block.h"
-#include "../Core/include/transaction.h"
+#include "../Core/types/include/block.h"
+#include "../Core/types/include/transaction.h"
 
 #include <map>
 #include <string>

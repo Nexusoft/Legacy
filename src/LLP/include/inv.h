@@ -51,3 +51,5 @@ namespace LLP
 			uint1024 hash;
 	};
 }
+
+#endif

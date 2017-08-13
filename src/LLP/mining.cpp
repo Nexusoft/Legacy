@@ -13,7 +13,7 @@
 #include "include/mining.h"
 #include "templates/types.h"
 
-#include "../Core/include/block.h"
+#include "../Core/types/include/block.h"
 #include "../Core/include/supply.h"
 
 #include <boost/algorithm/string/replace.hpp>

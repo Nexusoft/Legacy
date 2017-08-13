@@ -18,9 +18,15 @@ namespace LLD
 {
     /* Journal Database keeps in non-volatile memory the transaction record for rollback.
      * This will be triggered if the checksums don't match with sector data and the keychain 
+	 * 
      * TODO: Figure out the best Key system to correlate a transaction to the data in the journal
      * This should be seen by the sector as well, which means that the keychain should keep a list
      * of the keys that were changed.
+	 * 
+	 * This should be done with a std::pair(key, txid) for the journal's key. 
+	 * Records should be resued,
+	 * 
+	 * TODO: Get the Sector Chain working properly
      */
 	class CJournalDB : public SectorDatabase
 	{

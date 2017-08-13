@@ -9,7 +9,7 @@
 #ifndef NEXUS_WALLET_H
 #define NEXUS_WALLET_H
 
-#include "../Core/include/transaction.h"
+#include "../Core/types/include/transaction.h"
 #include "../Core/include/unifiedtime.h"
 #include "../Core/include/global.h"
 

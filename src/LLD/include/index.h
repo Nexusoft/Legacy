@@ -13,9 +13,9 @@
 
 #include "../templates/key.h"
 #include "../templates/sector.h"
-#include "../../Core/include/block.h"
+#include "../../Core/types/include/block.h"
 #include "../../Core/include/trust.h"
-#include "../../Core/include/transaction.h"
+#include "../../Core/types/include/transaction.h"
 #include "../../Wallet/db.h"
 
 namespace LLD

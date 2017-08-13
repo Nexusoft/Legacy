@@ -16,7 +16,7 @@ using namespace boost;
 #include "key.h"
 #include "keystore.h"
 
-#include "../Core/include/transaction.h"
+#include "../Core/types/include/transaction.h"
 #include "../LLC/types/bignum.h"
 #include "../LLC/include/random.h"
 
