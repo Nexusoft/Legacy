@@ -1,12 +1,15 @@
-/*******************************************************************************************
+/*__________________________________________________________________________________________
  
 			(c) Hash(BEGIN(Satoshi[2010]), END(Sunny[2012])) == Videlicet[2017] ++
 			
-			(c) Copyright Nexus Developers 2014 - 2017
+			(c) Copyright The Nexus Developers 2014 - 2017
 			
-			http://www.opensource.org/licenses/mit-license.php
+			Distributed under the MIT software license, see the accompanying
+			file COPYING or http://www.opensource.org/licenses/mit-license.php.
+			
+			"fides in stellis, virtus in numeris" - Faith in the Stars, Power in Numbers
   
-*******************************************************************************************/
+____________________________________________________________________________________________*/
 
 #ifndef NEXUS_LLP_INCLUDE_HOSTS_H
 #define NEXUS_LLP_INCLUDE_HOSTS_H
@@ -20,6 +23,12 @@ namespace LLP
 	class CAddress;
 	class CNetAddr;
 	class CService;
+	
+	/** These addresses are the first point of contact on the P2P network
+	 * They are established and maintained by the owners of each domain.
+	 */
+	extern std::vector<std::string> DNS_SeedNodes;
+	extern std::vector<std::string> DNS_SeedNodes_Testnet;
 	
 	
 	/* The DNS Lookup Routine to find the Nodes that are set as DNS seeds. */

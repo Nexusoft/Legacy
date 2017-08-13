@@ -123,6 +123,7 @@ OBJS= \
 	build/index.o \
 	build/keychain.o \
 	build/hosts.o \
+	build/seeds.o \
 	build/inv.o \
 	build/mining.o \
 	build/network.o \

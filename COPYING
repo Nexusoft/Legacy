@@ -1,6 +1,19 @@
-The MIT License (MIT)
+(c) Copyright Nexus Developers   2014 - 2017
 
-Copyright (c) 2009-2017 The Bitcoin Core developers
+Some of the code in this software was written by Satoshi Nakamoto, and some
+was written by the Bitcoin Core Developers over the years of 2008 - 2012. 
+Most of the code has been written by Videlicet and the Nexus Core Developers
+over the years of 2014 to 2017 with aim to provide backwards compatability
+to upgrades in the Bitcoin protocol proving stability and security of new
+architectures to create opportunities for other currencies to enhance their
+technology. It is asked in light of this for those that wish to copy and learn
+from this source code to examine it carefully and learn thoroughly rather than
+doing a copy/paste. Add to the technology as we have added to the technolgoy of
+Bitcoin and Crypto Currencies, and share it in effort to provide coopeartion in
+technology that has the potential to reinvent the world as we know it.
+
+
+The MIT License (MIT)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
