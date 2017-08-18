@@ -30,6 +30,7 @@ namespace Core
 	 * and that everything can be done in the order it was inteneded.
 	 */
 	
+	
 	void Manager::TimestampManager()
 	{
 

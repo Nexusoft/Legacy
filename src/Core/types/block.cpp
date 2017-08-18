@@ -37,35 +37,43 @@ ________________________________________________________________________________
 using namespace std;
 using namespace boost;
 
+/* Two Dimensional Blockchain
+ * 
+ * --------- BLK ----------
+ * ||||||||||||||||||||||||
+ * ||||||||||||||||||||||||
+ * ||||||||||||||||||||||||
+ * ||||||||||||||||||||||||
+ * --------- BLK ----------
+ * 
+ * Horizonal Locking along with Vertial Block locking
+ * LLD Database PArtitioning automatically integrated with the trust
+ * 
+ * An LLD route from the LLD keychain can be used in order to determine the integrity of data
+ * One can double check this with the rest of the ndoes to ensure that they havef a clear idea
+ * of what is happening and that everyone has agreed upon the same data reducing the ability for a sybil attack
+ * since to sybil attack you would need to hijack the trust routes and the time it took to creat ethem\
+ * 
+ * Operational time of a route and a data route and nubmer of requests to that data are very importatnt
+ * 
+ * 
+ * State channels or | move
+ * 
+ * Trust can validate a path of the state channels.
+ * 
+ * Use multi-level locks
+ * 
+ * A BLK lock is based on the security of the lock
+ * Security of the lock is built up by twin blocks or siblings
+ * 
+ * These can agree on a set of transaction lock data that as long as
+ * it satisfies the transaction lock it contributes to lock at that time
+ * 
+ * This can minimal all effects of orphans in the cube-chain.
+ */
+
 namespace Core
 {
-
-	/* bdg note: never used */
-	uint1024 GetOrphanRoot(const CBlock* pblock)
-	{
-		// Work back to the first block in the orphan chain
-		while (mapOrphanBlocks.count(pblock->hashPrevBlock))
-			pblock = mapOrphanBlocks[pblock->hashPrevBlock];
-		return pblock->GetHash();
-	}
-
-	/* bdg note: never used */
-	uint1024 WantedByOrphan(const CBlock* pblockOrphan)
-	{
-		// Work back to the first block in the orphan chain
-		while (mapOrphanBlocks.count(pblockOrphan->hashPrevBlock))
-			pblockOrphan = mapOrphanBlocks[pblockOrphan->hashPrevBlock];
-		return pblockOrphan->hashPrevBlock;
-	}
-
-	/* bdg note: never used */
-	const CBlockIndex* GetLastBlockIndex(const CBlockIndex* pindex, bool fProofOfStake)
-	{
-		while (pindex && pindex->pprev && (pindex->IsProofOfStake() != fProofOfStake))
-			pindex = pindex->pprev;
-			
-		return pindex;
-	}
 
 	const CBlockIndex* GetLastChannelIndex(const CBlockIndex* pindex, int nChannel)
 	{
@@ -76,9 +84,15 @@ namespace Core
 	}
 	
 
-	/* bdg note: never used */
+	/* Old procotol command, TODO: determine whether to utilzie or not.
+	 * Used to determine consensus between nodes on the best chain.
+	 */
 	int GetNumBlocksOfPeers() { return cPeerBlockCounts.Majority(); }
 	
+	
+	/* This can easily be replaced with a synchronize command that probes the total blocks on all nodes
+	 * in the LLP rather than relying on a great number of assumptions that are always changing.
+	 */
 	bool IsInitialBlockDownload()
 	{
 		if (pindexBest == NULL)
@@ -97,6 +111,7 @@ namespace Core
 	
 			
 			
+	/* TODO: Replace this with an LLD instance. */
 	bool CBlock::WriteToDisk(unsigned int& nFileRet, unsigned int& nBlockPosRet)
 	{
 		// Open history file to append
@@ -133,6 +148,7 @@ namespace Core
 	}
 
 		
+	/* TODO: Replace this by an LLD instance. */
 	bool CBlock::ReadFromDisk(unsigned int nFile, unsigned int nBlockPos, bool fReadTransactions)
 	{
 		SetNull();
@@ -178,6 +194,7 @@ namespace Core
 	}
 
 
+	/* This method can be easily replaced with an LLD method. */
 	bool CBlock::ReadFromDisk(const CBlockIndex* pindex, bool fReadTransactions)
 	{
 		if (!fReadTransactions)
@@ -193,9 +210,15 @@ namespace Core
 	}
 
 
+	/* Time update should not be contigent upon the memory map of the previous block.
+	 * 
+	 * Need this to be connected to the LLD so that these states can be erified either through a blk pool cache of recent blocks
+	 * or it can be read from disk from the LLD that will enable its index to be found easily. 
+	 */
 	void CBlock::UpdateTime() { nTime = std::max((uint64)mapBlockIndex[hashPrevBlock]->GetBlockTime() + 1, UnifiedTimestamp()); }
 
 	
+	/* Disconnect block could be seen as the same as following comment on ConnectBlock. */
 	bool CBlock::DisconnectBlock(LLD::CIndexDB& indexdb, CBlockIndex* pindex)
 	{
 		// Disconnect in reverse order
@@ -221,6 +244,16 @@ namespace Core
 	}
 
 	
+	
+	/* Connect block needs some serious work
+	 * 
+	 * This method only writes the disk index of transaction as tx.ConnectInputs should do
+	 * 
+	 * But it should be done in a much more efficient way as having a transaction flag from
+	 * the manager and blk pool be the ones that determine this.
+	 * 
+	 * TODO: Depricate this method.
+	 */
 	bool CBlock::ConnectBlock(LLD::CIndexDB& indexdb, CBlockIndex* pindex, LLP::CNode* pfrom)
 	{
 
@@ -367,7 +400,13 @@ namespace Core
 
 
 	
-	// Nexus: sign block
+	/* Block Signatures in Tritium need to seal a signature chain of each block.
+	 * 
+	 * The baseline of this needs to be done with the Manager and LLP integration
+	 * Beyond this the sinagure chain needs to create trust as a miner or holder.
+	 * 
+	 * This also needs to contain a slow decay in reward to incetivze trust.
+	 */
 	bool CBlock::SignBlock(const Wallet::CKeyStore& keystore)
 	{
 		vector<std::vector<unsigned char> > vSolutions;
@@ -386,6 +425,7 @@ namespace Core
 				return false;
 			if (key.GetPubKey() != vchPubKey)
 				return false;
+			
 			return key.Sign((nVersion >= 4) ? SignatureHash() : GetHash(), vchBlockSig, 1024);
 		}
 		
@@ -453,6 +493,11 @@ namespace Core
 	}
 
 	
+	/* TODO: This shouldn't be held by CBlockIndex
+	 * It needs to be held in an LLD by the key and then the memory won't be so required.
+	 * 
+	 * Make sure to have the chain states recorded in the LLD so that we can know exactly what the blockchain state is at.
+	 */
 	unsigned int nCurrentBlockFile = 1;
 	FILE* AppendBlockFile(unsigned int& nFileRet)
 	{
@@ -464,6 +509,7 @@ namespace Core
 				return NULL;
 			if (fseek(file, 0, SEEK_END) != 0)
 				return NULL;
+			
 			// FAT32 filesize max 4GB, fseek and ftell max 2GB, so we must stay under 2GB
 			if (ftell(file) < 0x7F000000 - MAX_SIZE)
 			{
@@ -475,7 +521,12 @@ namespace Core
 		}
 	}
 
-	
+
+	/* This function should be changed around to be:
+	 * CreateGenesisBlock() that is a default that is checked to the database disks.
+	 * 
+	 * A block hash is like a work hardened checksum of data to prove data integrity.
+	 */
 	bool LoadBlockIndex(bool fAllowNew)
 	{
 		if (fTestNet)
@@ -521,12 +572,12 @@ namespace Core
 			target.SetCompact(block.nBits);
 			block.print();
 			
+			/* Check the Genesis Block Data to the Hard Coded Genesis Hash. */
 			if(block.GetHash() != hashGenesisBlock)
 				return error("LoadBlockIndex() : genesis hash does not match");
 			
-			//TODO: Integrate with Node Manager
-			//if(!CheckBlock(&block))
-			//	return error("LoadBlockIndex() : genesis block check failed");
+			if(!pManager->blkPool.Check(block, NULL))
+				return error("LoadBlockIndex() : genesis block not accepted into block pool");
 			
 			/** Write the New Genesis to Disk. **/
 			unsigned int nFile;
@@ -534,35 +585,12 @@ namespace Core
 			if (!block.WriteToDisk(nFile, nBlockPos))
 				return error("LoadBlockIndex() : writing genesis block to disk failed");
 			
-			//TODO: Integrate with Node Manager
-			//if (!AddToBlockIndex(&block, nFile, nBlockPos))
-			//	return error("LoadBlockIndex() : genesis block not accepted");
+			if(!pManager->blkPool.AddToChain(block, nFile, nBlockPos, NULL))
+				return error("LoadBlockIndex() : genesis block not accepted");
 		}
 
 		return true;
 	}
-	
-	
-	class COrphan
-	{
-	public:
-		CTransaction* ptx;
-		set<uint512> setDependsOn;
-		double dPriority;
-
-		COrphan(CTransaction* ptxIn)
-		{
-			ptx = ptxIn;
-			dPriority = 0;
-		}
-
-		void print() const
-		{
-			printf("COrphan(hash=%s, dPriority=%.1f)\n", ptx->GetHash().ToString().substr(0,10).c_str(), dPriority);
-			BOOST_FOREACH(uint512 hash, setDependsOn)
-				printf("   setDependsOn %s\n", hash.ToString().substr(0,10).c_str());
-		}
-	};
 	
 	
 	/** Constructs a new block **/
@@ -676,8 +704,6 @@ namespace Core
 			}
 			else
 				txNew.vout[0].nValue = GetCoinbaseReward(pindexPrev, nChannel, 0);
-
-			//COUNTER_MUTEX.lock();
 				
 			
 			/** Reset the Coinbase Transaction Counter. **/
@@ -696,7 +722,6 @@ namespace Core
 			txNew.vout[txNew.vout.size() - 1].nValue = GetCoinbaseReward(pindexPrev, nChannel, 2);
 					
 			nCoinbaseCounter++;
-			//COUNTER_MUTEX.unlock();
 		}
 		
 		

@@ -48,6 +48,12 @@ namespace Core
 	/* Gets the UNIX Timestamp from the Nexus Network */
 	uint64 UnifiedTimestamp(bool fMilliseconds = false);
 	
+	
+	/* The unified time samples thread.
+	 * TODO: Remove post Tritium
+	 */
+	void ThreadUnifiedSamples(void* parg);
+	
 }
 
 

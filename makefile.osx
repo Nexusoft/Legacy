@@ -7,18 +7,18 @@
 # Mac OS X makefile for Nexus
 # Originally by Laszlo Hanyecz (solar@heliacal.net)
 
-CXX=llvm-g++
+CXX=llvm-g++ -std=c++11
 DEPSDIR=/opt/local
 
 INCLUDEPATHS= \
  -I"$(CURDIR)/src" \
- -I"$(CURDIR)/src/core" \
- -I"$(CURDIR)/src/hash" \
- -I"$(CURDIR)/src/json" \
+ -I"$(CURDIR)/src/Core" \
+ -I"$(CURDIR)/src/LLC" \
+ -I"$(CURDIR)/src/LLD" \
  -I"$(CURDIR)/src/LLP" \
- -I"$(CURDIR)/src/net" \
- -I"$(CURDIR)/src/util" \
- -I"$(CURDIR)/src/wallet" \
+ -I"$(CURDIR)/src/RPC" \
+ -I"$(CURDIR)/src/Util" \
+ -I"$(CURDIR)/src/Wallet" \
  -I"$(DEPSDIR)/include" \
  -I"$(DEPSDIR)/include/db48"
 
@@ -79,42 +79,50 @@ endif
 CFLAGS += $(DEBUGFLAGS) $(DEFS) $(INCLUDEPATHS)
 HEADERS = $(wildcard *.h)
 OBJS= \
-    build/version.o \
-    build/netbase.o \
-    build/addrman.o \
-    build/crypter.o \
-    build/key.o \
-    build/db.o \
-    build/main.o \
-    build/keystore.o \
-    build/difficulty.o \
-    build/checkpoints.o \
-    build/net.o \
-    build/protocol.o \
-    build/unifiedtime.o \
-    build/rpcserver.o \
-    build/rpcdump.o \
-    build/script.o \
-    build/util.o \
-    build/wallet.o \
-    build/walletdb.o \
-    build/noui.o \
-    build/kernel.o \
-    build/debug.o \
-    build/prime.o \
-    build/skein.o \
-    build/skein_block.o \
-    build/KeccakDuplex.o \
-    build/KeccakSponge.o \
-    build/Keccak-compact64.o \
-    build/KeccakHash.o \
-    build/release.o \
-    build/block.o \
-    build/dispatch.o \
-    build/message.o \
-    build/mining.o \
-    build/transaction.o \
-    build/global.o
+	build/main.o \
+	build/blkpool.o \
+	build/txpool.o \
+	build/block.o \
+	build/transaction.o \
+	build/checkpoints.o \
+	build/difficulty.o \
+	build/dispatch.o \
+	build/global.o \
+	build/manager.o \
+	build/prime.o \
+	build/supply.o \
+	build/trust.o \
+	build/unifiedtime.o \
+	build/version.o\
+	build/skein.o \
+	build/skein_block.o \
+	build/KeccakDuplex.o \
+	build/KeccakSponge.o \
+	build/Keccak-compact64.o \
+	build/KeccakHash.o \
+	build/random.o \
+	build/index.o \
+	build/keychain.o \
+	build/hosts.o \
+	build/seeds.o \
+	build/inv.o \
+	build/mining.o \
+	build/network.o \
+	build/node.o \
+	build/time.o \
+	build/args.o \
+	build/config.o \
+	build/debug.o \
+	build/noui.o \
+	build/rpcdump.o \
+	build/rpcserver.o \
+	build/crypter.o \
+	build/db.o \
+	build/key.o \
+	build/keystore.o \
+	build/script.o \
+	build/wallet.o \
+	build/walletdb.o
 
 ifdef USE_UPNP
 	DEFS += -DUSE_UPNP=$(USE_UPNP)
@@ -142,28 +150,49 @@ build/%.o: src/%.cpp $(HEADERS)
 	      -e '/^$$/ d' -e 's/$$/ :/' < $(@:%.o=%.d) >> $(@:%.o=%.P); \
 	  rm -f $(@:%.o=%.d)
 
-build/%.o: src/core/%.cpp $(HEADERS)
+build/%.o: src/Core/%.cpp $(HEADERS)
+	$(CXX) -c $(CFLAGS) -MMD -o $@ $<
+	@cp $(@:%.o=%.d) $(@:%.o=%.P); \
+	  sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
+	      -e '/^$$/ d' -e 's/$$/ :/' < $(@:%.o=%.d) >> $(@:%.o=%.P); \
+	  rm -f $(@:%.o=%.d)
+	  
+build/%.o: src/Core/network/%.cpp $(HEADERS)
+	$(CXX) -c $(CFLAGS) -MMD -o $@ $<
+	@cp $(@:%.o=%.d) $(@:%.o=%.P); \
+	  sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
+	      -e '/^$$/ d' -e 's/$$/ :/' < $(@:%.o=%.d) >> $(@:%.o=%.P); \
+	  rm -f $(@:%.o=%.d)
+	  
+build/%.o: src/Core/types/%.cpp $(HEADERS)
 	$(CXX) -c $(CFLAGS) -MMD -o $@ $<
 	@cp $(@:%.o=%.d) $(@:%.o=%.P); \
 	  sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
 	      -e '/^$$/ d' -e 's/$$/ :/' < $(@:%.o=%.d) >> $(@:%.o=%.P); \
 	  rm -f $(@:%.o=%.d)
 
-build/%.o: src/hash/%.c $(HEADERS)
-	$(CXX) -c $(CFLAGS) -x c -MMD -o $@ $<
-	@cp $(@:%.o=%.d) $(@:%.o=%.P); \
-	  sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
-	      -e '/^$$/ d' -e 's/$$/ :/' < $(@:%.o=%.d) >> $(@:%.o=%.P); \
-	  rm -f $(@:%.o=%.d)
-
-build/%.o: src/hash/%.cpp $(HEADERS)
+build/%.o: src/LLC/%.cpp $(HEADERS)
 	$(CXX) -c $(CFLAGS) -MMD -o $@ $<
 	@cp $(@:%.o=%.d) $(@:%.o=%.P); \
 	  sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
 	      -e '/^$$/ d' -e 's/$$/ :/' < $(@:%.o=%.d) >> $(@:%.o=%.P); \
 	  rm -f $(@:%.o=%.d)
 
-build/%.o: src/json/%.cpp $(HEADERS)
+build/%.o: src/LLC/hash/SK/%.c $(HEADERS)
+	llvm-g++ -c $(CFLAGS) -x c -MMD -o $@ $<
+	@cp $(@:%.o=%.d) $(@:%.o=%.P); \
+	  sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
+	      -e '/^$$/ d' -e 's/$$/ :/' < $(@:%.o=%.d) >> $(@:%.o=%.P); \
+	  rm -f $(@:%.o=%.d)
+	  
+build/%.o: src/LLC/hash/SK/%.cpp $(HEADERS)
+	$(CXX) -c $(CFLAGS) -MMD -o $@ $<
+	@cp $(@:%.o=%.d) $(@:%.o=%.P); \
+	  sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
+	      -e '/^$$/ d' -e 's/$$/ :/' < $(@:%.o=%.d) >> $(@:%.o=%.P); \
+	  rm -f $(@:%.o=%.d)
+	  
+build/%.o: src/LLD/%.cpp $(HEADERS)
 	$(CXX) -c $(CFLAGS) -MMD -o $@ $<
 	@cp $(@:%.o=%.d) $(@:%.o=%.P); \
 	  sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
@@ -177,21 +206,21 @@ build/%.o: src/LLP/%.cpp $(HEADERS)
 	      -e '/^$$/ d' -e 's/$$/ :/' < $(@:%.o=%.d) >> $(@:%.o=%.P); \
 	  rm -f $(@:%.o=%.d)
 
-build/%.o: src/net/%.cpp $(HEADERS)
+build/%.o: src/Util/%.cpp $(HEADERS)
 	$(CXX) -c $(CFLAGS) -MMD -o $@ $<
 	@cp $(@:%.o=%.d) $(@:%.o=%.P); \
 	  sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
 	      -e '/^$$/ d' -e 's/$$/ :/' < $(@:%.o=%.d) >> $(@:%.o=%.P); \
 	  rm -f $(@:%.o=%.d)
 
-build/%.o: src/util/%.cpp $(HEADERS)
+build/%.o: src/RPC/%.cpp $(HEADERS)
 	$(CXX) -c $(CFLAGS) -MMD -o $@ $<
 	@cp $(@:%.o=%.d) $(@:%.o=%.P); \
 	  sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
 	      -e '/^$$/ d' -e 's/$$/ :/' < $(@:%.o=%.d) >> $(@:%.o=%.P); \
 	  rm -f $(@:%.o=%.d)
 
-build/%.o: src/wallet/%.cpp $(HEADERS)
+build/%.o: src/Wallet/%.cpp $(HEADERS)
 	$(CXX) -c $(CFLAGS) -MMD -o $@ $<
 	@cp $(@:%.o=%.d) $(@:%.o=%.P); \
 	  sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \

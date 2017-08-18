@@ -350,6 +350,8 @@ namespace LLP
 		{
 			try
 			{
+				
+				/* Establish the new Connection. */
 				using boost::asio::ip::tcp;
 				
 				tcp::resolver					RESOLVER(IO_SERVICE);
@@ -361,7 +363,10 @@ namespace LLP
 			
 				/* Handle a Connection Error. */
 				if(ERROR_HANDLE)
-					return error("Failed to Connect to %s:%s....", strAddress.c_str(), strPort.c_str());
+					return error("Failed to Connect to %s:%s::%s", strAddress.c_str(), strPort.c_str(), ERROR_HANDLE.message().c_str());
+				
+				/* Set the object to be conneted if success. */
+				fCONNECTED = true;
 				
 				return true;
 			}
@@ -393,6 +398,10 @@ namespace LLP
 			boost::system::error_code ec;
 			return SOCKET->remote_endpoint(ec).address().to_string();
 		}
+		
+		
+		/* Helpful for debugging the code. */
+		std::string ErrorMessage() { return ERROR_HANDLE.message(); }
 
 		
 	protected:	

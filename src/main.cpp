@@ -15,6 +15,7 @@ ________________________________________________________________________________
 
 #include "Core/include/unifiedtime.h"
 #include "Core/include/dispatch.h"
+#include "Core/include/manager.h"
 
 #include "LLP/include/time.h"
 #include "LLP/include/node.h"
@@ -364,6 +365,8 @@ bool AppInit2(int argc, char* argv[])
 	InitMessage(_("Initializing Unified Time..."));
 	printf("Initializing Unified Time...\n");
 	//TODO: PUT IN NODE MANAGER InitializeUnifiedTime();
+	CreateThread(Core::ThreadUnifiedSamples, NULL);
+	
 	
 	if (!fDebug)
 		ShrinkDebugFile();
@@ -590,6 +593,11 @@ bool AppInit2(int argc, char* argv[])
 	
     if (fServer)
         CreateThread(RPC::ThreadRPCServer, NULL);
+	
+	
+	/* Establish the Manager Object. */
+	Core::pManager = new Core::Manager();
+	Core::pManager->Start();
 	
 
 #ifdef QT_GUI

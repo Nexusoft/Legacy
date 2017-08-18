@@ -393,7 +393,7 @@ namespace LLP
 			
 			/* Debug Level 3: output Node Latencies. */
 			if(GetArg("-verbose", 0) >= 3)
-				printf("***** Node Latency (%u ms)\n", nNodeLatency);
+				printf("***** Node %s Latency (%u ms)\n", addrThisNode.ToString().c_str(), nNodeLatency);
 		}
 		
 			
@@ -510,9 +510,9 @@ namespace LLP
 			std::vector<CInv> vInvNew;
 			for (int i = 0; i < vInv.size(); i++)
 			{
-				if(vInv[i].type == MSG_BLOCK && !Core::pManager->blkPool.Has(vInv[i].hash))
+				if(vInv[i].type == MSG_BLOCK && Core::pManager->blkPool.Has(vInv[i].hash))
 					continue;
-				else if(vInv[i].type == MSG_TX && !Core::pManager->txPool.Has(vInv[i].hash.getuint512()))
+				else if(vInv[i].type == MSG_TX && Core::pManager->txPool.Has(vInv[i].hash.getuint512()))
 					continue;
 				
 				

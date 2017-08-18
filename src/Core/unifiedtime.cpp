@@ -96,13 +96,14 @@ namespace Core
                     
                     
                 /** Connect to the Next Seed in the Iterator. **/
+				printf("***** Core LLP: [%u] Attempting Connection %s:9324\n", nIterator, SEED_NODES[nIterator].ToStringIP().c_str());
                 SERVER.Connect(SEED_NODES[nIterator].ToStringIP(), "9324", SERVER.IO_SERVICE);
                 
                 
                 /** If the Core LLP isn't connected, Retry in 10 Seconds. **/
                 if(!SERVER.Connected())
                 {
-                    printf("***** Core LLP: Failed To Connect To %s\n", SEED_NODES[nIterator].ToStringIP());
+                    printf("***** Core LLP: Failed To Connect To %s::%s\n", SEED_NODES[nIterator].ToStringIP().c_str(), SERVER.ErrorMessage().c_str());
                     
                     continue;
                 }
@@ -135,7 +136,7 @@ namespace Core
                             SERVER.GetOffset((unsigned int)Timestamp());
                             
                             if(GetArg("-verbose", 0) >= 2)
-                                printf("***** Core LLP: Added Sample %i | Seed %s\n", nOffset, SEED_NODES[nIterator].ToStringIP());
+                                printf("***** Core LLP: Added Sample %i | Seed %s\n", nOffset, SEED_NODES[nIterator].ToStringIP().c_str());
                         }
                         
                         SERVER.ResetPacket();
