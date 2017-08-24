@@ -296,14 +296,6 @@ namespace Core
 			/** Compound the Total Figures. **/
 			nTotalCoins += nValue;
 			nAverageAge += nCoinAge;
-			
-			if(GetArg("-verbose", 0) >= 2)
-			{
-				printf("CTransaction::GetCoinstakeInterest() : Staking input from Block %u with age of %" PRId64 ", Rate %f, and value %f\n", block.nHeight, nCoinAge, nInterestRate, (double)nValue / COIN);
-				
-				if(txPrev.IsCoinStake())
-					printf("CTransaction::GetCoinstakeInterest() : Using Previous Coin Stake Transaction for Block %u ++++++++++++++++++++++++++\n", block.nHeight);
-			}
 		
 			/** Interest is 2% of Year's Interest of Value of Coins. Coin Age is in Seconds. **/
 			nInterest += ((nValue * nInterestRate * nCoinAge) / (60 * 60 * 24 * 28 * 13));
@@ -312,7 +304,7 @@ namespace Core
 		
 		nAverageAge /= (vin.size() - 1);
 		
-		if(GetArg("-verbose", 0) >= 2)
+		if(GetArg("-verbose", 0) >= 3)
 			printf("CTransaction::GetCoinstakeInterest() : Total Nexus to Stake %f Generating %f Nexus from Average Age of %u Seconds at %f %% Variable Interest\n", (double)nTotalCoins / COIN, (double)nInterest / COIN, (unsigned int)nAverageAge, nInterestRate * 100.0);
 		
 		return true;
@@ -570,7 +562,7 @@ namespace Core
 				cTrustKey.Print();
 			
 			/** Only Debug when Not Initializing. **/
-			if(GetArg("-verbose", 0) >= 1 && !fInit) {
+			if(GetArg("-verbose", 0) >= 3 && !fInit) {
 				printf("CTrustPool::accept() : New Genesis Coinstake Transaction From Block %u\n", cBlock.nHeight);
 				printf("CTrustPool::ACCEPTED %s\n", cKey.ToString().substr(0, 20).c_str());
 			}
@@ -585,11 +577,11 @@ namespace Core
 			mapTrustKeys[cKey].hashPrevBlocks.push_back(cBlock.GetHash());
 			
 			/** Dump the Trust Key to Console if not Initializing. **/
-			if(!fInit && GetArg("-verbose", 0) >= 2)
+			if(!fInit && GetArg("-verbose", 0) >= 3)
 				mapTrustKeys[cKey].Print();
 			
 			/** Only Debug when Not Initializing. **/
-			if(!fInit && GetArg("-verbose", 0) >= 1) {
+			if(!fInit && GetArg("-verbose", 0) >= 3) {
 				TrustScore(cKey, mapBlockIndex[cBlock.hashPrevBlock]->GetBlockTime());
 				printf("CTrustPool::ACCEPTED %s\n", cKey.ToString().substr(0, 20).c_str());
 			}
@@ -711,7 +703,7 @@ namespace Core
 	bool CTrustKey::Expired(unsigned int nTime) const
 	{
 		if(BlockAge(nTime) > TRUST_KEY_EXPIRE)
-			return !error("CTrustKey::Expired() : Block Age Beyond Expiration Time.");
+			return true;
 			
 		return false;
 	}

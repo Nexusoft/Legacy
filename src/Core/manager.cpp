@@ -217,7 +217,8 @@ namespace Core
 					
 					blkPool.SetState(hash, blkPool.MAINCHAIN);
 					
-					printf("##### Block Processor::CONNECTED Block %s Height %u\n", hash.ToString().substr(0, 20).c_str(), block.nHeight);
+					if(GetArg("-verbose", 0) >= 2)
+						printf("##### Block Processor::CONNECTED Block %s Height %u (%" PRIu64 ")\n", hash.ToString().substr(0, 20).c_str(), block.nHeight, cTimer.ElapsedMicroseconds());
 				}
 				else
 				{
