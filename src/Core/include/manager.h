@@ -43,7 +43,7 @@ namespace Core
 		
 	public:
 		
-		Manager() : LLP::Server<LLP::CNode> (LLP::GetDefaultPort(), 10, false, 1, 20, 30, 30, true, true), txPool(), blkPool(), ConnectionThread(boost::bind(&Manager::ConnectionManager, this)),  ProcessorThread(boost::bind(&Manager::BlockProcessor, this)) {}
+		Manager() : LLP::Server<LLP::CNode> (LLP::GetDefaultPort(), 10, false, 1, 20, 30, 30, true, true), ConnectionThread(boost::bind(&Manager::ConnectionManager, this)), ProcessorThread(boost::bind(&Manager::BlockProcessor, this)), txPool(), blkPool(), vTried(), vNew() {}
 		
 		
 		/* Time Seed Manager. */

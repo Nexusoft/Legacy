@@ -596,9 +596,9 @@ bool AppInit2(int argc, char* argv[])
     RandAddSeedPerfmon();
 	
 	
-    if (fServer)
+    if (fServer) {
         CreateThread(RPC::ThreadRPCServer, NULL);
-	
+	}
 	
 	/* Start the Node Manager */
 	Core::pManager->Start();

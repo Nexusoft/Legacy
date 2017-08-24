@@ -173,15 +173,7 @@ namespace Core
 	
 	
 	/* Tritium ++ Rules for Trust Keys. Consistency History shows how consistent a node's block production times are. */
-	extern const int TRUST_KEY_CONSISTENCY_HISTORY;
-	
-	
-	/* Tritium ++ Rules for Trust Keys. Minimum Consistency tolerance is the amount you can fluctuate by speeding up block production without negative trust. */
-	extern const double TRUST_KEY_MIN_CONSISTENCY_TOLERANCE;
-	
-	
-	/* Tritium ++ Rules for Trust Keys. Maximum Consistency tolerance is the amount you can fluctuate by slowing down block production without negative trust.. */
-	extern const double TRUST_KEY_MAX_CONSISTENCY_TOLERANCE;
+	extern double TRUST_KEY_DIFFICULTY_THRESHOLD;
 
 	
 	

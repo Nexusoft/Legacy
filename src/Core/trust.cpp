@@ -611,6 +611,14 @@ namespace Core
 		return min(0.03, (((0.025 * log(((9.0 * (nTime - Find(cKey).nGenesisTime)) / (60 * 60 * 24 * 28 * 13)) + 1.0)) / log(10))) + 0.005);
 	}
 	
+	/* Break the Chain Age in Minutes into Days, Hours, and Minutes. */
+	void GetTimes(unsigned int nAge, unsigned int& nDays, unsigned int& nHours, unsigned int& nMinutes)
+	{
+		nDays = nAge / 1440;
+		nHours = (nAge - (nDays * 1440)) / 60;
+		nMinutes = nAge % 60;
+	}
+	
 	/* Trust Scoie for Trust Keys:
 		Determines how trusted a key is by score. Age of the Key is determined in combination with the Trust Score and Age. */
 	uint64 CTrustPool::TrustScore(uint576 cKey, unsigned int nTime) const
@@ -621,61 +629,41 @@ namespace Core
 		
 		/* Get the Trust Key from the Trust Pool. */
 		CTrustKey cTrustKey = Find(cKey);
-		
-		/* The Average Block Time of Key. */
-		unsigned int nAverageTime = cTrustKey.Age(nTime) / cTrustKey.hashPrevBlocks.size(), nLastTrustTime = 0, nAverageTimespan = 0;
-		
-		/* The Average Block Consistency. */
-		double nAverageConsistency = 0.0, nMeanHistory = 0.0, nDifficultyAverage = 0.0, nLastDifficulty = 0;
+
 		
 		/* The Trust Scores. */
 		double nPositiveTrust = 0.0, nNegativeTrust = 0.0;
-		
-		for(int nIndex = 0; nIndex < cTrustKey.hashPrevBlocks.size(); nIndex++)
+		for(int nIndex = 1; nIndex < cTrustKey.hashPrevBlocks.size(); nIndex++)
 		{
 			/* Calculate the Trust Time of Blocks. */
-			unsigned int nTrustTime = mapBlockIndex[cTrustKey.hashPrevBlocks[nIndex]]->GetBlockTime() - ((nIndex == 0) ? cTrustKey.nGenesisTime : mapBlockIndex[cTrustKey.hashPrevBlocks[nIndex - 1]]->GetBlockTime());
-			if(nLastTrustTime == 0) {
-				nLastTrustTime = nTrustTime;
-				nLastDifficulty = GetDifficulty(mapBlockIndex[cTrustKey.hashPrevBlocks[nIndex]]->nBits, 0);
-			}
+			unsigned int nTrustTime = mapBlockIndex[cTrustKey.hashPrevBlocks[nIndex]]->GetBlockTime() - mapBlockIndex[cTrustKey.hashPrevBlocks[nIndex - 1]]->GetBlockTime();
 			
-			/* Calculate the Weighted Trust Based on weight of trust to difficulty. */
-			unsigned int nMaxTimespan = (TRUST_KEY_MAX_TIMESPAN * (GetDifficulty(mapBlockIndex[cTrustKey.hashPrevBlocks[nIndex]]->nBits, 0) / nLastDifficulty));
-			nAverageTimespan += nMaxTimespan;
 				
 			/* Calculate Consistency Moving Average over Scope of Consistency History. */
-			if(cTrustKey.hashPrevBlocks.size() - nIndex <= TRUST_KEY_CONSISTENCY_HISTORY){
-				nAverageConsistency += (nAverageTime / nTrustTime);
-				nMeanHistory		  += (nLastTrustTime / nTrustTime);
-				nDifficultyAverage  += (GetDifficulty(mapBlockIndex[cTrustKey.hashPrevBlocks[nIndex]]->nBits, 0) / nLastDifficulty);
-				
-				nLastTrustTime = nTrustTime;
-				nLastDifficulty = GetDifficulty(mapBlockIndex[cTrustKey.hashPrevBlocks[nIndex]]->nBits, 0);
-			}
-						
+			unsigned int nMaxTimespan = TRUST_KEY_MAX_TIMESPAN * ((GetDifficulty(mapBlockIndex[cTrustKey.hashPrevBlocks[nIndex]]->nBits, 0)) / TRUST_KEY_DIFFICULTY_THRESHOLD);
+			
+			
 			/* Calculate the Positive Trust Time in the Key. */
-			if(nTrustTime < nMaxTimespan) {
+			if(nTrustTime < nMaxTimespan)
 				nPositiveTrust += (double)((nMaxTimespan * log(((3.0 * nTrustTime) / nMaxTimespan) + 1.0)) / log(4));
-			}
+			
 			
 			/* Calculate the Negative Trust Time in the Key. */
-			else if(nTrustTime > nMaxTimespan) {
+			else if(nTrustTime > nMaxTimespan)
 				nNegativeTrust += (double)((3.0 * nMaxTimespan * log(((3.0 * nTrustTime) / nMaxTimespan) - 2.0)) / log(4));
-			}
+			
 		}
-		
-		/* Final Compuatation for Consistency History. */
-		nAverageConsistency /= TRUST_KEY_CONSISTENCY_HISTORY;
-		nDifficultyAverage  /= TRUST_KEY_CONSISTENCY_HISTORY;
-		nMeanHistory		  /= TRUST_KEY_CONSISTENCY_HISTORY;
-		nAverageTimespan	  /= cTrustKey.hashPrevBlocks.size();
 		
 		/* Final Computation of the Trust Score. */
 		double nTrustScore = std::max(0.0, (nPositiveTrust - nNegativeTrust));
 		
+		
+		unsigned int nDays, nHours, nMinutes;
+		GetTimes(cTrustKey.Age(nTime) / 60, nDays, nHours, nMinutes);
+		
 		if(GetArg("-verbose", 0) >= 2)
-			printf("CTrustPool::TRUST [%f %%] Score %f Age %u | Difficulty %f %% Index %f %% Mean %f %% | Positive %f | Negative %f | Total Blocks %u Average Time %u Average Timespan %u [%f %%]\n", (nTrustScore * 100.0) / cTrustKey.Age(nTime), nTrustScore, (unsigned int)cTrustKey.Age(nTime), 100.0 * nDifficultyAverage, .0 * nAverageConsistency, 100.0 * nMeanHistory, nPositiveTrust, nNegativeTrust, cTrustKey.hashPrevBlocks.size(), nAverageTime, nAverageTimespan, 100.0 * nAverageTimespan / TRUST_KEY_MAX_TIMESPAN);
+			printf("CTrustPool::TRUST [%f %%] Score %f | Age %u Days, %u Hours, %u Minutes | Positive %f | Negative %f \n", (nTrustScore * 100.0) / cTrustKey.Age(nTime), nTrustScore,  nDays, nHours, nMinutes, nPositiveTrust, nNegativeTrust);
+		
 		
 		return (uint64)nPositiveTrust - nNegativeTrust;
 	}

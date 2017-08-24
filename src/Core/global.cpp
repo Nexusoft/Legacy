@@ -77,18 +77,11 @@ namespace Core
 	
 	/* NOTE: For Blocks Version 5 and Above.
 	 *	 The Maximum Grace time before trust begins to be reduced from no trust blocks seen.. **/
-	const int TRUST_KEY_MAX_TIMESPAN = 60 * 60 * 12;
+	const int TRUST_KEY_MAX_TIMESPAN = 60 * 60 * 8;
 	
 	
-	/* NOTE: For Blocks Version 5 and Above
-	 * The Maximum tolerance that a trust key can have for inconsistent behavior. */
-	const double TRUST_KEY_MIN_CONSISTENCY_TOLERANCE = 0.8;
-	const double TRUST_KEY_MAX_CONSISTENCY_TOLERANCE = 1.3;
-	
-	
-	/* NOTE: For Blocks Version 5 and Above
-	 * The Maximum Blocks to Check Backwards for Consistency Tolerance. */
-	const int TRUST_KEY_CONSISTENCY_HISTORY = 50;
+	/* Difficulty Trheshold Weight for Trust Keys. MAX_TIMESPAN is influenced linearly with this number. */
+	double TRUST_KEY_DIFFICULTY_THRESHOLD = 8.8;
 	
 	
 	/** The Minimum Number of Blocks Between Trust Key's Staking Blocks. **/

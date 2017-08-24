@@ -130,10 +130,6 @@ namespace Wallet
 
 		std::vector<unsigned char> vchDefaultKey;
 
-		// check whether we are allowed to upgrade (or already support) to the named feature
-		/* bdg note: CanSupportFeature is never used. */
-		bool CanSupportFeature(enum WalletFeature wf) { return nWalletMaxVersion >= wf; }
-
 		// keystore implementation
 		// Generate a new key
 		std::vector<unsigned char> GenerateNewKey();
@@ -584,6 +580,7 @@ namespace Wallet
 				return nChangeCached;
 			nChangeCached = pwallet->GetChange(*this);
 			fChangeCached = true;
+			
 			return nChangeCached;
 		}
 

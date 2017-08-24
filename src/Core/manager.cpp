@@ -39,6 +39,7 @@ namespace Core
 
 	}
 	
+	
 	void Manager::ConnectionManager()
 	{
 		while(!fShutdown)
@@ -74,7 +75,52 @@ namespace Core
 	{
 		while(!fShutdown)
 		{
-			Sleep(5000);
+			Sleep(100);
+			
+			/* Handle Orphan Checking. */
+			std::vector<uint1024> vOrphans;
+			if(blkPool.GetIndexes(blkPool.ORPHANED, vOrphans))
+			{
+				if(GetArg("-verbose", 0) >= 2)
+					printf("##### Block Processor::queued Job of %u Orphans.\n", vOrphans.size());
+				
+				std::sort(vOrphans.begin(), vOrphans.end(), SortByHeight);
+				for(auto hash : vOrphans)
+				{
+					CBlock block;
+					blkPool.Get(hash, block);
+					
+					if(!blkPool.Has(block.hashPrevBlock) && !Core::mapBlockIndex.count(block.hashPrevBlock))
+						continue;
+						
+					if(GetArg("-verbose", 0) >= 3)
+						printf("##### Block Processor::PROCESSING %s\n", hash.ToString().substr(0, 20).c_str());
+					
+					/* Timer object for runtime calculations. */
+					Timer cTimer;
+					cTimer.Reset();
+					
+					/* Check the Block validity. TODO: Send process message for Trust Depreciation (LLP:Dos). */
+					if(blkPool.Check(block, NULL))
+					{
+						if(GetArg("-verbose", 0) >= 3)
+							printf("PASSED checks in %" PRIu64 " us\n", cTimer.ElapsedMicroseconds());
+						
+						/* Set the proper state for the new block. */
+						blkPool.SetState(hash, blkPool.VERIFIED);
+					}
+					else
+					{
+						if(GetArg("-verbose", 0) >= 3)
+							printf("INVALID checks in %" PRIu64 " us", cTimer.ElapsedMicroseconds());
+						
+						/* Set the proper state for the new block. */
+						blkPool.SetState(hash, blkPool.INVALID);
+						
+						continue;
+					}
+				}
+			}
 			
 			std::vector<uint1024> vBlocks;
 			if(!blkPool.GetIndexes(blkPool.VERIFIED, vBlocks))
@@ -108,7 +154,7 @@ namespace Core
 				if(blkPool.Accept(block, NULL))
 				{
 					if(GetArg("-verbose", 0) >= 3)
-						printf("##### Block Processor::ACCEPTED in " PRIu64 "us\n", cTimer.ElapsedMicroseconds());
+						printf("##### Block Processor::ACCEPTED in %" PRIu64 " us\n", cTimer.ElapsedMicroseconds());
 					
 					/* Set the proper state for the new block. */
 					blkPool.SetState(hash, blkPool.ACCEPTED);
@@ -116,7 +162,7 @@ namespace Core
 				else
 				{
 					if(GetArg("-verbose", 0) >= 3)
-						printf("##### Block Processor::REJECTED in " PRIu64 "us\n", cTimer.ElapsedMicroseconds());
+						printf("##### Block Processor::REJECTED in %" PRIu64 " us\n", cTimer.ElapsedMicroseconds());
 					
 					/* Set the proper state for the new block. */
 					blkPool.SetState(hash, blkPool.REJECTED);
@@ -145,7 +191,7 @@ namespace Core
 				if (!pindexNew || !blkPool.Index(block, pindexNew, NULL))
 				{
 					if(GetArg("-verbose", 0) >= 3)
-						printf("##### Block Processor::FAILED INDEX in " PRIu64 "us\n", cTimer.ElapsedMicroseconds());
+						printf("##### Block Processor::FAILED INDEX in %" PRIu64 " us\n", cTimer.ElapsedMicroseconds());
 					
 					continue;
 				}
@@ -153,7 +199,7 @@ namespace Core
 				if(!indexdb.WriteBlockIndex(CDiskBlockIndex(pindexNew)))
 				{
 					if(GetArg("-verbose", 0) >= 3)
-						printf("##### Block Processor::FAILED WRITE INDEX in " PRIu64 "us\n", cTimer.ElapsedMicroseconds());
+						printf("##### Block Processor::FAILED WRITE INDEX in %" PRIu64 " us\n", cTimer.ElapsedMicroseconds());
 					
 					continue;
 				}
@@ -179,7 +225,6 @@ namespace Core
 					
 					printf("##### Block Processor::FORKED Block %s Height %u\n");
 				}
-				
 				
 				indexdb.TxnCommit();
 			}

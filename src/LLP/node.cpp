@@ -307,7 +307,7 @@ namespace LLP
 					return true;
 				
 				if(GetArg("-verbose", 0) >= 3)
-					printf("PASSED checks in %u ms\n", cTimer.ElapsedMilliseconds());
+					printf("PASSED checks in " PRIu64 " us\n", cTimer.ElapsedMicroseconds());
 			}
 			
 			
@@ -419,7 +419,7 @@ namespace LLP
 			if(Core::pManager->blkPool.Check(block, this))
 			{
 				if(GetArg("-verbose", 0) >= 3)
-					printf("PASSED checks in " PRIu64 "us\n", cTimer.ElapsedMicroseconds());
+					printf("PASSED checks in %" PRIu64 " us\n", cTimer.ElapsedMicroseconds());
 				
 				/* Set the proper state for the new block. */
 				Core::pManager->blkPool.SetState(hashBlock, Core::pManager->blkPool.VERIFIED);
@@ -427,7 +427,7 @@ namespace LLP
 			else
 			{
 				if(GetArg("-verbose", 0) >= 3)
-					printf("INVALID checks in " PRIu64 "us", cTimer.ElapsedMicroseconds());
+					printf("INVALID checks in %" PRIu64 " us", cTimer.ElapsedMicroseconds());
 				
 				/* Set the proper state for the new block. */
 				Core::pManager->blkPool.SetState(hashBlock, Core::pManager->blkPool.INVALID);
