@@ -43,7 +43,7 @@ namespace Core
     
 	
 	/** Gets the UNIX Timestamp from the Nexus Network **/
-	uint64 UnifiedTimestamp(bool fMilliseconds){ return Timestamp(fMilliseconds) + (UNIFIED_AVERAGE_OFFSET / (fMilliseconds ? 1 : 1000)); }
+	uint64 UnifiedTimestamp(bool fMilliseconds){ return Timestamp(fMilliseconds) + (UNIFIED_AVERAGE_OFFSET * (fMilliseconds ? 1000 : 1)); }
 
 
 	/* Calculate the Average Unified Time. Called after Time Data is Added */

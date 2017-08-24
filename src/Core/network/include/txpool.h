@@ -25,11 +25,22 @@ namespace Core
 {		
 	class CTxPool : public LLP::CHoldingPool<uint512, CTransaction>
 	{
-		
 		/* Map to Contain list of Inputs spending by UNVERIFIED transactions. */
 		std::map<uint512, uint512> mapInputLocks;
 		
 	public:
+		/** State level messages to hold information about holding data. */
+		enum
+		{
+			//Location States
+			MAINCHAIN      = 10,
+			FORKCHAIN      = 11,
+			RELAY          = 12,
+			DISK           = 13,
+			
+			//Validation States
+			GENESIS = 130
+		};
 		
 		
 		/** Default Constructor. */

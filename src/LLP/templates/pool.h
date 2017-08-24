@@ -21,17 +21,22 @@ namespace LLP
 {	
 
 	/* Holding Object for Memory Maps. */
-	template<typename ObjectType> struct CHoldingObject
+	template<typename ObjectType> class CHoldingObject
 	{
-		unsigned int  Timestamp;
+	public:
+		uint64        Timestamp;
 		unsigned char     State;
 		ObjectType       Object;
+		
+		CHoldingObject() {}
+		CHoldingObject(uint64 TimestampIn, unsigned char StateIn, ObjectType ObjectIn) : Timestamp(TimestampIn), State(StateIn), Object(ObjectIn) {}
 	};
 	
 	
 	/** Holding Pool:
 	 * 
 	 * This class is responsible for holding data that is partially processed.
+	 * It is also uselef for data that needs to be relayed from cache once recieved.
 	 * 
 	 * It must adhere to the processing expiration time.
 	 * 
@@ -60,22 +65,21 @@ namespace LLP
 			//Validation States
 			VERIFIED   = 0,
 			ACCEPTED   = 1,
-			ORPHANED   = 2,
-			REJECTED   = 3,
-			
-			//Location States
-			CHAIN      = 4,
-			RELAY      = 5,
-			DISK       = 6,
+			INDEXED    = 2,
+			ORPHANED   = 3,
+			REJECTED   = 4,
+			INVALID    = 5,
 			
 			
 			//Unverified States
 			UNVERIFIED = 128,
-			NOTFOUND   = 255
+			NOTFOUND   = 129
+			
+			//All states on 130 - 255 for custom states with child classes
 		};
 		
 		/** Base Constructor. **/
-		CHoldingPool() {}
+		CHoldingPool() : mapObjects(), nExpirationTime(0) {}
 		
 		
 		/** Expiration Constructor
@@ -83,7 +87,7 @@ namespace LLP
 		 * @param[in] nExpirationTimeIn The time in seconds for objects to expire in the pool.
 		 * 
 		 */
-		CHoldingPool(unsigned int nExpirationTimeIn) : nExpirationTime(nExpirationTimeIn) {}
+		CHoldingPool(unsigned int nExpirationTimeIn) : mapObjects(), nExpirationTime(nExpirationTimeIn) {}
 		
 		
 		/** Check for Data by Index.
@@ -93,7 +97,7 @@ namespace LLP
 		 * @return Boolean expressino whether pool contains data by index
 		 * 
 		 */
-		bool Has(IndexType Index) { return mapObjects.count(Index); }
+		bool Has(IndexType Index) { return (mapObjects.find(Index) != mapObjects.end()); }
 		
 		
 		/** Get the Data by Index
@@ -177,21 +181,23 @@ namespace LLP
 		
 		/** Add data to the pool
 		 * 
+		 * Default state is UNVERIFIED
+		 * 
 		 * @param[in] Index Template argument to add selected index
 		 * @param[in] Object Template argument for the object to be added.
 		 * 
 		 */
-		void Add(IndexType Index, ObjectType Object)
+		bool Add(IndexType Index, ObjectType Object, char State = UNVERIFIED, uint64 nTimestamp = Core::UnifiedTimestamp())
 		{
 			LOCK(MUTEX);
 			
-			CHoldingObject<ObjectType> HoldingObject;
+			if(Has(Index))
+				return false;
 			
-			HoldingObject.Timestamp = Core::UnifiedTimestamp();
-			HoldingObject.State     = UNVERIFIED;
-			HoldingObject.Object    = Object;
-			
+			CHoldingObject<ObjectType> HoldingObject(nTimestamp, State, Object);
 			mapObjects[Index] = HoldingObject;
+			
+			return true;
 		}
 
 		
@@ -201,7 +207,7 @@ namespace LLP
 		 * @param[in] State The selected state to add (Default is UNVERIFIED)
 		 * 
 		 */
-		void SetState(IndexType Index, unsigned char State = UNVERIFIED) 
+		void SetState(IndexType Index, unsigned char State = UNVERIFIED)
 		{ 
 			LOCK(MUTEX);
 			

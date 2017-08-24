@@ -132,6 +132,13 @@ namespace LLP
 		/* Handle Node Pings on Generic Events */
 		if(EVENT == EVENT_GENERIC)
 		{
+			
+			if(nLastBlockRequest + 30 < Core::UnifiedTimestamp())
+			{
+				nLastBlockRequest = Core::UnifiedTimestamp();
+				PushMessage("getblocks", Core::CBlockLocator(Core::pindexBest), uint1024(0));
+			}
+			
 			if(nLastPing + 10 < Core::UnifiedTimestamp()) {
 				RAND_bytes((unsigned char*)&nSessionID, sizeof(nSessionID));
 				
@@ -329,10 +336,30 @@ namespace LLP
 				ssMessage >> nRequestID;
 			}
 			
+			
+			/* Get the Block Hash. */
+			uint1024 hashBlock = block.GetHash();
+			
+			
+			/* Check that data doesn't already exist. 
+			 * 
+			 * TODO: Add disk checking too with LLD instance
+			 */
+			if(Core::pManager->blkPool.Has(hashBlock) || Core::mapBlockIndex.count(hashBlock))
+			{
+				/* Level 3 Debugging: Output Protocol Messages. */
+				if(GetArg("-verbose", 0) >= 3)
+					printf("duplicate block %s\n", hashBlock.ToString().substr(0,20).c_str());
+				
+				//TODO: add weighted ddos score for duplicates
+			
+				return true;
+			}
+            
             
 			/* Level 3 Debugging: Output Protocol Messages. */
 			if(GetArg("-verbose", 0) >= 3)
-				printf("received block %s\n", block.GetHash().ToString().substr(0,20).c_str());
+				printf("received block %s height %u\n", hashBlock.ToString().substr(0,20).c_str(), block.nHeight);
             
 			
 			/* Level 4 Debugging: Output raw data dumps. */
@@ -340,29 +367,76 @@ namespace LLP
 				block.print();
 			
 			
+			/* Add checked data to block pool */
+			if(!Core::pManager->blkPool.Add(hashBlock, block))
+			{
+				if(GetArg("-verbose", 0) >= 3)
+					printf("failed to add %s height %u\n", hashBlock.ToString().substr(0,20).c_str(), block.nHeight);
+				
+				return true;
+			}
+			
+			
+			/* Check if the block is an Orphan.
+			 * 
+			 * TODO: Add disk checks
+			 */
+			if(!Core::pManager->blkPool.Has(block.hashPrevBlock) && !Core::mapBlockIndex.count(block.hashPrevBlock))
+			{
+				if(GetArg("-verbose", 0) >= 3)
+					printf("ORPHANED no prev %s\n", block.hashPrevBlock.ToString().substr(0, 20).c_str());
+				
+				/* Set the state to Orphaned. */
+				Core::pManager->blkPool.SetState(hashBlock, Core::pManager->blkPool.ORPHANED);
+				
+				return true;
+			}
+			
+			
+			/* Check Previous Blocks States. TODO: Handle states on chain per violation */
+			unsigned char nPrevState = Core::pManager->blkPool.State(block.hashPrevBlock);
+			if( !Core::mapBlockIndex.count(block.hashPrevBlock) &&
+				(nPrevState == Core::pManager->blkPool.ORPHANED ||
+				nPrevState == Core::pManager->blkPool.INVALID  ||
+				nPrevState == Core::pManager->blkPool.REJECTED) )
+			{
+				if(GetArg("-verbose", 0) >= 3)
+					printf("ORPHANED BY PREV STATE (error %u) iby %s\n", nPrevState, block.hashPrevBlock.ToString().substr(0, 20).c_str());
+				
+				/* Set the state to Orphaned. */
+				Core::pManager->blkPool.SetState(hashBlock, Core::pManager->blkPool.ORPHANED);
+				
+				return true;
+			}
+			
+			
 			/* Timer object for runtime calculations. */
 			Timer cTimer;
-			cTimer.Start();
+			cTimer.Reset();
 			
 			
 			/* Check the Block validity. TODO: Send process message for Trust Depreciation (LLP:Dos). */
 			if(Core::pManager->blkPool.Check(block, this))
 			{
 				if(GetArg("-verbose", 0) >= 3)
-					printf("PASSED checks in %u ms\n", cTimer.ElapsedMilliseconds());
+					printf("PASSED checks in " PRIu64 "us\n", cTimer.ElapsedMicroseconds());
+				
+				/* Set the proper state for the new block. */
+				Core::pManager->blkPool.SetState(hashBlock, Core::pManager->blkPool.VERIFIED);
 			}
 			else
-				return true; //if failed return without terminating the connection
-			
-			cTimer.Reset();
-			if(Core::pManager->blkPool.Accept(block, this))
 			{
 				if(GetArg("-verbose", 0) >= 3)
-					printf("ACCEPTED in %u ms\n", cTimer.ElapsedMilliseconds());
-			}
-			else
+					printf("INVALID checks in " PRIu64 "us", cTimer.ElapsedMicroseconds());
+				
+				/* Set the proper state for the new block. */
+				Core::pManager->blkPool.SetState(hashBlock, Core::pManager->blkPool.INVALID);
+				
 				return true; //if failed return without terminating the connection
+			}
 			
+		
+			return true;
 		}
 		
 		
@@ -451,7 +525,6 @@ namespace LLP
 			}
 			//else
 			
-			PushMessage("getblocks", Core::CBlockLocator(Core::pindexBest), uint1024(0));
 		}
 
 		

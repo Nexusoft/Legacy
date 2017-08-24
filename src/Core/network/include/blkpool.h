@@ -29,6 +29,19 @@ namespace Core
 	{
 	public:
 		
+		/** State level messages to hold information about holding data. */
+		enum
+		{
+			//Location States
+			MAINCHAIN      = 10,
+			FORKCHAIN      = 11,
+			RELAY          = 12,
+			DISK           = 13,
+			
+			//Validation States
+			GENESIS = 130
+		};
+		
 		
 		/** Default Constructor. */
 		CBlkPool() : LLP::CHoldingPool<uint1024, CBlock>(60 * 60 * 24) {}
@@ -68,14 +81,13 @@ namespace Core
 		 * TODO: Make state calculations per block with child class, wrap that on disk and correlate that to checkpoint states
 		 * 
 		 * @param[in] blk The block object to added
-		 * @param[in] nFile The File number block will be appended to (NOTE: To be deprecated into LLD)
-		 * @param[in] nFilePos The Binary position of the RAW block data in the blk.....dat files (NOTE: To be deprecated into LLD)
+		 * @param[out] pindexNew The new index object to be returned
 		 * @param[out] pfrom The Node that block was recieved from for DoS and Trust filters
 		 * 
 		 * @return Returns true if the block was valid in the adding, False if it failed.
 		 * 
 		 */
-		bool AddToChain(CBlock blk, unsigned int nFile, unsigned int nFilePos, LLP::CNode* pfrom);
+		bool Index(CBlock blk, CBlockIndex* pindexNew, LLP::CNode* pfrom);
 		
 		
 		/** Set Best Block
@@ -90,7 +102,7 @@ namespace Core
 		 * @return Returns true if the block was successfully appended as the best block.
 		 * 
 		 */
-		bool SetBestBlock(LLD::CIndexDB& indexdb, CBlockIndex* pindexNew, LLP::CNode* pfrom);
+		bool Connect(LLD::CIndexDB& indexdb, CBlockIndex* pindexNew, LLP::CNode* pfrom);
 		
 		
 	};

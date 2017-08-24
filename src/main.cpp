@@ -353,6 +353,11 @@ bool AppInit2(int argc, char* argv[])
     }
 #endif
 
+
+	/* Establish the Manager Object. */
+	Core::pManager = new Core::Manager();
+
+	
 	printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
 	printf("%s (%s)\n", FormatFullVersion().c_str(), CLIENT_DATE.c_str());
 	printf("Default data directory %s\n", GetDefaultDataDir().string().c_str());
@@ -595,8 +600,7 @@ bool AppInit2(int argc, char* argv[])
         CreateThread(RPC::ThreadRPCServer, NULL);
 	
 	
-	/* Establish the Manager Object. */
-	Core::pManager = new Core::Manager();
+	/* Start the Node Manager */
 	Core::pManager->Start();
 	
 

@@ -536,57 +536,75 @@ namespace Core
 		}
 
 		if(GetArg("-verbose", 0) >= 0)
-			printf("%s Network: genesis=0x%s nBitsLimit=0x%08x nBitsInitial=0x%08x nCoinbaseMaturity=%d\n",
+			printf("%s Network: genesis=%s nBitsLimit=0x%08x nBitsInitial=0x%08x nCoinbaseMaturity=%d\n",
 			   fTestNet? "Test" : "Nexus", hashGenesisBlock.ToString().substr(0, 20).c_str(), bnProofOfWorkLimit[0].GetCompact(), bnProofOfWorkStart[0].GetCompact(), nCoinbaseMaturity);
+
+		if (!fAllowNew)
+			return false;
+
+
+		const char* pszTimestamp = "Silver Doctors [2-19-2014] BANKER CLEAN-UP: WE ARE AT THE PRECIPICE OF SOMETHING BIG";
+
+		CTransaction txNew;
+		txNew.nTime = 1409456199;
+		txNew.vin.resize(1);
+		txNew.vout.resize(1);
+		txNew.vin[0].scriptSig = Wallet::CScript() << vector<unsigned char>((const unsigned char*)pszTimestamp, (const unsigned char*)pszTimestamp + strlen(pszTimestamp));
+		txNew.vout[0].SetEmpty();
+			
+		CBlock block;
+		block.vtx.push_back(txNew);
+		block.hashPrevBlock = 0;
+		block.hashMerkleRoot = block.BuildMerkleTree();
+		block.nVersion = 1;
+		block.nHeight  = 0;
+		block.nChannel = 2;
+		block.nTime    = 1409456199;
+		block.nBits    = bnProofOfWorkLimit[2].GetCompact();
+		block.nNonce   = fTestNet ? 122999499 : 2196828850;
+
+		assert(block.hashMerkleRoot == uint512("0x8a971e1cec5455809241a3f345618a32dc8cb3583e03de27e6fe1bb4dfa210c413b7e6e15f233e938674a309df5a49db362feedbf96f93fb1c6bfeaa93bd1986"));
+			
+		CBigNum target;
+		target.SetCompact(block.nBits);
+		block.print();
+			
+		/* Check the Genesis Block Data to the Hard Coded Genesis Hash. */
+		if(block.GetHash() != hashGenesisBlock)
+			return error("LoadBlockIndex() : genesis hash does not match");
+		
+		/* Add the genesis to block pool level memory. */
+		if(!pManager->blkPool.Add(block.GetHash(), block, pManager->blkPool.GENESIS, 0))
+			return error("LoadBlockIndex() : blkPool failed to add");
 
 		/** Initialize Block Index Database. **/
 		LLD::CIndexDB indexdb("cr");
-		if (!indexdb.LoadBlockIndex() || mapBlockIndex.empty())
+		if (!indexdb.LoadBlockIndex() || mapBlockIndex.empty()) 
 		{
-			if (!fAllowNew)
-				return false;
-
-
-			const char* pszTimestamp = "Silver Doctors [2-19-2014] BANKER CLEAN-UP: WE ARE AT THE PRECIPICE OF SOMETHING BIG";
-			CTransaction txNew;
-			txNew.nTime = 1409456199;
-			txNew.vin.resize(1);
-			txNew.vout.resize(1);
-			txNew.vin[0].scriptSig = Wallet::CScript() << vector<unsigned char>((const unsigned char*)pszTimestamp, (const unsigned char*)pszTimestamp + strlen(pszTimestamp));
-			txNew.vout[0].SetEmpty();
-			
-			CBlock block;
-			block.vtx.push_back(txNew);
-			block.hashPrevBlock = 0;
-			block.hashMerkleRoot = block.BuildMerkleTree();
-			block.nVersion = 1;
-			block.nHeight  = 0;
-			block.nChannel = 2;
-			block.nTime    = 1409456199;
-			block.nBits    = bnProofOfWorkLimit[2].GetCompact();
-			block.nNonce   = fTestNet ? 122999499 : 2196828850;
-
-			assert(block.hashMerkleRoot == uint512("0x8a971e1cec5455809241a3f345618a32dc8cb3583e03de27e6fe1bb4dfa210c413b7e6e15f233e938674a309df5a49db362feedbf96f93fb1c6bfeaa93bd1986"));
-			
-			CBigNum target;
-			target.SetCompact(block.nBits);
-			block.print();
-			
-			/* Check the Genesis Block Data to the Hard Coded Genesis Hash. */
-			if(block.GetHash() != hashGenesisBlock)
-				return error("LoadBlockIndex() : genesis hash does not match");
-			
-			if(!pManager->blkPool.Check(block, NULL))
-				return error("LoadBlockIndex() : genesis block not accepted into block pool");
-			
 			/** Write the New Genesis to Disk. **/
 			unsigned int nFile;
 			unsigned int nBlockPos;
 			if (!block.WriteToDisk(nFile, nBlockPos))
 				return error("LoadBlockIndex() : writing genesis block to disk failed");
 			
-			if(!pManager->blkPool.AddToChain(block, nFile, nBlockPos, NULL))
+			CBlockIndex* pindexNew = new CBlockIndex(nFile, nBlockPos, block);
+			if (!pindexNew)
+				return error("LoadBlockIndex() : new CBlockIndex failed");
+		
+			if(!pManager->blkPool.Index(block, pindexNew, NULL))
 				return error("LoadBlockIndex() : genesis block not accepted");
+			
+			/* Commit the Genesis to disk. */
+			LLD::CIndexDB indexdb("r+");
+			indexdb.TxnBegin();
+			if(!indexdb.WriteBlockIndex(CDiskBlockIndex(pindexNew)))
+				return error("LoadBlockIndex() : failed to write index to disk");
+			
+			/* Write the Best Chain to the Index Database LLD. */
+			if (!indexdb.WriteHashBestChain(pindexNew->GetBlockHash()))
+				return error("CBlock::SetBestChain() : WriteHashBestChain failed");
+			
+			indexdb.TxnCommit();
 		}
 
 		return true;

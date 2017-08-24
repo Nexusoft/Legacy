@@ -33,7 +33,7 @@ namespace Core
 					mapInputLocks.erase(input.prevout.hash);
 			}
 			
-			SetState(tx.GetHash(), CHAIN);
+			SetState(tx.GetHash(), MAINCHAIN);
 		}
 	}
 	

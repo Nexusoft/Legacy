@@ -72,6 +72,15 @@ public:
 					
 		return (boost::posix_time::microsec_clock::local_time() - TIMER_START).total_milliseconds();
 	}
+	
+	/* Return the Total Microseconds Elapsed since Time Started. */
+	uint64_t ElapsedMicroseconds()
+	{
+		if(fStopped)
+			return (TIMER_END - TIMER_START).total_microseconds();
+					
+		return (boost::posix_time::microsec_clock::local_time() - TIMER_START).total_microseconds();
+	}
 };
 
 

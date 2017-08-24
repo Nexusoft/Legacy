@@ -221,6 +221,7 @@ namespace Core
 		if (mi == mapBlockIndex.end())
 			return LLP::DoS(pfrom, 10, error("AcceptBlock() : prev block not found"));
 		
+		
 		CBlockIndex* pindexPrev = (*mi).second;
 		int nPrevHeight = pindexPrev->nHeight + 1;
 		
@@ -287,39 +288,19 @@ namespace Core
 			if (!tx.IsFinal(blk.nHeight, blk.GetBlockTime()))
 				return LLP::DoS(pfrom, 10, error("AcceptBlock() : contains a non-final transaction"));
 
-				
-		/** Write new Block to Disk. **/
-		if (!CheckDiskSpace(::GetSerializeSize(blk, SER_DISK, DATABASE_VERSION)))
-			return error("AcceptBlock() : out of disk space");
-			
-			
-		unsigned int nFile = -1;
-		unsigned int nBlockPos = 0;
-		if (!blk.WriteToDisk(nFile, nBlockPos))
-			return error("AcceptBlock() : WriteToDisk failed");
-		
-		if (!AddToChain(blk, nFile, nBlockPos, pfrom))
-			return error("AcceptBlock() : AddToChain failed");
-		
-
 		return true;
 	}
 
 
 	/* AddToBlockIndex: Adds a new Block into the Block Index. 
-		This is where it is categorized and dealt with in the Blockchain. */
-	bool CBlkPool::AddToChain(CBlock blk, unsigned int nFile, unsigned int nBlockPos, LLP::CNode* pfrom)
+		This is where it is categorized and dealt with in the Blockchain.
+		
+		TODO: Remove this Indexing Function when moved to LLD indexing
+	*/
+	bool CBlkPool::Index(CBlock blk, CBlockIndex* pindexNew, LLP::CNode* pfrom)
 	{
-		/* Check for Duplicate. */
+		/* Get blocks hash. */
 		uint1024 hash = blk.GetHash();
-		if (mapBlockIndex.count(hash))
-			return error("AddToBlockIndex() : %s already exists", hash.ToString().substr(0,20).c_str());
-
-			
-		/* Build new Block Index Object. */
-		CBlockIndex* pindexNew = new CBlockIndex(nFile, nBlockPos, blk);
-		if (!pindexNew)
-			return error("AddToBlockIndex() : new CBlockIndex failed");
 
 			
 		/* Find Previous Block. */
@@ -382,17 +363,10 @@ namespace Core
 		std::map<uint1024, CBlockIndex*>::iterator mi = mapBlockIndex.insert(std::make_pair(hash, pindexNew)).first;
 		pindexNew->phashBlock = &((*mi).first);
 
-
-		/** Write the new Block to Disk. **/
-		LLD::CIndexDB indexdb("r+");
-		indexdb.TxnBegin();
-		indexdb.WriteBlockIndex(CDiskBlockIndex(pindexNew));
-		
-
 		return true;
 	}
 	
-	bool CBlkPool::SetBestBlock(LLD::CIndexDB& indexdb, CBlockIndex* pindexNew, LLP::CNode* pfrom)
+	bool CBlkPool::Connect(LLD::CIndexDB& indexdb, CBlockIndex* pindexNew, LLP::CNode* pfrom)
 	{
 		uint1024 hash = pindexNew->GetBlockHash();
 		if (pindexGenesisBlock == NULL && hash == hashGenesisBlock)
@@ -511,7 +485,7 @@ namespace Core
 
 
 			for(auto tx : vResurrect)
-				pManager->txPool.SetState(tx.GetHash(), pManager->txPool.ACCEPTED);
+				pManager->txPool.SetState(tx.GetHash(), pManager->txPool.MAINCHAIN);
 				
 
 			/* Reset the txpool states to VERIFIED not ACCEPTED if block disconnected. */
@@ -533,12 +507,14 @@ namespace Core
 			printf("SetBestChain: new best=%s  height=%d  trust=%" PRIu64 "  moneysupply=%s\n", hashBestChain.ToString().substr(0,20).c_str(), nBestHeight, nBestChainTrust, FormatMoney(pindexBest->nMoneySupply).c_str());
 
 		
+		/*
 		std::string strCmd = GetArg("-blocknotify", "");
 		if (!IsInitialBlockDownload() && !strCmd.empty())
 		{
 			boost::replace_all(strCmd, "%s", hashBestChain.GetHex());
 			boost::thread t(runCommand, strCmd);
 		}
+		*/
 
 		return true;
 	}

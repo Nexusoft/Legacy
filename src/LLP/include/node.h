@@ -79,6 +79,7 @@ namespace LLP
 		/* Network Statistics. */
 		unsigned int nNodeLatency; //milli-seconds
 		unsigned int nLastPing;
+		unsigned int nLastBlockRequest;
 		
 		
 		/* Node Timers (Internal Statistics) */

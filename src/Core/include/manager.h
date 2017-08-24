@@ -39,9 +39,11 @@ namespace Core
 	{
 		
 		Thread_t ConnectionThread;
+		Thread_t ProcessorThread;
+		
 	public:
 		
-		Manager() : LLP::Server<LLP::CNode> (LLP::GetDefaultPort(), 10, false, 1, 20, 30, 30, true, true), txPool(), blkPool(), ConnectionThread(boost::bind(&Manager::ConnectionManager, this)) {}
+		Manager() : LLP::Server<LLP::CNode> (LLP::GetDefaultPort(), 10, false, 1, 20, 30, 30, true, true), txPool(), blkPool(), ConnectionThread(boost::bind(&Manager::ConnectionManager, this)),  ProcessorThread(boost::bind(&Manager::BlockProcessor, this)) {}
 		
 		
 		/* Time Seed Manager. */
@@ -89,6 +91,11 @@ namespace Core
 	};
 	
 	extern Manager* pManager;
+	
+	
+	
+	/* Sorting Algorithm for Blocks. */
+	bool SortByHeight(const uint1024& nFirst, const uint1024& nSecond);
 	
 }
 
