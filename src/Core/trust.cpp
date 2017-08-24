@@ -193,7 +193,7 @@ namespace Core
 		if(GetHash() > hashTarget)
 			return error("CBlock::VerifyStake() : Proof of Stake Hash not meeting Target.");
 			
-		if(GetArg("-verbose", 0) >= 2)
+		if(GetArg("-verbose", 0) >= 3)
 		{
 			cTrustPool.TrustScore(cKey, nTime);
 			printf("CBlock::VerifyStake() : Stake Hash  %s\n", GetHash().ToString().substr(0, 20).c_str());

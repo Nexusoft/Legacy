@@ -333,7 +333,7 @@ namespace Core
 				
 				pindexNew->nReleasedReserve[nType] =  nReserve - pindexNew->nCoinbaseRewards[nType];
 				
-				if(GetArg("-verbose", 0) >= 2)
+				if(GetArg("-verbose", 0) >= 3)
 					printf("Reserve Balance %i | %f Nexus | Released %f\n", nType, pindexNew->nReleasedReserve[nType] / 1000000.0, (nReserve - pindexPrev->nReleasedReserve[nType]) / 1000000.0 );
 			}
 			else
@@ -346,7 +346,7 @@ namespace Core
 		{
 			pindexNew->PendingCheckpoint = std::make_pair(pindexNew->nHeight, pindexNew->GetBlockHash());
 			
-			if(GetArg("-verbose", 0) >= 2)
+			if(GetArg("-verbose", 0) >= 3)
 				printf("===== New Pending Checkpoint Hash = %s Height = %u\n", pindexNew->PendingCheckpoint.second.ToString().substr(0, 15).c_str(), pindexNew->nHeight);
 		}
 		else
@@ -355,7 +355,7 @@ namespace Core
 			
 			unsigned int nAge = pindexNew->pprev->GetBlockTime() - mapBlockIndex[pindexNew->PendingCheckpoint.second]->GetBlockTime();
 			
-			if(GetArg("-verbose", 0) >= 2)
+			if(GetArg("-verbose", 0) >= 3)
 				printf("===== Pending Checkpoint Age = %u Hash = %s Height = %u\n", nAge, pindexNew->PendingCheckpoint.second.ToString().substr(0, 15).c_str(), pindexNew->PendingCheckpoint.first);
 		}								 
 
