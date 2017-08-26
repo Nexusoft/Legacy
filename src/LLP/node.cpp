@@ -375,7 +375,7 @@ namespace LLP
 			 * 
 			 * TODO: Add disk checks
 			 */
-			if(!Core::pManager->blkPool.Has(block.hashPrevBlock) && !Core::mapBlockIndex.count(block.hashPrevBlock))
+			if(!Core::mapBlockIndex.count(block.hashPrevBlock))
 			{
 				if(GetArg("-verbose", 0) >= 3)
 					printf("ORPHANED no prev %s\n", block.hashPrevBlock.ToString().substr(0, 20).c_str());
@@ -383,22 +383,8 @@ namespace LLP
 				/* Set the state to Orphaned. */
 				Core::pManager->blkPool.SetState(hashBlock, Core::pManager->blkPool.ORPHANED);
 				
-				return true;
-			}
-			
-			
-			/* Check Previous Blocks States. TODO: Handle states on chain per violation */
-			unsigned char nPrevState = Core::pManager->blkPool.State(block.hashPrevBlock);
-			if( !Core::mapBlockIndex.count(block.hashPrevBlock) &&
-				(nPrevState == Core::pManager->blkPool.ORPHANED ||
-				nPrevState == Core::pManager->blkPool.INVALID  ||
-				nPrevState == Core::pManager->blkPool.REJECTED) )
-			{
-				if(GetArg("-verbose", 0) >= 3)
-					printf("ORPHANED BY PREV STATE (error %u) iby %s\n", nPrevState, block.hashPrevBlock.ToString().substr(0, 20).c_str());
-				
-				/* Set the state to Orphaned. */
-				Core::pManager->blkPool.SetState(hashBlock, Core::pManager->blkPool.ORPHANED);
+				/* Request the previous orphaned block. */
+				PushMessage("getdata", LLP::CInv(LLP::MSG_BLOCK, block.hashPrevBlock));
 				
 				return true;
 			}
@@ -411,7 +397,6 @@ namespace LLP
 					printf("failed block processing %s\n", hashBlock.ToString().substr(0, 20).c_str());
 				
 			}
-
 			
 		
 			return true;

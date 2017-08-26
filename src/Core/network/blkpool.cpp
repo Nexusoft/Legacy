@@ -38,7 +38,7 @@ namespace Core
 	bool VerifyAddress(const std::vector<unsigned char> cScript, const unsigned char nSignature[])
 	{
 		if(cScript.size() != 37)
-			return error("Script Size not 37 Bytes");
+			return false;
 				
 		for(int nIndex = 0; nIndex < 37; nIndex++)
 			if(cScript[nIndex] != nSignature[nIndex] )
@@ -84,7 +84,7 @@ namespace Core
 		else
 		{
 			if(GetArg("-verbose", 0) >= 3)
-				printf("INVALID checks in %" PRIu64 " us", cTimer.ElapsedMicroseconds());
+				printf("INVALID checks in %" PRIu64 " us\n", cTimer.ElapsedMicroseconds());
 			
 			/* Set the proper state for the new block. */
 			SetState(hashBlock, INVALID);
@@ -180,18 +180,19 @@ namespace Core
 		
 		/* Check the Previous Version to Block Time-Lock. Allow Version (Current -1) Blocks for 1 Hour after Time Lock. */
 		if (blk.nVersion > 1 && blk.nVersion == (fTestNet ? TESTNET_BLOCK_CURRENT_VERSION - 1 : NETWORK_BLOCK_CURRENT_VERSION - 1) && (blk.GetBlockTime() - 3600) > (fTestNet ? TESTNET_VERSION_TIMELOCK[TESTNET_BLOCK_CURRENT_VERSION - 2] : NETWORK_VERSION_TIMELOCK[NETWORK_BLOCK_CURRENT_VERSION - 2]))
-			return error("CheckBlock() : Version %u Blocks have been Obsolete for %" PRId64 " Seconds\n", blk.nVersion, (UnifiedTimestamp() - (fTestNet ? TESTNET_VERSION_TIMELOCK[TESTNET_BLOCK_CURRENT_VERSION - 2] : NETWORK_VERSION_TIMELOCK[TESTNET_BLOCK_CURRENT_VERSION - 2])));	
+			return error("CheckBlock() : Version %u Blocks have been Obsolete for %" PRId64 " Seconds", blk.nVersion, (UnifiedTimestamp() - (fTestNet ? TESTNET_VERSION_TIMELOCK[TESTNET_BLOCK_CURRENT_VERSION - 2] : NETWORK_VERSION_TIMELOCK[TESTNET_BLOCK_CURRENT_VERSION - 2])));	
 			
 		
 		/* Check the Current Version Block Time-Lock. */
 		if (blk.nVersion >= (fTestNet ? TESTNET_BLOCK_CURRENT_VERSION : NETWORK_BLOCK_CURRENT_VERSION) && blk.GetBlockTime() <= (fTestNet ? TESTNET_VERSION_TIMELOCK[TESTNET_BLOCK_CURRENT_VERSION - 2] : NETWORK_VERSION_TIMELOCK[NETWORK_BLOCK_CURRENT_VERSION - 2]))
-			return error("CheckBlock() : Version %u Blocks are not Accepted for %" PRId64 " Seconds\n", blk.nVersion, (UnifiedTimestamp() - (fTestNet ? TESTNET_VERSION_TIMELOCK[TESTNET_BLOCK_CURRENT_VERSION - 2] : NETWORK_VERSION_TIMELOCK[NETWORK_BLOCK_CURRENT_VERSION - 2])));	
+			return error("CheckBlock() : Version %u Blocks are not Accepted for %" PRId64 " Seconds", blk.nVersion, (UnifiedTimestamp() - (fTestNet ? TESTNET_VERSION_TIMELOCK[TESTNET_BLOCK_CURRENT_VERSION - 2] : NETWORK_VERSION_TIMELOCK[NETWORK_BLOCK_CURRENT_VERSION - 2])));	
 			
 		
-		/* Check the Required Mining Outputs. */
-		if (blk.nHeight > 0 && blk.IsProofOfWork() && blk.nVersion < 5) {
+		/* Check the Required Mining Outputs (blocks version 3 and 4 only). */
+		if (blk.nHeight > 0 && blk.IsProofOfWork() && blk.nVersion >= 3 && blk.nVersion < 5) {
 			unsigned int nSize = blk.vtx[0].vout.size();
 
+			
 			/* Check the Coinbase Tx Size. */
 			if(nSize < 3)
 				return error("CheckBlock() : Coinbase Too Small.");
@@ -199,19 +200,19 @@ namespace Core
 			if(!fTestNet)
 			{
 				if (!VerifyAddressList(blk.vtx[0].vout[nSize - 2].scriptPubKey, AMBASSADOR_SCRIPT_SIGNATURES))
-					return error("CheckBlock() : Block %u Channel Signature Not Verified.\n", blk.nHeight);
+					return error("CheckBlock() : Block %u Channel Signature Not Verified.", blk.nHeight);
 
 				if (!VerifyAddressList(blk.vtx[0].vout[nSize - 1].scriptPubKey, DEVELOPER_SCRIPT_SIGNATURES))
-					return error("CheckBlock() :  Block %u Developer Signature Not Verified.\n", blk.nHeight);
+					return error("CheckBlock() :  Block %u Developer Signature Not Verified.", blk.nHeight);
 			}
 			
 			else
 			{
 				if (!VerifyAddress(blk.vtx[0].vout[nSize - 2].scriptPubKey, TESTNET_DUMMY_SIGNATURE))
-					return error("CheckBlock() :  Block %u Channel Signature Not Verified.\n", blk.nHeight);
+					return error("CheckBlock() :  Block %u Channel Signature Not Verified.", blk.nHeight);
 
 				if (!VerifyAddress(blk.vtx[0].vout[nSize - 1].scriptPubKey, TESTNET_DUMMY_SIGNATURE))
-					return error("CheckBlock() :  Block %u Developer Signature Not Verified.\n", blk.nHeight);
+					return error("CheckBlock() :  Block %u Developer Signature Not Verified.", blk.nHeight);
 			}
 		}
 

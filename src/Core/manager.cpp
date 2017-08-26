@@ -116,16 +116,17 @@ namespace Core
 					CBlock block;
 					blkPool.Get(hash, block);
 					
-					if(!blkPool.Has(block.hashPrevBlock) && !Core::mapBlockIndex.count(block.hashPrevBlock))
+					if(!Core::mapBlockIndex.count(block.hashPrevBlock))
 						continue;
 						
 					if(GetArg("-verbose", 0) >= 3)
-						printf("##### Block Processor::PROCESSING %s\n", hash.ToString().substr(0, 20).c_str());
+						printf("##### Block Processor::PROCESSING ORPHAN %s\n", hash.ToString().substr(0, 20).c_str());
 					
 					if(!blkPool.Process(block, NULL))
 						continue;
 				}
 			}
+			
 			
 			/* Get some more blocks if the block processor is waiting. */
 			std::vector<uint1024> vBlocks;
@@ -137,14 +138,16 @@ namespace Core
 				
 				/* Only ask lowest latency nodes. */
 				std::sort(vNodes.begin(), vNodes.end(), SortByLatency);
-				if((nBestHeight < cPeerBlocks.Majority() && nLastBlockRequest + 15 < Core::UnifiedTimestamp()) ||
+				
+				int nRandom = GetRandInt(vNodes.size() - 1);
+				if((nBestHeight < cPeerBlocks.Majority() && nLastBlockRequest + 5 < Core::UnifiedTimestamp()) ||
 					nLastBlockRequest + 30 < Core::UnifiedTimestamp())
 				{
 					if(GetArg("-verbose", 0) >= 2)
-						printf("##### Block Processor::Requested Blocks from node %s (%u ms)\n",  vNodes[0]->GetIPAddress().c_str(), vNodes[0]->nNodeLatency);
+						printf("##### Block Processor::Requested Blocks from node %s (%u ms)\n",  vNodes[nRandom]->GetIPAddress().c_str(), vNodes[nRandom]->nNodeLatency);
 				
 					nLastBlockRequest = Core::UnifiedTimestamp();
-					vNodes[0]->PushMessage("getblocks", Core::CBlockLocator(Core::pindexBest), uint1024(0));
+					vNodes[nRandom]->PushMessage("getblocks", Core::CBlockLocator(Core::pindexBest), uint1024(0));
 				}
 				
 				continue;
