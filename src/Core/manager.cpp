@@ -140,7 +140,7 @@ namespace Core
 				std::sort(vNodes.begin(), vNodes.end(), SortByLatency);
 				
 				int nRandom = GetRandInt(vNodes.size() - 1);
-				if((nBestHeight < cPeerBlocks.Majority() && nLastBlockRequest + 5 < Core::UnifiedTimestamp()) ||
+				if((nBestHeight < cPeerBlocks.Majority() && nLastBlockRequest + 15 < Core::UnifiedTimestamp()) ||
 					nLastBlockRequest + 30 < Core::UnifiedTimestamp())
 				{
 					if(GetArg("-verbose", 0) >= 2)

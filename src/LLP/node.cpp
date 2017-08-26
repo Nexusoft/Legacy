@@ -485,6 +485,8 @@ namespace LLP
 
 				/* Add to the Majority Peer Block Count. */
 				Core::cPeerBlockCounts.Add(nStartingHeight);
+				
+				PushMessage("getblocks", Core::CBlockLocator(Core::pindexBest), uint1024(0));
 			}
 			
 			Core::pManager->cPeerBlocks.Add(nStartingHeight);

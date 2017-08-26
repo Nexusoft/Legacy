@@ -98,7 +98,12 @@ namespace LLP
 		 * @return Boolean expressino whether pool contains data by index
 		 * 
 		 */
-		bool Has(IndexType Index) { return (mapObjects.find(Index) != mapObjects.end()); }
+		bool Has(IndexType Index) 
+		{ 
+			LOCK(MUTEX); 
+			
+			return (mapObjects.find(Index) != mapObjects.end()); 
+		}
 		
 		
 		/** Get the Data by Index
@@ -190,10 +195,10 @@ namespace LLP
 		 */
 		bool Add(IndexType Index, ObjectType Object, char State = UNVERIFIED, uint64 nTimestamp = Core::UnifiedTimestamp())
 		{
-			LOCK(MUTEX);
-			
 			if(Has(Index))
 				return false;
+			
+			LOCK(MUTEX);
 			
 			HoldingType HoldingObject(nTimestamp, State, Object);
 			mapObjects[Index] = HoldingObject;
@@ -212,10 +217,10 @@ namespace LLP
 		 */
 		bool Update(IndexType Index, ObjectType Object, char State = UNVERIFIED, uint64 nTimestamp = Core::UnifiedTimestamp())
 		{
-			LOCK(MUTEX);
-			
 			if(!Has(Index))
 				return false;
+			
+			LOCK(MUTEX);
 			
 			mapObjects[Index].Object    = Object;
 			mapObjects[Index].State     = State;
@@ -248,10 +253,10 @@ namespace LLP
 		 */
 		unsigned char State(IndexType Index)
 		{
-			LOCK(MUTEX);
-			
 			if(!Has(Index))
 				return NOTFOUND;
+			
+			LOCK(MUTEX);
 			
 			return mapObjects[Index].State; 
 		}
@@ -266,10 +271,10 @@ namespace LLP
 		 */
 		bool Remove(IndexType Index)
 		{
-			LOCK(MUTEX);
-			
 			if(!Has(Index))
 				return false;
+			
+			LOCK(MUTEX);
 			
 			mapObjects.erase(Index);
 			
@@ -286,10 +291,10 @@ namespace LLP
 		 */
 		bool Expired(IndexType Index)
 		{
-			LOCK(MUTEX);
-			
 			if(!Has(Index))
 				return true;
+			
+			LOCK(MUTEX);
 			
 			if(mapObjects[Index].Timestamp + nExpirationTime < Core::UnifiedTimestamp())
 				return true;
