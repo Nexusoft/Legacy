@@ -21,6 +21,8 @@ ________________________________________________________________________________
 #include "../network/include/txpool.h"
 #include "../network/include/blkpool.h"
 
+#include "../../Util/templates/containers.h"
+
 namespace Core
 {
 
@@ -43,7 +45,11 @@ namespace Core
 		
 	public:
 		
-		Manager() : LLP::Server<LLP::CNode> (LLP::GetDefaultPort(), 10, false, 1, 20, 30, 30, true, true), ConnectionThread(boost::bind(&Manager::ConnectionManager, this)), ProcessorThread(boost::bind(&Manager::BlockProcessor, this)), txPool(), blkPool(), vTried(), vNew() {}
+		/* The total blocks other peers have reported. */
+		CMajority<int> cPeerBlocks;
+		
+		
+		Manager() : LLP::Server<LLP::CNode> (LLP::GetDefaultPort(), 10, false, 1, 20, 30, 30, true, true), ConnectionThread(boost::bind(&Manager::ConnectionManager, this)), ProcessorThread(boost::bind(&Manager::BlockProcessor, this)), cPeerBlocks(), txPool(), blkPool(), vTried(), vNew(), fStarted(false) {}
 		
 		
 		/* Time Seed Manager. */
@@ -87,6 +93,10 @@ namespace Core
 		
 		/* New Addresses in the Manager. */
 		std::vector<LLP::CAddress> vNew;
+		
+		
+		/* Flag that Manager is Booted. */
+		bool fStarted;
 		
 	};
 	

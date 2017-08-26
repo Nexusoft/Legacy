@@ -91,10 +91,6 @@ namespace LLP
 		unsigned int nLastUnifiedCheck;
 		
 		
-		/* Node Process Queue. TODO: Make Process Queue Generate std::pair<key_data, data> */
-		std::queue< std::vector<unsigned char> > queueProcessing; //Need this to be able to accept node data pushes into the server (manager) class logic.
-		
-		
 		/* Message ID's of Requests Sent. */
 		std::map<unsigned int, uint64> mapSentRequests;
 		

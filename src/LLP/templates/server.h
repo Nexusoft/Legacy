@@ -95,15 +95,15 @@ namespace LLP
 		 * @return Returns the list of active connections in a vector
 		 * 
 		 **/
-		std::vector<ProtocolType> GetConnections()
+		std::vector<ProtocolType*> GetConnections()
 		{
-			std::vector<ProtocolType> vConnections;
+			std::vector<ProtocolType*> vConnections;
 			for(int nThread = 0; nThread < MAX_THREADS; nThread++)
 			{
 				int nSize = DATA_THREADS[nThread]->CONNECTIONS.size();
 				for(int nIndex = 0; nIndex < nSize; nIndex ++)
 				{
-					if(!DATA_THREADS[nThread]->CONNECTIONS[nIndex] || !DATA_THREADS[nThread]->CONNECTIONS[nIndex].Connected())
+					if(!DATA_THREADS[nThread]->CONNECTIONS[nIndex] || !DATA_THREADS[nThread]->CONNECTIONS[nIndex]->Connected())
 						continue;
 					
 					vConnections.push_back(DATA_THREADS[nThread]->CONNECTIONS[nIndex]);

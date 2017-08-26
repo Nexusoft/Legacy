@@ -133,12 +133,6 @@ namespace LLP
 		if(EVENT == EVENT_GENERIC)
 		{
 			
-			if(nLastBlockRequest + 30 < Core::UnifiedTimestamp())
-			{
-				nLastBlockRequest = Core::UnifiedTimestamp();
-				PushMessage("getblocks", Core::CBlockLocator(Core::pindexBest), uint1024(0));
-			}
-			
 			if(nLastPing + 10 < Core::UnifiedTimestamp()) {
 				RAND_bytes((unsigned char*)&nSessionID, sizeof(nSessionID));
 				
@@ -410,30 +404,14 @@ namespace LLP
 			}
 			
 			
-			/* Timer object for runtime calculations. */
-			Timer cTimer;
-			cTimer.Reset();
-			
-			
-			/* Check the Block validity. TODO: Send process message for Trust Depreciation (LLP:Dos). */
-			if(Core::pManager->blkPool.Check(block, this))
+			/* Process the Block. */
+			if(!Core::pManager->blkPool.Process(block, this))
 			{
 				if(GetArg("-verbose", 0) >= 3)
-					printf("PASSED checks in %" PRIu64 " us\n", cTimer.ElapsedMicroseconds());
+					printf("failed block processing %s\n", hashBlock.ToString().substr(0, 20).c_str());
 				
-				/* Set the proper state for the new block. */
-				Core::pManager->blkPool.SetState(hashBlock, Core::pManager->blkPool.VERIFIED);
 			}
-			else
-			{
-				if(GetArg("-verbose", 0) >= 3)
-					printf("INVALID checks in %" PRIu64 " us", cTimer.ElapsedMicroseconds());
-				
-				/* Set the proper state for the new block. */
-				Core::pManager->blkPool.SetState(hashBlock, Core::pManager->blkPool.INVALID);
-				
-				return true; //if failed return without terminating the connection
-			}
+
 			
 		
 			return true;
@@ -523,6 +501,8 @@ namespace LLP
 				/* Add to the Majority Peer Block Count. */
 				Core::cPeerBlockCounts.Add(nStartingHeight);
 			}
+			
+			Core::pManager->cPeerBlocks.Add(nStartingHeight);
 			//else
 			
 		}
@@ -599,6 +579,7 @@ namespace LLP
 			
 			/* Ask for the data. */
 			PushMessage("getdata", vInvNew);
+			
 		}
 
 		

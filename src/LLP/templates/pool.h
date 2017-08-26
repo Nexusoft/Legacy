@@ -44,7 +44,7 @@ namespace LLP
 	 * B. It can process data locked as orphans
 	 * 
 	 */
-	template<typename IndexType, typename ObjectType> class CHoldingPool
+	template<typename IndexType, typename ObjectType, typename HoldingType = CHoldingObject<ObjectType> > class CHoldingPool
 	{
 			
 		/* Map of the current holding data. */
@@ -69,6 +69,7 @@ namespace LLP
 			ORPHANED   = 3,
 			REJECTED   = 4,
 			INVALID    = 5,
+			INVENTORY  = 6,
 			
 			
 			//Unverified States
@@ -194,8 +195,31 @@ namespace LLP
 			if(Has(Index))
 				return false;
 			
-			CHoldingObject<ObjectType> HoldingObject(nTimestamp, State, Object);
+			HoldingType HoldingObject(nTimestamp, State, Object);
 			mapObjects[Index] = HoldingObject;
+			
+			return true;
+		}
+		
+		
+		/** Update data in the Pool
+		 * 
+		 * Default state is UNVERIFIED
+		 * 
+		 * @param[in] Index Template argument to add selected index
+		 * @param[in] Object Template argument for the object to be added.
+		 * 
+		 */
+		bool Update(IndexType Index, ObjectType Object, char State = UNVERIFIED, uint64 nTimestamp = Core::UnifiedTimestamp())
+		{
+			LOCK(MUTEX);
+			
+			if(!Has(Index))
+				return false;
+			
+			mapObjects[Index].Object    = Object;
+			mapObjects[Index].State     = State;
+			mapObjects[Index].Timestamp = nTimestamp;
 			
 			return true;
 		}

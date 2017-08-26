@@ -47,6 +47,21 @@ namespace Core
 		CBlkPool() : LLP::CHoldingPool<uint1024, CBlock>(60 * 60 * 24) {}
 		
 		
+		/** Run Basic Processing Checks for Block
+		 * 
+		 * Makes sure the block passes basic checks off chain (Check)
+		 * and on-chain (Accept) which work together to verify block data
+		 * 
+		 * Each stage of validation the block recieves gets a different state in the pool
+		 * 
+		 * @param[in] blk The block object to process
+		 * @param[out] pfrom The node the block was recieved from
+		 * 
+		 * @return Returns trus if it passes validation checks, false if failed.
+		 */
+		bool Process(CBlock blk, LLP::CNode* pfrom);
+		
+		
 		/** Check Block before adding
 		 * 
 		 * Checks a block that is not a part of the blockchain. Verifies basic rules that don't rely on calculations

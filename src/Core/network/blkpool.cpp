@@ -57,6 +57,82 @@ namespace Core
 		return false;
 	}
 	
+	/* This function is responsible for running the basic process checks for (check and accept)
+	 * In order to determine if the block is a valid block, but allow multiprocessing of the data.
+	 */
+	bool CBlkPool::Process(CBlock blk, LLP::CNode* pfrom)
+	{
+		
+		/* Timer object for runtime calculations. */
+		Timer cTimer;
+		cTimer.Reset();
+		
+		
+		/* Get the block Hash. */
+		uint1024 hashBlock = blk.GetHash();
+			
+			
+		/* Check the Block validity. TODO: Send process message for Trust Depreciation (LLP:Dos). */
+		if(Check(blk, pfrom))
+		{
+			if(GetArg("-verbose", 0) >= 3)
+				printf("PASSED checks in %" PRIu64 " us\n", cTimer.ElapsedMicroseconds());
+				
+			/* Set the proper state for the new block. */
+			SetState(hashBlock, VERIFIED);
+		}
+		else
+		{
+			if(GetArg("-verbose", 0) >= 3)
+				printf("INVALID checks in %" PRIu64 " us", cTimer.ElapsedMicroseconds());
+			
+			/* Set the proper state for the new block. */
+			SetState(hashBlock, INVALID);
+				
+			return true; //if failed return without terminating the connection
+		}
+			
+			
+		/* Check the block to the blockchain. */
+		if(Accept(blk, pfrom))
+		{
+			if (!CheckDiskSpace(::GetSerializeSize(blk, SER_DISK, DATABASE_VERSION)))
+				return error("out of disk space");
+					
+			
+			unsigned int nFile = 0;
+			unsigned int nBlockPos = 0;
+			if (!blk.WriteToDisk(nFile, nBlockPos))
+				return error("failed to write to disk");
+					
+			
+			Core::CBlockIndex* pindexNew = new Core::CBlockIndex(nFile, nBlockPos, blk);
+			if (!pindexNew || !Index(blk, pindexNew, NULL))
+				return error("FAILED INDEX in %" PRIu64 " us\n", cTimer.ElapsedMicroseconds());
+		
+					
+			/* Set the proper state for the new block. */
+			SetState(hashBlock, ACCEPTED);
+			
+			
+			if(GetArg("-verbose", 0) >= 3)
+				printf("ACCEPTED in %" PRIu64 " us\n", cTimer.ElapsedMicroseconds());
+		}
+		else
+		{
+			if(GetArg("-verbose", 0) >= 3)
+				printf("REJECTED in %" PRIu64 " us\n", cTimer.ElapsedMicroseconds());
+					
+			/* Set the proper state for the new block. */
+			SetState(hashBlock, REJECTED);
+					
+			return false;
+		}
+
+		return true;
+	}
+	
+	
 	/** Check Block: These are Checks done before the Block is sunken in the Blockchain.
 		These are done before a block is orphaned to ensure it is valid before trying to obtain its chain. **/
 	bool CBlkPool::Check(CBlock blk, LLP::CNode* pfrom)

@@ -42,6 +42,16 @@ namespace Core
 	
 	void Manager::ConnectionManager()
 	{
+		while(!fStarted)
+			Sleep(1000);
+		
+		
+		//FOR TESTING ONLY
+		AddConnection("104.192.170.130", "9323");
+		AddConnection("96.43.131.82", "9323");
+		AddConnection("104.192.170.30", "9323");
+		AddConnection("54.169.195.135", "9323");
+		
 		while(!fShutdown)
 		{
 			if(vNew.size() == 0 && vTried.size() == 0){
@@ -51,13 +61,19 @@ namespace Core
 			}
 
 			//TODO: Make this tied to port macros
-			if(!AddConnection(vNew[0].ToStringIP(), "9323"))
-				vTried.push_back(vNew[0]);
+			int nRandom = GetRandInt(vNew.size() - 1);
+			
+			
+			/* Attempt to make connections from the manager. */
+			printf("##### Connection Manager::attempting connection %s\n", vNew[nRandom].ToStringIP().c_str());
+			if(!AddConnection(vNew[nRandom].ToStringIP(), "9323"))
+				vTried.push_back(vNew[nRandom]);
 				
-			vNew.erase(vNew.begin());
+			vNew.erase(vNew.begin() + nRandom);
 			Sleep(5000);
 		}
 	}
+
 	
 	bool SortByHeight(const uint1024& nFirst, const uint1024& nSecond)
 	{ 
@@ -68,11 +84,21 @@ namespace Core
 		
 		return blkFirst.nHeight < blkSecond.nHeight;
 	}
+	
+	
+	bool SortByLatency(const LLP::CNode* nFirst, const LLP::CNode* nSecond)
+	{ 
+		return nFirst->nNodeLatency < nSecond->nNodeLatency;
+	}
 		
 		
 	/* Blocks are checked in the order they are recieved. */
 	void Manager::BlockProcessor()
 	{
+		while(!fStarted)
+			Sleep(1000);
+		
+		unsigned int nLastBlockRequest = 0;
 		while(!fShutdown)
 		{
 			Sleep(100);
@@ -81,8 +107,8 @@ namespace Core
 			std::vector<uint1024> vOrphans;
 			if(blkPool.GetIndexes(blkPool.ORPHANED, vOrphans))
 			{
-				if(GetArg("-verbose", 0) >= 2)
-					printf("##### Block Processor::queued Job of %u Orphans.\n", vOrphans.size());
+				//if(GetArg("-verbose", 0) >= 2)
+				//	printf("##### Block Processor::queued Job of %u Orphans.\n", vOrphans.size());
 				
 				std::sort(vOrphans.begin(), vOrphans.end(), SortByHeight);
 				for(auto hash : vOrphans)
@@ -96,35 +122,34 @@ namespace Core
 					if(GetArg("-verbose", 0) >= 3)
 						printf("##### Block Processor::PROCESSING %s\n", hash.ToString().substr(0, 20).c_str());
 					
-					/* Timer object for runtime calculations. */
-					Timer cTimer;
-					cTimer.Reset();
-					
-					/* Check the Block validity. TODO: Send process message for Trust Depreciation (LLP:Dos). */
-					if(blkPool.Check(block, NULL))
-					{
-						if(GetArg("-verbose", 0) >= 3)
-							printf("PASSED checks in %" PRIu64 " us\n", cTimer.ElapsedMicroseconds());
-						
-						/* Set the proper state for the new block. */
-						blkPool.SetState(hash, blkPool.VERIFIED);
-					}
-					else
-					{
-						if(GetArg("-verbose", 0) >= 3)
-							printf("INVALID checks in %" PRIu64 " us", cTimer.ElapsedMicroseconds());
-						
-						/* Set the proper state for the new block. */
-						blkPool.SetState(hash, blkPool.INVALID);
-						
+					if(!blkPool.Process(block, NULL))
 						continue;
-					}
 				}
 			}
 			
+			/* Get some more blocks if the block processor is waiting. */
 			std::vector<uint1024> vBlocks;
-			if(!blkPool.GetIndexes(blkPool.VERIFIED, vBlocks))
+			if(!blkPool.GetIndexes(blkPool.ACCEPTED, vBlocks))
+			{
+				std::vector<LLP::CNode*> vNodes = GetConnections();
+				if(vNodes.size() == 0)
+					continue;
+				
+				/* Only ask lowest latency nodes. */
+				std::sort(vNodes.begin(), vNodes.end(), SortByLatency);
+				if((nBestHeight < cPeerBlocks.Majority() && nLastBlockRequest + 15 < Core::UnifiedTimestamp()) ||
+					nLastBlockRequest + 30 < Core::UnifiedTimestamp())
+				{
+					if(GetArg("-verbose", 0) >= 2)
+						printf("##### Block Processor::Requested Blocks from node %s (%u ms)\n",  vNodes[0]->GetIPAddress().c_str(), vNodes[0]->nNodeLatency);
+				
+					nLastBlockRequest = Core::UnifiedTimestamp();
+					vNodes[0]->PushMessage("getblocks", Core::CBlockLocator(Core::pindexBest), uint1024(0));
+				}
+				
 				continue;
+			}
+			
 			
 			if(GetArg("-verbose", 0) >= 2)
 				printf("##### Block Processor::queued Job of %u Blocks.\n", vBlocks.size());
@@ -140,71 +165,22 @@ namespace Core
 				CBlock block;
 				blkPool.Get(hash, block);
 				
-				if (!CheckDiskSpace(::GetSerializeSize(block, SER_DISK, DATABASE_VERSION)))
-				{
-					printf("##### Block Processor::out of disk space");
-					
-					continue; //TODO: Recycle X times (add to holding object)
-				}
 				
-				
-				/* Check the block to the blockchain. */
-				Timer cTimer;
-				cTimer.Reset();
-				if(blkPool.Accept(block, NULL))
-				{
-					if(GetArg("-verbose", 0) >= 3)
-						printf("##### Block Processor::ACCEPTED in %" PRIu64 " us\n", cTimer.ElapsedMicroseconds());
-					
-					/* Set the proper state for the new block. */
-					blkPool.SetState(hash, blkPool.ACCEPTED);
-				}
-				else
-				{
-					if(GetArg("-verbose", 0) >= 3)
-						printf("##### Block Processor::REJECTED in %" PRIu64 " us\n", cTimer.ElapsedMicroseconds());
-					
-					/* Set the proper state for the new block. */
-					blkPool.SetState(hash, blkPool.REJECTED);
-					
-					continue;
-				}
-				
-				
-				/* Populate Index Data
-				* 
-				* TODO: Remove this once block indexing is done in LLD
-				*/
-				unsigned int nFile = 0;
-				unsigned int nBlockPos = 0;
-				if (!block.WriteToDisk(nFile, nBlockPos))
-				{
-					printf("##### Block Processor::WriteToDisk failed");
-					
-					continue; //TODO: Recylce X times (add to holding object)
-				}
-				
-				
+				/* Start the LLD transaction. */
 				indexdb.TxnBegin();
-				
-				Core::CBlockIndex* pindexNew = new Core::CBlockIndex(nFile, nBlockPos, block);
-				if (!pindexNew || !blkPool.Index(block, pindexNew, NULL))
-				{
-					if(GetArg("-verbose", 0) >= 3)
-						printf("##### Block Processor::FAILED INDEX in %" PRIu64 " us\n", cTimer.ElapsedMicroseconds());
 					
-					continue;
-				}
+				/* Set the best chain if it is highest trust.
+				 * TODO: Have this processor check different chain states.
+				 */
+				CBlockIndex* pindexNew = mapBlockIndex[hash];
 				
+				
+				/* Write the Index to DISK. */
 				if(!indexdb.WriteBlockIndex(CDiskBlockIndex(pindexNew)))
-				{
-					if(GetArg("-verbose", 0) >= 3)
-						printf("##### Block Processor::FAILED WRITE INDEX in %" PRIu64 " us\n", cTimer.ElapsedMicroseconds());
-					
 					continue;
-				}
-					
-
+				else
+					blkPool.SetState(hash, blkPool.INDEXED);
+			
 				if (pindexNew->nChainTrust > nBestChainTrust)
 				{
 					if (!blkPool.Connect(indexdb, pindexNew, NULL))
@@ -218,7 +194,7 @@ namespace Core
 					blkPool.SetState(hash, blkPool.MAINCHAIN);
 					
 					if(GetArg("-verbose", 0) >= 2)
-						printf("##### Block Processor::CONNECTED Block %s Height %u (%" PRIu64 ")\n", hash.ToString().substr(0, 20).c_str(), block.nHeight, cTimer.ElapsedMicroseconds());
+						printf("##### Block Processor::CONNECTED Block %s Height %u\n", hash.ToString().substr(0, 20).c_str(), block.nHeight);
 				}
 				else
 				{
@@ -254,6 +230,9 @@ namespace Core
 	/* Start up the Node Manager. */
 	void Manager::Start()
 	{
+		fStarted = true;
+		printf("##### Node Started #####\n");
+		
 		std::vector<LLP::CAddress> vSeeds = LLP::DNS_Lookup(fTestNet ? LLP::DNS_SeedNodes_Testnet : LLP::DNS_SeedNodes);
 		for(int nIndex = 0; nIndex < vSeeds.size(); nIndex++)
 			AddAddress(vSeeds[nIndex]);
