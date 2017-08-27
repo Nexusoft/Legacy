@@ -25,9 +25,12 @@ namespace LLP { class CNode;    }
 namespace Core
 {		
 	
+	
 	class CBlkPool : public LLP::CHoldingPool<uint1024, CBlock>
 	{
 	public:
+		Mutex_t INDEXING;
+		
 		
 		/** State level messages to hold information about holding data. */
 		enum
@@ -37,6 +40,7 @@ namespace Core
 			FORKCHAIN      = 11,
 			RELAY          = 12,
 			DISK           = 13,
+			ERROR          = 14,
 			
 			//Validation States
 			GENESIS = 130

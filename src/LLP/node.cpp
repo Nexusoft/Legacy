@@ -339,7 +339,7 @@ namespace LLP
 			 * 
 			 * TODO: Add disk checking too with LLD instance
 			 */
-			if(Core::pManager->blkPool.Has(hashBlock) || Core::mapBlockIndex.count(hashBlock))
+			if(Core::pManager->blkPool.Has(hashBlock) && Core::mapBlockIndex.count(hashBlock))
 			{
 				/* Level 3 Debugging: Output Protocol Messages. */
 				if(GetArg("-verbose", 0) >= 3)
@@ -454,11 +454,8 @@ namespace LLP
 			CAddress addrMe;
 			CAddress addrFrom;
 			uint64 nServices = 0;
+
 			
-			if(GetArg("-verbose", 0) >= 1)
-				printf("***** Node version message: version %d, blocks=%d\n", nCurrentVersion, nStartingHeight);
-			
-				
 			/* Check the Protocol Versions */
 			ssMessage >> nCurrentVersion >> nServices >> nTime >> addrMe >> addrFrom >> nSessionID >> strNodeVersion >> nStartingHeight;
 			if (nCurrentVersion < MIN_PROTO_VERSION)

@@ -90,6 +90,12 @@ namespace Core
 	{ 
 		return nFirst->nNodeLatency < nSecond->nNodeLatency;
 	}
+	
+	
+	bool SortByStartingHeight(const LLP::CNode* nFirst, const LLP::CNode* nSecond)
+	{ 
+		return nFirst->nStartingHeight < nSecond->nStartingHeight;
+	}
 		
 		
 	/* Blocks are checked in the order they are recieved. */
@@ -137,7 +143,7 @@ namespace Core
 					continue;
 				
 				/* Only ask lowest latency nodes. */
-				std::sort(vNodes.begin(), vNodes.end(), SortByLatency);
+				std::sort(vNodes.begin(), vNodes.end(), SortByStartingHeight);
 				
 				int nRandom = GetRandInt(vNodes.size() - 1);
 				if((nBestHeight < cPeerBlocks.Majority() && nLastBlockRequest + 15 < Core::UnifiedTimestamp()) ||
@@ -171,6 +177,7 @@ namespace Core
 				
 				/* Start the LLD transaction. */
 				indexdb.TxnBegin();
+				
 					
 				/* Set the best chain if it is highest trust.
 				 * TODO: Have this processor check different chain states.
@@ -186,12 +193,14 @@ namespace Core
 			
 				if (pindexNew->nChainTrust > nBestChainTrust)
 				{
-					if (!blkPool.Connect(indexdb, pindexNew, NULL))
-					{
-						printf("##### Block Processor::Connect failed\n");
-						indexdb.TxnAbort();
-						
-						continue; //TODO: Recycle X times (add to holding object)
+					{ LOCK(blkPool.INDEXING);
+						if (!blkPool.Connect(indexdb, pindexNew, NULL))
+						{
+							printf("##### Block Processor::Connect failed\n");
+							indexdb.TxnAbort();
+							
+							continue; //TODO: Recycle X times (add to holding object)
+						}
 					}
 					
 					blkPool.SetState(hash, blkPool.MAINCHAIN);

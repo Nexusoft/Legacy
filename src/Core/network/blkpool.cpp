@@ -96,20 +96,23 @@ namespace Core
 		/* Check the block to the blockchain. */
 		if(Accept(blk, pfrom))
 		{
-			if (!CheckDiskSpace(::GetSerializeSize(blk, SER_DISK, DATABASE_VERSION)))
-				return error("out of disk space");
-					
+			{ LOCK(INDEXING);
 			
-			unsigned int nFile = 0;
-			unsigned int nBlockPos = 0;
-			if (!blk.WriteToDisk(nFile, nBlockPos))
-				return error("failed to write to disk");
-					
-			
-			Core::CBlockIndex* pindexNew = new Core::CBlockIndex(nFile, nBlockPos, blk);
-			if (!pindexNew || !Index(blk, pindexNew, NULL))
-				return error("FAILED INDEX in %" PRIu64 " us\n", cTimer.ElapsedMicroseconds());
+				if (!CheckDiskSpace(::GetSerializeSize(blk, SER_DISK, DATABASE_VERSION)))
+					return error("out of disk space");
+						
+				
+				unsigned int nFile = 0;
+				unsigned int nBlockPos = 0;
+				if (!blk.WriteToDisk(nFile, nBlockPos))
+					return error("failed to write to disk");
+						
+				
+				Core::CBlockIndex* pindexNew = new Core::CBlockIndex(nFile, nBlockPos, blk);
+				if (!pindexNew || !Index(blk, pindexNew, NULL))
+					return error("FAILED INDEX in %" PRIu64 " us\n", cTimer.ElapsedMicroseconds());
 		
+			}
 					
 			/* Set the proper state for the new block. */
 			SetState(hashBlock, ACCEPTED);
