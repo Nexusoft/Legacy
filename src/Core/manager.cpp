@@ -24,16 +24,6 @@ namespace Core
 	
 	Manager* pManager;
 	
-	
-	/* NODE MANAGER NOTE:
-	 * 
-	 * The Node Manager handles all the connections associated with a specifric node and rates them based on their interactions and trust they have built in th network
-	 * 
-	 * It is also intelligent to distinguish the best nodes to connect with and also process blocks in a single location so that there are not more processes that need happen
-	 * and that everything can be done in the order it was inteneded.
-	 */
-	
-	
 	void Manager::TimestampManager()
 	{
 
@@ -48,9 +38,10 @@ namespace Core
 		
 		//FOR TESTING ONLY
 		AddConnection("104.192.170.130", "9323");
-		AddConnection("96.43.131.82", "9323");
+		AddConnection("104.192.169.10", "9323");
 		AddConnection("104.192.170.30", "9323");
-		AddConnection("54.169.195.135", "9323");
+		AddConnection("104.192.169.62", "9323");
+		AddConnection("96.43.131.82", "9323");
 		
 		while(!fShutdown)
 		{
@@ -61,20 +52,68 @@ namespace Core
 			}
 
 			//TODO: Make this tied to port macros
-			int nRandom = GetRandInt(vNew.size() - 1);
-			
-			
-			/* Attempt to make connections from the manager. */
-			printf("##### Connection Manager::attempting connection %s\n", vNew[nRandom].ToStringIP().c_str());
-			if(!AddConnection(vNew[nRandom].ToStringIP(), "9323"))
-				vTried.push_back(vNew[nRandom]);
+			if(vNew.size() > 0)
+			{
+				int nRandom = GetRandInt(vNew.size() - 1);
 				
-			vNew.erase(vNew.begin() + nRandom);
-			Sleep(5000);
+				printf("##### Connection Manager::attempting connection %s\n", vNew[nRandom].ToStringIP().c_str());
+				if(!AddConnection(vNew[nRandom].ToStringIP(), "9323"))
+					vTried.push_back(vNew[nRandom]);
+					
+				vNew.erase(vNew.begin() + nRandom);
+			}
+			else if(vTried.size() > 0)
+			{
+				int nRandom = GetRandInt(vTried.size() - 1);
+				
+				printf("##### Connection Manager::attempting tried connection %s\n", vTried[nRandom].ToStringIP().c_str());
+				if(!AddConnection(vTried[nRandom].ToStringIP(), "9323"))
+					continue;
+				
+			}
+			
+			//TODO: MAke this connection manager more intelligent (Addr Info )
+			if(vDropped.size() > 0)
+			{
+				int nRandom = GetRandInt(vDropped.size() - 1);
+				
+				printf("##### Connection Manager::retry dropped connection %s\n", vDropped[nRandom].ToStringIP().c_str());
+				if(!AddConnection(vDropped[nRandom].ToStringIP(), "9323"))
+					continue;
+				
+				vDropped.erase(vDropped.begin() + nRandom);
+				
+			}
+			
+			Sleep(1000);
 		}
 	}
-
 	
+	
+	/* Randomly Select a Node. 
+	 * TODO: Add selection filtering parameters
+	 */
+	static unsigned int nRequestCounter = 0;
+	LLP::CNode* Manager::SelectNode()
+	{
+		std::vector<LLP::CNode*> vNodes = GetConnections();
+		if(vNodes.size() == 0)
+			return NULL;
+		
+		/* Iterate the request counter. */
+		nRequestCounter++;
+		if(nRequestCounter >= vNodes.size())
+			nRequestCounter = 0;
+		
+		/* Make sure the node has sent a version message. */
+		if(vNodes[nRequestCounter] && vNodes[nRequestCounter]->nCurrentVersion == 0)
+			return NULL;
+		
+		return vNodes[nRequestCounter];
+	}
+	
+	
+	/** Sort the block list by its height in ascending order **/
 	bool SortByHeight(const uint1024& nFirst, const uint1024& nSecond)
 	{ 
 		CBlock blkFirst, blkSecond;
@@ -86,138 +125,186 @@ namespace Core
 	}
 	
 	
-	bool SortByLatency(const LLP::CNode* nFirst, const LLP::CNode* nSecond)
-	{ 
-		return nFirst->nNodeLatency < nSecond->nNodeLatency;
+	/* Manages the Inventory while building the blockchain
+	 * 
+	 * Finds inconsitent breaks in blockchain download and makes sure the data is processed. 
+	 * 
+	 */
+	void Manager::InventoryProcessor()
+	{
+		while(!fStarted)
+			Sleep(1000);
+
+		unsigned int nLastBlockRequest = UnifiedTimestamp();
+		while(!fShutdown)
+		{
+			Sleep(1000);
+			
+			/* Find what intervals are going to be requested. */
+			uint1024 hashBegin;
+			uint1024 hashEnd  = uint1024(0);
+
+			
+			/* Check for blocks that have been asked for, and re-try if failed. */
+			std::vector<uint1024> vBlocks;
+			std::vector<LLP::CInv> vRequest;
+			if(blkPool.GetIndexes(blkPool.HEADER, vBlocks))
+			{
+				std::sort(vBlocks.begin(), vBlocks.end(), SortByHeight);
+
+				CBlock blk;
+				blkPool.Get(vBlocks.front(), blk);
+				
+				if(blk.hashPrevBlock != pindexBest->GetBlockHash())
+					printf("Processing Behind Best Block...\n");
+			
+				
+				for(auto hash : vBlocks)
+				{
+					if(blkPool.Age(hash) > 15)
+					{
+						vRequest.push_back(LLP::CInv(LLP::MSG_BLOCK, hash));
+						
+						blkPool.SetTimestamp(hash);
+					}
+				}
+					
+					
+				LLP::CNode* pNode = SelectNode();
+				if(vRequest.size() > 0 && pNode)
+				{
+					if(GetArg("-verbose", 0) >= 1)
+						printf("***** Manager::Trying to get %u blocks again...\n", vRequest.size());
+						
+					pNode->PushMessage("getdata", vRequest);
+				}
+				
+				hashBegin = vBlocks.back();
+			}
+			
+			
+			/* Check block processing queue. */
+			if(!blkPool.GetIndexes(blkPool.CHECKED, vBlocks))
+				hashBegin = pindexBest->GetBlockHash();
+			else
+			{
+				std::sort(vBlocks.begin(), vBlocks.end(), SortByHeight);
+				
+				CBlock blk;
+				blkPool.Get(vBlocks.front(), blk);
+				if(blk.hashPrevBlock != pindexBest->GetBlockHash())
+				{
+					hashBegin = pindexBest->GetBlockHash(); //TODO: hashend should be blk.hashPrevBlock 
+					hashEnd   = blk.hashPrevBlock;
+					
+					printf("***** Manager::Inconsistent Best blocks. Poosibly Orphaned at height %u\n", blk.nHeight);
+				}
+			}
+				
+			/* Request new blocks if requests for new blocks or been 5 seconds. */
+			if(nLastBlockRequest + 10 < UnifiedTimestamp())
+			{
+				/* Request blocks if there is a node. */
+				LLP::CNode* pNode = SelectNode();
+				if(pNode)
+				{
+					std::vector<uint1024> vBegin = { hashBegin };
+					pNode->PushMessage("getheaders", Core::CBlockLocator(vBegin), uint1024(0));
+					
+					if(GetArg("-verbose", 0) >= 1)
+						printf("***** Manager::Requested (%s) block range (%s ... 0000000)\n", pNode->GetIPAddress().c_str(), hashBegin.ToString().substr(0, 20).c_str());
+					
+					nLastBlockRequest = UnifiedTimestamp();
+				}
+			}
+		}
 	}
 	
-	
-	bool SortByStartingHeight(const LLP::CNode* nFirst, const LLP::CNode* nSecond)
-	{ 
-		return nFirst->nStartingHeight < nSecond->nStartingHeight;
-	}
-		
 		
 	/* Blocks are checked in the order they are recieved. */
 	void Manager::BlockProcessor()
 	{
 		while(!fStarted)
 			Sleep(1000);
-		
-		unsigned int nLastBlockRequest = 0;
+
 		while(!fShutdown)
 		{
-			Sleep(100);
-			
-			/* Handle Orphan Checking. */
-			std::vector<uint1024> vOrphans;
-			if(blkPool.GetIndexes(blkPool.ORPHANED, vOrphans))
-			{
-				//if(GetArg("-verbose", 0) >= 2)
-				//	printf("##### Block Processor::queued Job of %u Orphans.\n", vOrphans.size());
+			Sleep(2000);
 				
-				std::sort(vOrphans.begin(), vOrphans.end(), SortByHeight);
-				for(auto hash : vOrphans)
-				{
-					CBlock block;
-					blkPool.Get(hash, block);
-					
-					if(!Core::mapBlockIndex.count(block.hashPrevBlock))
-						continue;
-						
-					if(GetArg("-verbose", 0) >= 3)
-						printf("##### Block Processor::PROCESSING ORPHAN %s\n", hash.ToString().substr(0, 20).c_str());
-					
-					if(!blkPool.Process(block, NULL))
-						continue;
-				}
-			}
-			
 			
 			/* Get some more blocks if the block processor is waiting. */
 			std::vector<uint1024> vBlocks;
-			if(!blkPool.GetIndexes(blkPool.ACCEPTED, vBlocks))
-			{
-				std::vector<LLP::CNode*> vNodes = GetConnections();
-				if(vNodes.size() == 0)
-					continue;
-				
-				/* Only ask lowest latency nodes. */
-				std::sort(vNodes.begin(), vNodes.end(), SortByStartingHeight);
-				
-				int nRandom = GetRandInt(vNodes.size() - 1);
-				if((nBestHeight < cPeerBlocks.Majority() && nLastBlockRequest + 15 < Core::UnifiedTimestamp()) ||
-					nLastBlockRequest + 30 < Core::UnifiedTimestamp())
-				{
-					if(GetArg("-verbose", 0) >= 2)
-						printf("##### Block Processor::Requested Blocks from node %s (%u ms)\n",  vNodes[nRandom]->GetIPAddress().c_str(), vNodes[nRandom]->nNodeLatency);
-				
-					nLastBlockRequest = Core::UnifiedTimestamp();
-					vNodes[nRandom]->PushMessage("getblocks", Core::CBlockLocator(Core::pindexBest), uint1024(0));
-				}
-				
+			if(!blkPool.GetIndexes(blkPool.CHECKED, vBlocks))
 				continue;
-			}
 			
 			
-			if(GetArg("-verbose", 0) >= 2)
-				printf("##### Block Processor::queued Job of %u Blocks.\n", vBlocks.size());
-			
+			/* Sort the Blocks by Height. */
 			std::sort(vBlocks.begin(), vBlocks.end(), SortByHeight);
+
 			
-			LLD::CIndexDB indexdb("r+");
+			/* Block Processor. */
+			if(GetArg("-verbose", 0) >= 1)
+				printf("***** Manager::Process Queue with %u Items\n", vBlocks.size());
+
+			
+			/* Run through the list of blocks to see if they need to be connected. */
+			Timer cTimer;
 			for(auto hash : vBlocks)
 			{
-				if(GetArg("-verbose", 0) >= 3)
-					printf("##### Block Processor::PROCESSING %s\n", hash.ToString().substr(0, 20).c_str());
+				cTimer.Reset();
 				
+				
+				/* Get the Block from the Memory Pool. */
 				CBlock block;
 				blkPool.Get(hash, block);
+
 				
-				
-				/* Start the LLD transaction. */
-				indexdb.TxnBegin();
-				
-					
-				/* Set the best chain if it is highest trust.
-				 * TODO: Have this processor check different chain states.
-				 */
-				CBlockIndex* pindexNew = mapBlockIndex[hash];
-				
-				
-				/* Write the Index to DISK. */
-				if(!indexdb.WriteBlockIndex(CDiskBlockIndex(pindexNew)))
-					continue;
-				else
-					blkPool.SetState(hash, blkPool.INDEXED);
-			
-				if (pindexNew->nChainTrust > nBestChainTrust)
+				/* Check that previous block exists. */
+				if(blkPool.State(block.hashPrevBlock) != blkPool.CONNECTED &&
+				   blkPool.State(block.hashPrevBlock) != blkPool.ACCEPTED )
 				{
-					{ LOCK(blkPool.INDEXING);
-						if (!blkPool.Connect(indexdb, pindexNew, NULL))
-						{
-							printf("##### Block Processor::Connect failed\n");
-							indexdb.TxnAbort();
-							
-							continue; //TODO: Recycle X times (add to holding object)
-						}
-					}
+					printf("ORPHANED %s by Invalid Previous State(%u)\n", block.hashPrevBlock.ToString().substr(0, 20).c_str(), blkPool.State(block.hashPrevBlock));
+					break;
+				}
+				
+				/* Check the block to the blockchain. */
+				if(blkPool.Accept(block, NULL))
+				{
 					
-					blkPool.SetState(hash, blkPool.MAINCHAIN);
-					
+					/* Keep the Meter data up to date. */
+					nProcessed++;
 					if(GetArg("-verbose", 0) >= 2)
-						printf("##### Block Processor::CONNECTED Block %s Height %u\n", hash.ToString().substr(0, 20).c_str(), block.nHeight);
+						printf("ACCEPTED %s in %" PRIu64 " us\n", hash.ToString().substr(0, 20).c_str(), cTimer.ElapsedMicroseconds());
 				}
 				else
 				{
-					//blkPool.SetState(hash, blkPool.FORKCHAIN);
+					if(GetArg("-verbose", 0) >= 2)
+						printf("REJECTED %s in %" PRIu64 " us\n", hash.ToString().substr(0, 20).c_str(), cTimer.ElapsedMicroseconds());
+							
+					//blkPool.SetState(hash, blkPool.ERROR_ACCEPT);
 					
-					printf("##### Block Processor::FORKED Block %s Height %u\n");
+					break;
 				}
-				
-				indexdb.TxnCommit();
 			}
+		}
+	}
+	
+	
+	/* LLP Meter Thread. Tracks the Requests / Second. */
+	void Manager::ProcessorMeter()
+	{
+		while(!fStarted)
+			Sleep(1000);
+		
+		Timer TIMER;
+		TIMER.Start();
 			
+		while(!fShutdown)
+		{	
+			Sleep(30000);
+					
+			double RPS = (double) nProcessed / TIMER.Elapsed();
+			printf("METER %f block/s | best=%s | height=%d | trust=%" PRIu64 "\n", RPS, hashBestChain.ToString().substr(0,20).c_str(), nBestHeight, nBestChainTrust);
 		}
 	}
 		
@@ -236,6 +323,10 @@ namespace Core
 		if(fNew)
 			vSelect.insert(vSelect.begin(), vNew.begin(), vNew.end());
 		
+		vSelect.insert(vSelect.end(), vTried.begin(), vTried.end());
+		int nSelect = GetRandInt(vSelect.size() - 1);
+		
+		return vSelect[nSelect];
 	}
 	
 	

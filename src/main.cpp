@@ -369,6 +369,7 @@ bool AppInit2(int argc, char* argv[])
 	
 	InitMessage(_("Initializing Unified Time..."));
 	printf("Initializing Unified Time...\n");
+	
 	//TODO: PUT IN NODE MANAGER InitializeUnifiedTime();
 	CreateThread(Core::ThreadUnifiedSamples, NULL);
 	

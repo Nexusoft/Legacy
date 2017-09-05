@@ -33,13 +33,13 @@ namespace Core
 		enum
 		{
 			//Location States
-			MAINCHAIN      = 10,
-			FORKCHAIN      = 11,
-			RELAY          = 12,
+			ACCEPTED       = 10,
+			INDEXED        = 11,
+			CONNECTED      = 12,
 			DISK           = 13,
 			
-			//Validation States
-			GENESIS = 130
+			//invalid states
+			ORPHANED       = 50
 		};
 		
 		

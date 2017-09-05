@@ -401,19 +401,40 @@ namespace LLP
 		
 		
 		/* Helpful for debugging the code. */
-		std::string ErrorMessage() { return ERROR_HANDLE.message(); }
-
+		std::string ErrorMessage() 
+		{ 
+			if(!Errors())
+				return "N/A";
+			
+			return ERROR_HANDLE.message(); 
+		}
+		
 		
 	protected:
 		
 		
 		/* Lower level network communications: Read. Interacts with OS sockets. */
-		size_t Read(std::vector<unsigned char> &DATA, size_t nBytes) { if(Errors()) return 0; TIMER.Reset(); return  boost::asio::read(*SOCKET, boost::asio::buffer(DATA, nBytes), ERROR_HANDLE); }
-							
-				
-				
+		size_t Read(std::vector<unsigned char> &DATA, size_t nBytes) 
+		{
+			if(Errors())
+				return 0;
+			
+			TIMER.Reset();
+			
+			return  boost::asio::read(*SOCKET, boost::asio::buffer(DATA, nBytes), ERROR_HANDLE); 
+		}
+		
+		
 		/* Lower level network communications: Write. Interacts with OS sockets. */
-		void Write(std::vector<unsigned char> DATA) { if(Errors()) return; TIMER.Reset(); boost::asio::write(*SOCKET, boost::asio::buffer(DATA, DATA.size()), ERROR_HANDLE); }
+		void Write(std::vector<unsigned char> DATA) 
+		{ 
+			if(Errors())
+				return;
+			
+			TIMER.Reset();
+			
+			boost::asio::write(*SOCKET, boost::asio::buffer(DATA, DATA.size()), ERROR_HANDLE);
+		}
 
 	};
 	

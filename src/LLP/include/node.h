@@ -74,6 +74,7 @@ namespace LLP
 		bool fInbound;
 		bool fNetworkNode;
         bool fTritium;
+		bool fReady;
 		
 		
 		/* Network Statistics. */
@@ -140,8 +141,8 @@ namespace LLP
 	/* DoS Wrapper for Block Level Functions. */
 	inline bool DoS(CNode* pfrom, int nDoS, bool fReturn)
 	{
-		if(pfrom)
-			pfrom->DDOS->rSCORE += nDoS;
+		//if(pfrom)
+		//	pfrom->DDOS->rSCORE += nDoS;
 			
 		return fReturn;
 	}

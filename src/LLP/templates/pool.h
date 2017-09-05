@@ -46,15 +46,16 @@ namespace LLP
 	 */
 	template<typename IndexType, typename ObjectType, typename HoldingType = CHoldingObject<ObjectType> > class CHoldingPool
 	{
-			
+		
+	protected:
+		
 		/* Map of the current holding data. */
-		std::map<IndexType, CHoldingObject<ObjectType> > mapObjects;
+		std::map<IndexType, HoldingType > mapObjects;
 		
 		/* The Expiration Time of Holding Data. */
 		unsigned int nExpirationTime;
 		
-	protected:
-		
+		/* Mutex for thread concurrencdy. */
 		Mutex_t MUTEX;
 		
 	public:
@@ -62,22 +63,13 @@ namespace LLP
 		/** State level messages to hold information about holding data. */
 		enum
 		{
-			//Validation States
-			VERIFIED   = 0,
-			ACCEPTED   = 1,
-			INDEXED    = 2,
-			ORPHANED   = 3,
-			REJECTED   = 4,
-			INVALID    = 5,
-			INVENTORY  = 6,
-			
-			
 			//Unverified States
-			UNVERIFIED = 128,
-			NOTFOUND   = 129
+			UNVERIFIED = 254,
+			NOTFOUND   = 255
 			
-			//All states on 130 - 255 for custom states with child classes
+			//All states on 0 - 253 for custom states with child classes
 		};
+		
 		
 		/** Base Constructor. **/
 		CHoldingPool() : mapObjects(), nExpirationTime(0) {}
@@ -98,7 +90,7 @@ namespace LLP
 		 * @return Boolean expressino whether pool contains data by index
 		 * 
 		 */
-		bool Has(IndexType Index) { LOCK(MUTEX); return (mapObjects.find(Index) != mapObjects.end()); }
+		bool Has(IndexType Index) const { return mapObjects.count(Index); }
 		
 		
 		/** Get the Data by Index
@@ -126,17 +118,23 @@ namespace LLP
 		 * 
 		 * @param[in] State The state that is being searched for 
 		 * @param[out] vObjects The list of objects being sent out
+		 * @param[in]  nLimit The limit to the number of objects to get (0 = unlimited)
 		 * 
 		 * @return Returns true if any states matched, false if none matched
 		 * 
 		 */
-		bool Get(unsigned char State, std::vector<ObjectType>& vObjects)
+		bool Get(unsigned char State, std::vector<ObjectType>& vObjects, unsigned int nLimit = 0)
 		{
 			LOCK(MUTEX);
 			
-			for(auto i : mapObjects)
+			for(auto const& i : mapObjects)
+			{
+				if(nLimit != 0 && vObjects.size() >= nLimit)
+					return true;
+				
 				if(i.second.State == State)
 					vObjects.push_back(i.second.Object);
+			}
 				
 			return (vObjects.size() > 0);
 		}
@@ -145,16 +143,22 @@ namespace LLP
 		/** Get the Indexes in Pool
 		 * 
 		 * @param[out] vIndexes A list of Indexes in the pool
+		 * @param[in] nLimit The limit to the number of indexes to get (0 = unlimited)
 		 * 
 		 * @return Returns true if there are indexes, false if none found.
 		 * 
 		 */
-		bool GetIndexes(std::vector<IndexType>& vIndexes)
+		bool GetIndexes(std::vector<IndexType>& vIndexes, unsigned int nLimit = 0)
 		{
 			LOCK(MUTEX);
 			
-			for(auto i : mapObjects)
+			for(auto const& i : mapObjects)
+			{
+				if(nLimit != 0 && vIndexes.size() >= nLimit)
+					return true;
+					
 				vIndexes.push_back(i.first);
+			}
 			
 			return (vIndexes.size() > 0);
 		}
@@ -164,19 +168,48 @@ namespace LLP
 		 * 
 		 * @param[in] State The state char to filter results by
 		 * @param[out] vIndexes The return vector with the results
+		 * @param[in] nLimit The limit to the nuymber of indexes to get (0 = unlimited)
 		 * 
 		 * @return Returns true if indexes fit criteria, false if none found
 		 * 
 		 */
-		bool GetIndexes(unsigned char State, std::vector<IndexType>& vIndexes)
+		bool GetIndexes(const unsigned char State, std::vector<IndexType>& vIndexes, unsigned int nLimit = 0)
 		{
 			LOCK(MUTEX);
 			
-			for(auto i : mapObjects)
+			for(auto const& i : mapObjects)
+			{
+				if(nLimit != 0 && vIndexes.size() >= nLimit)
+					return true;
+				
 				if(i.second.State == State)
 					vIndexes.push_back(i.first);
+			}
 				
 			return (vIndexes.size() > 0);
+		}
+		
+		
+		/** Update data in the Pool
+		 * 
+		 * Default state is UNVERIFIED
+		 * 
+		 * @param[in] Index Template argument to add selected index
+		 * @param[in] Object Template argument for the object to be added.
+		 * 
+		 */
+		bool Update(IndexType Index, ObjectType Object, unsigned char State = UNVERIFIED, uint64 nTimestamp = Core::UnifiedTimestamp())
+		{
+			LOCK(MUTEX);
+			
+			if(!Has(Index))
+				return false;
+			
+			mapObjects[Index].Object    = Object;
+			mapObjects[Index].State     = State;
+			mapObjects[Index].Timestamp = nTimestamp;
+			
+			return true;
 		}
 		
 		
@@ -188,7 +221,7 @@ namespace LLP
 		 * @param[in] Object Template argument for the object to be added.
 		 * 
 		 */
-		bool Add(IndexType Index, ObjectType Object, char State = UNVERIFIED, uint64 nTimestamp = Core::UnifiedTimestamp())
+		bool Add(IndexType Index, ObjectType Object, unsigned char State = UNVERIFIED, uint64 nTimestamp = Core::UnifiedTimestamp())
 		{
 			LOCK(MUTEX);
 			
@@ -202,26 +235,21 @@ namespace LLP
 		}
 		
 		
-		/** Update data in the Pool
-		 * 
-		 * Default state is UNVERIFIED
+		/** Set the State of specific Object
 		 * 
 		 * @param[in] Index Template argument to add selected index
-		 * @param[in] Object Template argument for the object to be added.
+		 * @param[in] State The selected state to add (Default is UNVERIFIED)
 		 * 
 		 */
-		bool Update(IndexType Index, ObjectType Object, char State = UNVERIFIED, uint64 nTimestamp = Core::UnifiedTimestamp())
-		{
+		void AddState(IndexType Index, unsigned char State = UNVERIFIED)
+		{ 
 			LOCK(MUTEX);
 			
-			if(!Has(Index))
-				return false;
+			HoldingType HoldingObject();
+			HoldingObject.State = State;
+			HoldingObject.Timestamp = Core::UnifiedTimestamp();
 			
-			mapObjects[Index].Object    = Object;
-			mapObjects[Index].State     = State;
-			mapObjects[Index].Timestamp = nTimestamp;
-			
-			return true;
+			mapObjects[Index] = HoldingObject;
 		}
 
 		
@@ -235,7 +263,28 @@ namespace LLP
 		{ 
 			LOCK(MUTEX);
 			
-			mapObjects[Index].State = State; 
+			if(!Has(Index))
+				return;
+			
+			mapObjects[Index].State = State;
+			mapObjects[Index].Timestamp = Core::UnifiedTimestamp();
+		}
+		
+		
+		/** Set Timestamp of Object
+		 * 
+		 * @param[in] Index Template argument to select Object
+		 * @param[in] Timestamp The new timestamp for object
+		 * 
+		 */
+		void SetTimestamp(IndexType Index, unsigned int Timestamp = Core::UnifiedTimestamp())
+		{
+			LOCK(MUTEX);
+			
+			if(!Has(Index))
+				return;
+			
+			mapObjects[Index].Timestamp = Timestamp;
 		}
 		
 		
@@ -246,14 +295,12 @@ namespace LLP
 		 * @return Object state (NOTFOUND returned if does not exist)
 		 *
 		 */
-		unsigned char State(IndexType Index)
+		unsigned char State(IndexType Index) const
 		{
-			LOCK(MUTEX);
-			
 			if(!Has(Index))
 				return NOTFOUND;
 			
-			return mapObjects[Index].State; 
+			return mapObjects.at(Index).State;
 		}
 		
 		
@@ -284,17 +331,30 @@ namespace LLP
 		 * @return True if object has expired, false if it is active
 		 * 
 		 */
-		bool Expired(IndexType Index)
+		bool Expired(IndexType Index, unsigned int nTimestamp) const
 		{
-			LOCK(MUTEX);
-			
 			if(!Has(Index))
 				return true;
 			
-			if(mapObjects[Index].Timestamp + nExpirationTime < Core::UnifiedTimestamp())
+			if(mapObjects.at(Index).Timestamp + nTimestamp < Core::UnifiedTimestamp())
 				return true;
 			
 			return false;
+		}
+		
+		
+		/** Check the age of an object since its last state change. 
+		 * 
+		 * @param[in] Index Template argument to determine location
+		 * 
+		 * @return The age in seconds of the object being quieried.
+		 */
+		unsigned int Age(IndexType Index) const
+		{
+			if(!Has(Index))
+				return 0;
+			
+			return Core::UnifiedTimestamp() - mapObjects.at(Index).Timestamp;
 		}
 		
 		
@@ -305,12 +365,13 @@ namespace LLP
 		 */
 		int Clean()
 		{
-			LOCK(MUTEX);
-			
 			std::vector<IndexType> vClean;
-			for(auto i : mapObjects)
-				if(Expired(i.first))
-					vClean.push_back(i.first);
+			
+			{ LOCK(MUTEX);
+				for(auto const& i : mapObjects)
+					if(Expired(i.first, nExpirationTime))
+						vClean.push_back(i.first);
+			}
 			
 			for(auto i : vClean)
 				Remove(i);
@@ -323,10 +384,8 @@ namespace LLP
 		 * @return returns the total size of the pool.
 		 * 
 		 */
-		int Count()
+		int Count() const
 		{
-			LOCK(MUTEX);
-			
 			return mapObjects.size();
 		}
 		
@@ -343,7 +402,7 @@ namespace LLP
 			LOCK(MUTEX);
 			
 			int nCount = 0;
-			for(auto i : mapObjects)
+			for(auto const& i : mapObjects)
 				if(i.second.State == State)
 					nCount++;
 				

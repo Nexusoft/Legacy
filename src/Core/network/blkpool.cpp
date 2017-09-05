@@ -62,7 +62,6 @@ namespace Core
 	 */
 	bool CBlkPool::Process(CBlock blk, LLP::CNode* pfrom)
 	{
-		
 		/* Timer object for runtime calculations. */
 		Timer cTimer;
 		cTimer.Reset();
@@ -75,60 +74,30 @@ namespace Core
 		/* Check the Block validity. TODO: Send process message for Trust Depreciation (LLP:Dos). */
 		if(Check(blk, pfrom))
 		{
+
+			/* Set the state to verified. */
+			if(State(hashBlock) == HEADER)
+				Update(hashBlock, blk, CHECKED);
+			else
+				Add(hashBlock, blk, CHECKED);
+			
 			if(GetArg("-verbose", 0) >= 3)
-				printf("PASSED checks in %" PRIu64 " us\n", cTimer.ElapsedMicroseconds());
-				
-			/* Set the proper state for the new block. */
-			SetState(hashBlock, VERIFIED);
+				printf("PASSED %s checks in %" PRIu64 " us (%s)\n", hashBlock.ToString().substr(0, 20).c_str(), cTimer.ElapsedMicroseconds(), pfrom->GetAddress().ToStringIP().c_str());
+			
+			/* Set the node that block was recieved from. */
+			//SetNode(hashBlock, pfrom);
 		}
 		else
 		{
 			if(GetArg("-verbose", 0) >= 3)
-				printf("INVALID checks in %" PRIu64 " us\n", cTimer.ElapsedMicroseconds());
+				return error("INVALID checks in %" PRIu64 " us\n", cTimer.ElapsedMicroseconds());
 			
 			/* Set the proper state for the new block. */
-			SetState(hashBlock, INVALID);
+			//Add(hashBlock, blk, ERROR_CHECK);
+			
+			/* Set the node that block was recieved from. */
+			//SetNode(hashBlock, pfrom);
 				
-			return true; //if failed return without terminating the connection
-		}
-			
-			
-		/* Check the block to the blockchain. */
-		if(Accept(blk, pfrom))
-		{
-			{ LOCK(INDEXING);
-			
-				if (!CheckDiskSpace(::GetSerializeSize(blk, SER_DISK, DATABASE_VERSION)))
-					return error("out of disk space");
-						
-				
-				unsigned int nFile = 0;
-				unsigned int nBlockPos = 0;
-				if (!blk.WriteToDisk(nFile, nBlockPos))
-					return error("failed to write to disk");
-						
-				
-				Core::CBlockIndex* pindexNew = new Core::CBlockIndex(nFile, nBlockPos, blk);
-				if (!pindexNew || !Index(blk, pindexNew, NULL))
-					return error("FAILED INDEX in %" PRIu64 " us\n", cTimer.ElapsedMicroseconds());
-		
-			}
-					
-			/* Set the proper state for the new block. */
-			SetState(hashBlock, ACCEPTED);
-			
-			
-			if(GetArg("-verbose", 0) >= 3)
-				printf("ACCEPTED in %" PRIu64 " us\n", cTimer.ElapsedMicroseconds());
-		}
-		else
-		{
-			if(GetArg("-verbose", 0) >= 3)
-				printf("REJECTED in %" PRIu64 " us\n", cTimer.ElapsedMicroseconds());
-					
-			/* Set the proper state for the new block. */
-			SetState(hashBlock, REJECTED);
-					
 			return false;
 		}
 
@@ -290,12 +259,6 @@ namespace Core
 	bool CBlkPool::Accept(CBlock blk, LLP::CNode* pfrom)
 	{
 		
-		/** Check for Duplicate Block. **/
-		uint1024 hash = blk.GetHash();
-		if (mapBlockIndex.count(hash))
-			return error("AcceptBlock() : block already in mapBlockIndex");
-
-			
 		/** Find the Previous block from hashPrevBlock. **/
 		std::map<uint1024, CBlockIndex*>::iterator mi = mapBlockIndex.find(blk.hashPrevBlock);
 		if (mi == mapBlockIndex.end())
@@ -313,7 +276,7 @@ namespace Core
 
 		/** Check that the nBits match the current Difficulty. **/
 		if (blk.nBits != GetNextTargetRequired(pindexPrev, blk.GetChannel(), !IsInitialBlockDownload()))
-			return LLP::DoS(pfrom, 100, error("AcceptBlock() : incorrect proof-of-work/proof-of-stake"));
+			return LLP::DoS(pfrom, 100, error("AcceptBlock() : incorrect proof-of-work/proof-of-stake %s", blk.GetHash().ToString().substr(0, 20).c_str()));
 			
 			
 		/** Check that Block is Descendant of Hardened Checkpoints. **/
@@ -367,6 +330,48 @@ namespace Core
 		for(auto tx : blk.vtx)
 			if (!tx.IsFinal(blk.nHeight, blk.GetBlockTime()))
 				return LLP::DoS(pfrom, 10, error("AcceptBlock() : contains a non-final transaction"));
+			
+							
+		/* Check Block Disk Usage. */
+		if (!CheckDiskSpace(::GetSerializeSize(blk, SER_DISK, DATABASE_VERSION)))
+			return error("AcceptBlock() : Out of Disk Space.");
+						
+				
+		/* Write Block to Disk. */
+		unsigned int nFile = 0;
+		unsigned int nBlockPos = 0;
+		if (!blk.WriteToDisk(nFile, nBlockPos))
+			return error("AcceptBlock() : Writing Failed %s Height %u\n", blk.GetHash().ToString().substr(0, 20).c_str(), blk.nHeight);
+						
+				
+		/* Write Block Index Data. */
+		Core::CBlockIndex* pindexNew = new Core::CBlockIndex(nFile, nBlockPos, blk);
+		if (!Index(blk, pindexNew, NULL))
+			return error("AcceptBlock() : Indexing Failed %s Height %u\n", blk.GetHash().ToString().substr(0, 20).c_str(), blk.nHeight);
+		
+		
+		/* Write Index to DB. */
+		indexdb.TxnBegin();
+		if (!indexdb.WriteBlockIndex(CDiskBlockIndex(pindexNew)))
+			return error("Index() : Failed to Write Index %s Height %u\n", blk.GetHash().ToString().substr(0, 20).c_str(), blk.nHeight);
+				
+		
+		/* Set the best chain if is best block. */
+		if (pindexNew->nChainTrust > nBestChainTrust)
+		{
+			/* Connect the block and commit to LLD. */
+			if (!Connect(pindexNew, NULL))
+			{
+				printf("##### Block Processor::Connect failed %s\n", blk.GetHash().ToString().substr(0, 20).c_str());
+				indexdb.TxnAbort();
+									
+				return error("Accept() : Failed to Connect Best Block");
+			}
+		}
+		
+		indexdb.TxnCommit();
+		SetState(blk.GetHash(), ACCEPTED);
+		
 
 		return true;
 	}
@@ -380,11 +385,15 @@ namespace Core
 	bool CBlkPool::Index(CBlock blk, CBlockIndex* pindexNew, LLP::CNode* pfrom)
 	{
 		/* Get blocks hash. */
-		uint1024 hash = blk.GetHash();
-
+		const uint1024 hash = blk.GetHash();
+		
+		
+		/* Add to the MapBlockIndex */
+		std::map<uint1024, CBlockIndex*>::iterator mi = mapBlockIndex.insert(std::make_pair(hash, pindexNew)).first;
+		pindexNew->phashBlock = &((*mi).first);
+		
 			
 		/* Find Previous Block. */
-		pindexNew->phashBlock = &hash;
 		std::map<uint1024, CBlockIndex*>::iterator miPrev = mapBlockIndex.find(blk.hashPrevBlock);
 		if (miPrev != mapBlockIndex.end())
 			pindexNew->pprev = (*miPrev).second;
@@ -409,7 +418,7 @@ namespace Core
 				
 				/** Block Version 3 Check. Disable Reserves from going below 0. **/
 				if(pindexNew->nVersion >= 3 && pindexNew->nCoinbaseRewards[nType] >= nReserve)
-					return error("AddToBlockIndex() : Coinbase Transaction too Large. Out of Reserve Limits");
+					return error("Index() : Coinbase Transaction too Large. Out of Reserve Limits");
 				
 				pindexNew->nReleasedReserve[nType] =  nReserve - pindexNew->nCoinbaseRewards[nType];
 				
@@ -437,16 +446,12 @@ namespace Core
 			
 			if(GetArg("-verbose", 0) >= 3)
 				printf("===== Pending Checkpoint Age = %u Hash = %s Height = %u\n", nAge, pindexNew->PendingCheckpoint.second.ToString().substr(0, 15).c_str(), pindexNew->PendingCheckpoint.first);
-		}								 
-
-		/** Add to the MapBlockIndex **/
-		std::map<uint1024, CBlockIndex*>::iterator mi = mapBlockIndex.insert(std::make_pair(hash, pindexNew)).first;
-		pindexNew->phashBlock = &((*mi).first);
-
+		}
+		
 		return true;
 	}
 	
-	bool CBlkPool::Connect(LLD::CIndexDB& indexdb, CBlockIndex* pindexNew, LLP::CNode* pfrom)
+	bool CBlkPool::Connect(CBlockIndex* pindexNew, LLP::CNode* pfrom)
 	{
 		uint1024 hash = pindexNew->GetBlockHash();
 		if (pindexGenesisBlock == NULL && hash == hashGenesisBlock)
@@ -501,11 +506,17 @@ namespace Core
 				if (!block.DisconnectBlock(indexdb, pindex))
 					return error("CBlock::SetBestChain() : DisconnectBlock %s failed", pindex->GetBlockHash().ToString().substr(0,20).c_str());
 					
-				/** Remove Transactions from Current Trust Keys **/
+				
+				/* Remove Transactions from Current Trust Keys */
 				if(block.IsProofOfStake() && !cTrustPool.Remove(block))
 					return error("CBlock::SetBestChain() : Disconnect Failed to Remove Trust Key at Block %s", pindex->GetBlockHash().ToString().substr(0,20).c_str());
 				
-				/** Resurrect Memory Pool Transactions. **/
+				
+				/* Set the block's state in blkPool. */
+				pManager->blkPool.SetState(pindex->GetBlockHash(), pManager->blkPool.INDEXED);
+				
+				
+				/* Resurrect Memory Pool Transactions. */
 				for(auto tx : block.vtx)
 					if (!(tx.IsCoinBase() || tx.IsCoinStake()))
 						vResurrect.push_back(tx);
@@ -524,10 +535,7 @@ namespace Core
 				
 				
 				if (!block.ConnectBlock(indexdb, pindex, pfrom))
-				{
-					indexdb.TxnAbort();
 					return error("CBlock::SetBestChain() : ConnectBlock %s Height %u failed", pindex->GetBlockHash().ToString().substr(0,20).c_str(), pindex->nHeight);
-				}
 				
 				
 				/* Harden a pending checkpoint if this is the case. */
@@ -538,6 +546,10 @@ namespace Core
 				/* Add Transaction to Current Trust Keys */
 				if(block.IsProofOfStake() && !cTrustPool.Accept(block))
 					return error("CBlock::SetBestChain() : Failed To Accept Trust Key Block.");
+				
+				
+				/* Set the block's state in blkPool. */
+				pManager->blkPool.SetState(pindex->GetBlockHash(), pManager->blkPool.CONNECTED);
 
 				
 				/* Delete Memory Pool Transactions contained already. **/
@@ -550,7 +562,7 @@ namespace Core
 			/* Write the Best Chain to the Index Database LLD. */
 			if (!indexdb.WriteHashBestChain(pindexNew->GetBlockHash()))
 				return error("CBlock::SetBestChain() : WriteHashBestChain failed");
-
+			
 			
 			/* Disconnect Shorter Branch in Memory. */
 			for(auto pindex : vDisconnect)
@@ -565,13 +577,11 @@ namespace Core
 
 
 			for(auto tx : vResurrect)
-				pManager->txPool.SetState(tx.GetHash(), pManager->txPool.MAINCHAIN);
-				
+				pManager->txPool.SetState(tx.GetHash(), pManager->txPool.ACCEPTED);
 
-			/* Reset the txpool states to VERIFIED not ACCEPTED if block disconnected. */
 			for(auto tx : vDelete)
-				pManager->txPool.SetState(tx.GetHash(), pManager->txPool.VERIFIED);
-				
+				pManager->txPool.SetState(tx.GetHash(), pManager->txPool.CONNECTED);
+			
 		}
 
 		
@@ -583,7 +593,7 @@ namespace Core
 		nTimeBestReceived = UnifiedTimestamp();
 		
 		
-		if(GetArg("-verbose", 0) >= 0)
+		if(GetArg("-verbose", 0) >= 2)
 			printf("SetBestChain: new best=%s  height=%d  trust=%" PRIu64 "  moneysupply=%s\n", hashBestChain.ToString().substr(0,20).c_str(), nBestHeight, nBestChainTrust, FormatMoney(pindexBest->nMoneySupply).c_str());
 
 		

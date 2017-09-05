@@ -432,7 +432,7 @@ namespace RPC
 		obj.push_back(Pair("hashReserve",        ValueFromAmount(pindexGPU->nReleasedReserve[0])));
 		obj.push_back(Pair("primeValue",       ValueFromAmount(Core::GetCoinbaseReward(Core::pindexBest, 1, 0))));
 		obj.push_back(Pair("hashValue",        ValueFromAmount(Core::GetCoinbaseReward(Core::pindexBest, 2, 0))));
-		obj.push_back(Pair("pooledtx",      (uint64_t)Core::pManager->txPool.Count(Core::pManager->txPool.VERIFIED)));
+		obj.push_back(Pair("pooledtx",      (uint64_t)Core::pManager->txPool.Count(Core::pManager->txPool.ACCEPTED)));
 		return obj;
 	}
 
@@ -2298,7 +2298,7 @@ namespace RPC
 				"Returns all transaction ids in memory pool.");
 
 		vector<uint512> vtxid;
-		Core::pManager->txPool.GetIndexes(Core::pManager->txPool.VERIFIED, vtxid);
+		Core::pManager->txPool.GetIndexes(Core::pManager->txPool.ACCEPTED, vtxid);
 
 		Array a;
 		BOOST_FOREACH(const uint512& hash, vtxid)

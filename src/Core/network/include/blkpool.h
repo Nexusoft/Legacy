@@ -15,32 +15,61 @@ ________________________________________________________________________________
 #define NEXUS_CORE_NETWORK_INCLUDE_BLKPOOL_H
 
 #include "../../../LLC/types/uint1024.h"
+#include "../../../LLD/include/index.h"
 #include "../../../LLP/templates/pool.h"
 
 #include "../../../Core/types/include/block.h"
 
-namespace LLD { class CIndexDB; }
 namespace LLP { class CNode;    }
 
 namespace Core
 {		
 	
-	
-	class CBlkPool : public LLP::CHoldingPool<uint1024, CBlock>
+	/* Holding Object for Memory Maps. */
+	class CBlockHolding : public LLP::CHoldingObject<CBlock>
 	{
 	public:
-		Mutex_t INDEXING;
+		LLP::CNode* Node; //TODO: Handle multiple nodes
 		
 		
+		CBlockHolding() : LLP::CHoldingObject<CBlock>(), Node() {}
+		CBlockHolding(uint64 TimestampIn, unsigned char StateIn, CBlock ObjectIn) : LLP::CHoldingObject<CBlock>(TimestampIn, StateIn, ObjectIn), Node() {}
+		CBlockHolding(uint64 TimestampIn, unsigned char StateIn, CBlock ObjectIn, LLP::CNode* NodeIn) : LLP::CHoldingObject<CBlock>(TimestampIn, StateIn, ObjectIn), Node(NodeIn) {}
+	};
+	
+	
+	class CBlkPool : public LLP::CHoldingPool<uint1024, CBlock, CBlockHolding>
+	{
+	public:
+		
+		LLD::CIndexDB indexdb;
+		
+
 		/** State level messages to hold information about holding data. */
 		enum
 		{
-			//Location States
-			MAINCHAIN      = 10,
-			FORKCHAIN      = 11,
-			RELAY          = 12,
-			DISK           = 13,
-			ERROR          = 14,
+			//Validation States
+			HEADER     = 0,
+			CHECKED    = 1,
+			ACCEPTED   = 2,
+			INDEXED    = 3,
+			CONNECTED  = 4,
+			RECEIVED   = 5,
+			
+			
+			//invalid states
+			ORPHANED   = 50,
+			REJECTED   = 51,
+			INVALID    = 52,
+			
+			
+			//error states
+			ERROR_CHECK   = 100,
+			ERROR_ACCEPT  = 101,
+			ERROR_WRITE   = 102,
+			ERROR_INDEX   = 103,
+			ERROR_CONNECT = 104,
+			
 			
 			//Validation States
 			GENESIS = 130
@@ -48,7 +77,7 @@ namespace Core
 		
 		
 		/** Default Constructor. */
-		CBlkPool() : LLP::CHoldingPool<uint1024, CBlock>(60 * 60 * 24) {}
+		CBlkPool() : LLP::CHoldingPool<uint1024, CBlock, CBlockHolding>(60 * 60 * 24), indexdb("r+") {}
 		
 		
 		/** Run Basic Processing Checks for Block
@@ -94,7 +123,7 @@ namespace Core
 		bool Accept(CBlock blk, LLP::CNode* pfrom);
 		
 		
-		/** Add to Chain 
+		/** Index the block to disk positions
 		 * 
 		 * Adds the block to the main indexing for the chain and calculates state requirements for blocks to be added on top of it
 		 * TODO: Make state calculations per block with child class, wrap that on disk and correlate that to checkpoint states
@@ -109,7 +138,7 @@ namespace Core
 		bool Index(CBlock blk, CBlockIndex* pindexNew, LLP::CNode* pfrom);
 		
 		
-		/** Set Best Block
+		/** Connect
 		 * 
 		 * Sets the pointers in CBlockIndex for the best block or the highest block in the blockchain.
 		 * Gives credit to miner and connects the inputs marking transactions as spent.
@@ -121,8 +150,41 @@ namespace Core
 		 * @return Returns true if the block was successfully appended as the best block.
 		 * 
 		 */
-		bool Connect(LLD::CIndexDB& indexdb, CBlockIndex* pindexNew, LLP::CNode* pfrom);
+		bool Connect(CBlockIndex* pindexNew, LLP::CNode* pfrom);
 		
+		
+		/** Set the Node that serviced the data
+		 * 
+		 * @param[in] Index Template argument to add selected index
+		 * @param[in] NodeIn The node to set into object
+		 * 
+		 */
+		void SetNode(uint1024 Index, LLP::CNode* NodeIn)
+		{ 
+			LOCK(MUTEX);
+			
+			if(!Has(Index))
+				return;
+			
+			mapObjects[Index].Node      = NodeIn;
+			mapObjects[Index].Timestamp = Core::UnifiedTimestamp();
+		}
+		
+		
+		/** Get the node that serviced the data
+		 * 
+		 * @param[in] Index Template argument to add selected index
+		 * 
+		 */
+		LLP::CNode* GetNode(uint1024 Index)
+		{
+			LOCK(MUTEX);
+			
+			if(!Has(Index))
+				return NULL;
+			
+			return mapObjects[Index].Node;
+		}
 		
 	};
 	

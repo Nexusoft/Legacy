@@ -33,7 +33,7 @@ namespace Core
 					mapInputLocks.erase(input.prevout.hash);
 			}
 			
-			SetState(tx.GetHash(), MAINCHAIN);
+			//SetState(tx.GetHash(), );
 		}
 	}
 	
@@ -143,11 +143,7 @@ namespace Core
 		
 		
 		/* Add the transaction to Pool. */
-		Add(hash, tx);
-		
-		
-		/* Set the Proper States. */
-		SetState(hash, ACCEPTED);
+		Add(hash, tx, ACCEPTED);
 
 		
 		/* Verbose Debug Logging. */

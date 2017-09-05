@@ -329,7 +329,7 @@ namespace Core
 		pindex->nMint = nValueOut - nValueIn;
 		pindex->nMoneySupply = (pindex->pprev ? pindex->pprev->nMoneySupply : 0) + nValueOut - nValueIn;
 		
-		if(GetArg("-verbose", 0) >= 0)
+		if(GetArg("-verbose", 0) >= 2)
 			printf("Generated %f Nexus\n", (double) pindex->nMint / COIN);
 		
 		if (!indexdb.WriteBlockIndex(CDiskBlockIndex(pindex)))
@@ -344,7 +344,7 @@ namespace Core
 
 		// Nexus: fees are not collected by miners as in bitcoin
 		// Nexus: fees are destroyed to compensate the entire network
-		if(GetArg("-verbose", 0) >= 1)
+		if(GetArg("-verbose", 0) >= 2)
 			printf("ConnectBlock() : destroy=%s nFees=%" PRI64d "\n", FormatMoney(nFees).c_str(), nFees);
 
 		// Update block index on disk without changing it in memory.
@@ -569,17 +569,15 @@ namespace Core
 		target.SetCompact(block.nBits);
 		block.print();
 			
+		
 		/* Check the Genesis Block Data to the Hard Coded Genesis Hash. */
 		if(block.GetHash() != hashGenesisBlock)
 			return error("LoadBlockIndex() : genesis hash does not match");
-		
-		/* Add the genesis to block pool level memory. */
-		if(!pManager->blkPool.Add(block.GetHash(), block, pManager->blkPool.GENESIS, 0))
-			return error("LoadBlockIndex() : blkPool failed to add");
 
+		
 		/** Initialize Block Index Database. **/
 		LLD::CIndexDB indexdb("cr");
-		if (!indexdb.LoadBlockIndex() || mapBlockIndex.empty()) 
+		if (!indexdb.LoadBlockIndex() || mapBlockIndex.empty())
 		{
 			/** Write the New Genesis to Disk. **/
 			unsigned int nFile;
@@ -587,25 +585,51 @@ namespace Core
 			if (!block.WriteToDisk(nFile, nBlockPos))
 				return error("LoadBlockIndex() : writing genesis block to disk failed");
 			
-			CBlockIndex* pindexNew = new CBlockIndex(nFile, nBlockPos, block);
-			if (!pindexNew)
+			pindexBest = new CBlockIndex(nFile, nBlockPos, block);
+			if (!pindexBest)
 				return error("LoadBlockIndex() : new CBlockIndex failed");
 		
-			if(!pManager->blkPool.Index(block, pindexNew, NULL))
+			if(!pManager->blkPool.Index(block, pindexBest, NULL))
 				return error("LoadBlockIndex() : genesis block not accepted");
 			
 			/* Commit the Genesis to disk. */
 			LLD::CIndexDB indexdb("r+");
 			indexdb.TxnBegin();
-			if(!indexdb.WriteBlockIndex(CDiskBlockIndex(pindexNew)))
+			if(!indexdb.WriteBlockIndex(CDiskBlockIndex(pindexBest)))
 				return error("LoadBlockIndex() : failed to write index to disk");
 			
 			/* Write the Best Chain to the Index Database LLD. */
-			if (!indexdb.WriteHashBestChain(pindexNew->GetBlockHash()))
-				return error("CBlock::SetBestChain() : WriteHashBestChain failed");
+			if (!indexdb.WriteHashBestChain(pindexBest->GetBlockHash()))
+				return error("LoadBlockIndex() : WriteHashBestChain failed");
 			
+			/* Add the genesis to the block pool. */
+			if(!pManager->blkPool.Add(block.GetHash(), block, pManager->blkPool.CONNECTED))
+				return error("LoadBlockIndex() : Failed to add to pool");
+			
+			/* Commit to the LLD. */
 			indexdb.TxnCommit();
 		}
+		else
+		{
+			
+			/* Read the block from the disk. */
+			CBlock blk;
+			if (!blk.ReadFromDisk(pindexBest))
+				return error("LoadBlockIndex() : failed to read best block");
+		
+			/* Add the object to the block pool. */
+			if(!pManager->blkPool.Add(blk.GetHash(), blk, pManager->blkPool.CONNECTED))
+				return error("LoadBlockIndex() : Failed to add best block");
+
+		}
+		
+		
+		/* Initialize the Chain Stats. */
+		hashBestChain = pindexBest->GetBlockHash();
+		nBestHeight = pindexBest->nHeight;
+		nBestChainTrust = pindexBest->nChainTrust;
+		nTimeBestReceived = UnifiedTimestamp();
+		
 
 		return true;
 	}
@@ -777,7 +801,7 @@ namespace Core
 
 			/* Collect the list of Verified transactions in the txpool. */
 			std::vector<CTransaction> vTransactions;
-			if(!pManager->txPool.Get(pManager->txPool.VERIFIED, vTransactions))
+			if(!pManager->txPool.Get(pManager->txPool.ACCEPTED, vTransactions))
 				return;
 			
 			

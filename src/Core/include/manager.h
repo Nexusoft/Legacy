@@ -25,7 +25,7 @@ ________________________________________________________________________________
 
 namespace Core
 {
-
+	
 	/** Node Manager Class:
 	 * 
 	 * This is resonsilbe for the managing of all the nodes in the Tritum Protocol.
@@ -42,14 +42,36 @@ namespace Core
 		
 		Thread_t ConnectionThread;
 		Thread_t ProcessorThread;
+		Thread_t InventoryThread;
+		Thread_t MeteringThread;
 		
 	public:
+		
+		/* Dropped connections for retrying.*/
+		std::vector<LLP::CAddress> vDropped;
+		
+		
+		/* The last hash that was selected on download. */
+		uint1024 hashLastBlock;
+		
+		
+		/* Node Synchronization Flag. */
+		bool fSynchronizing;
+		
+		
+		/* Processing for Meter. */
+		int nProcessed;
+		
+		
+		/* Mutex for Node Management. */
+		Mutex_t NODE_MUTEX;
+		
 		
 		/* The total blocks other peers have reported. */
 		CMajority<int> cPeerBlocks;
 		
 		
-		Manager() : LLP::Server<LLP::CNode> (LLP::GetDefaultPort(), 10, false, 1, 20, 30, 30, true, true), ConnectionThread(boost::bind(&Manager::ConnectionManager, this)), ProcessorThread(boost::bind(&Manager::BlockProcessor, this)), cPeerBlocks(), txPool(), blkPool(), vTried(), vNew(), fStarted(false) {}
+		Manager() : LLP::Server<LLP::CNode> (LLP::GetDefaultPort(), 10, false, 1, 20, 30, 30, true, true), ConnectionThread(boost::bind(&Manager::ConnectionManager, this)), ProcessorThread(boost::bind(&Manager::BlockProcessor, this)), InventoryThread(boost::bind(&Manager::InventoryProcessor, this)), MeteringThread(boost::bind(&Manager::ProcessorMeter, this)), hashLastBlock(0), fSynchronizing(false), cPeerBlocks(), txPool(), blkPool(), vTried(), vNew(), fStarted(false) {}
 		
 		
 		/* Time Seed Manager. */
@@ -60,12 +82,24 @@ namespace Core
 		void ConnectionManager();
 		
 		
+		/* Inventory Processing Thread. */
+		void InventoryProcessor();
+		
+		
 		/* Handle and Process New Blocks. */
 		void BlockProcessor();
 		
 		
+		/* Handle for statistics on processing. */
+		void ProcessorMeter();
+		
+		
 		/* Add address to the Queue. */
 		void AddAddress(LLP::CAddress cAddress);
+		
+		
+		/* Get a node from connected nodes. */
+		LLP::CNode* SelectNode();
 		
 		
 		/* Get a random address from the active connections in the manager. */

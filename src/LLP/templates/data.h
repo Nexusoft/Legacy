@@ -168,7 +168,6 @@ namespace LLP
 						
 
 						/* Handle any DDOS Filters. */
-						boost::system::error_code ec;
 						std::string ADDRESS = CONNECTIONS[nIndex]->GetIPAddress();
 							
 						if(fDDOS && ADDRESS != "127.0.0.1")

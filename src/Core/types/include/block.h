@@ -679,30 +679,6 @@ namespace Core
 		
 	
 	/* __________________________________________________ (Block Processing Methods) __________________________________________________  */
-
-
-
-
-
-
-	/* bdg note: never used */
-	/* Find the Nearest Orphan Block down the Chain. */
-	uint1024 GetOrphanRoot(const CBlock* pblock);
-	
-
-	/* bdg note: never used */
-	/* Find the blocks that are required to complete an orphan chain. */
-	uint1024 WantedByOrphan(const CBlock* pblockOrphan);
-
-
-	/* bdg note: never used */
-	/* Get Coinbase Reweards for Given Blocks. */
-	int64 GetProofOfWorkReward(unsigned int nBits);
-
-
-	/* bdg note: never used */
-	/* Get the Stake Reward for Given Blocks. */
-	int64 GetProofOfStakeReward(int64 nCoinAge);
 	
 	
 	/* Search back for an index given PoW / PoS parameters. */
@@ -711,32 +687,11 @@ namespace Core
 	
 	/* Search back for an index of given Mining Channel. */
 	const CBlockIndex* GetLastChannelIndex(const CBlockIndex* pindex, int nChannel);
-
-
-	/* bdg note: never used */
-	/* Calculate the majority of blocks that other peers have. */
-	int GetNumBlocksOfPeers();
 	
 	
 	/* Determine if the node is syncing from scratch. */
 	bool IsInitialBlockDownload();
-	
-	
-	/* Check a block before it is appended to the blockchain. */
-	bool CheckBlock(CBlock* pblock, LLP::CNode* pfrom = NULL);
 
-
-	/* bdg note: never used */
-	/* Accept a block into the block chain without setting it as the leading block. */
-	bool AcceptBlock(CBlock* pblock, LLP::CNode* pfrom = NULL);
-	
-	
-	/* Add a block into index memory and give it a location in the chain. */
-	bool AddToBlockIndex(CBlock* pblock, unsigned int nFile, unsigned int nBlockPos, LLP::CNode* pfrom = NULL);
-	
-	
-	/* Set block as the current leading block of the block chain. */
-	bool SetBestChain(LLD::CIndexDB& indexdb, CBlockIndex* pindexNew, LLP::CNode* pfrom = NULL);
 	
 	
 	/* Check the disk space for the current partition database is stored in. */
@@ -772,7 +727,5 @@ namespace Core
 	
 
 }
-
-/** 2017-03: Reviewed by bdg. **/
 
 #endif

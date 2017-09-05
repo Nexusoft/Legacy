@@ -133,7 +133,7 @@ namespace LLP
 		if(EVENT == EVENT_GENERIC)
 		{
 			
-			if(nLastPing + 10 < Core::UnifiedTimestamp()) {
+			if(nLastPing + 5 < Core::UnifiedTimestamp()) {
 				RAND_bytes((unsigned char*)&nSessionID, sizeof(nSessionID));
 				
 				nLastPing = Core::UnifiedTimestamp();
@@ -148,6 +148,8 @@ namespace LLP
 		if(EVENT == EVENT_CONNECT)
 		{
 			addrThisNode = CAddress(CService(GetIPAddress(), GetDefaultPort()));
+			nLastPing    = Core::UnifiedTimestamp();
+			
 			if(GetArg("-verbose", 0) >= 1)
 				printf("***** %s Node %s Connected at Timestamp %" PRIu64 "\n", fOUTGOING ? "Ougoing" : "Incoming", addrThisNode.ToString().c_str(), Core::UnifiedTimestamp());
 			
@@ -161,8 +163,10 @@ namespace LLP
 		/* Handle the Socket Disconnect */
 		if(EVENT == EVENT_DISCONNECT)
 		{
+			Core::pManager->vDropped.push_back(addrThisNode);
+			
 			if(GetArg("-verbose", 0) >= 1)
-				printf("xxxxx %s Node %s Disconnected at Timestamp %" PRIu64 "\n", fOUTGOING ? "Ougoing" : "Incoming", addrThisNode.ToString().c_str(), Core::UnifiedTimestamp());
+				printf("xxxxx %s Node %s Disconnected (%s) at Timestamp %" PRIu64 "\n", fOUTGOING ? "Ougoing" : "Incoming", addrThisNode.ToString().c_str(), ErrorMessage().c_str(), Core::UnifiedTimestamp());
 			
 			return;
 		}
@@ -315,6 +319,7 @@ namespace LLP
 				tx.print();
 		}
 		
+		
 		/* Push a block into the Node's Recieved Blocks Queue. */
 		else if (INCOMING.GetMessage() == "block")
 		{
@@ -330,27 +335,24 @@ namespace LLP
 				ssMessage >> nRequestID;
 			}
 			
-			
+						
 			/* Get the Block Hash. */
 			uint1024 hashBlock = block.GetHash();
-			
-			
-			/* Check that data doesn't already exist. 
-			 * 
-			 * TODO: Add disk checking too with LLD instance
-			 */
-			if(Core::pManager->blkPool.Has(hashBlock) && Core::mapBlockIndex.count(hashBlock))
+
+				
+			/* Make sure it's not an already process(ing) block. */
+			if(Core::pManager->blkPool.Has(hashBlock) && Core::pManager->blkPool.State(hashBlock) != Core::pManager->blkPool.HEADER )
 			{
-				/* Level 3 Debugging: Output Protocol Messages. */
+				
 				if(GetArg("-verbose", 0) >= 3)
 					printf("duplicate block %s\n", hashBlock.ToString().substr(0,20).c_str());
 				
-				//TODO: add weighted ddos score for duplicates
+				DDOS->rSCORE += 5;
 			
 				return true;
 			}
-            
-            
+			
+			
 			/* Level 3 Debugging: Output Protocol Messages. */
 			if(GetArg("-verbose", 0) >= 3)
 				printf("received block %s height %u\n", hashBlock.ToString().substr(0,20).c_str(), block.nHeight);
@@ -361,45 +363,14 @@ namespace LLP
 				block.print();
 			
 			
-			/* Add checked data to block pool */
-			if(!Core::pManager->blkPool.Add(hashBlock, block))
-			{
-				if(GetArg("-verbose", 0) >= 3)
-					printf("failed to add %s height %u\n", hashBlock.ToString().substr(0,20).c_str(), block.nHeight);
-				
-				return true;
-			}
-			
-			
-			/* Check if the block is an Orphan.
-			 * 
-			 * TODO: Add disk checks
-			 */
-			if(!Core::mapBlockIndex.count(block.hashPrevBlock))
-			{
-				if(GetArg("-verbose", 0) >= 3)
-					printf("ORPHANED no prev %s\n", block.hashPrevBlock.ToString().substr(0, 20).c_str());
-				
-				/* Set the state to Orphaned. */
-				Core::pManager->blkPool.SetState(hashBlock, Core::pManager->blkPool.ORPHANED);
-				
-				/* Request the previous orphaned block. */
-				PushMessage("getdata", LLP::CInv(LLP::MSG_BLOCK, block.hashPrevBlock));
-				
-				return true;
-			}
-			
-			
 			/* Process the Block. */
 			if(!Core::pManager->blkPool.Process(block, this))
 			{
 				if(GetArg("-verbose", 0) >= 3)
 					printf("failed block processing %s\n", hashBlock.ToString().substr(0, 20).c_str());
 				
+				return true;
 			}
-			
-		
-			return true;
 		}
 		
 		
@@ -429,7 +400,7 @@ namespace LLP
 			
 			
 			/* Debug Level 3: output Node Latencies. */
-			if(GetArg("-verbose", 0) >= 3)
+			if(GetArg("-verbose", 0) >= 1)
 				printf("***** Node %s Latency (%u ms)\n", addrThisNode.ToString().c_str(), nNodeLatency);
 		}
 		
@@ -466,29 +437,27 @@ namespace LLP
 				return false;
 			}
 			
+			if(GetArg("-verbose", 0) >= 1)
+				printf("***** Node version message: version %d, blocks=%d\n", nCurrentVersion, nStartingHeight);
+			
+			
 			/* Send the Version Response to ensure communication channel is open. */
 			PushMessage("verack");
 			
-			if(GetArg("-verbose", 0) >= 1)
-				printf("***** Node version message: version %d, blocks=%d\n", nCurrentVersion, nStartingHeight);
 			
 			/* Push our version back since we just completed getting the version from the other node. */
 			if (fOUTGOING)
 			{
-				/* Get recent addresses */
-				//if (Net::addrman.size() < 1000)
-				//	PushPacket("getaddr");
-
+				/* Get headers if the connection was made as outgoing. */
+				PushMessage("getheaders", Core::CBlockLocator(Core::pindexBest), uint1024(0));
 
 				/* Add to the Majority Peer Block Count. */
 				Core::cPeerBlockCounts.Add(nStartingHeight);
-				
-				PushMessage("getblocks", Core::CBlockLocator(Core::pindexBest), uint1024(0));
 			}
 			
-			Core::pManager->cPeerBlocks.Add(nStartingHeight);
-			//else
 			
+			//TODO remove this once IsInitialBlockDownload is changed
+			Core::pManager->cPeerBlocks.Add(nStartingHeight);
 		}
 
 		
@@ -501,24 +470,14 @@ namespace LLP
 			ssMessage >> vAddr;
 
 			/* Don't want addr from older versions unless seeding */
-			if (vAddr.size() > 1000){
+			if (vAddr.size() > 2000){
 				DDOS->rSCORE += 20;
 				
 				return error("***** Node message addr size() = %d... Dropping Connection", vAddr.size());
 			}
 
-			/* Store the new addresses. */
-			BOOST_FOREACH(CAddress& addr, vAddr)
-			{
-				/* ignore IPv6 for now, since it isn't implemented anyway */
-				if (!addr.IsIPv4())
-					continue;
-				
-				//setAddrKnown.insert(addr);
-				
-				/* TODO: Relay Address to other nodes. Might be better to have addresses requested by nodes. */
-				//Net::addrman.Add(vAddr, addr, 2 * 60 * 60);
-			}
+			for(auto addr : vAddr)
+				Core::pManager->AddAddress(addr);
 		}
 		
 		
@@ -531,7 +490,7 @@ namespace LLP
 			ssMessage >> vInv;
 			
 			
-			if(GetArg("-verbose", 0) >= 3)
+			if(GetArg("-verbose", 0) >= 2)
 				printf("***** Inventory Message of %u elements\n", vInv.size());
 			
 			
@@ -547,23 +506,66 @@ namespace LLP
 			std::vector<CInv> vInvNew;
 			for (int i = 0; i < vInv.size(); i++)
 			{
+				/* Skip asking for inventory that is already known. */
 				if(vInv[i].type == MSG_BLOCK && Core::pManager->blkPool.Has(vInv[i].hash))
 					continue;
-				else if(vInv[i].type == MSG_TX && Core::pManager->txPool.Has(vInv[i].hash.getuint512()))
-					continue;
 				
+				/* Skip asking for inventory that is already known. */
+				if(vInv[i].type == MSG_TX && Core::pManager->txPool.Has(vInv[i].hash.getuint512()))
+					continue;
 				
 				/* Log Level 4: Inventory Message (Relay v1.0). */
 				if(GetArg("-verbose", 0) >= 4)
 					printf("***** Node recieved inventory: %s  %s\n", vInv[i].ToString().c_str());
 
-				/* Add the inventory to new vector. */
+				/* Add the inventory to new vector. (Only TX) */
 				vInvNew.push_back(vInv[i]);
 			}
 			
+			
 			/* Ask for the data. */
 			PushMessage("getdata", vInvNew);
+		}
+		
+		
+		/* Handle block header inventory message
+		 * 
+		 * This is just block data without transactions.
+		 * 
+		 */
+		else if (INCOMING.GetMessage() == "headers")
+		{
+			std::vector<Core::CBlock> vBlocks;
+			ssMessage >> vBlocks;
 			
+			
+			if(GetArg("-verbose", 0) >= 1)
+				printf("***** Recieved Message of %u Headers\n", vBlocks.size());
+			
+			
+			/* Make sure it is not beyond limits */
+			if (vBlocks.size() > 5000 || vBlocks.size() == 0)
+			{
+				DDOS->rSCORE += 20;
+				printf("ERROR SIZE TOO LARGE\n");
+				
+				return true;
+			}
+			
+			
+			/* Add the list of new block headers into the block pool. */
+			std::vector<CInv> vRequest;
+			for(auto block : vBlocks)
+			{
+				/* Add the block data to the block pool. */
+				if(Core::pManager->blkPool.Add(block.GetHash(), block, Core::pManager->blkPool.HEADER))
+					vRequest.push_back(CInv(MSG_BLOCK, block.GetHash()));
+			}
+			
+			PushMessage("getdata", vRequest);
+
+			
+			return true;
 		}
 
 		
@@ -579,6 +581,15 @@ namespace LLP
 				DDOS->rSCORE += 20;
 				
 				return true;
+			}
+			
+			
+			/* Add request ID for every Tritium command. */
+			unsigned int nRequestID;
+			if(nCurrentVersion > 20000)
+			{
+				
+				
 			}
 			
 			for(int i = 0; i < vInv.size(); i++)
@@ -637,19 +648,47 @@ namespace LLP
 			if(GetArg("-verbose", 0) >= 3)
 				printf("***** Node Requested getblocks %d to %s limit %d\n", (pindex ? pindex->nHeight : -1), hashStop.ToString().substr(0,20).c_str(), nLimit);
 				
+			std::vector<CInv> vInv;
 			for (; pindex; pindex = pindex->pnext)
 			{
-				if (pindex->GetBlockHash() == hashStop)
-				{
-					if(GetArg("-verbose", 0) >= 3)
-						printf("***** Sending getblocks stopping at %d %s \n", pindex->nHeight, pindex->GetBlockHash().ToString().substr(0,20).c_str());
-						
-					if(hashStop != Core::hashBestChain)
-						PushInventory(CInv(MSG_BLOCK, Core::hashBestChain));
-				}
+				if (pindex->GetBlockHash() == hashStop || vInv.size() >= nLimit || !pindex->pnext)
+					break;
 				
-				PushInventory(CInv(MSG_BLOCK, pindex->GetBlockHash()));
+				vInv.push_back(CInv(MSG_BLOCK, pindex->GetBlockHash()));
 			}
+			
+			PushMessage("inv", vInv);
+		}
+		
+		
+		/* Handle a Request to get a list of Blocks from a Node. */
+		else if (INCOMING.GetMessage() == "getheaders")
+		{
+			Core::CBlockLocator locator;
+			uint1024 hashStop;
+			ssMessage >> locator >> hashStop;
+
+			/* Find the last block the caller has in the main chain */
+			Core::CBlockIndex* pindex = locator.GetBlockIndex();
+
+			/* Send the rest of the chain as INV messages. */
+			if (pindex)
+				pindex = pindex->pnext;
+			
+			int nLimit = 2000 + locator.GetDistanceBack();
+			if(GetArg("-verbose", 0) >= 3)
+				printf("***** Node Requested getheaders %d to %s limit %d\n", (pindex ? pindex->nHeight : -1), hashStop.ToString().substr(0,20).c_str(), nLimit);
+				
+			std::vector<Core::CBlock> vHeaders;
+			for (; pindex; pindex = pindex->pnext)
+			{
+				if (pindex->GetBlockHash() == hashStop || vHeaders.size() >= nLimit || !pindex->pnext)
+					break;
+				
+				vHeaders.push_back(pindex->GetBlockHeader());
+			}
+			
+			PushMessage("headers", vHeaders);
 		}
 
 

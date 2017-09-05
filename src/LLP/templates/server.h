@@ -191,7 +191,7 @@ namespace LLP
 							SOCKET -> shutdown(boost::asio::ip::tcp::socket::shutdown_both, ERROR_HANDLE);
 							SOCKET -> close();
 							
-							printf("##### BLOCKED: LLP Connection Request from %u.%u.%u.%u to Port %u\n", vAddress[0], vAddress[1], vAddress[2], vAddress[3], PORT);
+							printf("XXXXX BLOCKED: LLP Connection Request from %u.%u.%u.%u to Port %u\n", vAddress[0], vAddress[1], vAddress[2], vAddress[3], PORT);
 								
 							continue;
 						}
@@ -224,7 +224,7 @@ namespace LLP
 					nGlobalConnections += DATA_THREADS[nIndex]->nConnections;
 					
 				double RPS = (double) TotalRequests() / TIMER.Elapsed();
-				printf("[METERS] LLP Running at %f Requests per Second with %u Connections.\n", RPS, nGlobalConnections);
+				printf("METER LLP Running at %f Requests per Second with %u Connections.\n", RPS, nGlobalConnections);
 				
 				TIMER.Reset();
 				ClearRequests();

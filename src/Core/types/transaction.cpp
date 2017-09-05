@@ -856,7 +856,9 @@ namespace Core
 				int64 nInterest;
 				GetCoinstakeInterest(indexdb, nInterest);
 				
-				printf("ConnectInputs() : %f Value Out, %f Interest, %f Expected\n", (double)vout[0].nValue / COIN, (double)nInterest / COIN, (double)(nInterest + nValueIn) / COIN);
+				if(GetArg("-verbose", 0) >= 2)
+					printf("ConnectInputs() : %f Value Out, %f Interest, %f Expected\n", (double)vout[0].nValue / COIN, (double)nInterest / COIN, (double)(nInterest + nValueIn) / COIN);
+				
 				if (vout[0].nValue != (nInterest + nValueIn))
 					return LLP::DoS(NULL, 100, error("ConnectInputs() : %s stake reward mismatch", GetHash().ToString().substr(0,10).c_str()));
 					
