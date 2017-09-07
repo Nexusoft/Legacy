@@ -178,8 +178,8 @@ namespace Core
 			}
 				
 				
-			/* Request new blocks if requests for new blocks or been 5 seconds. */
-			else if(nLastBlockRequest + 5 < UnifiedTimestamp())
+			/* Request new blocks if requests for new blocks or been 15 seconds. */
+			else if(nLastBlockRequest + 15 < UnifiedTimestamp())
 			{
 				/* Request blocks if there is a node. */
 				LLP::CNode* pNode = SelectNode();
@@ -229,7 +229,7 @@ namespace Core
 			for(auto hash : vBlocks)
 			{
 				cTimer.Reset();
-				
+					
 				
 				/* Get the Block from the Memory Pool. */
 				CBlock block;

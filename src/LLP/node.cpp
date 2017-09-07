@@ -341,7 +341,7 @@ namespace LLP
 
 				
 			/* Make sure it's not an already process(ing) block. */
-			if(Core::pManager->blkPool.Has(hashBlock) && Core::pManager->blkPool.State(hashBlock) != Core::pManager->blkPool.HEADER )
+			if(Core::pManager->blkPool.Has(hashBlock) || Core::mapBlockIndex.count(hashBlock))
 			{
 				
 				if(GetArg("-verbose", 0) >= 3)
@@ -449,7 +449,8 @@ namespace LLP
 			if (fOUTGOING)
 			{
 				
-				//PushMessage("getblocks", Core::CBlockLocator(Core::pindexBest), uint1024(0));
+				PushMessage("getblocks", Core::CBlockLocator(Core::pindexBest), uint1024(0));
+				
 
 				/* Add to the Majority Peer Block Count. */
 				Core::cPeerBlockCounts.Add(nStartingHeight);
