@@ -170,12 +170,20 @@ namespace Core
 					hashEnd   = blk.hashPrevBlock;
 					
 					printf("***** Manager::Inconsistent Best blocks. Poosibly Orphaned at height %u\n", blk.nHeight);
+					
+					std::vector<uint1024> vBegin = { hashBegin };
+					LLP::CNode* pNode = SelectNode();
+					if(pNode)
+						pNode->PushMessage("getblocks", Core::CBlockLocator(vBegin), hashEnd);
+					
+					if(GetArg("-verbose", 0) >= 1)
+						printf("***** Manager::Requested (%s) block range (%s ... 0000000)\n", pNode->GetIPAddress().c_str(), hashBegin.ToString().substr(0, 20).c_str());
 				}
 			}
 				
 				
 			/* Request new blocks if requests for new blocks or been 5 seconds. */
-			if(nLastBlockRequest + 5 < UnifiedTimestamp())
+			else if(nLastBlockRequest + 5 < UnifiedTimestamp())
 			{
 				/* Request blocks if there is a node. */
 				LLP::CNode* pNode = SelectNode();
