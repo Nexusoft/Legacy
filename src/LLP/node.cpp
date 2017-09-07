@@ -270,15 +270,6 @@ namespace LLP
 			ssMessage >> tx;
 			
 			
-			/* De-Serialize the Request ID. 
-			TODO: Check Request ID's and Relay KEYS. */
-			if(nCurrentVersion > 20000)
-			{
-				unsigned int nRequestID;
-				ssMessage >> nRequestID;
-			}
-			
-			
 			/* Don't double process what one already has. */
 			if(Core::pManager->txPool.Has(tx.GetHash()))
 				return true;
@@ -308,6 +299,17 @@ namespace LLP
 					printf("PASSED checks in " PRIu64 " us\n", cTimer.ElapsedMicroseconds());
 			}
 			
+			/* Only relay the transaction data if it was accepted. */
+			else
+			{
+				std::vector<CInv> vInv = { CInv(MSG_TX, tx.GetHash()) };
+				
+				std::vector<LLP::CNode*> vNodes = Core::pManager->GetConnections();
+				for(auto node : vNodes)
+					if(node != this)
+						node->PushMessage("inv", vInv);
+			}
+			
 			
 			/* Level 3 Debugging: Output Protocol Messages. */
 			if(GetArg("-verbose", 0) >= 3)
@@ -326,15 +328,6 @@ namespace LLP
 			Core::CBlock block;
 			ssMessage >> block;
 			
-			
-			/* De-Serialize the Request ID. 
-				TODO: Check Request ID's and Relay KEYS. */
-			if(nCurrentVersion > 20000)
-			{
-				unsigned int nRequestID;
-				ssMessage >> nRequestID;
-			}
-			
 						
 			/* Get the Block Hash. */
 			uint1024 hashBlock = block.GetHash();
@@ -344,7 +337,7 @@ namespace LLP
 			if(Core::pManager->blkPool.Has(hashBlock) || Core::mapBlockIndex.count(hashBlock))
 			{
 				
-				if(GetArg("-verbose", 0) >= 3)
+				if(GetArg("-verbose", 0) >= 4)
 					printf("duplicate block %s\n", hashBlock.ToString().substr(0,20).c_str());
 				
 				DDOS->rSCORE += 5;
@@ -400,7 +393,7 @@ namespace LLP
 			
 			
 			/* Debug Level 3: output Node Latencies. */
-			if(GetArg("-verbose", 0) >= 1)
+			if(GetArg("-verbose", 0) >= 3)
 				printf("***** Node %s Latency (%u ms)\n", addrThisNode.ToString().c_str(), nNodeLatency);
 		}
 		
@@ -448,7 +441,6 @@ namespace LLP
 			/* Push our version back since we just completed getting the version from the other node. */
 			if (fOUTGOING)
 			{
-				
 				PushMessage("getblocks", Core::CBlockLocator(Core::pindexBest), uint1024(0));
 				
 

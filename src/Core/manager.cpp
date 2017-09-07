@@ -248,11 +248,20 @@ namespace Core
 				/* Check the block to the blockchain. */
 				if(blkPool.Accept(block, NULL))
 				{
+					/* If this isn't the main chain synchronization broadcast the block to other nodes. */
+					if(!fSynchronizing)
+					{
+						std::vector<LLP::CInv> vInv = { LLP::CInv(LLP::MSG_BLOCK, hash) };
+						std::vector<LLP::CNode*> vNodes = GetConnections();
+						for(auto node : vNodes)
+							node->PushMessage("inv", vInv);
+					}
 					
 					/* Keep the Meter data up to date. */
 					nProcessed++;
 					if(GetArg("-verbose", 0) >= 2)
 						printf("ACCEPTED %s in %" PRIu64 " us\n", hash.ToString().substr(0, 20).c_str(), cTimer.ElapsedMicroseconds());
+					
 				}
 				else
 				{
