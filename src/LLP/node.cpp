@@ -580,14 +580,6 @@ namespace LLP
 			}
 			
 			
-			/* Add request ID for every Tritium command. */
-			unsigned int nRequestID;
-			if(nCurrentVersion > 20000)
-			{
-				
-				
-			}
-			
 			for(int i = 0; i < vInv.size(); i++)
 			{
 
