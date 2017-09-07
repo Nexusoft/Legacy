@@ -239,7 +239,8 @@ namespace Core
 				/* Check that previous block exists. */
 				if(blkPool.State(block.hashPrevBlock) != blkPool.CONNECTED &&
 				   blkPool.State(block.hashPrevBlock) != blkPool.ACCEPTED &&
-				   blkPool.State(block.hashPrevBlock) != blkPool.INDEXED )
+				   blkPool.State(block.hashPrevBlock) != blkPool.INDEXED && 
+				   !mapBlockIndex.count(block.hashPrevBlock)) //NOTE: mapBlockIndex to be deprecated
 				{
 					printf("ORPHANED Height %u %s by Invalid Previous State(%u)\n", block.nHeight, block.hashPrevBlock.ToString().substr(0, 20).c_str(), blkPool.State(block.hashPrevBlock));
 					
