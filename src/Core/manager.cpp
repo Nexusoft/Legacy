@@ -43,6 +43,7 @@ namespace Core
 		AddConnection("104.192.169.62", "9323");
 		AddConnection("96.43.131.82", "9323");
 		
+		
 		while(!fShutdown)
 		{
 			if(vNew.size() == 0 && vTried.size() == 0){
@@ -136,57 +137,28 @@ namespace Core
 			Sleep(1000);
 
 		unsigned int nLastBlockRequest = UnifiedTimestamp();
+		hashLastBlock = pindexBest->GetBlockHash();
+		
+		fSynchronizing = true;
 		while(!fShutdown)
 		{
 			Sleep(1000);
 			
+			if(fSynchronizing && nBestHeight > cPeerBlocks.Majority())
+				fSynchronizing = false;
+			
+			if(!fSynchronizing)
+				hashLastBlock = pindexBest->GetBlockHash();
+			
+			
 			/* Find what intervals are going to be requested. */
-			uint1024 hashBegin;
+			uint1024 hashBegin = hashLastBlock;
 			uint1024 hashEnd  = uint1024(0);
 
 			
 			/* Check for blocks that have been asked for, and re-try if failed. */
 			std::vector<uint1024> vBlocks;
-			std::vector<LLP::CInv> vRequest;
-			if(blkPool.GetIndexes(blkPool.HEADER, vBlocks))
-			{
-				std::sort(vBlocks.begin(), vBlocks.end(), SortByHeight);
-
-				CBlock blk;
-				blkPool.Get(vBlocks.front(), blk);
-				
-				if(blk.hashPrevBlock != pindexBest->GetBlockHash())
-					printf("Processing Behind Best Block...\n");
-			
-				
-				for(auto hash : vBlocks)
-				{
-					if(blkPool.Age(hash) > 15)
-					{
-						vRequest.push_back(LLP::CInv(LLP::MSG_BLOCK, hash));
-						
-						blkPool.SetTimestamp(hash);
-					}
-				}
-					
-					
-				LLP::CNode* pNode = SelectNode();
-				if(vRequest.size() > 0 && pNode)
-				{
-					if(GetArg("-verbose", 0) >= 1)
-						printf("***** Manager::Trying to get %u blocks again...\n", vRequest.size());
-						
-					pNode->PushMessage("getdata", vRequest);
-				}
-				
-				hashBegin = vBlocks.back();
-			}
-			
-			
-			/* Check block processing queue. */
-			if(!blkPool.GetIndexes(blkPool.CHECKED, vBlocks))
-				hashBegin = pindexBest->GetBlockHash();
-			else
+			if(blkPool.GetIndexes(blkPool.CHECKED, vBlocks))
 			{
 				std::sort(vBlocks.begin(), vBlocks.end(), SortByHeight);
 				
@@ -194,22 +166,23 @@ namespace Core
 				blkPool.Get(vBlocks.front(), blk);
 				if(blk.hashPrevBlock != pindexBest->GetBlockHash())
 				{
-					hashBegin = pindexBest->GetBlockHash(); //TODO: hashend should be blk.hashPrevBlock 
+					hashBegin = pindexBest->GetBlockHash();
 					hashEnd   = blk.hashPrevBlock;
 					
 					printf("***** Manager::Inconsistent Best blocks. Poosibly Orphaned at height %u\n", blk.nHeight);
 				}
 			}
 				
+				
 			/* Request new blocks if requests for new blocks or been 5 seconds. */
-			if(nLastBlockRequest + 10 < UnifiedTimestamp())
+			if(nLastBlockRequest + 5 < UnifiedTimestamp())
 			{
 				/* Request blocks if there is a node. */
 				LLP::CNode* pNode = SelectNode();
 				if(pNode)
 				{
 					std::vector<uint1024> vBegin = { hashBegin };
-					pNode->PushMessage("getheaders", Core::CBlockLocator(vBegin), uint1024(0));
+					pNode->PushMessage("getblocks", Core::CBlockLocator(vBegin), hashEnd);
 					
 					if(GetArg("-verbose", 0) >= 1)
 						printf("***** Manager::Requested (%s) block range (%s ... 0000000)\n", pNode->GetIPAddress().c_str(), hashBegin.ToString().substr(0, 20).c_str());
@@ -263,7 +236,8 @@ namespace Core
 				if(blkPool.State(block.hashPrevBlock) != blkPool.CONNECTED &&
 				   blkPool.State(block.hashPrevBlock) != blkPool.ACCEPTED )
 				{
-					printf("ORPHANED %s by Invalid Previous State(%u)\n", block.hashPrevBlock.ToString().substr(0, 20).c_str(), blkPool.State(block.hashPrevBlock));
+					printf("ORPHANED Height %u %s by Invalid Previous State(%u)\n", block.nHeight, block.hashPrevBlock.ToString().substr(0, 20).c_str(), blkPool.State(block.hashPrevBlock));
+					
 					break;
 				}
 				

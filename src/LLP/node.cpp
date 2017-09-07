@@ -448,8 +448,8 @@ namespace LLP
 			/* Push our version back since we just completed getting the version from the other node. */
 			if (fOUTGOING)
 			{
-				/* Get headers if the connection was made as outgoing. */
-				PushMessage("getheaders", Core::CBlockLocator(Core::pindexBest), uint1024(0));
+				
+				//PushMessage("getblocks", Core::CBlockLocator(Core::pindexBest), uint1024(0));
 
 				/* Add to the Majority Peer Block Count. */
 				Core::cPeerBlockCounts.Add(nStartingHeight);
@@ -522,6 +522,9 @@ namespace LLP
 				vInvNew.push_back(vInv[i]);
 			}
 			
+			/* Handle the Hash Stop. */
+			if(vInvNew.size() > 1)
+				Core::pManager->hashLastBlock = vInvNew.back().hash;
 			
 			/* Ask for the data. */
 			PushMessage("getdata", vInvNew);
