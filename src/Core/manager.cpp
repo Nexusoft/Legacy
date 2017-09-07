@@ -37,11 +37,11 @@ namespace Core
 		
 		
 		//FOR TESTING ONLY
-		AddConnection("104.192.170.130", "9323");
+		//AddConnection("104.192.170.130", "9323");
 		AddConnection("104.192.169.10", "9323");
-		AddConnection("104.192.170.30", "9323");
+		//AddConnection("104.192.170.30", "9323");
 		AddConnection("104.192.169.62", "9323");
-		AddConnection("96.43.131.82", "9323");
+		//AddConnection("96.43.131.82", "9323");
 		
 		
 		while(!fShutdown)
@@ -52,7 +52,7 @@ namespace Core
 				continue;
 			}
 
-			//TODO: Make this tied to port macros
+			/*
 			if(vNew.size() > 0)
 			{
 				int nRandom = GetRandInt(vNew.size() - 1);
@@ -85,6 +85,7 @@ namespace Core
 				vDropped.erase(vDropped.begin() + nRandom);
 				
 			}
+			*/
 			
 			Sleep(1000);
 		}
@@ -179,7 +180,7 @@ namespace Core
 				
 				
 			/* Request new blocks if requests for new blocks or been 15 seconds. */
-			else if(nLastBlockRequest + 15 < UnifiedTimestamp())
+			if(fSynchronizing && nLastBlockRequest + 10 < UnifiedTimestamp())
 			{
 				/* Request blocks if there is a node. */
 				LLP::CNode* pNode = SelectNode();

@@ -447,6 +447,8 @@ namespace LLP
 				/* Add to the Majority Peer Block Count. */
 				Core::cPeerBlockCounts.Add(nStartingHeight);
 			}
+			else
+				PushVersion();
 			
 			
 			//TODO remove this once IsInitialBlockDownload is changed
