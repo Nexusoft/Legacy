@@ -166,18 +166,14 @@ namespace Core
 				blkPool.Get(vBlocks.front(), blk);
 				if(blk.hashPrevBlock != pindexBest->GetBlockHash())
 				{
-					hashBegin = pindexBest->GetBlockHash();
-					hashEnd   = blk.hashPrevBlock;
-					
-					printf("***** Manager::Inconsistent Best blocks. Poosibly Orphaned at height %u\n", blk.nHeight);
-					
-					std::vector<uint1024> vBegin = { hashBegin };
 					LLP::CNode* pNode = SelectNode();
 					if(pNode)
-						pNode->PushMessage("getblocks", Core::CBlockLocator(vBegin), hashEnd);
+					{
+						pNode->PushMessage("getblocks", Core::CBlockLocator(pindexBest), uint1024(0));
 					
-					if(GetArg("-verbose", 0) >= 1)
-						printf("***** Manager::Requested (%s) block range (%s ... 0000000)\n", pNode->GetIPAddress().c_str(), hashBegin.ToString().substr(0, 20).c_str());
+						if(GetArg("-verbose", 0) >= 1)
+							printf("***** Manager::Requested Missing (%s) block range (%s ... 0000000)\n", pNode->GetIPAddress().c_str(), hashBegin.ToString().substr(0, 20).c_str());
+					}
 				}
 			}
 				
