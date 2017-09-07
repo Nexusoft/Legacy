@@ -52,7 +52,7 @@ namespace Core
 				continue;
 			}
 
-			/*
+			
 			if(vNew.size() > 0)
 			{
 				int nRandom = GetRandInt(vNew.size() - 1);
@@ -85,7 +85,7 @@ namespace Core
 				vDropped.erase(vDropped.begin() + nRandom);
 				
 			}
-			*/
+			
 			
 			Sleep(1000);
 		}

@@ -448,7 +448,12 @@ namespace LLP
 				Core::cPeerBlockCounts.Add(nStartingHeight);
 			}
 			else
+			{
 				PushVersion();
+				
+				/* Add address to tried stack. */
+				Core::pManager->AddAddress(addrThisNode);
+			}
 			
 			
 			//TODO remove this once IsInitialBlockDownload is changed
