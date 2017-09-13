@@ -282,6 +282,10 @@ namespace Core
 	extern uint1024 hashGenesisBlock;
 	
 	
+	/* Reference of the last checkpoint. */
+	extern uint1024 hashLastCheckpoint;
+	
+	
 	/* The Official Hash of the Best Chain. This is set in the SetBestChain method in block.h/block.cpp. */
 	extern uint1024 hashBestChain;
 	

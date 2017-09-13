@@ -14,6 +14,7 @@ ________________________________________________________________________________
 
 #include "../Core/include/manager.h"
 
+#include "include/checkpoints.h"
 #include "include/message.h"
 #include "include/hosts.h"
 #include "include/node.h"
@@ -29,34 +30,7 @@ ________________________________________________________________________________
 
 
 namespace LLP
-{
-	
-	/* Check Inventory to see if already owned. */
-	bool AlreadyHave(LLD::CIndexDB& indexdb, const CInv& inv)
-	{
-		switch (inv.type)
-		{
-			case MSG_TX:
-			{
-				bool txInMap = Core::pManager->txPool.Has(inv.hash.getuint512());
-				return txInMap || indexdb.ContainsTx(inv.hash.getuint512());
-			}
-			case MSG_BLOCK:
-				return Core::pManager->blkPool.Has(inv.hash);
-		}
-		
-		/* Pretend we know what it is even if we don't. */
-		return true;
-	}
-	
-	
-	/* Keep Track of the Inventory we Already have. */
-	void CNode::AddInventoryKnown(const CInv& inv) { }
-	
-		
-	/* Send Inventory We have. */
-	void CNode::PushInventory(const CInv& inv) {}
-	
+{	
 	
 	/* Push a Message With Information about This Current Node. */
 	void CNode::PushVersion()
@@ -140,6 +114,29 @@ namespace LLP
 				cLatencyTimer.Reset();
 				
 				PushMessage("ping", nSessionID);
+				
+				if(fSync)
+				{
+					std::map<uint1024, Core::CBlockIndex*>::iterator mi = Core::mapBlockIndex.find(hashLastBlock);
+					if (mi != Core::mapBlockIndex.end())
+					{
+						Core::CBlockIndex* pindex = mi->second;
+						Core::CBlock block;
+						for(int i = 0; i < 2000 && pindex->pnext; i++)
+						{
+							if(!block.ReadFromDisk(pindex))
+								break;
+								
+							PushMessage("block", block);
+							
+							pindex = pindex->pnext;
+							hashLastBlock = pindex->GetBlockHash();
+						}
+						
+						printf("***** Pushed 2000 Blocks in Sync to Node %s\n", addrThisNode.ToString().c_str());
+					}	
+					
+				}
 			}
 		}
 			
@@ -179,9 +176,40 @@ namespace LLP
 	bool CNode::ProcessPacket()
 	{
 		CDataStream ssMessage(INCOMING.DATA, SER_NETWORK, MIN_PROTO_VERSION);
+		
+		
+		if (INCOMING.GetMessage() == "tritium")
+		{
+			ssMessage >> nCurrentVersion >> addrThisNode >> hashLastCheckpoint >> hashBestBlock >> nBestHeight;
+			
+			/* Tritium Node Logging. */
+			if(GetArg("-verbose", 0) >= 1)
+				printf("***** Tritium Node: version %d, blocks=%d\n", nCurrentVersion, nBestHeight);
+			
+			/* Push response Tritium Message. */
+			if(!fOUTGOING)
+				PushMessage("tritium", nCurrentVersion, CAddress(CService(GetIPAddress(), GetDefaultPort())), Core::hashLastCheckpoint, Core::hashBestChain, Core::nBestHeight);
+			else
+				PushMessage("sync", Core::hashBestChain);
+			
+			/* Set the Tritium Flag. */
+			fTritium = true;
+			
+			return true;
+		}
+		
+		else if(INCOMING.GetMessage() == "sync")
+		{
+			ssMessage >> hashLastBlock;
+			
+			//fSync = true;
+			
+			return true;
+		}
+			
 			
 		/* Get a Time Offset from the Connection. */
-		if(INCOMING.GetMessage() == "getoffset")
+		else if(INCOMING.GetMessage() == "getoffset")
 		{
 			/* Don't service unified seeds unless time is unified. */
 			if(!Core::fTimeUnified)
@@ -201,6 +229,7 @@ namespace LLP
 			if(GetArg("-verbose", 0) >= 3)
 				printf("***** Node: Sent Offset %i | %s | Unified %" PRIu64 "\n", nOffset, addrThisNode.ToString().c_str(), Core::UnifiedTimestamp());
 
+			return true;
 		}
 		
 		/* Recieve a Time Offset from this Node. */
@@ -211,54 +240,57 @@ namespace LLP
 			unsigned int nRequestID;
 			ssMessage >> nRequestID;
 			
+			
 			/* De-Serialize the Timestamp Sent. */
 			uint64 nTimestamp;
 			ssMessage >> nTimestamp;
 			
+			
 			/* Handle the Request ID's. */
 			unsigned int nLatencyTime = (Core::UnifiedTimestamp(true) - nTimestamp);
-			{ LOCK(NODE_MUTEX);
-				
-				/* Ignore Messages Recieved that weren't Requested. */
-				if(!mapSentRequests.count(nRequestID)) {
-					DDOS->rSCORE += 5;
+
+			
+			/* Ignore Messages Recieved that weren't Requested. */
+			if(!mapSentRequests.count(nRequestID)) {
+				DDOS->rSCORE += 5;
 					
-					if(GetArg("-verbose", 0) >= 3)
-						printf("***** Node (%s): Invalid Request : Message Not Requested [%x][%u ms]\n", addrThisNode.ToString().c_str(), nRequestID, nLatencyTime);
+				if(GetArg("-verbose", 0) >= 3)
+					printf("***** Node (%s): Invalid Request : Message Not Requested [%x][%u ms]\n", addrThisNode.ToString().c_str(), nRequestID, nLatencyTime);
 						
-					return true;
-				}
+				return true;
+			}
 				
 				
-				/* Reject Samples that are recieved 30 seconds after last check on this node. */
-				if(Core::UnifiedTimestamp(true) - mapSentRequests[nRequestID] > 30000) {
-					mapSentRequests.erase(nRequestID);
+			/* Reject Samples that are recieved 30 seconds after last check on this node. */
+			if(Core::UnifiedTimestamp(true) - mapSentRequests[nRequestID] > 30000) {
+				mapSentRequests.erase(nRequestID);
 					
-					if(GetArg("-verbose", 0) >= 3)
-						printf("***** Node (%s): Invalid Request : Message Stale [%x][%u ms]\n", addrThisNode.ToString().c_str(), nRequestID, nLatencyTime);
+				if(GetArg("-verbose", 0) >= 3)
+					printf("***** Node (%s): Invalid Request : Message Stale [%x][%u ms]\n", addrThisNode.ToString().c_str(), nRequestID, nLatencyTime);
 						
-					DDOS->rSCORE += 15;
+				DDOS->rSCORE += 15;
 					
-					return true;
-				}
+				return true;
+			}
 				
 
-				/* De-Serialize the Offset. */
-				int nOffset;
-				ssMessage >> nOffset;
+			/* De-Serialize the Offset. */
+			int nOffset;
+			ssMessage >> nOffset;
 				
-				if(GetArg("-verbose", 0) >= 3)
-					printf("***** Node (%s): Received Unified Offset %i [%x][%u ms]\n", addrThisNode.ToString().c_str(), nOffset, nRequestID, nLatencyTime);
+			if(GetArg("-verbose", 0) >= 3)
+				printf("***** Node (%s): Received Unified Offset %i [%x][%u ms]\n", addrThisNode.ToString().c_str(), nOffset, nRequestID, nLatencyTime);
 				
-				/* Adjust the Offset for Latency. */
-				nOffset -= nLatencyTime;
+			/* Adjust the Offset for Latency. */
+			nOffset -= nLatencyTime;
 				
-				/* Add the Samples. */
-				setTimeSamples.insert(nOffset);
+			/* Add the Samples. */
+			setTimeSamples.insert(nOffset);
 				
-				/* Remove the Request from the Map. */
-				mapSentRequests.erase(nRequestID);
-			}
+			/* Remove the Request from the Map. */
+			mapSentRequests.erase(nRequestID);
+			
+			return true;
 		}
 		
 		/* Push a transaction into the Node's Recieved Transaction Queue. */
@@ -319,6 +351,8 @@ namespace LLP
 			/* Level 4 Debugging: Output Raw Data Dumps. */
 			if(GetArg("-verbose", 0) >= 4)
 				tx.print();
+			
+			return true;
 		}
 		
 		
@@ -331,6 +365,7 @@ namespace LLP
 						
 			/* Get the Block Hash. */
 			uint1024 hashBlock = block.GetHash();
+
 
 				
 			/* Make sure it's not an already process(ing) block. */
@@ -364,6 +399,8 @@ namespace LLP
 				
 				return true;
 			}
+			
+			return true;
 		}
 		
 		
@@ -378,6 +415,8 @@ namespace LLP
 			cLatencyTimer.Start();
 				
 			PushMessage("pong", nonce);
+			
+			return true;
 		}
 		
 		
@@ -395,6 +434,8 @@ namespace LLP
 			/* Debug Level 3: output Node Latencies. */
 			if(GetArg("-verbose", 0) >= 3)
 				printf("***** Node %s Latency (%u ms)\n", addrThisNode.ToString().c_str(), nNodeLatency);
+			
+			return true;
 		}
 		
 			
@@ -421,15 +462,24 @@ namespace LLP
 
 			
 			/* Check the Protocol Versions */
-			ssMessage >> nCurrentVersion >> nServices >> nTime >> addrMe >> addrFrom >> nSessionID >> strNodeVersion >> nStartingHeight;
-			if (nCurrentVersion < MIN_PROTO_VERSION)
+			ssMessage >> nCurrentVersion;
+			
+			
+			/* Check the Tritium Protocol. */
+			if (nCurrentVersion >= MIN_TRITIUM_VERSION)
 			{
-				if(GetArg("-verbose", 0) >= 1)
-					printf("***** Node %s using obsolete version %i; disconnecting\n", GetIPAddress().c_str(), PROTOCOL_VERSION);
-					
-				return false;
+				if(GetArg("verbose", 0) >= 1)
+					printf("***** Node %s detected on the tritium protocol %i; moving to tritium message sets\n", GetIPAddress().c_str(), PROTOCOL_VERSION);
+				
+				if(!fOUTGOING)
+					PushMessage("tritium", PROTOCOL_VERSION, CAddress(CService(GetIPAddress(), GetDefaultPort())), Core::hashLastCheckpoint, Core::hashBestChain, Core::nBestHeight);
+				
+				return true;
 			}
 			
+			
+			/* Deserialize the rest of the data. */
+			ssMessage >> nServices >> nTime >> addrMe >> addrFrom >> nSessionID >> strNodeVersion >> nStartingHeight;
 			if(GetArg("-verbose", 0) >= 1)
 				printf("***** Node version message: version %d, blocks=%d\n", nCurrentVersion, nStartingHeight);
 			
@@ -442,19 +492,12 @@ namespace LLP
 			if (fOUTGOING)
 			{
 				PushMessage("getblocks", Core::CBlockLocator(Core::pindexBest), uint1024(0));
-				
 
 				/* Add to the Majority Peer Block Count. */
 				Core::cPeerBlockCounts.Add(nStartingHeight);
 			}
 			else
-			{
 				PushVersion();
-				
-				/* Add address to tried stack. */
-				Core::pManager->AddAddress(addrThisNode);
-			}
-			
 			
 			//TODO remove this once IsInitialBlockDownload is changed
 			Core::pManager->cPeerBlocks.Add(nStartingHeight);
@@ -490,7 +533,7 @@ namespace LLP
 			ssMessage >> vInv;
 			
 			
-			if(GetArg("-verbose", 0) >= 2)
+			if(GetArg("-verbose", 0) >= 1)
 				printf("***** Inventory Message of %u elements\n", vInv.size());
 			
 			
@@ -506,6 +549,10 @@ namespace LLP
 			std::vector<CInv> vInvNew;
 			for (int i = 0; i < vInv.size(); i++)
 			{
+				/* Log Level 4: Inventory Message (Relay v1.0). */
+				if(GetArg("-verbose", 0) >= 4)
+					printf("***** Node recieved inventory: %s\n", vInv[i].ToString().c_str());
+				
 				/* Skip asking for inventory that is already known. */
 				if(vInv[i].type == MSG_BLOCK && Core::pManager->blkPool.Has(vInv[i].hash))
 					continue;
@@ -513,18 +560,11 @@ namespace LLP
 				/* Skip asking for inventory that is already known. */
 				if(vInv[i].type == MSG_TX && Core::pManager->txPool.Has(vInv[i].hash.getuint512()))
 					continue;
-				
-				/* Log Level 4: Inventory Message (Relay v1.0). */
-				if(GetArg("-verbose", 0) >= 4)
-					printf("***** Node recieved inventory: %s  %s\n", vInv[i].ToString().c_str());
 
 				/* Add the inventory to new vector. (Only TX) */
 				vInvNew.push_back(vInv[i]);
 			}
 			
-			/* Handle the Hash Stop. */
-			if(vInvNew.size() > 1)
-				Core::pManager->hashLastBlock = vInvNew.back().hash;
 			
 			/* Ask for the data. */
 			PushMessage("getdata", vInvNew);
@@ -690,7 +730,6 @@ namespace LLP
 		/* TODO: Change this Algorithm. */
 		else if (INCOMING.GetMessage() == "getaddr")
 		{
-			//pfrom->vAddrToSend.clear();
 			//vector<Net::CAddress> vAddr = Net::addrman.GetAddr();
 			//BOOST_FOREACH(const Net::CAddress &addr, vAddr)
 			//	pfrom->PushAddress(addr);

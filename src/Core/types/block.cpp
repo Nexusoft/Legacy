@@ -105,8 +105,10 @@ namespace Core
 			pindexLastBest = pindexBest;
 			nLastUpdate = UnifiedTimestamp();
 		}
-		return (UnifiedTimestamp() - nLastUpdate < 10 &&
-				pindexBest->GetBlockTime() < UnifiedTimestamp() - 24 * 60 * 60);
+		//return (UnifiedTimestamp() - nLastUpdate < 10 &&
+		//		pindexBest->GetBlockTime() < UnifiedTimestamp() - 24 * 60 * 60);
+		
+		return false;
 	}
 	
 			

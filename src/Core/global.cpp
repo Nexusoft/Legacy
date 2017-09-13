@@ -216,14 +216,21 @@ namespace Core
 	/** Trust Key Holding Structure To Verify Trust Keys Seen on Blockchain. **/
 	CTrustPool cTrustPool;
 
+	
 	/** In memory Indexing of Blocks into Blockchain. **/
 	map<uint1024, CBlockIndex*> mapBlockIndex;
+	
 	
 	/** In Memory Holdings of each Address Balance. **/
 	map<uint256, uint64>   mapAddressTransactions;
 	
+	
 	/** Anchored Genesis Block to start the Chain. **/
 	uint1024 hashGenesisBlock = hashGenesisBlockOfficial;
+	
+	
+	/* Reference of the last checkpoint. */
+	uint1024 hashLastCheckpoint;
 	
 	/** Initial Difficulty Adjustments. **/
 	CBigNum bnProofOfWorkLimit[] = { CBigNum(~uint1024(0) >> 5), CBigNum(20000000), CBigNum(~uint1024(0) >> 17) };

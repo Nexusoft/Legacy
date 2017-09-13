@@ -259,6 +259,7 @@ namespace LLP
 		Timer         TIMER;
 		Error_t       ERROR_HANDLE;
 		Socket_t      SOCKET;
+		Mutex_t       MUTEX;
 
 		
 		/*  Pure Virtual Event Function to be Overridden allowing Custom Read Events. 
@@ -328,8 +329,10 @@ namespace LLP
 		
 		
 		/* Write a single packet to the TCP stream. */
-		void WritePacket(PacketType PACKET) 
+		void WritePacket(PacketType PACKET)
 		{ 
+			LOCK(MUTEX);
+			
 			if(GetArg("-verbose", 0) >= 5)
 				PrintHex(PACKET.GetBytes());
 			

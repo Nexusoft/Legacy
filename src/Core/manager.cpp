@@ -35,13 +35,9 @@ namespace Core
 		while(!fStarted)
 			Sleep(1000);
 		
-		
-		//FOR TESTING ONLY
-		//AddConnection("104.192.170.130", "9323");
-		AddConnection("104.192.169.10", "9323");
-		//AddConnection("104.192.170.30", "9323");
-		AddConnection("104.192.169.62", "9323");
-		//AddConnection("96.43.131.82", "9323");
+		if (mapArgs.count("-addnode"))
+			for(auto strAddr : mapMultiArgs["-addnode"])
+				AddConnection(strAddr, "9323");
 		
 		
 		while(!fShutdown)
@@ -51,8 +47,8 @@ namespace Core
 				
 				continue;
 			}
-
 			
+
 			if(vNew.size() > 0)
 			{
 				int nRandom = GetRandInt(vNew.size() - 1);
@@ -63,6 +59,8 @@ namespace Core
 					
 				vNew.erase(vNew.begin() + nRandom);
 			}
+			
+
 			else if(vTried.size() > 0)
 			{
 				int nRandom = GetRandInt(vTried.size() - 1);
@@ -138,24 +136,16 @@ namespace Core
 			Sleep(1000);
 
 		unsigned int nLastBlockRequest = UnifiedTimestamp();
-		hashLastBlock = pindexBest->GetBlockHash();
+		nLastHeight   = pindexBest->nHeight;
 		
 		fSynchronizing = true;
 		while(!fShutdown)
 		{
-			Sleep(1000);
+			Sleep(100);
 			
-			if(fSynchronizing && nBestHeight > cPeerBlocks.Majority())
+			if(pindexBest->GetBlockTime() > UnifiedTimestamp() - 12 * 60 * 60)
 				fSynchronizing = false;
 			
-			if(!fSynchronizing)
-				hashLastBlock = pindexBest->GetBlockHash();
-			
-			
-			/* Find what intervals are going to be requested. */
-			uint1024 hashBegin = hashLastBlock;
-			uint1024 hashEnd  = uint1024(0);
-
 			
 			/* Check for blocks that have been asked for, and re-try if failed. */
 			std::vector<uint1024> vBlocks;
@@ -163,34 +153,48 @@ namespace Core
 			{
 				std::sort(vBlocks.begin(), vBlocks.end(), SortByHeight);
 				
-				CBlock blk;
-				blkPool.Get(vBlocks.front(), blk);
-				if(blk.hashPrevBlock != pindexBest->GetBlockHash())
+				for(auto hash : vBlocks)
 				{
-					LLP::CNode* pNode = SelectNode();
-					if(pNode)
-					{
-						pNode->PushMessage("getblocks", Core::CBlockLocator(pindexBest), uint1024(0));
+					CBlock blk;
+					blkPool.Get(hash, blk);
 					
-						if(GetArg("-verbose", 0) >= 1)
-							printf("***** Manager::Requested Missing (%s) block range (%s ... 0000000)\n", pNode->GetIPAddress().c_str(), hashBegin.ToString().substr(0, 20).c_str());
+					if(blk.nHeight == nLastHeight + 900)
+					{
+						
+						/* Request blocks if there is a node. */
+						LLP::CNode* pNode = SelectNode();
+						if(pNode)
+						{
+							nLastHeight   = blk.nHeight;
+							
+							std::vector<uint1024> vLast = { hash };
+							pNode->PushMessage("getblocks", Core::CBlockLocator(vLast), uint1024(0));
+							
+							if(GetArg("-verbose", 0) >= 1)
+								printf("***** Manager::Requested from stop (%s) block range (%s ... 0000000)\n", pNode->GetIPAddress().c_str(), hash.ToString().substr(0, 20).c_str());
+							
+							nLastBlockRequest = UnifiedTimestamp();
+						}
+						
+						break;
 					}
 				}
 			}
 				
 				
-			/* Request new blocks if requests for new blocks or been 15 seconds. */
-			if(fSynchronizing && nLastBlockRequest + 10 < UnifiedTimestamp())
+			/* Request new blocks if requests for new blocks or been 30 seconds. */
+			if(nLastBlockRequest + 30 < UnifiedTimestamp())
 			{
 				/* Request blocks if there is a node. */
 				LLP::CNode* pNode = SelectNode();
 				if(pNode)
 				{
-					std::vector<uint1024> vBegin = { hashBegin };
-					pNode->PushMessage("getblocks", Core::CBlockLocator(vBegin), hashEnd);
+					nLastHeight   = nBestHeight;
+					
+					pNode->PushMessage("getblocks", Core::CBlockLocator(pindexBest), uint1024(0));
 					
 					if(GetArg("-verbose", 0) >= 1)
-						printf("***** Manager::Requested (%s) block range (%s ... 0000000)\n", pNode->GetIPAddress().c_str(), hashBegin.ToString().substr(0, 20).c_str());
+						printf("***** Manager::Requested (%s) block range (%s ... 0000000)\n", pNode->GetIPAddress().c_str(), pindexBest->GetBlockHash().ToString().substr(0, 20).c_str());
 					
 					nLastBlockRequest = UnifiedTimestamp();
 				}
@@ -207,7 +211,7 @@ namespace Core
 
 		while(!fShutdown)
 		{
-			Sleep(2000);
+			Sleep(100);
 				
 			
 			/* Get some more blocks if the block processor is waiting. */
@@ -221,8 +225,8 @@ namespace Core
 
 			
 			/* Block Processor. */
-			if(GetArg("-verbose", 0) >= 1)
-				printf("***** Manager::Process Queue with %u Items\n", vBlocks.size());
+			//if(GetArg("-verbose", 0) >= 1)
+			//	printf("***** Manager::Process Queue with %u Items\n", vBlocks.size());
 
 			
 			/* Run through the list of blocks to see if they need to be connected. */
@@ -243,7 +247,7 @@ namespace Core
 				   blkPool.State(block.hashPrevBlock) != blkPool.INDEXED && 
 				   !mapBlockIndex.count(block.hashPrevBlock)) //NOTE: mapBlockIndex to be deprecated
 				{
-					printf("ORPHANED Height %u %s by Invalid Previous State(%u)\n", block.nHeight, block.hashPrevBlock.ToString().substr(0, 20).c_str(), blkPool.State(block.hashPrevBlock));
+					//printf("ORPHANED Height %u %s by Invalid Previous State(%u)\n", block.nHeight, block.hashPrevBlock.ToString().substr(0, 20).c_str(), blkPool.State(block.hashPrevBlock));
 					
 					break;
 				}
@@ -254,6 +258,9 @@ namespace Core
 					/* If this isn't the main chain synchronization broadcast the block to other nodes. */
 					if(!fSynchronizing)
 					{
+						
+						printf("Pushing best block to Nodes...\n");
+						
 						std::vector<LLP::CInv> vInv = { LLP::CInv(LLP::MSG_BLOCK, hash) };
 						std::vector<LLP::CNode*> vNodes = GetConnections();
 						for(auto node : vNodes)
@@ -271,7 +278,7 @@ namespace Core
 					if(GetArg("-verbose", 0) >= 2)
 						printf("REJECTED %s in %" PRIu64 " us\n", hash.ToString().substr(0, 20).c_str(), cTimer.ElapsedMicroseconds());
 							
-					//blkPool.SetState(hash, blkPool.ERROR_ACCEPT);
+					blkPool.SetState(hash, blkPool.ERROR_ACCEPT);
 					
 					break;
 				}

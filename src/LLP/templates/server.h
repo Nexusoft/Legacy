@@ -145,6 +145,10 @@ namespace LLP
 		/** Main Listening Thread of LLP Server. Handles new Connections and DDOS associated with Connection if enabled. **/
 		void ListeningThread()
 		{
+			/* End the listening thread if LLP set to not listen. */
+			if(!fLISTEN)
+				return;
+			
 			/** Don't listen until all data threads are created. **/
 			while(DATA_THREADS.size() < MAX_THREADS)
 				Sleep(1000);

@@ -269,7 +269,7 @@ namespace Core
 			
 			
 		/* Verbose Debug Output. */
-		if(GetArg("-verbose", 0) >= 1 && output)
+		if(GetArg("-verbose", 0) >= 2)
 		{
 			unsigned int nDays, nHours, nMinutes;
 			GetChainTimes(GetChainAge(pindexFirst->GetBlockTime()), nDays, nHours, nMinutes);
@@ -393,7 +393,7 @@ namespace Core
 			nBits = bnProofOfWorkLimit[1].getuint();
 			
 		/* Console Output */
-		if(GetArg("-verbose", 0) >= 1 && output)
+		if(GetArg("-verbose", 0) >= 2)
 		{
 			unsigned int nDays, nHours, nMinutes;
 			GetChainTimes(GetChainAge(pindexFirst->GetBlockTime()), nDays, nHours, nMinutes);
@@ -517,7 +517,7 @@ namespace Core
 			
 			
 		/* Console Output if Flagged. */
-		if(GetArg("-verbose", 0) >= 1 && output)
+		if(GetArg("-verbose", 0) >= 2)
 		{
 			unsigned int nDays, nHours, nMinutes;
 			GetChainTimes(GetChainAge(pindexFirst->GetBlockTime()), nDays, nHours, nMinutes);

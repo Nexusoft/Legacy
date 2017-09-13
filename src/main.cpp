@@ -559,17 +559,6 @@ bool AppInit2(int argc, char* argv[])
     fAllowDNS = GetBoolArg("-dns");
     fNoListen = !GetBoolArg("-listen", true);
 
-    if (mapArgs.count("-addnode"))
-    {
-        for(auto strAddr : mapMultiArgs["-addnode"])
-        {
-            //LLP::CAddress addr(LLP::CService(strAddr, LLP::GetDefaultPort(), LLP::fAllowDNS));
-            //addr.nTime = 0; // so it won't relay unless successfully connected
-            //if (addr.IsValid())
-            //    Net::addrman.Add(addr, Net::CNetAddr("127.0.0.1"));
-        }
-    }
-
     if (mapArgs.count("-paytxfee"))
     {
         if (!ParseMoney(mapArgs["-paytxfee"], Core::nTransactionFee) || Core::nTransactionFee < Core::MIN_TX_FEE)

@@ -48,7 +48,11 @@ extern const std::string CLIENT_DATE;
 /* Used to Lock-Out Nodes that are running a protocol version that is too old,  
  * Or to allow certain new protocol changes without confusing Old Nodes. */
 extern const int MIN_PROTO_VERSION;
-	
+
+
+/* Minimum Tritium Version. */
+extern const int MIN_TRITIUM_VERSION;
+
 	
 /* Used to determine the features available in the Nexus Network */
 extern const int PROTOCOL_VERSION;

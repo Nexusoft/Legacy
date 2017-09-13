@@ -11,7 +11,6 @@
   
 ____________________________________________________________________________________________*/
 
-#include <string>
 
 #include "include/version.h"
 
@@ -19,12 +18,15 @@ ________________________________________________________________________________
 #include "../LLP/include/network.h"
 
 
+/* Used for features in the database. */
 const int DATABASE_VERSION =
                     1000000 * DATABASE_MAJOR
                   +   10000 * DATABASE_MINOR 
                   +     100 * DATABASE_PATCH
                   +       1 * DATABASE_BUILD;
 
+				  
+/* The database type used (Berklee DB or Lower Level Database) */
 #ifdef USE_LLD
 const std::string DATABASE_NAME("LLD");
 #else
@@ -32,7 +34,7 @@ const std::string DATABASE_NAME("BDB");
 #endif
 
 
-
+/* The version of the actual wallet client. */
 const int CLIENT_VERSION =
                     1000000 * CLIENT_MAJOR
                   +   10000 * CLIENT_MINOR 
@@ -52,12 +54,18 @@ const int PROTOCOL_VERSION =
  * Or to allow certain new protocol changes without confusing Old Nodes. */
 const int MIN_PROTO_VERSION = 10000;
 
+
+/* Used to define the baseline of Tritium Versioning. */
+const int MIN_TRITIUM_VERSION = 20000;
+
 						
+/* Client Version Outputs. */
 const std::string CLIENT_NAME("Tritium");
 const std::string CLIENT_TYPE("Alpha");
 const std::string CLIENT_DATE(__DATE__ " " __TIME__);
 
-						
+
+/* Simple string representative of the version. */
 std::string FormatVersion(int nVersion)
 {
     if (nVersion % 100 == 0)
@@ -67,6 +75,7 @@ std::string FormatVersion(int nVersion)
 }
 
 
+/* Basic client version outputs and the database type. */
 std::string FormatSubVersion()
 {
 	 std::ostringstream ss;
@@ -76,6 +85,7 @@ std::string FormatSubVersion()
 }
 
 
+/* Full version outputs including the databse and protocol version. */
 std::string FormatFullVersion()
 {
     std::ostringstream ss;

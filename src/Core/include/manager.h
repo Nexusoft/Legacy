@@ -60,7 +60,7 @@ namespace Core
 		
 		
 		/* Processing for Meter. */
-		int nProcessed;
+		int nProcessed, nLastHeight;
 		
 		
 		/* Mutex for Node Management. */
@@ -71,7 +71,7 @@ namespace Core
 		CMajority<int> cPeerBlocks;
 		
 		
-		Manager() : LLP::Server<LLP::CNode> (LLP::GetDefaultPort(), 10, false, 1, 20, 30, 30, true, true), ConnectionThread(boost::bind(&Manager::ConnectionManager, this)), ProcessorThread(boost::bind(&Manager::BlockProcessor, this)), InventoryThread(boost::bind(&Manager::InventoryProcessor, this)), MeteringThread(boost::bind(&Manager::ProcessorMeter, this)), hashLastBlock(0), fSynchronizing(false), cPeerBlocks(), txPool(), blkPool(), vTried(), vNew(), fStarted(false) {}
+		Manager() : LLP::Server<LLP::CNode> (LLP::GetDefaultPort(), 10, false, 1, 20, 30, 30, GetBoolArg("-listen", true), true), ConnectionThread(boost::bind(&Manager::ConnectionManager, this)), ProcessorThread(boost::bind(&Manager::BlockProcessor, this)), InventoryThread(boost::bind(&Manager::InventoryProcessor, this)), MeteringThread(boost::bind(&Manager::ProcessorMeter, this)), hashLastBlock(0), fSynchronizing(false), cPeerBlocks(), txPool(), blkPool(), vTried(), vNew(), fStarted(false) {}
 		
 		
 		/* Time Seed Manager. */

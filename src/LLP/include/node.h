@@ -39,8 +39,9 @@ namespace LLP
 		
 	public:
 		
-		/* Mutex for handling node inventory messages. */
-		Mutex_t NODE_MUTEX;
+		/* Constructors for Message LLP Class. */
+		CNode() : MessageConnection(){ }
+		CNode( Socket_t SOCKET_IN, DDOS_Filter* DDOS_IN, bool isDDOS = false ) : MessageConnection( SOCKET_IN, DDOS_IN ) { }
 		
 		
 		/* Node Identifier */
@@ -50,31 +51,23 @@ namespace LLP
 		/* Basic Stats. */
 		std::string strNodeVersion;
 		int nCurrentVersion;
-		int nStartingHeight;
-		
-		
-		/* Positive: Node Stats. */
-		unsigned int nLastMessageTime;
-		unsigned int nNodeGenesisTime;
-		unsigned int nTotalObjectAcks;
-		
-		
-		/* Negative: Node Stats. */
-		unsigned int nTotalBans;
-		unsigned int nTotalRejects;
 		
 		
 		/* Consensus Stats. */
 		uint1024 hashLastCheckpoint;
-		unsigned int nUnifiedOffset;
+		uint1024 hashBestBlock;
+		uint1024 hashLastBlock;
+		
+		
+		/* Average unified offset of node. */
+		unsigned int nBestHeight;
+		int nStartingHeight;
 		
 		
 		/* Behavior Flags*/
-		bool fClient;
 		bool fInbound;
-		bool fNetworkNode;
         bool fTritium;
-		bool fReady;
+		bool fSync;
 		
 		
 		/* Network Statistics. */
@@ -98,30 +91,22 @@ namespace LLP
 		
 		/* Keep track of this nodes bad responses. */
 		std::map<std::string, unsigned int> mapBadResponse;
-
-		
-		
-		/* Constructors for Message LLP Class. */
-		CNode() : MessageConnection(){ }
-		CNode( Socket_t SOCKET_IN, DDOS_Filter* DDOS_IN, bool isDDOS = false ) : MessageConnection( SOCKET_IN, DDOS_IN ) { }
 		
 		
 		/* Virtual Functions to Determine Behavior of Message LLP. */
 		void Event(unsigned char EVENT, unsigned int LENGTH = 0);
+		
+		
+		/* Main message handler once a packet is recieved. */
 		bool ProcessPacket();
+		
+		
+		/* Handle for version message */
 		void PushVersion();
 		
 		
 		/* Send an Address to Node. */
 		void PushAddress(const CAddress& addr);
-
-		
-		/* Keep Track of the Inventory we Already have. */
-		void AddInventoryKnown(const CInv& inv);
-
-		
-		/* Send Inventory We have. */
-		void PushInventory(const CInv& inv);
 		
 		
 		/* Send the DoS Score to DDOS Filter. */
@@ -141,8 +126,8 @@ namespace LLP
 	/* DoS Wrapper for Block Level Functions. */
 	inline bool DoS(CNode* pfrom, int nDoS, bool fReturn)
 	{
-		//if(pfrom)
-		//	pfrom->DDOS->rSCORE += nDoS;
+		if(pfrom)
+			pfrom->DDOS->rSCORE += nDoS;
 			
 		return fReturn;
 	}
