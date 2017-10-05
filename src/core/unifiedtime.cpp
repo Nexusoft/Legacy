@@ -200,15 +200,10 @@ void ThreadUnifiedSamples(void* parg)
 		try
 		{
 		
-			/** Increment the Time Seed Connection Iterator. **/
-			nIterator++;
+			/** Randomize the Time Seed Connection Iterator. **/
+			nIterator = GetRandInt(SEEDS.size() - 1);
 			
 			
-			/** Reset the ITerator if out of Seeds. **/
-			if(nIterator == SEEDS.size())
-			   nIterator = 0;
-				
-				
 			/** Connect to the Next Seed in the Iterator. **/
 			SERVER.IP = SEEDS[nIterator];
 			SERVER.Connect();
