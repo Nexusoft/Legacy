@@ -94,9 +94,9 @@ namespace Core
 	 * TODO: Add selection filtering parameters
 	 */
 	static unsigned int nRequestCounter = 0;
-	LLP::CNode* Manager::SelectNode()
+	LLP::CLegacyNode* Manager::SelectNode()
 	{
-		std::vector<LLP::CNode*> vNodes = GetConnections();
+		std::vector<LLP::CLegacyNode*> vNodes = GetConnections();
 		if(vNodes.size() == 0)
 			return NULL;
 		
@@ -115,7 +115,7 @@ namespace Core
 	
 	/** Sort the block list by its height in ascending order **/
 	bool SortByHeight(const uint1024& nFirst, const uint1024& nSecond)
-	{ 
+	{
 		CBlock blkFirst, blkSecond;
 		
 		pManager->blkPool.Get(nFirst, blkFirst);
@@ -143,7 +143,7 @@ namespace Core
 		{
 			Sleep(100);
 			
-			if(pindexBest->GetBlockTime() > UnifiedTimestamp() - 12 * 60 * 60)
+			if(pindexBest->GetBlockTime() > UnifiedTimestamp() - 60 * 60)
 				fSynchronizing = false;
 			
 			
@@ -158,11 +158,11 @@ namespace Core
 					CBlock blk;
 					blkPool.Get(hash, blk);
 					
-					if(blk.nHeight == nLastHeight + 900)
+					if(blk.nHeight == nLastHeight + 1000)
 					{
 						
 						/* Request blocks if there is a node. */
-						LLP::CNode* pNode = SelectNode();
+						LLP::CLegacyNode* pNode = SelectNode();
 						if(pNode)
 						{
 							nLastHeight   = blk.nHeight;
@@ -178,25 +178,6 @@ namespace Core
 						
 						break;
 					}
-				}
-			}
-				
-				
-			/* Request new blocks if requests for new blocks or been 30 seconds. */
-			if(nLastBlockRequest + 30 < UnifiedTimestamp())
-			{
-				/* Request blocks if there is a node. */
-				LLP::CNode* pNode = SelectNode();
-				if(pNode)
-				{
-					nLastHeight   = nBestHeight;
-					
-					pNode->PushMessage("getblocks", Core::CBlockLocator(pindexBest), uint1024(0));
-					
-					if(GetArg("-verbose", 0) >= 1)
-						printf("***** Manager::Requested (%s) block range (%s ... 0000000)\n", pNode->GetIPAddress().c_str(), pindexBest->GetBlockHash().ToString().substr(0, 20).c_str());
-					
-					nLastBlockRequest = UnifiedTimestamp();
 				}
 			}
 		}
@@ -225,8 +206,8 @@ namespace Core
 
 			
 			/* Block Processor. */
-			//if(GetArg("-verbose", 0) >= 1)
-			//	printf("***** Manager::Process Queue with %u Items\n", vBlocks.size());
+			if(GetArg("-verbose", 0) >= 1)
+				printf("***** Manager::Process Queue with %u Items\n", vBlocks.size());
 
 			
 			/* Run through the list of blocks to see if they need to be connected. */
@@ -242,27 +223,34 @@ namespace Core
 
 				
 				/* Check that previous block exists. */
-				if(blkPool.State(block.hashPrevBlock) != blkPool.CONNECTED &&
-				   blkPool.State(block.hashPrevBlock) != blkPool.ACCEPTED &&
-				   blkPool.State(block.hashPrevBlock) != blkPool.INDEXED && 
-				   !mapBlockIndex.count(block.hashPrevBlock)) //NOTE: mapBlockIndex to be deprecated
+				if(blkPool.State(block.hashPrevBlock) == blkPool.NOTFOUND || !mapBlockIndex.count(block.hashPrevBlock)) //NOTE: mapBlockIndex to be deprecated
 				{
 					//printf("ORPHANED Height %u %s by Invalid Previous State(%u)\n", block.nHeight, block.hashPrevBlock.ToString().substr(0, 20).c_str(), blkPool.State(block.hashPrevBlock));
+					
+					/* Request blocks if there is a node. */
+					LLP::CLegacyNode* pNode = SelectNode();
+					if(pNode)
+					{
+						LLP::CInv inv(LLP::MSG_BLOCK, block.hashPrevBlock);
+						std::vector<LLP::CInv> vInv = { inv };
+						pNode->PushMessage("getdata", vInv);
+							
+						if(GetArg("-verbose", 0) >= 1)
+							printf("***** Manager::Requested ORPHAN %s\n", hash.ToString().substr(0, 20).c_str());
+						
+					}
 					
 					break;
 				}
 				
 				/* Check the block to the blockchain. */
-				if(blkPool.Accept(block, NULL))
+				if(blkPool.Accept(block))
 				{
 					/* If this isn't the main chain synchronization broadcast the block to other nodes. */
 					if(!fSynchronizing)
 					{
-						
-						printf("Pushing best block to Nodes...\n");
-						
 						std::vector<LLP::CInv> vInv = { LLP::CInv(LLP::MSG_BLOCK, hash) };
-						std::vector<LLP::CNode*> vNodes = GetConnections();
+						std::vector<LLP::CLegacyNode*> vNodes = GetConnections();
 						for(auto node : vNodes)
 							node->PushMessage("inv", vInv);
 					}
@@ -310,6 +298,19 @@ namespace Core
 	void Manager::AddAddress(LLP::CAddress cAddress)
 	{
 		vNew.push_back(cAddress);
+	}
+	
+	
+	/* Get the addresses of connected nodes. */
+	std::vector<LLP::CAddress> Manager::GetAddresses()
+	{
+		std::vector<LLP::CAddress> vAddr;
+		
+		std::vector<LLP::CLegacyNode*> vNodes = GetConnections();
+		for(auto node : vNodes)
+			vAddr.push_back(node->GetAddress());
+			
+		return vAddr;
 	}
 		
 		

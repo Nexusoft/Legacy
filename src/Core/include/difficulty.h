@@ -31,31 +31,27 @@ namespace Core
 	void GetChainTimes(unsigned int nAge, unsigned int& nDays, unsigned int& nHours, unsigned int& nMinutes);
 	
 	
-	/* Minimum work required after nTime from last checkpoint. Used to compare blocks difficulty to a minimum probable difficulty after nTime */
-	unsigned int ComputeMinWork(const CBlockIndex* pcheckpoint, unsigned int nTime, int nChannel);
-	
-	
 	/* Get Weighted Times functions to weight the average on an iterator */
 	int64 GetWeightedTimes(const CBlockIndex* pindex, unsigned int nDepth);
 
 	
 	/* Switching function for each difficulty re-target [each channel uses their own version] */
-	unsigned int GetNextTargetRequired(const CBlockIndex* pindex, int nChannel, bool output);
+	unsigned int GetNextTargetRequired(const CBlockIndex* pindex, int nChannel);
 	
 	
 	/* Trust Channel Retargeting: Modulate Difficulty based on production rate. */
-	unsigned int RetargetTrust(const CBlockIndex* pindex, bool output);
+	unsigned int RetargetTrust(const CBlockIndex* pindex);
 	
 	
 	/* Prime Channel Retargeting. Very different than GPU or POS retargeting. Scales the Maximum
 		Increase / Decrease by Network Difficulty. This helps to keep increases more time based than
 		mathematically based. This means that as the difficulty rises, the maximum up/down in difficulty
 		will decrease keeping the time difference in difficulty jumps the same from diff 1 - 100. */
-	unsigned int RetargetPrime(const CBlockIndex* pindex, bool output);
+	unsigned int RetargetPrime(const CBlockIndex* pindex);
 
 	
 	/* Hash Channel Retargeting: Modulate Difficulty based on production rate. */
-	unsigned int RetargetHash(const CBlockIndex* pindex, bool output);
+	unsigned int RetargetHash(const CBlockIndex* pindex);
 }
 
 #endif

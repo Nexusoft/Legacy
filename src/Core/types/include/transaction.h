@@ -612,8 +612,6 @@ namespace Core
 		int GetDepthInMainChain() const { CBlockIndex *pindexRet; return GetDepthInMainChain(pindexRet); }
 		bool IsInMainChain() const { return GetDepthInMainChain() > 0; }
 		int GetBlocksToMaturity() const;
-		bool AcceptToMemoryPool(LLD::CIndexDB& indexdb, bool fCheckInputs=true);
-		bool AcceptToMemoryPool();
 	};
 	
 	

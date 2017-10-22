@@ -17,7 +17,7 @@ ________________________________________________________________________________
 #include "include/checkpoints.h"
 #include "include/message.h"
 #include "include/hosts.h"
-#include "include/node.h"
+#include "include/legacy.h"
 #include "include/inv.h"
 
 #include "../LLC/include/random.h"
@@ -33,7 +33,7 @@ namespace LLP
 {	
 	
 	/* Push a Message With Information about This Current Node. */
-	void CNode::PushVersion()
+	void CLegacyNode::PushVersion()
 	{
 		/* Random Session ID */
 		RAND_bytes((unsigned char*)&nSessionID, sizeof(nSessionID));
@@ -55,7 +55,7 @@ namespace LLP
 	
 	
 	/** Handle Event Inheritance. **/
-	void CNode::Event(unsigned char EVENT, unsigned int LENGTH)
+	void CLegacyNode::Event(unsigned char EVENT, unsigned int LENGTH)
 	{
 		/** Handle any DDOS Packet Filters. **/
 		if(EVENT == EVENT_HEADER)
@@ -114,29 +114,6 @@ namespace LLP
 				cLatencyTimer.Reset();
 				
 				PushMessage("ping", nSessionID);
-				
-				if(fSync)
-				{
-					std::map<uint1024, Core::CBlockIndex*>::iterator mi = Core::mapBlockIndex.find(hashLastBlock);
-					if (mi != Core::mapBlockIndex.end())
-					{
-						Core::CBlockIndex* pindex = mi->second;
-						Core::CBlock block;
-						for(int i = 0; i < 2000 && pindex->pnext; i++)
-						{
-							if(!block.ReadFromDisk(pindex))
-								break;
-								
-							PushMessage("block", block);
-							
-							pindex = pindex->pnext;
-							hashLastBlock = pindex->GetBlockHash();
-						}
-						
-						printf("***** Pushed 2000 Blocks in Sync to Node %s\n", addrThisNode.ToString().c_str());
-					}	
-					
-				}
 			}
 		}
 			
@@ -173,43 +150,12 @@ namespace LLP
 		
 	/** This function is necessary for a template LLP server. It handles your 
 		custom messaging system, and how to interpret it from raw packets. **/
-	bool CNode::ProcessPacket()
+	bool CLegacyNode::ProcessPacket()
 	{
 		CDataStream ssMessage(INCOMING.DATA, SER_NETWORK, MIN_PROTO_VERSION);
 		
 		
-		if (INCOMING.GetMessage() == "tritium")
-		{
-			ssMessage >> nCurrentVersion >> addrThisNode >> hashLastCheckpoint >> hashBestBlock >> nBestHeight;
-			
-			/* Tritium Node Logging. */
-			if(GetArg("-verbose", 0) >= 1)
-				printf("***** Tritium Node: version %d, blocks=%d\n", nCurrentVersion, nBestHeight);
-			
-			/* Push response Tritium Message. */
-			if(!fOUTGOING)
-				PushMessage("tritium", nCurrentVersion, CAddress(CService(GetIPAddress(), GetDefaultPort())), Core::hashLastCheckpoint, Core::hashBestChain, Core::nBestHeight);
-			else
-				PushMessage("sync", Core::hashBestChain);
-			
-			/* Set the Tritium Flag. */
-			fTritium = true;
-			
-			return true;
-		}
-		
-		else if(INCOMING.GetMessage() == "sync")
-		{
-			ssMessage >> hashLastBlock;
-			
-			//fSync = true;
-			
-			return true;
-		}
-			
-			
-		/* Get a Time Offset from the Connection. */
-		else if(INCOMING.GetMessage() == "getoffset")
+		if(INCOMING.GetMessage() == "getoffset")
 		{
 			/* Don't service unified seeds unless time is unified. */
 			if(!Core::fTimeUnified)
@@ -223,6 +169,10 @@ namespace LLP
 			uint64 nTimestamp;
 			ssMessage >> nTimestamp;
 			
+			/* Log into the sent requests Map. */
+			mapSentRequests[nRequestID] = Core::UnifiedTimestamp(true);
+			
+			/* Calculate the offset to current clock. */
 			int   nOffset    = (int)(Core::UnifiedTimestamp(true) - nTimestamp);
 			PushMessage("offset", nRequestID, Core::UnifiedTimestamp(true), nOffset);
 				
@@ -293,6 +243,7 @@ namespace LLP
 			return true;
 		}
 		
+		
 		/* Push a transaction into the Node's Recieved Transaction Queue. */
 		else if (INCOMING.GetMessage() == "tx")
 		{
@@ -336,7 +287,7 @@ namespace LLP
 			{
 				std::vector<CInv> vInv = { CInv(MSG_TX, tx.GetHash()) };
 				
-				std::vector<LLP::CNode*> vNodes = Core::pManager->GetConnections();
+				std::vector<LLP::CLegacyNode*> vNodes = Core::pManager->GetConnections();
 				for(auto node : vNodes)
 					if(node != this)
 						node->PushMessage("inv", vInv);
@@ -392,7 +343,7 @@ namespace LLP
 			
 			
 			/* Process the Block. */
-			if(!Core::pManager->blkPool.Process(block, this))
+			if(!Core::pManager->blkPool.Process(block))
 			{
 				if(GetArg("-verbose", 0) >= 3)
 					printf("failed block processing %s\n", hashBlock.ToString().substr(0, 20).c_str());
@@ -470,11 +421,6 @@ namespace LLP
 			{
 				if(GetArg("verbose", 0) >= 1)
 					printf("***** Node %s detected on the tritium protocol %i; moving to tritium message sets\n", GetIPAddress().c_str(), PROTOCOL_VERSION);
-				
-				if(!fOUTGOING)
-					PushMessage("tritium", PROTOCOL_VERSION, CAddress(CService(GetIPAddress(), GetDefaultPort())), Core::hashLastCheckpoint, Core::hashBestChain, Core::nBestHeight);
-				
-				return true;
 			}
 			
 			
@@ -499,8 +445,7 @@ namespace LLP
 			else
 				PushVersion();
 			
-			//TODO remove this once IsInitialBlockDownload is changed
-			Core::pManager->cPeerBlocks.Add(nStartingHeight);
+			PushMessage("getaddr");
 		}
 
 		
@@ -649,6 +594,7 @@ namespace LLP
 					}
 				}
 				
+				
 				else if(vInv[i].type == MSG_TX)
 				{
 					Core::CTransaction tx;
@@ -730,9 +676,9 @@ namespace LLP
 		/* TODO: Change this Algorithm. */
 		else if (INCOMING.GetMessage() == "getaddr")
 		{
-			//vector<Net::CAddress> vAddr = Net::addrman.GetAddr();
-			//BOOST_FOREACH(const Net::CAddress &addr, vAddr)
-			//	pfrom->PushAddress(addr);
+			std::vector<LLP::CAddress> vAddr = Core::pManager->GetAddresses();
+			
+			PushMessage("addr", vAddr);
 		}
 
 

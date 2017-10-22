@@ -27,7 +27,7 @@ ________________________________________________________________________________
 
 #include "../../LLP/include/mining.h"
 #include "../../LLP/include/message.h"
-#include "../../LLP/include/node.h"
+#include "../../LLP/include/legacy.h"
 
 #include "../../LLD/include/index.h"
 
@@ -37,7 +37,7 @@ ________________________________________________________________________________
 using namespace std;
 using namespace boost;
 
-/* Two Dimensional Blockchain
+/* Three Dimensional Blockchain
  * 
  * --------- BLK ----------
  * ||||||||||||||||||||||||
@@ -82,35 +82,6 @@ namespace Core
 			
 		return pindex;
 	}
-	
-
-	/* Old procotol command, TODO: determine whether to utilzie or not.
-	 * Used to determine consensus between nodes on the best chain.
-	 */
-	int GetNumBlocksOfPeers() { return cPeerBlockCounts.Majority(); }
-	
-	
-	/* This can easily be replaced with a synchronize command that probes the total blocks on all nodes
-	 * in the LLP rather than relying on a great number of assumptions that are always changing.
-	 */
-	bool IsInitialBlockDownload()
-	{
-		if (pindexBest == NULL)
-			return true;
-			
-		static int64 nLastUpdate;
-		static CBlockIndex* pindexLastBest;
-		if (pindexBest != pindexLastBest)
-		{
-			pindexLastBest = pindexBest;
-			nLastUpdate = UnifiedTimestamp();
-		}
-		//return (UnifiedTimestamp() - nLastUpdate < 10 &&
-		//		pindexBest->GetBlockTime() < UnifiedTimestamp() - 24 * 60 * 60);
-		
-		return false;
-	}
-	
 			
 			
 	/* TODO: Replace this with an LLD instance. */
@@ -137,7 +108,7 @@ namespace Core
 
 		// Flush stdio buffers and commit to disk before returning
 		fflush(fileout);
-		if (!IsInitialBlockDownload() || (nBestHeight+1) % 500 == 0)
+		if ((nBestHeight+1) % 500 == 0)
 		{
 	#ifdef WIN32
 			_commit(_fileno(fileout));
@@ -204,6 +175,7 @@ namespace Core
 			*this = pindex->GetBlockHeader();
 			return true;
 		}
+		
 		if (!ReadFromDisk(pindex->nFile, pindex->nBlockPos, fReadTransactions))
 			return false;
 		if (GetHash() != pindex->GetBlockHash())
@@ -239,7 +211,7 @@ namespace Core
 		}
 
 		// Nexus: clean up wallet after disconnecting coinstake
-		BOOST_FOREACH(CTransaction& tx, vtx)
+		for(auto tx : vtx)
 			SyncWithWallets(tx, this, false, false);
 
 		return true;
@@ -256,7 +228,7 @@ namespace Core
 	 * 
 	 * TODO: Depricate this method.
 	 */
-	bool CBlock::ConnectBlock(LLD::CIndexDB& indexdb, CBlockIndex* pindex, LLP::CNode* pfrom)
+	bool CBlock::ConnectBlock(LLD::CIndexDB& indexdb, CBlockIndex* pindex)
 	{
 
 		// Do not allow blocks that contain transactions which 'overwrite' older transactions,
@@ -264,12 +236,12 @@ namespace Core
 		// If such overwrites are allowed, coinbases and transactions depending upon those
 		// can be duplicated to remove the ability to spend the first instance -- even after
 		// being sent to another address.
-		BOOST_FOREACH(CTransaction& tx, vtx)
+		for(auto tx : vtx)
 		{
 			CTxIndex txindexOld;
 			if (indexdb.ReadTxIndex(tx.GetHash(), txindexOld))
 			{
-				BOOST_FOREACH(CDiskTxPos &pos, txindexOld.vSpent)
+				for(auto pos : txindexOld.vSpent)
 					if (pos.IsNull()){
 						
 						return error("ConnectBlock() : Transaction Disk Index is Null %s", tx.GetHash().ToString().c_str());
@@ -287,11 +259,11 @@ namespace Core
 		int64 nValueOut = 0;
 		unsigned int nSigOps = 0;
 		unsigned int nIterator = 0;
-		BOOST_FOREACH(CTransaction& tx, vtx)
+		for(auto tx : vtx)
 		{
 			nSigOps += tx.GetLegacySigOpCount();
 			if (nSigOps > MAX_BLOCK_SIGOPS)
-				return LLP::DoS(pfrom, 100, error("ConnectBlock() : too many sigops"));
+				return error("ConnectBlock() : too many sigops");
 
 			CDiskTxPos posThisTx(pindex->nFile, pindex->nBlockPos, nTxPos);
 			nTxPos += ::GetSerializeSize(tx, SER_DISK, DATABASE_VERSION);
@@ -311,7 +283,7 @@ namespace Core
 				// an incredibly-expensive-to-validate block.
 				nSigOps += tx.TotalSigOps(mapInputs);
 				if (nSigOps > MAX_BLOCK_SIGOPS)
-					return LLP::DoS(pfrom, 100, error("ConnectBlock() : too many sigops"));
+					return error("ConnectBlock() : too many sigops");
 
 				int64 nTxValueIn = tx.GetValueIn(mapInputs);
 				int64 nTxValueOut = tx.GetValueOut();
@@ -326,6 +298,7 @@ namespace Core
 			nIterator++;
 			mapQueuedChanges[tx.GetHash()] = CTxIndex(posThisTx, tx.vout.size());
 		}
+		
 
 		// track money supply and mint amount info
 		pindex->nMint = nValueOut - nValueIn;
@@ -361,7 +334,7 @@ namespace Core
 		}
 
 		// Watch for transactions paying to me
-		BOOST_FOREACH(CTransaction& tx, vtx)
+		for(auto tx : vtx)
 			SyncWithWallets(tx, this, true);
 
 		return true;
@@ -591,7 +564,7 @@ namespace Core
 			if (!pindexBest)
 				return error("LoadBlockIndex() : new CBlockIndex failed");
 		
-			if(!pManager->blkPool.Index(block, pindexBest, NULL))
+			if(!pManager->blkPool.Index(block, pindexBest))
 				return error("LoadBlockIndex() : genesis block not accepted");
 			
 			/* Commit the Genesis to disk. */
@@ -783,7 +756,7 @@ namespace Core
 		pblock->hashMerkleRoot = pblock->BuildMerkleTree();
 		pblock->nChannel       = nChannel;
 		pblock->nHeight        = pindexPrev->nHeight + 1;
-		pblock->nBits          = GetNextTargetRequired(pindexPrev, pblock->GetChannel(), false);
+		pblock->nBits          = GetNextTargetRequired(pindexPrev, pblock->GetChannel());
 		pblock->nNonce         = 1;
 		
 		pblock->UpdateTime();
@@ -824,7 +797,7 @@ namespace Core
 				
 				/* Establish Prioity based on previous transaction. */
 				double dPriority = 0;
-				BOOST_FOREACH(const CTxIn& txin, tx.vin)
+				for(auto txin : tx.vin)
 				{
 					CTransaction txPrev;
 					CTxIndex txindex;
@@ -999,21 +972,15 @@ namespace Core
 		printf("%s ", DateTimeStrFormat(UnifiedTimestamp()).c_str());
 		//printf("generated %s\n", FormatMoney(pblock->vtx[0].vout[0].nValue).c_str());
 
-		// Found a solution
+		
 		{
-			//LOCK(cs_main);
 			if (pblock->hashPrevBlock != hashBestChain && mapBlockIndex[pblock->hashPrevBlock]->GetChannel() == pblock->GetChannel())
 				return error("Nexus Miner : generated block is stale");
 
-			// Track how many getdata requests this block gets
-			//{
-			//	LOCK(wallet.cs_wallet);
-			//	wallet.mapRequestCount[pblock->GetHash()] = 0;
-			//}
 
 			/** Process the Block to see if it gets Accepted into Blockchain. **/
-			//if (!ProcessBlock(NULL, pblock))
-			//	return error("Nexus Miner : ProcessBlock, block not accepted\n");
+			if (!pManager->blkPool.Process(*pblock))
+				return error("Nexus Miner : ProcessBlock, block not accepted\n");
 				
 			/** Keep the Reserve Key only if it was used in a block. **/
 			reservekey.KeepKey();
@@ -1082,7 +1049,7 @@ namespace Core
 		// Retrace how far back it was in the sender's branch
 		int nDistance = 0;
 		int nStep = 1;
-		BOOST_FOREACH(const uint1024& hash, vHave)
+		for(const uint1024& hash : vHave)
 		{
 			std::map<uint1024, CBlockIndex*>::iterator mi = mapBlockIndex.find(hash);
 			if (mi != mapBlockIndex.end())
@@ -1098,6 +1065,7 @@ namespace Core
 		return nDistance;
 	}
 
+	
 	CBlockIndex* CBlockLocator::GetBlockIndex()
 	{
 		// Find the first block the caller has in the main chain
@@ -1114,6 +1082,7 @@ namespace Core
 		return pindexGenesisBlock;
 	}
 
+	
 	uint1024 CBlockLocator::GetBlockHash()
 	{
 		// Find the first block the caller has in the main chain
@@ -1130,6 +1099,7 @@ namespace Core
 		return hashGenesisBlock;
 	}
 
+	
 	/* bdg note: GetHeight is never used. */
 	int CBlockLocator::GetHeight()
 	{
@@ -1140,5 +1110,3 @@ namespace Core
 	}
 
 }
-
-/** 2017-03: Reviewed by bdg. **/

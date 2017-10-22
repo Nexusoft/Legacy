@@ -18,81 +18,6 @@ ________________________________________________________________________________
 
 using namespace std;
 
-/* Diffiuculty is Linear
- * Difficulty 0.000016 per Second 0.133239 Total 1227 [0.737034 %]
- * 
- * Difficulty 0.000534 Total 122 [0.118752 %]
- * Difficulty 0.000507 Total 130 [0.126539 %]
- * Difficulty 0.000482 Total 150 [0.146007 %]
- * Difficulty 0.000457 Total 147 [0.143087 %]
- * Difficulty 0.000435 Total 155 [0.150874 %]
- * Difficulty 0.000413 Total 174 [0.169368 %]
- * Difficulty 0.000392 Total 187 [0.182022 %
- * Difficulty 0.000373 Total 192 [0.186889 %]
- * Difficulty 0.000354 Total 217 [0.211223 %]
- * Difficulty 0.000336 Total 179 [0.174235 %]
- * Difficulty 0.000319 Total 197 [0.191755 %]
- * Difficulty 0.000303 Total 241 [0.234584 %]
- * Difficulty 0.000288 Total 237 [0.230691 %]
- * Difficulty 0.000274 Total 256 [0.249185 %]
- * Difficulty 0.000260 Total 272 [0.264759 %]
- * Difficulty 0.000247 Total 286 [0.278386 %]
- * Difficulty 0.000235 Total 296 [0.288120 %]
- * ifficulty 0.000223 Total 295 [0.287147 %]
- * Difficulty 0.000212 Total 317 [0.308561 %]
- * Difficulty 0.000201 Total 338 [0.329002 %]
- * Difficulty 0.000191 Total 367 [0.357230 %]
- * Difficulty 0.000182 Total 396 [0.385458 %]
- * Difficulty 0.000173 Total 398 [0.387404 %]
- * Difficulty 0.000164 Total 394 [0.383511 %]
- * Difficulty 0.000156 Total 462 [0.449701 %]
- * Difficulty 0.000148 Total 448 [0.436073 %]
- * Difficulty 0.000141 Total 474 [0.461381 %]
- * Difficulty 0.000134 Total 505 [0.491556 %]
- * Difficulty 0.000127 Total 530 [0.515890 %]
- * Difficulty 0.000121 Total 539 [0.524651 %]
- * Difficulty 0.000115 Total 569 [0.553852 %]
- * Difficulty 0.000109 Total 621 [0.604468 %]
- * Difficulty 0.000103 Total 624 [0.607388 %]
- * Difficulty 0.000098 Total 694 [0.675524 %]
- * Difficulty 0.000093 Total 765 [0.744634 %]
- * Difficulty 0.000089 Total 805 [0.783569 %]
- * Difficulty 0.000084 Total 777 [0.756315 %]
- * Difficulty 0.000080 Total 844 [0.821531 %]
- * Difficulty 0.000076 Total 881 [0.857546 %]
- * Difficulty 0.000072 Total 944 [0.918869 %]
- * Difficulty 0.000069 Total 1018 [0.990899 %]
- * Difficulty 0.000065 Total 1065 [1.036648 %]
- * Difficulty 0.000062 Total 1120 [1.090183 %]
- * Difficulty 0.000059 Total 1159 [1.128145 %]
- * Difficulty 0.000056 Total 1169 [1.137879 %]
- * Difficulty 0.000053 Total 1316 [1.280966 %]
- * Difficulty 0.000050 Total 1372 [1.335475 %]
- * Difficulty 0.000048 Total 1445 [1.406531 %]
- * Difficulty 0.000045 Total 1528 [1.487322 %]
- * Difficulty 0.000043 Total 1546 [1.504843 %]
- * Difficulty 0.000041 Total 1653 [1.608994 %]
- * Difficulty 0.000039 Total 1712 [1.666423 %]
- * Difficulty 0.000037 Total 1879 [1.828977 %]
- * Difficulty 0.000035 Total 1876 [1.826057 %]
- * Difficulty 0.000033 Total 2094 [2.038254 %]
- * Difficulty 0.000032 Total 2177 [2.119044 %]
- * Difficulty 0.000030 Total 2254 [2.193994 %]
- * Difficulty 0.000029 Total 2422 [2.357522 %]
- * Difficulty 0.000027 Total 2577 [2.508395 %]
- * Difficulty 0.000026 Total 2603 [2.533703 %]
- * Difficulty 0.000025 Total 2731 [2.658296 %]
- * Difficulty 0.000023 Total 2972 [2.892880 %]
- * Difficulty 0.000022 Total 2937 [2.858812 %]
- * Difficulty 0.000021 Total 3193 [3.107996 %]
- * Difficulty 0.000020 Total 3404 [3.313379 %]
- * Difficulty 0.000019 Total 3563 [3.468146 %]
- * Difficulty 0.000018 Total 3803 [3.701757 %]
- * Difficulty 0.000017 Total 4046 [3.938288 %]
- * Difficulty 0.000016 Total 4212 [4.099869 %]
-
-*/
-
 namespace Core
 {
 	/* Determines the Decimal of nBits per Channel for a decent "Frame of Reference".
@@ -140,17 +65,6 @@ namespace Core
 	}
 	
 	
-	/* Minimum work required after nTime from last checkpoint
-		Used to compare blocks difficulty to a minimum probable difficulty after nTime */
-	unsigned int ComputeMinWork(const CBlockIndex* pcheckpoint, unsigned int nTime, int nChannel)
-	{
-	
-		//TODO: Precise Calculation on Maximum Decrease of Difficulty from Version 3 +
-		
-		return 0;
-	}
-	
-	
 	/* Get Weighted Times functions to weight the average on an iterator to give more weight to the most recent blocks
 		in the average to let previous block nDepth back still influence difficulty, but to let the most recent block
 		have the most influence in the adjustment. */
@@ -180,23 +94,24 @@ namespace Core
 
 	
 	/* Switching function for each difficulty re-target [each channel uses their own version] */
-	unsigned int GetNextTargetRequired(const CBlockIndex* pindex, int nChannel, bool output)
+	unsigned int GetNextTargetRequired(const CBlockIndex* pindex, int nChannel)
 	{
 		if(nChannel == 0)
-			return RetargetTrust(pindex, output);
+			return RetargetTrust(pindex);
 			
 		else if(nChannel == 1)
-			return RetargetPrime(pindex, output);
+			return RetargetPrime(pindex);
 			
 		else if(nChannel == 2)
-			return RetargetHash(pindex, output);
+			return RetargetHash(pindex);
+		
 		
 		return 0;
 	}
 	
 	
 	/* Trust Retargeting: Modulate Difficulty based on production rate. */
-	unsigned int RetargetTrust(const CBlockIndex* pindex, bool output)
+	unsigned int RetargetTrust(const CBlockIndex* pindex)
 	{
 
 		/* Get Last Block Index [1st block back in Channel]. **/
@@ -284,7 +199,7 @@ namespace Core
 	
 	
 	/* Prime Retargeting: Modulate Difficulty based on production rate. */
-	unsigned int RetargetPrime(const CBlockIndex* pindex, bool output)
+	unsigned int RetargetPrime(const CBlockIndex* pindex)
 	{
 		
 		/* Get Last Block Index [1st block back in Channel]. */
@@ -409,7 +324,7 @@ namespace Core
 	
 	
 	/* Trust Retargeting: Modulate Difficulty based on production rate. */
-	unsigned int RetargetHash(const CBlockIndex* pindex, bool output)
+	unsigned int RetargetHash(const CBlockIndex* pindex)
 	{
 	
 		/* Get the Last Block Index [1st block back in Channel]. */

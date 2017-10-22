@@ -67,7 +67,7 @@ namespace LLP
 		}
 
 		/* Adds a new connection to current Data Thread */
-		bool AddConnection(Socket_t SOCKET, DDOS_Filter* DDOS)
+		void AddConnection(Socket_t SOCKET, DDOS_Filter* DDOS)
 		{
 			int nSlot = FindSlot();
 			if(nSlot == CONNECTIONS.size())
@@ -81,8 +81,6 @@ namespace LLP
 			CONNECTIONS[nSlot]->fCONNECTED = true;
 			
 			nConnections ++;
-			
-			return true;
 		}
 		
 		/* Adds a new connection to current Data Thread */

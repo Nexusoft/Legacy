@@ -757,9 +757,6 @@ namespace Core
 				
 			if (pwalletMain->IsLocked())
 				continue;
-
-			if (IsInitialBlockDownload())
-				continue;
 				
 			CBlock* pblock = CreateNewBlock(reservekey, pwalletMain, 0);
 			dTrustWeight = 0;
@@ -895,15 +892,6 @@ namespace Core
 						
 						break;
 					}
-					
-					//TODO: Integrate with Node Manager
-					//if (!CheckBlock(pblock, NULL))
-					//{
-					//	if(GetArg("-verbose", 0) >= 1)
-					//		error("Stake Minter : Check Block Failed...");
-						
-					//	break;
-					//}
 					
 					if(GetArg("-verbose", 0) >= 1)
 						pblock->print();

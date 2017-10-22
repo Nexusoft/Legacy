@@ -16,7 +16,7 @@ ________________________________________________________________________________
 #include "../types/include/transaction.h"
 
 #include "../../LLD/include/index.h"
-#include "../../LLP/include/node.h"
+#include "../../LLP/include/legacy.h"
 
 
 namespace Core
@@ -63,12 +63,12 @@ namespace Core
 		
 		/* Disallow Coinbase Transaction into TxPool */
 		if (tx.IsCoinBase())
-			return LLP::DoS(NULL, 100, error("CTxPool::Accept() : coinbase as individual tx"));
+			return error("CTxPool::Accept() : coinbase as individual tx");
 			
 			
 		/* Disallow Coinstake Transaction into TxPool. */
 		if (tx.IsCoinStake())
-			return LLP::DoS(NULL, 100, error("CTxPool::Accept() : coinstake as individual tx"));
+			return error("CTxPool::Accept() : coinstake as individual tx");
 		
 		
 		/* Disallow non-standard transactions except in TestNet (For Testing new Transaciton Types). */
@@ -79,7 +79,7 @@ namespace Core
 		/* Check for Duplicate Transactions in TxPool. */
 		uint512 hash = tx.GetHash();
 		if(Has(hash))
-			return error("CTxPool::accept() : transaction already exists in pool");
+			return error("CTxPool::Accept() : transaction already exists in pool");
 		
 		
 		/* Furthur Input checking if Flagged. */
@@ -88,7 +88,7 @@ namespace Core
 			
 			/* Check whether the Disk contains the Transaction. */
 			if (indexdb.ContainsTx(hash))
-				return error("CTxPool::accept() : transaction already exists on disk");
+				return error("CTxPool::Accept() : transaction already exists on disk");
 			
 			
 			/* Check for conflicting inputs in the pool. */

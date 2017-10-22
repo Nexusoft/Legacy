@@ -19,7 +19,7 @@ ________________________________________________________________________________
 
 #include "../../LLD/include/index.h"
 
-#include "../../LLP/include/node.h"
+#include "../../LLP/include/legacy.h"
 
 #include "../../Util/include/parse.h"
 
@@ -60,19 +60,17 @@ namespace Core
 	/* This function is responsible for running the basic process checks for (check and accept)
 	 * In order to determine if the block is a valid block, but allow multiprocessing of the data.
 	 */
-	bool CBlkPool::Process(CBlock blk, LLP::CNode* pfrom)
+	bool CBlkPool::Process(CBlock blk)
 	{
 		/* Timer object for runtime calculations. */
 		Timer cTimer;
 		cTimer.Reset();
 		
-		
 		/* Get the block Hash. */
 		uint1024 hashBlock = blk.GetHash();
 			
-			
 		/* Check the Block validity. TODO: Send process message for Trust Depreciation (LLP:Dos). */
-		if(Check(blk, pfrom))
+		if(Check(blk))
 		{
 
 			/* Set the state to verified. */
@@ -82,10 +80,7 @@ namespace Core
 				Add(hashBlock, blk, CHECKED);
 			
 			if(GetArg("-verbose", 0) >= 3)
-				printf("PASSED %s checks in %" PRIu64 " us (%s)\n", hashBlock.ToString().substr(0, 20).c_str(), cTimer.ElapsedMicroseconds(), pfrom->GetAddress().ToStringIP().c_str());
-			
-			/* Set the node that block was recieved from. */
-			//SetNode(hashBlock, pfrom);
+				printf("PASSED %s checks in %" PRIu64 " us\n", hashBlock.ToString().substr(0, 20).c_str(), cTimer.ElapsedMicroseconds());
 		}
 		else
 		{
@@ -93,10 +88,7 @@ namespace Core
 				return error("INVALID checks in %" PRIu64 " us\n", cTimer.ElapsedMicroseconds());
 			
 			/* Set the proper state for the new block. */
-			//Add(hashBlock, blk, ERROR_CHECK);
-			
-			/* Set the node that block was recieved from. */
-			//SetNode(hashBlock, pfrom);
+			Add(hashBlock, blk, ERROR_CHECK);
 				
 			return false;
 		}
@@ -107,57 +99,57 @@ namespace Core
 	
 	/** Check Block: These are Checks done before the Block is sunken in the Blockchain.
 		These are done before a block is orphaned to ensure it is valid before trying to obtain its chain. **/
-	bool CBlkPool::Check(CBlock blk, LLP::CNode* pfrom)
+	bool CBlkPool::Check(CBlock blk)
 	{
 		
 		/* Check the Size limits of the Current Block. */
 		if (blk.vtx.empty() || blk.vtx.size() > MAX_BLOCK_SIZE || ::GetSerializeSize(blk, SER_NETWORK, PROTOCOL_VERSION) > MAX_BLOCK_SIZE)
-			return LLP::DoS(pfrom, 100, error("CheckBlock() : size limits failed"));
+			return error("CBlkPool::Check() : size limits failed");
 			
 		
 		/* Make sure the Block was Created within Active Channel. */
 		if (blk.GetChannel() > 2)
-			return LLP::DoS(pfrom, 50, error("CheckBlock() : Channel out of Range."));
+			return error("CBlkPool::Check() : Channel out of Range.");
 		
 		
 		/* Check that the Timestamp isn't made in the future. */
 		if (blk.GetBlockTime() > UnifiedTimestamp() + MAX_UNIFIED_DRIFT)
-			return error("AcceptBlock() : block timestamp too far in the future");
+			return error("CBlkPool::Check() : block timestamp too far in the future");
 	
 		
 		/* Do not allow blocks to be accepted above the Current Block Version. */
 		if(blk.nVersion > (fTestNet ? TESTNET_BLOCK_CURRENT_VERSION : NETWORK_BLOCK_CURRENT_VERSION))
-			return LLP::DoS(pfrom, 50, error("CheckBlock() : Invalid Block Version."));
+			return error("CBlkPool::Check() : Invalid Block Version.");
 	
 		
 		/* Only allow POS blocks in Version 4. */
 		if(blk.IsProofOfStake() && blk.nVersion < 4)
-			return LLP::DoS(pfrom, 50, error("CheckBlock() : Proof of Stake Blocks Rejected until Version 4."));
+			return error("CBlkPool::Check() : Proof of Stake Blocks Rejected until Version 4.");
 			
 		
 		/* Check the Proof of Work Claims. */
 		if (blk.IsProofOfWork() && !blk.VerifyWork())
-			return LLP::DoS(pfrom, 50, error("CheckBlock() : Invalid Proof of Work"));
+			return error("CBlkPool::Check() : Invalid Proof of Work");
 
 		
 		/* Check the Network Launch Time-Lock. */
 		if (blk.nHeight > 0 && blk.GetBlockTime() <= (fTestNet ? NEXUS_TESTNET_TIMELOCK : NEXUS_NETWORK_TIMELOCK))
-			return LLP::DoS(pfrom, 50, ("CheckBlock() : Block Created before Network Time-Lock"));
+			return error("CBlkPool::Check() : Block Created before Network Time-Lock");
 			
 		
 		/* Check the Current Channel Time-Lock. */
 		if (blk.nHeight > 0 && blk.GetBlockTime() < (fTestNet ? CHANNEL_TESTNET_TIMELOCK[blk.GetChannel()] : CHANNEL_NETWORK_TIMELOCK[blk.GetChannel()]))
-			return error("CheckBlock() : Block Created before Channel Time-Lock. Channel Opens in %" PRId64 " Seconds", (fTestNet ? CHANNEL_TESTNET_TIMELOCK[blk.GetChannel()] : CHANNEL_NETWORK_TIMELOCK[blk.GetChannel()]) - UnifiedTimestamp());
+			return error("CBlkPool::Check() : Block Created before Channel Time-Lock. Channel Opens in %" PRId64 " Seconds", (fTestNet ? CHANNEL_TESTNET_TIMELOCK[blk.GetChannel()] : CHANNEL_NETWORK_TIMELOCK[blk.GetChannel()]) - UnifiedTimestamp());
 			
 		
 		/* Check the Previous Version to Block Time-Lock. Allow Version (Current -1) Blocks for 1 Hour after Time Lock. */
 		if (blk.nVersion > 1 && blk.nVersion == (fTestNet ? TESTNET_BLOCK_CURRENT_VERSION - 1 : NETWORK_BLOCK_CURRENT_VERSION - 1) && (blk.GetBlockTime() - 3600) > (fTestNet ? TESTNET_VERSION_TIMELOCK[TESTNET_BLOCK_CURRENT_VERSION - 2] : NETWORK_VERSION_TIMELOCK[NETWORK_BLOCK_CURRENT_VERSION - 2]))
-			return error("CheckBlock() : Version %u Blocks have been Obsolete for %" PRId64 " Seconds", blk.nVersion, (UnifiedTimestamp() - (fTestNet ? TESTNET_VERSION_TIMELOCK[TESTNET_BLOCK_CURRENT_VERSION - 2] : NETWORK_VERSION_TIMELOCK[TESTNET_BLOCK_CURRENT_VERSION - 2])));	
+			return error("CBlkPool::Check() : Version %u Blocks have been Obsolete for %" PRId64 " Seconds", blk.nVersion, (UnifiedTimestamp() - (fTestNet ? TESTNET_VERSION_TIMELOCK[TESTNET_BLOCK_CURRENT_VERSION - 2] : NETWORK_VERSION_TIMELOCK[TESTNET_BLOCK_CURRENT_VERSION - 2])));	
 			
 		
 		/* Check the Current Version Block Time-Lock. */
 		if (blk.nVersion >= (fTestNet ? TESTNET_BLOCK_CURRENT_VERSION : NETWORK_BLOCK_CURRENT_VERSION) && blk.GetBlockTime() <= (fTestNet ? TESTNET_VERSION_TIMELOCK[TESTNET_BLOCK_CURRENT_VERSION - 2] : NETWORK_VERSION_TIMELOCK[NETWORK_BLOCK_CURRENT_VERSION - 2]))
-			return error("CheckBlock() : Version %u Blocks are not Accepted for %" PRId64 " Seconds", blk.nVersion, (UnifiedTimestamp() - (fTestNet ? TESTNET_VERSION_TIMELOCK[TESTNET_BLOCK_CURRENT_VERSION - 2] : NETWORK_VERSION_TIMELOCK[NETWORK_BLOCK_CURRENT_VERSION - 2])));	
+			return error("CBlkPool::Check() : Version %u Blocks are not Accepted for %" PRId64 " Seconds", blk.nVersion, (UnifiedTimestamp() - (fTestNet ? TESTNET_VERSION_TIMELOCK[TESTNET_BLOCK_CURRENT_VERSION - 2] : NETWORK_VERSION_TIMELOCK[NETWORK_BLOCK_CURRENT_VERSION - 2])));	
 			
 		
 		/* Check the Required Mining Outputs (blocks version 3 and 4 only). */
@@ -167,41 +159,41 @@ namespace Core
 			
 			/* Check the Coinbase Tx Size. */
 			if(nSize < 3)
-				return error("CheckBlock() : Coinbase Too Small.");
+				return error("CBlkPool::Check() : Coinbase Too Small.");
 				
 			if(!fTestNet)
 			{
 				if (!VerifyAddressList(blk.vtx[0].vout[nSize - 2].scriptPubKey, AMBASSADOR_SCRIPT_SIGNATURES))
-					return error("CheckBlock() : Block %u Channel Signature Not Verified.", blk.nHeight);
+					return error("CBlkPool::Check() : Block %u Channel Signature Not Verified.", blk.nHeight);
 
 				if (!VerifyAddressList(blk.vtx[0].vout[nSize - 1].scriptPubKey, DEVELOPER_SCRIPT_SIGNATURES))
-					return error("CheckBlock() :  Block %u Developer Signature Not Verified.", blk.nHeight);
+					return error("CBlkPool::Check() :  Block %u Developer Signature Not Verified.", blk.nHeight);
 			}
 			
 			else
 			{
 				if (!VerifyAddress(blk.vtx[0].vout[nSize - 2].scriptPubKey, TESTNET_DUMMY_SIGNATURE))
-					return error("CheckBlock() :  Block %u Channel Signature Not Verified.", blk.nHeight);
+					return error("CBlkPool::Check() :  Block %u Channel Signature Not Verified.", blk.nHeight);
 
 				if (!VerifyAddress(blk.vtx[0].vout[nSize - 1].scriptPubKey, TESTNET_DUMMY_SIGNATURE))
-					return error("CheckBlock() :  Block %u Developer Signature Not Verified.", blk.nHeight);
+					return error("CBlkPool::Check() :  Block %u Developer Signature Not Verified.", blk.nHeight);
 			}
 		}
 
 		
 		/* Check the Coinbase Transaction is First, with no repetitions. */
 		if (blk.vtx.empty() || (!blk.vtx[0].IsCoinBase() && blk.nChannel > 0))
-			return LLP::DoS(pfrom, 100, error("CheckBlock() : first tx is not coinbase for Proof of Work Block"));
+			return error("CBlkPool::Check() : first tx is not coinbase for Proof of Work Block");
 			
 		
 		/* Check the Coinstake Transaction is First, with no repetitions. */
 		if (blk.vtx.empty() || (!blk.vtx[0].IsCoinStake() && blk.nChannel == 0))
-			return LLP::DoS(pfrom, 100, error("CheckBlock() : first tx is not coinstake for Proof of Stake Block"));
+			return error("CBlkPool::Check() : first tx is not coinstake for Proof of Stake Block");
 			
 			
 		/* Check coinbase/coinstake timestamp is at most 20 minutes before block time */
 		if (blk.GetBlockTime() > (int64)blk.vtx[0].nTime + ((blk.nVersion < 4) ? 1200 : 3600))
-			return LLP::DoS(pfrom, 50, error("CheckBlock() : coinbase/coinstake timestamp is too early"));
+			return error("CBlkPool::Check() : coinbase/coinstake timestamp is too early");
 		
 		
 		/* Check the Transactions in the Block. */
@@ -211,17 +203,17 @@ namespace Core
 			
 			/* Check for duplicate Coinbase / Coinstake Transactions. */
 			if (i > 0 && (blk.vtx[i].IsCoinBase() || blk.vtx[i].IsCoinStake()))
-				return LLP::DoS(pfrom, 100, error("CheckBlock() : more than one coinbase / coinstake"));
+				return error("CBlkPool::Check() : more than one coinbase / coinstake");
 				
 			
 			/* Verify Transaction Validity. */
 			if (!blk.vtx[i].CheckTransaction())
-				return LLP::DoS(pfrom, 50, error("CheckBlock() : CheckTransaction failed"));
+				return error("CBlkPool::Check() : CheckTransaction failed");
 				
 			
 			/* Transaction timestamp must be less than block timestamp. */
 			if (blk.GetBlockTime() < (int64)blk.vtx[i].nTime)
-				return LLP::DoS(pfrom, 50, error("CheckBlock() : block timestamp earlier than transaction timestamp"));
+				return error("CBlkPool::Check() : block timestamp earlier than transaction timestamp");
 			
 			
 			/* Check for Duplicate txid's. */
@@ -235,34 +227,34 @@ namespace Core
 		
 		/* Reject Block if there are duplicate txid's. */
 		if (uniqueTx.size() != blk.vtx.size())
-			return LLP::DoS(pfrom, 100, error("CheckBlock() : duplicate transaction"));
+			return error("CBlkPool::Check() : duplicate transaction");
 
 		
 		/* Check the signature operations are within bound. */
 		if (nSigOps > MAX_BLOCK_SIGOPS)
-			return LLP::DoS(pfrom, 100, error("CheckBlock() : out-of-bounds SigOpCount"));
+			return error("CBlkPool::Check() : out-of-bounds SigOpCount");
 
 		
 		/* Check the Merkle Root builds as Advertised. */
 		if (blk.hashMerkleRoot != blk.BuildMerkleTree())
-			return LLP::DoS(pfrom, 100, error("CheckBlock() : hashMerkleRoot mismatch"));
+			return error("CBlkPool::Check() : hashMerkleRoot mismatch");
 		
 		
 		/* Check the Block Signature. */
 		if (!blk.CheckBlockSignature())
-			return LLP::DoS(pfrom, 100, error("CheckBlock() : bad block signature"));
+			return error("CBlkPool::Check() : bad block signature");
 
 		return true;
 	}
 	
 	
-	bool CBlkPool::Accept(CBlock blk, LLP::CNode* pfrom)
+	bool CBlkPool::Accept(CBlock blk)
 	{
 		
 		/** Find the Previous block from hashPrevBlock. **/
 		std::map<uint1024, CBlockIndex*>::iterator mi = mapBlockIndex.find(blk.hashPrevBlock);
 		if (mi == mapBlockIndex.end())
-			return LLP::DoS(pfrom, 10, error("AcceptBlock() : prev block not found"));
+			return error("CBlkPool::Accept() : prev block not found");
 		
 		
 		CBlockIndex* pindexPrev = (*mi).second;
@@ -271,22 +263,22 @@ namespace Core
 		
 		/** Check the Height of Block to Previous Block. **/
 		if(nPrevHeight != blk.nHeight)
-			return LLP::DoS(pfrom, 100, error("AcceptBlock() : incorrect block height."));
+			return error("CBlkPool::Accept() : incorrect block height.");
 		
 
 		/** Check that the nBits match the current Difficulty. **/
-		if (blk.nBits != GetNextTargetRequired(pindexPrev, blk.GetChannel(), !IsInitialBlockDownload()))
-			return LLP::DoS(pfrom, 100, error("AcceptBlock() : incorrect proof-of-work/proof-of-stake %s", blk.GetHash().ToString().substr(0, 20).c_str()));
+		if (blk.nBits != GetNextTargetRequired(pindexPrev, blk.GetChannel()))
+			return error("CBlkPool::Accept() : incorrect proof-of-work/proof-of-stake %s", blk.GetHash().ToString().substr(0, 20).c_str());
 			
 			
 		/** Check that Block is Descendant of Hardened Checkpoints. **/
 		if(pindexPrev && !IsDescendant(pindexPrev))
-			return error("AcceptBlock() : Not a descendant of Last Checkpoint");
+			return error("CBlkPool::Accept() : Not a descendant of Last Checkpoint");
 
 			
 		/** Check That Block Timestamp is not before previous block. **/
 		if (blk.GetBlockTime() <= pindexPrev->GetBlockTime())
-			return error("AcceptBlock() : block's timestamp too early Block: % " PRId64 " Prev: %" PRId64 "", blk.GetBlockTime(), pindexPrev->GetBlockTime());
+			return error("CBlkPool::Accept() : block's timestamp too early Block: % " PRId64 " Prev: %" PRId64 "", blk.GetBlockTime(), pindexPrev->GetBlockTime());
 			
 			
 		/** Check the Coinbase Transactions in Block Version 3. **/
@@ -301,15 +293,15 @@ namespace Core
 					
 			/** Check that the Mining Reward Matches the Coinbase Calculations. **/
 			if (nMiningReward != GetCoinbaseReward(pindexPrev, blk.GetChannel(), 0))
-				return error("AcceptBlock() : miner reward mismatch %" PRId64 " : %" PRId64 "", nMiningReward, GetCoinbaseReward(pindexPrev, blk.GetChannel(), 0));
+				return error("CBlkPool::Accept() : miner reward mismatch %" PRId64 " : %" PRId64 "", nMiningReward, GetCoinbaseReward(pindexPrev, blk.GetChannel(), 0));
 					
 			/** Check that the Exchange Reward Matches the Coinbase Calculations. **/
 			if (blk.vtx[0].vout[nSize - 2].nValue != GetCoinbaseReward(pindexPrev, blk.GetChannel(), 1))
-				return error("AcceptBlock() : exchange reward mismatch %" PRId64 " : %" PRId64 "\n", blk.vtx[0].vout[1].nValue, GetCoinbaseReward(pindexPrev, blk.GetChannel(), 1));
+				return error("CBlkPool::Accept() : exchange reward mismatch %" PRId64 " : %" PRId64 "\n", blk.vtx[0].vout[1].nValue, GetCoinbaseReward(pindexPrev, blk.GetChannel(), 1));
 						
 			/** Check that the Developer Reward Matches the Coinbase Calculations. **/
 			if (blk.vtx[0].vout[nSize - 1].nValue != GetCoinbaseReward(pindexPrev, blk.GetChannel(), 2))
-				return error("AcceptBlock() : developer reward mismatch %" PRId64 " : %" PRId64 "\n", blk.vtx[0].vout[2].nValue, GetCoinbaseReward(pindexPrev, blk.GetChannel(), 2));
+				return error("CBlkPool::Accept() : developer reward mismatch %" PRId64 " : %" PRId64 "\n", blk.vtx[0].vout[2].nValue, GetCoinbaseReward(pindexPrev, blk.GetChannel(), 2));
 					
 		}
 		
@@ -318,54 +310,54 @@ namespace Core
 		else if (blk.IsProofOfStake())
 		{
 			if(!cTrustPool.Check(blk))
-				return LLP::DoS(pfrom, 50, error("AcceptBlock() : Invalid Trust Key"));
+				return error("CBlkPool::Accept() : Invalid Trust Key");
 			
 			/** Verify the Stake Kernel. **/
 			if(!blk.VerifyStake())
-				return LLP::DoS(pfrom, 50, error("AcceptBlock() : Invalid Proof of Stake"));
+				return error("CBlkPool::Accept() : Invalid Proof of Stake");
 		}
 		
 			
 		/** Check that Transactions are Finalized. **/
 		for(auto tx : blk.vtx)
 			if (!tx.IsFinal(blk.nHeight, blk.GetBlockTime()))
-				return LLP::DoS(pfrom, 10, error("AcceptBlock() : contains a non-final transaction"));
+				return error("CBlkPool::Accept() : contains a non-final transaction");
 			
 							
 		/* Check Block Disk Usage. */
 		if (!CheckDiskSpace(::GetSerializeSize(blk, SER_DISK, DATABASE_VERSION)))
-			return error("AcceptBlock() : Out of Disk Space.");
+			return error("CBlkPool::Accept() : Out of Disk Space.");
 						
 				
 		/* Write Block to Disk. */
 		unsigned int nFile = 0;
 		unsigned int nBlockPos = 0;
 		if (!blk.WriteToDisk(nFile, nBlockPos))
-			return error("AcceptBlock() : Writing Failed %s Height %u\n", blk.GetHash().ToString().substr(0, 20).c_str(), blk.nHeight);
+			return error("CBlkPool::Accept() : Writing Failed %s Height %u\n", blk.GetHash().ToString().substr(0, 20).c_str(), blk.nHeight);
 						
 				
 		/* Write Block Index Data. */
 		Core::CBlockIndex* pindexNew = new Core::CBlockIndex(nFile, nBlockPos, blk);
-		if (!Index(blk, pindexNew, NULL))
-			return error("AcceptBlock() : Indexing Failed %s Height %u\n", blk.GetHash().ToString().substr(0, 20).c_str(), blk.nHeight);
+		if (!Index(blk, pindexNew))
+			return error("CBlkPool::Accept() : Indexing Failed %s Height %u\n", blk.GetHash().ToString().substr(0, 20).c_str(), blk.nHeight);
 		
 		
 		/* Write Index to DB. */
 		indexdb.TxnBegin();
 		if (!indexdb.WriteBlockIndex(CDiskBlockIndex(pindexNew)))
-			return error("Index() : Failed to Write Index %s Height %u\n", blk.GetHash().ToString().substr(0, 20).c_str(), blk.nHeight);
+			return error("CBlkPool::Accept() : Failed to Write Index %s Height %u\n", blk.GetHash().ToString().substr(0, 20).c_str(), blk.nHeight);
 				
 		
 		/* Set the best chain if is best block. */
 		if (pindexNew->nChainTrust > nBestChainTrust)
 		{
 			/* Connect the block and commit to LLD. */
-			if (!Connect(pindexNew, NULL))
+			if (!Connect(pindexNew))
 			{
 				printf("##### Block Processor::Connect failed %s\n", blk.GetHash().ToString().substr(0, 20).c_str());
 				indexdb.TxnAbort();
 									
-				return error("Accept() : Failed to Connect Best Block");
+				return error("CBlkPool::Accept() : Failed to Connect Best Block");
 			}
 		}
 		
@@ -382,7 +374,7 @@ namespace Core
 		
 		TODO: Remove this Indexing Function when moved to LLD indexing
 	*/
-	bool CBlkPool::Index(CBlock blk, CBlockIndex* pindexNew, LLP::CNode* pfrom)
+	bool CBlkPool::Index(CBlock blk, CBlockIndex* pindexNew)
 	{
 		/* Get blocks hash. */
 		const uint1024 hash = blk.GetHash();
@@ -418,7 +410,7 @@ namespace Core
 				
 				/** Block Version 3 Check. Disable Reserves from going below 0. **/
 				if(pindexNew->nVersion >= 3 && pindexNew->nCoinbaseRewards[nType] >= nReserve)
-					return error("Index() : Coinbase Transaction too Large. Out of Reserve Limits");
+					return error("CBlkPool::Index() : Coinbase Transaction too Large. Out of Reserve Limits");
 				
 				pindexNew->nReleasedReserve[nType] =  nReserve - pindexNew->nCoinbaseRewards[nType];
 				
@@ -451,7 +443,8 @@ namespace Core
 		return true;
 	}
 	
-	bool CBlkPool::Connect(CBlockIndex* pindexNew, LLP::CNode* pfrom)
+
+	bool CBlkPool::Connect(CBlockIndex* pindexNew)
 	{
 		uint1024 hash = pindexNew->GetBlockHash();
 		if (pindexGenesisBlock == NULL && hash == hashGenesisBlock)
@@ -467,11 +460,11 @@ namespace Core
 			{
 				while (plonger->nHeight > pfork->nHeight)
 					if (!(plonger = plonger->pprev))
-						return error("CBlock::SetBestChain() : plonger->pprev is null");
+						return error("CBlkPool::Connect() : plonger->pprev is null");
 				if (pfork == plonger)
 					break;
 				if (!(pfork = pfork->pprev))
-					return error("CBlock::SetBestChain() : pfork->pprev is null");
+					return error("CBlkPool::Connect : pfork->pprev is null");
 			}
 
 			
@@ -502,14 +495,14 @@ namespace Core
 			{
 				CBlock block;
 				if (!block.ReadFromDisk(pindex))
-					return error("CBlock::SetBestChain() : ReadFromDisk for disconnect failed");
+					return error("CBlkPool::Connect() : ReadFromDisk for disconnect failed");
 				if (!block.DisconnectBlock(indexdb, pindex))
-					return error("CBlock::SetBestChain() : DisconnectBlock %s failed", pindex->GetBlockHash().ToString().substr(0,20).c_str());
+					return error("CBlkPool::Connect() : DisconnectBlock %s failed", pindex->GetBlockHash().ToString().substr(0,20).c_str());
 					
 				
 				/* Remove Transactions from Current Trust Keys */
 				if(block.IsProofOfStake() && !cTrustPool.Remove(block))
-					return error("CBlock::SetBestChain() : Disconnect Failed to Remove Trust Key at Block %s", pindex->GetBlockHash().ToString().substr(0,20).c_str());
+					return error("CBlkPool::Connect() : Disconnect Failed to Remove Trust Key at Block %s", pindex->GetBlockHash().ToString().substr(0,20).c_str());
 				
 				
 				/* Set the block's state in blkPool. */
@@ -531,11 +524,11 @@ namespace Core
 				CBlockIndex* pindex = vConnect[i];
 				CBlock block;
 				if (!block.ReadFromDisk(pindex))
-					return error("CBlock::SetBestChain() : ReadFromDisk for connect failed");
+					return error("CBlkPool::Connect() : ReadFromDisk for connect failed");
 				
 				
-				if (!block.ConnectBlock(indexdb, pindex, pfrom))
-					return error("CBlock::SetBestChain() : ConnectBlock %s Height %u failed", pindex->GetBlockHash().ToString().substr(0,20).c_str(), pindex->nHeight);
+				if (!block.ConnectBlock(indexdb, pindex))
+					return error("CBlkPool::Connect() : ConnectBlock %s Height %u failed", pindex->GetBlockHash().ToString().substr(0,20).c_str(), pindex->nHeight);
 				
 				
 				/* Harden a pending checkpoint if this is the case. */
@@ -545,7 +538,7 @@ namespace Core
 				
 				/* Add Transaction to Current Trust Keys */
 				if(block.IsProofOfStake() && !cTrustPool.Accept(block))
-					return error("CBlock::SetBestChain() : Failed To Accept Trust Key Block.");
+					return error("CBlkPool::Connect() : Failed To Accept Trust Key Block.");
 				
 				
 				/* Set the block's state in blkPool. */
@@ -561,7 +554,7 @@ namespace Core
 			
 			/* Write the Best Chain to the Index Database LLD. */
 			if (!indexdb.WriteHashBestChain(pindexNew->GetBlockHash()))
-				return error("CBlock::SetBestChain() : WriteHashBestChain failed");
+				return error("CBlkPool::Connect() : WriteHashBestChain failed");
 			
 			
 			/* Disconnect Shorter Branch in Memory. */
@@ -594,7 +587,7 @@ namespace Core
 		
 		
 		if(GetArg("-verbose", 0) >= 2)
-			printf("SetBestChain: new best=%s  height=%d  trust=%" PRIu64 "  moneysupply=%s\n", hashBestChain.ToString().substr(0,20).c_str(), nBestHeight, nBestChainTrust, FormatMoney(pindexBest->nMoneySupply).c_str());
+			printf("CBlkPool::Connect() : best=%s  height=%d  trust=%" PRIu64 "  moneysupply=%s\n", hashBestChain.ToString().substr(0,20).c_str(), nBestHeight, nBestChainTrust, FormatMoney(pindexBest->nMoneySupply).c_str());
 
 		
 		/*

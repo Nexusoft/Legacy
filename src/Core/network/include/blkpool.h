@@ -17,10 +17,9 @@ ________________________________________________________________________________
 #include "../../../LLC/types/uint1024.h"
 #include "../../../LLD/include/index.h"
 #include "../../../LLP/templates/pool.h"
+#include "../../../LLP/templates/types.h"
 
 #include "../../../Core/types/include/block.h"
-
-namespace LLP { class CNode;    }
 
 namespace Core
 {		
@@ -29,12 +28,9 @@ namespace Core
 	class CBlockHolding : public LLP::CHoldingObject<CBlock>
 	{
 	public:
-		LLP::CNode* Node; //TODO: Handle multiple nodes
 		
-		
-		CBlockHolding() : LLP::CHoldingObject<CBlock>(), Node() {}
-		CBlockHolding(uint64 TimestampIn, unsigned char StateIn, CBlock ObjectIn) : LLP::CHoldingObject<CBlock>(TimestampIn, StateIn, ObjectIn), Node() {}
-		CBlockHolding(uint64 TimestampIn, unsigned char StateIn, CBlock ObjectIn, LLP::CNode* NodeIn) : LLP::CHoldingObject<CBlock>(TimestampIn, StateIn, ObjectIn), Node(NodeIn) {}
+		CBlockHolding() : LLP::CHoldingObject<CBlock>() {}
+		CBlockHolding(uint64 TimestampIn, unsigned char StateIn, CBlock ObjectIn) : LLP::CHoldingObject<CBlock>(TimestampIn, StateIn, ObjectIn) {}
 	};
 	
 	
@@ -88,11 +84,10 @@ namespace Core
 		 * Each stage of validation the block recieves gets a different state in the pool
 		 * 
 		 * @param[in] blk The block object to process
-		 * @param[out] pfrom The node the block was recieved from
 		 * 
 		 * @return Returns trus if it passes validation checks, false if failed.
 		 */
-		bool Process(CBlock blk, LLP::CNode* pfrom);
+		bool Process(CBlock blk);
 		
 		
 		/** Check Block before adding
@@ -101,12 +96,11 @@ namespace Core
 		 * of previous blocks in the blockchain.
 		 * 
 		 * @param[in] blk The Block object to check
-		 * @param[out] pfrom The Node that block was recievewd from for DoS and Trust filters
 		 * 
 		 * @return Returns true if the block passes basic tests.
 		 * 
 		 */
-		bool Check(CBlock blk, LLP::CNode* pfrom);
+		bool Check(CBlock blk);
 		
 		
 		/** Accdept the Block into Disk
@@ -115,12 +109,11 @@ namespace Core
 		 * This should be done after the block is checked.
 		 * 
 		 * @param[in] blk The block object to accept
-		 * @param[out] pfrom The Node that block was recieved from for DoS and Trust filters
 		 * 
 		 * @return Returns true if the block is valid to be added to the blockchain.
 		 * 
 		 */
-		bool Accept(CBlock blk, LLP::CNode* pfrom);
+		bool Accept(CBlock blk);
 		
 		
 		/** Index the block to disk positions
@@ -130,12 +123,11 @@ namespace Core
 		 * 
 		 * @param[in] blk The block object to added
 		 * @param[out] pindexNew The new index object to be returned
-		 * @param[out] pfrom The Node that block was recieved from for DoS and Trust filters
 		 * 
 		 * @return Returns true if the block was valid in the adding, False if it failed.
 		 * 
 		 */
-		bool Index(CBlock blk, CBlockIndex* pindexNew, LLP::CNode* pfrom);
+		bool Index(CBlock blk, CBlockIndex* pindexNew);
 		
 		
 		/** Connect
@@ -145,46 +137,12 @@ namespace Core
 		 * 
 		 * @param[in] indexdb The LLD database instance for the transaction (ACID)
 		 * @param[in] pindexNew The index object that is being appended as best block
-		 * @param[out] pfrom The Node that block was recieved from for Dos and Trust filters
 		 * 
 		 * @return Returns true if the block was successfully appended as the best block.
 		 * 
 		 */
-		bool Connect(CBlockIndex* pindexNew, LLP::CNode* pfrom);
+		bool Connect(CBlockIndex* pindexNew);
 		
-		
-		/** Set the Node that serviced the data
-		 * 
-		 * @param[in] Index Template argument to add selected index
-		 * @param[in] NodeIn The node to set into object
-		 * 
-		 */
-		void SetNode(uint1024 Index, LLP::CNode* NodeIn)
-		{ 
-			LOCK(MUTEX);
-			
-			if(!Has(Index))
-				return;
-			
-			mapObjects[Index].Node      = NodeIn;
-			mapObjects[Index].Timestamp = Core::UnifiedTimestamp();
-		}
-		
-		
-		/** Get the node that serviced the data
-		 * 
-		 * @param[in] Index Template argument to add selected index
-		 * 
-		 */
-		LLP::CNode* GetNode(uint1024 Index)
-		{
-			LOCK(MUTEX);
-			
-			if(!Has(Index))
-				return NULL;
-			
-			return mapObjects[Index].Node;
-		}
 		
 	};
 	

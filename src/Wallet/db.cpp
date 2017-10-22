@@ -177,8 +177,6 @@ namespace Wallet
 			nMinutes = 2;
 		if (strFile == "blkindex.dat")
 			nMinutes = 2;
-		if (strFile == "blkindex.dat" && Core::IsInitialBlockDownload())
-			nMinutes = 5;
 
 		dbenv.txn_checkpoint(nMinutes ? GetArg("-dblogsize", 100)*1024 : 0, nMinutes, 0);
 

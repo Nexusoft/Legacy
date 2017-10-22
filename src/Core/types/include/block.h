@@ -23,7 +23,7 @@ class CBigNum;
 namespace LLP 
 { 
 	class Coinbase; 
-	class CNode;
+	class CLegacyNode;
 }
 
 namespace LLD 
@@ -295,7 +295,7 @@ namespace Core
 		
 		
 		/* Connect all associated inputs from a block. */
-		bool ConnectBlock(LLD::CIndexDB& indexdb, CBlockIndex* pindex, LLP::CNode* pfrom = NULL);
+		bool ConnectBlock(LLD::CIndexDB& indexdb, CBlockIndex* pindex);
 		
 		
 		/* Verify the Proof of Work satisfies network requirements. */
@@ -687,10 +687,6 @@ namespace Core
 	
 	/* Search back for an index of given Mining Channel. */
 	const CBlockIndex* GetLastChannelIndex(const CBlockIndex* pindex, int nChannel);
-	
-	
-	/* Determine if the node is syncing from scratch. */
-	bool IsInitialBlockDownload();
 
 	
 	

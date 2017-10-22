@@ -68,9 +68,6 @@ namespace LLP
 			sscanf(strAddress.c_str(), "%hhu.%hhu.%hhu.%hhu", &vAddress[0], &vAddress[1], &vAddress[2], &vAddress[3]);
 			unsigned int ADDRESS = (vAddress[0] << 24) + (vAddress[1] << 16) + (vAddress[2] << 8) + vAddress[3];
 					
-			/* Handle the DDOS Checking. */
-			//LOCK(DDOS_MUTEX);
-			//{
 			/* Create new DDOS Filter if NEeded. */
 			if(!DDOS_MAP.count(ADDRESS))
 				DDOS_MAP[ADDRESS] = new DDOS_Filter(DDOS_TIMESPAN);
@@ -78,8 +75,6 @@ namespace LLP
 			/* DDOS Operations: Only executed when DDOS is enabled. */
 			if((fDDOS && DDOS_MAP[ADDRESS]->Banned()))
 				return false;
-				
-			//}
 			
 			/* Find a balanced Data Thread to Add Connection to. */
 			int nThread = FindThread();

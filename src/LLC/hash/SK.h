@@ -36,6 +36,28 @@ namespace LLC
 		
 		/* Hashing template for Checksums */
 		template<typename T1>
+		inline unsigned int SK32(const T1 pbegin, const T1 pend)
+		{
+			static unsigned char pblank[1];
+			
+			unsigned int skein;
+			Skein_256_Ctxt_t ctx;
+			Skein_256_Init  (&ctx, 32);
+			Skein_256_Update(&ctx, (pbegin == pend ? pblank : (unsigned char*)&pbegin[0]), (pend - pbegin) * sizeof(pbegin[0]));
+			Skein_256_Final (&ctx, (unsigned char *)&skein);
+			
+			unsigned int keccak;
+			Keccak_HashInstance ctx_keccak;
+			Keccak_HashInitialize(&ctx_keccak, 1344, 256, 32, 0x06);
+			Keccak_HashUpdate(&ctx_keccak, (unsigned char *)&skein, 32);
+			Keccak_HashFinal(&ctx_keccak, (unsigned char *)&keccak);
+			
+			return keccak;
+		}
+		
+		
+		/* Hashing template for Checksums */
+		template<typename T1>
 		inline uint64 SK64(const T1 pbegin, const T1 pend)
 		{
 			static unsigned char pblank[1];

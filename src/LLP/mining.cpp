@@ -248,16 +248,8 @@ namespace LLP
 		{
 			Packet PACKET   = this->INCOMING;
 			
-
-			if(Core::IsInitialBlockDownload() ) 
-			{ 
-				printf("%%%%%%%%%% Mining LLP: Rejected Request...Downloadning BLockchain\n"); return false; 
-			}
-
 			if( pwalletMain->IsLocked()) 
-			{ 
 				printf("%%%%%%%%%% Mining LLP: Rejected Request...Wallet Locked\n"); return false; 
-			}
 			
 			
 			/* Set the Mining Channel this Connection will Serve Blocks for. */

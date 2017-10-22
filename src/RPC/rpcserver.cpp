@@ -22,7 +22,7 @@ ________________________________________________________________________________
 #include "../LLC/include/random.h"
 #include "../LLD/include/index.h"
 #include "../LLP/include/permissions.h"
-#include "../LLP/include/node.h"
+#include "../LLP/include/legacy.h"
 #include "../Util/include/ui_interface.h"
 #include "../Util/include/debug.h"
 #include "../Util/include/args.h"
@@ -295,7 +295,7 @@ namespace RPC
 		Array ret;
 
 		/* TODO: NODE MANAGER GRAB ACTIVE NODES AND DUMP STATS
-		BOOST_FOREACH(const CNode& stats, vstats) {
+		BOOST_FOREACH(const CLegacyNode& stats, vstats) {
 			Object obj;
 
 			obj.push_back(Pair("addr", stats.addrName));
@@ -426,8 +426,8 @@ namespace RPC
 		
 		const Core::CBlockIndex* pindexCPU = Core::GetLastChannelIndex(Core::pindexBest, 1);
 		const Core::CBlockIndex* pindexGPU = Core::GetLastChannelIndex(Core::pindexBest, 2);
-		obj.push_back(Pair("primeDifficulty",        Core::GetDifficulty(Core::GetNextTargetRequired(Core::pindexBest, 1, false), 1)));
-		obj.push_back(Pair("hashDifficulty",         Core::GetDifficulty(Core::GetNextTargetRequired(Core::pindexBest, 2, false), 2)));
+		obj.push_back(Pair("primeDifficulty",        Core::GetDifficulty(Core::pindexBest->nBits, 1)));
+		obj.push_back(Pair("hashDifficulty",         Core::GetDifficulty(Core::pindexBest->nBits, 2)));
 		obj.push_back(Pair("primeReserve",       ValueFromAmount(pindexCPU->nReleasedReserve[0])));
 		obj.push_back(Pair("hashReserve",        ValueFromAmount(pindexGPU->nReleasedReserve[0])));
 		obj.push_back(Pair("primeValue",       ValueFromAmount(Core::GetCoinbaseReward(Core::pindexBest, 1, 0))));
@@ -2411,7 +2411,7 @@ namespace RPC
 		  << "Content-Length: " << strMsg.size() << "\r\n"
 		  << "Connection: close\r\n"
 		  << "Accept: application/json\r\n";
-		BOOST_FOREACH(const PAIRTYPE(string, string)& item, mapRequestHeaders)
+		for(auto item : mapRequestHeaders)
 			s << item.first << ": " << item.second << "\r\n";
 		s << "\r\n" << strMsg;
 
@@ -2594,7 +2594,7 @@ namespace RPC
 		if (strAddress == asio::ip::address_v4::loopback().to_string())
 			return true;
 		const vector<string>& vAllow = mapMultiArgs["-rpcallowip"];
-		BOOST_FOREACH(string strAllow, vAllow)
+		for(auto strAllow : vAllow)
 			if (WildcardMatch(strAddress, strAllow))
 				return true;
 		return false;

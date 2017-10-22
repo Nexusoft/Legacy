@@ -1312,7 +1312,7 @@ namespace Wallet
 
 				// Mark old coins as spent
 				set<CWalletTx*> setCoins;
-				BOOST_FOREACH(const Core::CTxIn& txin, wtxNew.vin)
+				for(auto txin : wtxNew.vin)
 				{
 					CWalletTx &coin = mapWallet[txin.prevout.hash];
 					coin.BindWallet(this);
@@ -1329,15 +1329,17 @@ namespace Wallet
 			mapRequestCount[wtxNew.GetHash()] = 0;
 
 			// Broadcast
-			if (!wtxNew.AcceptToMemoryPool())
+			LLD::CIndexDB db("rw");
+			if (Core::pManager->txPool.Accept(db, wtxNew, true))
 			{
 				// This must not fail. The transaction has already been signed and recorded.
 				printf("CommitTransaction() : Error: Transaction not valid");
 				return false;
 			}
+			
 			wtxNew.RelayWalletTransaction();
 		}
-		MainFrameRepaint();
+		
 		return true;
 	}
 

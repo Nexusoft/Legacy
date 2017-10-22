@@ -18,7 +18,7 @@ ________________________________________________________________________________
 #include "Core/include/manager.h"
 
 #include "LLP/include/time.h"
-#include "LLP/include/node.h"
+#include "LLP/include/legacy.h"
 #include "LLP/include/hosts.h"
 #include "LLP/include/network.h"
 #include "LLP/templates/server.h"

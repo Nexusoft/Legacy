@@ -16,7 +16,7 @@ ________________________________________________________________________________
 
 #include "../../LLP/templates/server.h"
 #include "../../LLP/include/network.h"
-#include "../../LLP/include/node.h"
+#include "../../LLP/include/legacy.h"
 
 #include "../network/include/txpool.h"
 #include "../network/include/blkpool.h"
@@ -37,7 +37,7 @@ namespace Core
 	 * 
 	 * TODO: 
 	 */
-	class Manager : public LLP::Server<LLP::CNode>
+	class Manager : public LLP::Server<LLP::CLegacyNode>
 	{
 		
 		Thread_t ConnectionThread;
@@ -71,7 +71,7 @@ namespace Core
 		CMajority<int> cPeerBlocks;
 		
 		
-		Manager() : LLP::Server<LLP::CNode> (LLP::GetDefaultPort(), 10, false, 1, 20, 30, 30, GetBoolArg("-listen", true), true), ConnectionThread(boost::bind(&Manager::ConnectionManager, this)), ProcessorThread(boost::bind(&Manager::BlockProcessor, this)), InventoryThread(boost::bind(&Manager::InventoryProcessor, this)), MeteringThread(boost::bind(&Manager::ProcessorMeter, this)), hashLastBlock(0), fSynchronizing(false), cPeerBlocks(), txPool(), blkPool(), vTried(), vNew(), fStarted(false) {}
+		Manager() : LLP::Server<LLP::CLegacyNode> (LLP::GetDefaultPort(), 10, false, 1, 20, 30, 30, GetBoolArg("-listen", true), true), ConnectionThread(boost::bind(&Manager::ConnectionManager, this)), ProcessorThread(boost::bind(&Manager::BlockProcessor, this)), InventoryThread(boost::bind(&Manager::InventoryProcessor, this)), MeteringThread(boost::bind(&Manager::ProcessorMeter, this)), hashLastBlock(0), fSynchronizing(false), cPeerBlocks(), txPool(), blkPool(), vTried(), vNew(), fStarted(false) {}
 		
 		
 		/* Time Seed Manager. */
@@ -98,8 +98,12 @@ namespace Core
 		void AddAddress(LLP::CAddress cAddress);
 		
 		
+		/* Return a list of active connections to the network. */
+		std::vector<LLP::CAddress> GetAddresses();
+		
+		
 		/* Get a node from connected nodes. */
-		LLP::CNode* SelectNode();
+		LLP::CLegacyNode* SelectNode();
 		
 		
 		/* Get a random address from the active connections in the manager. */

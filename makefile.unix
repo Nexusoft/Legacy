@@ -127,7 +127,7 @@ OBJS= \
 	build/inv.o \
 	build/mining.o \
 	build/network.o \
-	build/node.o \
+	build/legacy.o \
 	build/time.o \
 	build/args.o \
 	build/config.o \

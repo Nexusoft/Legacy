@@ -32,53 +32,7 @@ namespace Core
 	 */
 	namespace Codes
 	{
-		
-		enum
-		{
-			IF = 0,
-			THEN = 1,
-			ENDIF = 2,
-			WHILE = 3,
-			FOR   = 4,
-			CALL  = 5,
-			
-			
-			
-		};
-		
-		enum 
-		{
-			
-			
-		}
-		
-		
-		enum
-		{
-			
-			/* Main Memory Commands */
-			REQUIRE = 0,
-			DEFINE  = 1,
-			OPERATE = 2,
-			DELETE  = 3,
-			
-			
-		};
-	
-	}
-	
-	namespace Finance
-	{
-		enum
-		{
-			
-			CREDIT = 0,
-			DEBIT  = 1,
-			
-		}
-		
+
 		
 	}
-
-
 }

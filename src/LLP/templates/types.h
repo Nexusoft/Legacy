@@ -51,6 +51,17 @@ namespace LLP
 	typedef boost::system::error_code                            Error_t;
 	
 	
+	/* DoS Wrapper for Returning  */
+	template<typename NodeType>
+	inline bool DoS(NodeType* pfrom, int nDoS, bool fReturn)
+	{
+		if(pfrom)
+			pfrom->DDOS->rSCORE += nDoS;
+			
+		return fReturn;
+	}
+	
+	
 	/** Class that tracks DDOS attempts on LLP Servers. 
 		Uses a Timer to calculate Request Score [rScore] and Connection Score [cScore] as a unit of Score / Second. 
 		Pointer stored by Connection class and Server Listener DDOS_MAP. **/

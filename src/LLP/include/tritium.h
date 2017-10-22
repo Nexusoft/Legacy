@@ -21,51 +21,43 @@ ________________________________________________________________________________
 
 namespace LLP
 {
-	
-	/* Message Packet Leading Bytes. */
-	const unsigned char MESSAGE_START_TESTNET[4] = { 0xe9, 0x59, 0x0d, 0x05 };
-	const unsigned char MESSAGE_START_MAINNET[4] = { 0x05, 0x0d, 0x59, 0xe9 };
 
-	
-	
 	/* Class to handle sending and receiving of More Complese Message LLP Packets. */
-	class MessagePacket
+	class TritiumPacket
 	{
 	public:
 	
-		/* 
-		 * Components of a Message LLP Packet.
-		 * BYTE 0 - 4    : Start
-		 * BYTE 5 - 17   : Message
-		 * BYTE 18 - 22  : Size      
-		 * BYTE 23 - 26  : Checksum
-		 * BYTE 26 - X   : Data
+		/* Components of a Tritium LLP Packet.
+		 * 
+		 * BYTE 00 - 01  : Message
+		 * BYTE 02 - 05  : Length
+		 * BYTE 06 - 09  : Checksum
+		 * BYTE 10 - XX  : Data
+		 * 
+		 * NOTE: Total messages available is 65,536 messages with enumeration
 		 * 
 		 */
-		unsigned char	HEADER[4];
-		char			MESSAGE[12];
+		unsigned short	MESSAGE;
 		unsigned int	LENGTH;
 		unsigned int	CHECKSUM;
 		
 		std::vector<unsigned char> DATA;
 		
-		MessagePacket()
+		TritiumPacket()
 		{
 			SetNull();
 			SetHeader();
 		}
 		
-		MessagePacket(const char* chMessage)
+		TritiumPacket(unsigned short MESSAGE_IN)
 		{
 			SetNull();
-			SetHeader();
-			SetMessage(chMessage);
+			SetMessage(MESSAGE_IN);
 		}
 		
 		IMPLEMENT_SERIALIZE
 		(
-			READWRITE(FLATDATA(HEADER));
-			READWRITE(FLATDATA(MESSAGE));
+			READWRITE(MESSAGE);
 			READWRITE(LENGTH);
 			READWRITE(CHECKSUM);
 		)
@@ -74,23 +66,16 @@ namespace LLP
 		/* Set the Packet Null Flags. */
 		void SetNull()
 		{
+			MESSAGE   = 0;
 			LENGTH    = 0;
 			CHECKSUM  = 0;
-			SetMessage("");
 			
 			DATA.clear();
 		}
 		
 		
-		/* Get the Command of packet in a std::string type. */
-		std::string GetMessage()
-		{
-			return std::string(MESSAGE, MESSAGE + strlen(MESSAGE));
-		}
-		
-		
 		/* Packet Null Flag. Length and Checksum both 0. */
-		bool IsNull() { return (std::string(MESSAGE) == "" && LENGTH == 0 && CHECKSUM == 0); }
+		bool IsNull() { return MESSAGE == 0 && LENGTH == 0 && CHECKSUM == 0 }
 		
 		
 		/* Determine if a packet is fully read. */
@@ -98,40 +83,15 @@ namespace LLP
 		
 		
 		/* Determine if header is fully read */
-		bool Header()   { return IsNull() ? false : (CHECKSUM > 0 && std::string(MESSAGE) != ""); }
-		
-		
-		/* Set the first four bytes in the packet headcer to be of the byte series selected. */
-		void SetHeader()
-		{
-			if (fTestNet)
-				memcpy(HEADER, MESSAGE_START_TESTNET, sizeof(MESSAGE_START_TESTNET));
-			else
-				memcpy(HEADER, MESSAGE_START_MAINNET, sizeof(MESSAGE_START_MAINNET));
-		}
+		bool Header()   { return IsNull() ? false : (CHECKSUM > 0 && LENGTH > 0 && MESSAGE > 0); }
 		
 		
 		/* Set the message in the packet header. */
-		void SetMessage(const char* chMessage)
-		{
-			strncpy(MESSAGE, chMessage, 12);
-		}
-		
-		
-		/* Sets the size of the packet from Byte Vector. */
-		void SetLength(std::vector<unsigned char> BYTES) 
-		{
-			CDataStream ssLength(BYTES, SER_NETWORK, MIN_PROTO_VERSION);
-			ssLength >> LENGTH;
-		}
+		void SetMessage(unsigned short MESSAGE_IN) { MESSAGE = MESSAGE_IN; }
 		
 		
 		/* Set the Packet Checksum Data. */
-		void SetChecksum()
-		{
-			uint512 hash = LLC::HASH::SK512(DATA.begin(), DATA.end());
-			memcpy(&CHECKSUM, &hash, sizeof(CHECKSUM));
-		}
+		void SetChecksum() { CHECKSUM = LLC::HASH::SK32(DATA.begin(), DATA.end()); }
 		
 		
 		/* Set the Packet Data. */
@@ -153,22 +113,15 @@ namespace LLP
 			if(IsNull())
 				return false;
 			
-			/* Check the Header Bytes. */
-			if(memcmp(HEADER, (fTestNet ? MESSAGE_START_TESTNET : MESSAGE_START_TESTNET), sizeof(HEADER)) != 0)
-				return error("Message Packet (Invalid Packet Header");
-			
 			/* Make sure Packet length is within bounds. (Max 512 MB Packet Size) */
 			if (LENGTH > (1024 * 1024 * 512))
 				return error("Message Packet (%s, %u bytes) : Message too Large", MESSAGE, LENGTH);
 
 			/* Double check the Message Checksum. */
-			uint512 hash = LLC::HASH::SK512(DATA.begin(), DATA.end());
-			unsigned int nChecksum = 0;
-			memcpy(&nChecksum, &hash, sizeof(nChecksum));
-			
+			unsigned int nChecksum = LLC::HASH::SK32(DATA.begin(), DATA.end());
 			if (nChecksum != CHECKSUM)
-				return error("Message Packet (%s, %u bytes) : CHECKSUM MISMATCH nChecksum=%u hdr.nChecksum=%u",
-				   MESSAGE, LENGTH, nChecksum, CHECKSUM);
+				return error("Message Packet (%u bytes) : CHECKSUM MISMATCH nChecksum=%u hdr.nChecksum=%u",
+				   LENGTH, nChecksum, CHECKSUM);
 				
 			return true;
 		}
@@ -188,7 +141,7 @@ namespace LLP
 	
 	
 	/* Base Template class to handle outgoing / incoming LLP data for both Client and Server. */
-	class MessageConnection : public BaseConnection<MessagePacket>
+	class TritiumConnection : public BaseConnection<TritiumPacket>
 	{
 	protected:
 		/* 
@@ -202,14 +155,13 @@ namespace LLP
 		*/
 		virtual void Event(unsigned char EVENT, unsigned int LENGTH = 0){ }
 		
-		
 		/* Virtual Process Function. To be overridden with your own custom packet processing. */
 		virtual bool ProcessPacket(){ return false; }
 	public:
 		
 		/* Constructors for Message LLP Class. */
-		MessageConnection() : BaseConnection<MessagePacket>(){ }
-		MessageConnection( Socket_t SOCKET_IN, DDOS_Filter* DDOS_IN, bool isDDOS = false ) : BaseConnection<MessagePacket>( SOCKET_IN, DDOS_IN, isDDOS ) { }
+		TritiumConnection() : BaseConnection<TritiumPacket>(){ }
+		TritiumConnection( Socket_t SOCKET_IN, DDOS_Filter* DDOS_IN, bool isDDOS = false ) : BaseConnection<TritiumPacket>( SOCKET_IN, DDOS_IN, isDDOS ) { }
 
 		
 		/* Non-Blocking Packet reader to build a packet from TCP Connection.
@@ -220,10 +172,10 @@ namespace LLP
 			if(!INCOMING.Complete())
 			{
 				/** Handle Reading Packet Length Header. **/
-				if(SOCKET->available() >= 24 && INCOMING.IsNull())
+				if(SOCKET->available() >= 10 && INCOMING.IsNull())
 				{
-					std::vector<unsigned char> BYTES(24, 0);
-					if(Read(BYTES, 24) == 24)
+					std::vector<unsigned char> BYTES(10, 0);
+					if(Read(BYTES, 10) == 10)
 					{
 						CDataStream ssHeader(BYTES, SER_NETWORK, MIN_PROTO_VERSION);
 						ssHeader >> INCOMING;
@@ -231,7 +183,8 @@ namespace LLP
 						Event(EVENT_HEADER);
 					}
 				}
-					
+				
+				
 				/** Handle Reading Packet Data. **/
 				unsigned int nAvailable = SOCKET->available();
 				if(nAvailable > 0 && !INCOMING.IsNull() && INCOMING.DATA.size() < INCOMING.LENGTH)
@@ -249,20 +202,42 @@ namespace LLP
 		}
 		
 		
-		MessagePacket NewMessage(const char* chCommand, CDataStream ssData)
+		/** Send the DoS Score to DDOS Filte
+		 * 
+		 * @param[in] nDoS The score to add for DoS banning
+		 * @param[in] fReturn The value to return (False disconnects this node)
+		 * 
+		 */
+		inline bool DoS(int nDoS, bool fReturn)
 		{
-			MessagePacket RESPONSE(chCommand);
+			if(fDDOS)
+				DDOS->rSCORE += nDoS;
+			
+			return fReturn;
+		}
+		
+		
+		/** Construct a new Tritium Packet.
+		 * 
+		 * @param[in] nCommand The command to push in packet header
+		 * @param[in] ssData The serialized data to be pushed in packet.
+		 * 
+		 * @return The new packet responded with.
+		 */
+		TritiumPacket NewMessage(const unsigned short nCommand, CDataStream ssData)
+		{
+			TritiumPacket RESPONSE(chCommand);
 			RESPONSE.SetData(ssData);
 			
 			return RESPONSE;
 		}
 		
 		
-		void PushMessage(const char* chCommand)
+		void PushMessage(const unsigned short nCommand)
 		{
 			try
 			{
-				MessagePacket RESPONSE(chCommand);
+				TritiumPacket RESPONSE(nCommand);
 				RESPONSE.SetChecksum();
 			
 				this->WritePacket(RESPONSE);
@@ -274,7 +249,7 @@ namespace LLP
 		}
 		
 		template<typename T1>
-		void PushMessage(const char* chMessage, const T1& t1)
+		void PushMessage(const unsigned short nCommand, const T1& t1)
 		{
 			try
 			{
@@ -418,6 +393,58 @@ namespace LLP
 		}
 		
 	};
+	
+	
+	class CTritiumNode : public TritiumConnection
+	{
+		CAddress addrThisNode;
+		
+	public:
+		
+		/* Constructors for Message LLP Class. */
+		CLegacyNode() : MessageConnection(){ }
+		CLegacyNode( Socket_t SOCKET_IN, DDOS_Filter* DDOS_IN, bool isDDOS = false ) : MessageConnection( SOCKET_IN, DDOS_IN ) { }
+		
+		
+		/** Virtual Functions to Determine Behavior of Message LLP.
+		 * 
+		 * @param[in] EVENT The byte header of the event type
+		 * @param[in[ LENGTH The size of bytes read on packet read events
+		 *
+		 */
+		 void Event(unsigned char EVENT, unsigned int LENGTH = 0);
+		
+		
+		/** Main message handler once a packet is recieved. **/
+		bool ProcessPacket();
+		
+		
+		/** Handle for version message **/
+		void PushVersion();
+		
+		
+		/** Send an Address to Node. 
+		 * 
+		 * @param[in] addr The address to send to nodes
+		 * 
+		 */
+		void PushAddress(const CAddress& addr);
+		
+		
+		
+		/** Get the current IP address of this node. **/
+		inline CAddress GetAddress() { return addrThisNode; }
+	};
+	
+	
+	/* DoS Wrapper for Block Level Functions. */
+	inline bool DoS(CLegacyNode* pfrom, int nDoS, bool fReturn)
+	{
+		if(pfrom)
+			pfrom->DDOS->rSCORE += nDoS;
+			
+		return fReturn;
+	}
 }
 
 #endif
