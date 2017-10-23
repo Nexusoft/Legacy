@@ -37,7 +37,7 @@ namespace Core
 		
 		if (mapArgs.count("-addnode"))
 			for(auto strAddr : mapMultiArgs["-addnode"])
-				AddConnection(strAddr, "9323");
+				LegacyServer->AddConnection(strAddr, "9323");
 		
 		
 		while(!fShutdown)
@@ -54,7 +54,7 @@ namespace Core
 				int nRandom = GetRandInt(vNew.size() - 1);
 				
 				printf("##### Connection Manager::attempting connection %s\n", vNew[nRandom].ToStringIP().c_str());
-				if(!AddConnection(vNew[nRandom].ToStringIP(), "9323"))
+				if(!LegacyServer->AddConnection(vNew[nRandom].ToStringIP(), "9323"))
 					vTried.push_back(vNew[nRandom]);
 					
 				vNew.erase(vNew.begin() + nRandom);
@@ -66,7 +66,7 @@ namespace Core
 				int nRandom = GetRandInt(vTried.size() - 1);
 				
 				printf("##### Connection Manager::attempting tried connection %s\n", vTried[nRandom].ToStringIP().c_str());
-				if(!AddConnection(vTried[nRandom].ToStringIP(), "9323"))
+				if(!LegacyServer->AddConnection(vTried[nRandom].ToStringIP(), "9323"))
 					continue;
 				
 			}
@@ -77,7 +77,7 @@ namespace Core
 				int nRandom = GetRandInt(vDropped.size() - 1);
 				
 				printf("##### Connection Manager::retry dropped connection %s\n", vDropped[nRandom].ToStringIP().c_str());
-				if(!AddConnection(vDropped[nRandom].ToStringIP(), "9323"))
+				if(!LegacyServer->AddConnection(vDropped[nRandom].ToStringIP(), "9323"))
 					continue;
 				
 				vDropped.erase(vDropped.begin() + nRandom);
@@ -96,7 +96,7 @@ namespace Core
 	static unsigned int nRequestCounter = 0;
 	LLP::CLegacyNode* Manager::SelectNode()
 	{
-		std::vector<LLP::CLegacyNode*> vNodes = GetConnections();
+		std::vector<LLP::CLegacyNode*> vNodes = LegacyServer->GetConnections();
 		if(vNodes.size() == 0)
 			return NULL;
 		
@@ -215,7 +215,7 @@ namespace Core
 			for(auto hash : vBlocks)
 			{
 				cTimer.Reset();
-					
+				
 				
 				/* Get the Block from the Memory Pool. */
 				CBlock block;
@@ -223,9 +223,8 @@ namespace Core
 
 				
 				/* Check that previous block exists. */
-				if(blkPool.State(block.hashPrevBlock) == blkPool.NOTFOUND || !mapBlockIndex.count(block.hashPrevBlock)) //NOTE: mapBlockIndex to be deprecated
+				if(blkPool.State(block.hashPrevBlock) == blkPool.NOTFOUND)
 				{
-					//printf("ORPHANED Height %u %s by Invalid Previous State(%u)\n", block.nHeight, block.hashPrevBlock.ToString().substr(0, 20).c_str(), blkPool.State(block.hashPrevBlock));
 					
 					/* Request blocks if there is a node. */
 					LLP::CLegacyNode* pNode = SelectNode();
@@ -250,7 +249,7 @@ namespace Core
 					if(!fSynchronizing)
 					{
 						std::vector<LLP::CInv> vInv = { LLP::CInv(LLP::MSG_BLOCK, hash) };
-						std::vector<LLP::CLegacyNode*> vNodes = GetConnections();
+						std::vector<LLP::CLegacyNode*> vNodes = LegacyServer->GetConnections();
 						for(auto node : vNodes)
 							node->PushMessage("inv", vInv);
 					}
@@ -306,7 +305,7 @@ namespace Core
 	{
 		std::vector<LLP::CAddress> vAddr;
 		
-		std::vector<LLP::CLegacyNode*> vNodes = GetConnections();
+		std::vector<LLP::CLegacyNode*> vNodes = LegacyServer->GetConnections();
 		for(auto node : vNodes)
 			vAddr.push_back(node->GetAddress());
 			
@@ -338,5 +337,6 @@ namespace Core
 		for(int nIndex = 0; nIndex < vSeeds.size(); nIndex++)
 			AddAddress(vSeeds[nIndex]);
 		
+		LegacyServer = new LLP::Server<LLP::CLegacyNode>(LLP::GetDefaultPort(), 10, false, 1, 20, 30, 30, GetBoolArg("-listen", true), true);
 	}
 }

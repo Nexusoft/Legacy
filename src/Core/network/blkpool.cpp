@@ -69,7 +69,7 @@ namespace Core
 		/* Get the block Hash. */
 		uint1024 hashBlock = blk.GetHash();
 			
-		/* Check the Block validity. TODO: Send process message for Trust Depreciation (LLP:Dos). */
+		/* Check the Block validity. */
 		if(Check(blk))
 		{
 

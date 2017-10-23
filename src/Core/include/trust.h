@@ -183,7 +183,7 @@ namespace Core
 	
 	
 	/* Declration of the Function that will act for the Staking Thread. */
-	void StakeMinter(void* parg);
+	void StakeMinter();
 	
 }
 

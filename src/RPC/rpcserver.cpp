@@ -2301,7 +2301,7 @@ namespace RPC
 		Core::pManager->txPool.GetIndexes(Core::pManager->txPool.ACCEPTED, vtxid);
 
 		Array a;
-		BOOST_FOREACH(const uint512& hash, vtxid)
+		for(auto hash : vtxid)
 			a.push_back(hash.ToString());
 
 		return a;
@@ -2339,6 +2339,7 @@ namespace RPC
 		{ "exportkeys",             &exportkeys,             false },
 		{ "importkeys",             &importkeys,             false },
 		{ "rescan",                 &rescan,                 false },
+		{ "getrawmempool", 			&getrawmempool,			 true },
 		{ "backupwallet",           &backupwallet,           true },
 		{ "keypoolrefill",          &keypoolrefill,          true },
 		{ "walletpassphrase",       &walletpassphrase,       true },

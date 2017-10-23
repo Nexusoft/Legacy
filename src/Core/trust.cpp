@@ -740,7 +740,7 @@ namespace Core
 	
 	
 	/** Proof of Stake local CPU miner. Uses minimal resources. **/
-	void StakeMinter(void* parg)
+	void StakeMinter()
 	{	
 		printf("Stake Minter Started\n");
 		
@@ -768,6 +768,7 @@ namespace Core
 			if(GetArg("-verbose", 0) >= 2)
 				printf("Stake Minter : Created New Block %s\n", pblock->GetHash().ToString().substr(0, 20).c_str());
 			
+			pblock->print();
 			pblock->UpdateTime();
 			
 			vector< std::vector<unsigned char> > vKeys;
@@ -867,7 +868,7 @@ namespace Core
 				CBigNum hashTarget;
 				hashTarget.SetCompact(pblock->nBits);
 				
-				if(pblock->nNonce % (unsigned int)((nTrustWeight + nBlockWeight) * 5) == 0 && GetArg("-verbose", 0) >= 2)
+				if(pblock->nNonce % (unsigned int)((nTrustWeight + nBlockWeight) * 5) == 0 && GetArg("-verbose", 0) >= 3)
 					printf("Stake Minter : Below Threshold %f Required %f Incrementing nNonce %" PRIu64 "\n", nThreshold, nRequired, pblock->nNonce);
 						
 				if (pblock->GetHash() < hashTarget.getuint1024())

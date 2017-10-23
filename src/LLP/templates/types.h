@@ -407,11 +407,7 @@ namespace LLP
 			fCONNECTED = false;
 		}
 
-		std::string GetIPAddress()
-		{
-			boost::system::error_code ec;
-			return SOCKET->remote_endpoint(ec).address().to_string();
-		}
+		std::string GetIPAddress() { return SOCKET->remote_endpoint().address().to_string(); }
 		
 		
 		/* Helpful for debugging the code. */

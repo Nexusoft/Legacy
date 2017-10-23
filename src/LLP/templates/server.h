@@ -55,6 +55,33 @@ namespace LLP
 				delete DATA_THREADS[index];
 		}
 		
+		
+		/** Public Wraper to Add a Connection Manually. 
+			
+			@param[in] SOCKET		The socket object to add
+			
+		*/
+		void AddConnection(Socket_t SOCKET)
+		{
+			/* Initialize DDOS Protection for Incoming IP Address. */
+			std::vector<unsigned char> vAddress(4, 0);
+			sscanf(SOCKET->remote_endpoint().address().to_string().c_str(), "%hhu.%hhu.%hhu.%hhu", &vAddress[0], &vAddress[1], &vAddress[2], &vAddress[3]);
+			unsigned int ADDRESS = (vAddress[0] << 24) + (vAddress[1] << 16) + (vAddress[2] << 8) + vAddress[3];
+					
+			/* Create new DDOS Filter if NEeded. */
+			if(!DDOS_MAP.count(ADDRESS))
+				DDOS_MAP[ADDRESS] = new DDOS_Filter(DDOS_TIMESPAN);
+								
+			/* DDOS Operations: Only executed when DDOS is enabled. */
+			if((fDDOS && DDOS_MAP[ADDRESS]->Banned()))
+				return;
+			
+			/* Find a balanced Data Thread to Add Connection to. */
+			int nThread = FindThread();
+			DATA_THREADS[nThread]->AddConnection(SOCKET, DDOS_MAP[ADDRESS]);
+		}
+		
+		
 		/** Public Wraper to Add a Connection Manually. 
 			
 			@param[in] strAddress	IPv4 Address of outgoing connection

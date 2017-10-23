@@ -287,7 +287,7 @@ namespace LLP
 			{
 				std::vector<CInv> vInv = { CInv(MSG_TX, tx.GetHash()) };
 				
-				std::vector<LLP::CLegacyNode*> vNodes = Core::pManager->GetConnections();
+				std::vector<LLP::CLegacyNode*> vNodes = Core::pManager->LegacyServer->GetConnections();
 				for(auto node : vNodes)
 					if(node != this)
 						node->PushMessage("inv", vInv);
@@ -320,10 +320,10 @@ namespace LLP
 
 				
 			/* Make sure it's not an already process(ing) block. */
-			if(Core::pManager->blkPool.Has(hashBlock) || Core::mapBlockIndex.count(hashBlock))
+			if(Core::pManager->blkPool.Has(hashBlock))
 			{
 				
-				if(GetArg("-verbose", 0) >= 4)
+				if(GetArg("-verbose", 0) >= 3)
 					printf("duplicate block %s\n", hashBlock.ToString().substr(0,20).c_str());
 				
 				DDOS->rSCORE += 5;
@@ -338,7 +338,7 @@ namespace LLP
             
 			
 			/* Level 4 Debugging: Output raw data dumps. */
-			if(GetArg("-verbose", 0) >= 4)
+			if(GetArg("-verbose", 0) >= 3)
 				block.print();
 			
 			

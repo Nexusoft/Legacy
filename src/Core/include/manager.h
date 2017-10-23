@@ -37,13 +37,15 @@ namespace Core
 	 * 
 	 * TODO: 
 	 */
-	class Manager : public LLP::Server<LLP::CLegacyNode>
+	class Manager
 	{
 		
+		/* Data processing Threads. */
 		Thread_t ConnectionThread;
 		Thread_t ProcessorThread;
 		Thread_t InventoryThread;
 		Thread_t MeteringThread;
+		
 		
 	public:
 		
@@ -71,7 +73,10 @@ namespace Core
 		CMajority<int> cPeerBlocks;
 		
 		
-		Manager() : LLP::Server<LLP::CLegacyNode> (LLP::GetDefaultPort(), 10, false, 1, 20, 30, 30, GetBoolArg("-listen", true), true), ConnectionThread(boost::bind(&Manager::ConnectionManager, this)), ProcessorThread(boost::bind(&Manager::BlockProcessor, this)), InventoryThread(boost::bind(&Manager::InventoryProcessor, this)), MeteringThread(boost::bind(&Manager::ProcessorMeter, this)), hashLastBlock(0), fSynchronizing(false), cPeerBlocks(), txPool(), blkPool(), vTried(), vNew(), fStarted(false) {}
+		Manager() : ConnectionThread(boost::bind(&Manager::ConnectionManager, this)), ProcessorThread(boost::bind(&Manager::BlockProcessor, this)), InventoryThread(boost::bind(&Manager::InventoryProcessor, this)), MeteringThread(boost::bind(&Manager::ProcessorMeter, this)), hashLastBlock(0), fSynchronizing(false), cPeerBlocks(), txPool(), blkPool(), vTried(), vNew(), fStarted(false) 
+		{
+			
+		}
 		
 		
 		/* Time Seed Manager. */
@@ -120,6 +125,10 @@ namespace Core
 		
 		/* Block Holding Pool. */
 		CBlkPool blkPool;
+		
+		
+		/* Legacy Server for Old Protocol Commands. */
+		LLP::Server<LLP::CLegacyNode>* LegacyServer;
 		
 		
 	private:

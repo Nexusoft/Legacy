@@ -16,6 +16,7 @@ ________________________________________________________________________________
 #include "Core/include/unifiedtime.h"
 #include "Core/include/dispatch.h"
 #include "Core/include/manager.h"
+#include "Core/include/trust.h"
 
 #include "LLP/include/time.h"
 #include "LLP/include/legacy.h"
@@ -592,6 +593,11 @@ bool AppInit2(int argc, char* argv[])
 	
 	/* Start the Node Manager */
 	Core::pManager->Start();
+	
+	//Thread_t stake1(Core::StakeMinter);
+	//Thread_t stake2(Core::StakeMinter);
+	//Thread_t stake3(Core::StakeMinter);
+	//Thread_t stake4(Core::StakeMinter);
 	
 
 #ifdef QT_GUI
