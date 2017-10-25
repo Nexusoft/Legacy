@@ -11,8 +11,15 @@
 
 /** Used for Visual Reference Only **/
 const std::string CLIENT_NAME("Nexus");
-const std::string CLIENT_BUILD("0.2.2.3 - LLD Stable");
-const std::string CLIENT_DATE("January 5th, 2017");
+
+/* The database type used (Berklee DB or Lower Level Database) */
+#ifdef USE_LLD
+const std::string CLIENT_BUILD("0.2.3 [LLD]");
+#else
+const std::string CLIENT_BUILD("0.2.3 [BDB]");
+#endif
+
+const std::string CLIENT_DATE(__DATE__ " " __TIME__);
 
 /** Used to determine the current features available on the local database */
  const int DATABASE_VERSION =

@@ -834,7 +834,7 @@ namespace Core
 		/** Coinstake Transaction Rules: **/
 		bool IsCoinStake() const
 		{
-			/** A] Must have more than one Input. **/
+			/** A] Must have at least one Input. **/
 			if(vin.size() <= 1)
 				return false;
 				

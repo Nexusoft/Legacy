@@ -643,10 +643,6 @@ namespace Core
 	void StartMiningLLP() { MINING_LLP = new LLP::Server<LLP::MiningLLP>(fTestNet ? TESTNET_MINING_LLP_PORT : NEXUS_MINING_LLP_PORT, GetArg("-mining_threads", 10), true, GetArg("-mining_cscore", 5), GetArg("-mining_rscore", 50), GetArg("-mining_timout", 60)); }
 	
 	
-	/** Entry Staking Function. **/
-	void StartStaking(Wallet::CWallet *pwallet) { CreateThread(StakeMinter, pwallet); }
-	
-	
 	/** Constructs a new block **/
 	CBlock* CreateNewBlock(Wallet::CReserveKey& reservekey, Wallet::CWallet* pwallet, unsigned int nChannel, unsigned int nID, LLP::Coinbase* pCoinbase)
 	{
@@ -700,13 +696,7 @@ namespace Core
 				txNew.vout[0].scriptPubKey << cTrustPool.vchTrustKey << Wallet::OP_CHECKSIG;
 				txNew.vin[0].prevout.n = 0;
 				txNew.vin[0].prevout.hash = cTrustPool.Find(cKey).GetHash();
-				
-				//cTrustPool.Find(cKey).Print();
-				//printf("Previous Out Hash %s\n", txNew.vin[0].prevout.hash.ToString().c_str());
 			}
-			
-			if (!pwallet->AddCoinstakeInputs(txNew))
-				return NULL;
 				
 		}
 		
@@ -772,7 +762,7 @@ namespace Core
 		pblock->vtx.push_back(txNew);
 		
 		/** Add in the Transaction from Memory Pool only if it is not a Genesis. **/
-		if(!pblock->vtx[0].IsGenesis())
+		if(nChannel > 0)
 			AddTransactions(pblock->vtx, pindexPrev);
 			
 		/** Populate the Block Data. **/
@@ -981,8 +971,6 @@ namespace Core
 
 			nLastBlockTx = nBlockTx;
 			nLastBlockSize = nBlockSize;
-			if(GetArg("-verbose", 0) >= 2)
-				printf("AddTransactions(): total size %lu\n", nBlockSize);
 
 		}
 		
@@ -1039,190 +1027,6 @@ namespace Core
 		}
 
 		return true;
-	}
-
-
-
-	/** Proof of Stake local CPU miner. Uses minimal resources. **/
-	void StakeMinter(void* parg)
-	{	
-		printf("Stake Minter Started\n");
-		SetThreadPriority(THREAD_PRIORITY_LOWEST);
-
-		// Each thread has its own key and counter
-		Wallet::CReserveKey reservekey(pwalletMain);
-
-		loop
-		{
-			Sleep(100);
-			
-			if (fShutdown)
-				return;
-				
-			if (pwalletMain->IsLocked())
-				continue;
-
-			if (Net::vNodes.empty() || IsInitialBlockDownload())
-				continue;
-				
-			CBlock* pblock = CreateNewBlock(reservekey, pwalletMain, 0);
-			dTrustWeight = 0;
-			dBlockWeight = 0;
-			
-			if(!pblock)
-				continue;
-			
-			if(GetArg("-verbose", 0) >= 2)
-				printf("Stake Minter : Created New Block %s\n", pblock->GetHash().ToString().substr(0, 20).c_str());
-			
-			pblock->UpdateTime();
-			
-			
-			vector< std::vector<unsigned char> > vKeys;
-			Wallet::TransactionType keyType;
-			if (!Wallet::Solver(pblock->vtx[0].vout[0].scriptPubKey, keyType, vKeys))
-			{
-				if(GetArg("-verbose", 0) >= 2)
-					error("Stake Minter : Failed To Solve Trust Key Script.");
-				
-				continue;
-			}
-
-			/** Ensure the Key is Public Key. No Pay Hash or Script Hash for Trust Keys. **/
-			if (keyType != Wallet::TX_PUBKEY)
-			{
-				if(GetArg("-verbose", 0) >= 2)
-					error("Stake Minter : Trust Key must be of Public Key Type Created from Keypool.");
-				
-				continue;
-			}
-			
-			/** Set the Public Key Integer Key from Bytes. **/
-			uint576 cKey;
-			cKey.SetBytes(vKeys[0]);
-		
-			/** Determine Trust Age if the Trust Key Exists. **/
-			uint64 nCoinAge = 0, nTrustAge = 0, nBlockAge = 0;
-			double nTrustWeight = 0.0, nBlockWeight = 0.0;
-			if(cTrustPool.Exists(cKey))
-			{
-				nTrustAge = cTrustPool.Find(cKey).Age(mapBlockIndex[pblock->hashPrevBlock]->GetBlockTime());
-				nBlockAge = cTrustPool.Find(cKey).BlockAge(mapBlockIndex[pblock->hashPrevBlock]->GetBlockTime());
-				
-				/** Trust Weight Reaches Maximum at 30 day Limit. **/
-				nTrustWeight = min(17.5, (((16.5 * log(((2.0 * nTrustAge) / (60 * 60 * 24 * 28)) + 1.0)) / log(3))) + 1.0);
-				
-				/** Block Weight Reaches Maximum At Trust Key Expiration. **/
-				nBlockWeight = min(20.0, (((19.0 * log(((2.0 * nBlockAge) / (TRUST_KEY_EXPIRE)) + 1.0)) / log(3))) + 1.0);
-			}
-			else
-			{
-				/** Calculate the Average Coinstake Age. **/
-				LLD::CIndexDB indexdb("r");
-				if(!pblock->vtx[0].GetCoinstakeAge(indexdb, nCoinAge))
-				{
-					if(GetArg("-verbose", 0) >= 2)
-						error("Stake Minter : Failed to Get Coinstake Age.");
-					
-					continue;
-				}
-				
-				/** Trust Weight For Genesis Transaction Reaches Maximum at 90 day Limit. **/
-				nTrustWeight = min(17.5, (((16.5 * log(((2.0 * nCoinAge) / (60 * 60 * 24 * 28 * 3)) + 1.0)) / log(3))) + 1.0);
-			}
-			
-			/** Set the Reporting Variables for the Qt. **/
-			dTrustWeight = nTrustWeight;
-			dBlockWeight = nBlockWeight;
-			
-			if(GetArg("-verbose", 0) >= 1)			
-				printf("Stake Minter : Staking at Trust Weight %f | Block Weight %f | Coin Age %"PRIu64" | Trust Age %"PRIu64"| Block Age %"PRIu64"\n", nTrustWeight, nBlockWeight, nCoinAge, nTrustAge, nBlockAge);
-			
-			CBlockIndex* pindex = pindexBest;
-			while(true)
-			{
-				Sleep(120);
-				
-				if (fShutdown)
-					return;
-				
-				if (pwalletMain->IsLocked())
-					break;
-
-				if (Net::vNodes.empty() || IsInitialBlockDownload())
-					break;
-				
-				if(pindex->GetBlockHash() != pindexBest->GetBlockHash())
-				{
-					if(GetArg("-verbose", 0) >= 2)
-						printf("Stake Minter : New Best Block\n");
-					
-					break;
-				}
-				
-				/** Update the block time for difficulty accuracy. **/
-				pblock->UpdateTime();
-				if(pblock->nTime == pblock->vtx[0].nTime)
-					continue;
-					
-				/** Calculate the Efficiency Threshold. **/
-				double nThreshold = (double)((pblock->nTime - pblock->vtx[0].nTime) * 100.0) / (pblock->nNonce + 1); //+1 to account for increment if that nNonce is chosen
-				double nRequired  = ((50.0 - nTrustWeight - nBlockWeight) * MAX_STAKE_WEIGHT) / std::min((int64)MAX_STAKE_WEIGHT, pblock->vtx[0].vout[0].nValue);
-					
-				/** Allow the Searching For Stake block if Below the Efficiency Threshold. **/
-				if(nThreshold < nRequired)
-					continue;
-				
-				pblock->nNonce ++;
-					
-				CBigNum hashTarget;
-				hashTarget.SetCompact(pblock->nBits);
-				
-				if(pblock->nNonce % (unsigned int)((nTrustWeight + nBlockWeight) * 5) == 0 && GetArg("-verbose", 0) >= 2)
-					printf("Stake Minter : Below Threshold %f Required %f Incrementing nNonce %"PRIu64"\n", nThreshold, nRequired, pblock->nNonce);
-						
-				if (pblock->GetHash() < hashTarget.getuint1024())
-				{
-					
-					/** Sign the new Proof of Stake Block. **/
-					if(GetArg("-verbose", 0) >= 1)
-						printf("Stake Minter : Found New Block Hash %s\n", pblock->GetHash().ToString().substr(0, 20).c_str());
-					
-					if (!pblock->SignBlock(*pwalletMain))
-					{	
-						if(GetArg("-verbose", 0) >= 1)
-							printf("Stake Minter : Could Not Sign Proof of Stake Block.");
-						
-						break;
-					}
-					
-					if(!cTrustPool.Check(*pblock))
-					{
-						if(GetArg("-verbose", 0) >= 1)
-							error("Stake Minter : Check Trust Key Failed...");
-						
-						break;
-					}
-					
-					if (!pblock->CheckBlock())
-					{
-						if(GetArg("-verbose", 0) >= 1)
-							error("Stake Minter : Check Block Failed...");
-						
-						break;
-					}
-					
-					if(GetArg("-verbose", 0) >= 1)
-						pblock->print();
-					
-					SetThreadPriority(THREAD_PRIORITY_NORMAL);
-					CheckWork(pblock, *pwalletMain, reservekey);
-					SetThreadPriority(THREAD_PRIORITY_LOWEST);
-					
-					break;
-				}
-			}
-		}
 	}
 
 	

@@ -391,7 +391,24 @@ namespace LLD
 			TODO: Handle the Transaction Rollbacks with a new Transaction Keychain and Sector Database. 
 			Make it temporary and named after the unique identity of the sector database. 
 			Fingerprint is SK64 hash of unified time and the sector database name along with some other data 
-			To be determined... **/
+			To be determined... 
+			
+			1. TxnStart()
+				+ Create a new Transaction Record (TODO: Find how this will be indentified. Maybe Unique Tx Hash and Registry in Journal of Active Transaction?)
+				+ Create a new Transaction Memory Object
+				
+			2. Put()
+				+ Add new data to the Transaction Record
+				+ Add new data to the Transaction Memory
+				+ Keep states of keys in a valid object for recover of corrupted keychain.
+				
+			3. Get()  NOTE: Read from the Transaction object rather than the database
+				+ Read the data from the Transaction Memory 
+				
+			4. Commit()
+				+ 
+			
+			**/
 		bool TxnCommit()
 		{
 			MUTEX_LOCK(SECTOR_MUTEX);

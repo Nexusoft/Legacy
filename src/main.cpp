@@ -642,16 +642,15 @@ bool AppInit2(int argc, char* argv[])
     if (!CreateThread(Net::StartNode, NULL))
         ThreadSafeMessageBox(_("Error: CreateThread(StartNode) failed"), _("Nexus"), wxOK | wxMODAL);
 	
-#ifdef QT_GUI
-	Core::StartStaking(pwalletMain);
-#else
+	
 	if(GetBoolArg("-stake", false))
 	{
-		Core::StartStaking(pwalletMain);
+		CreateThread(Core::StakeMinter, pwalletMain); 
+
 		printf("%%%%%%%%%%%%%%%%% Daemon Staking Thread Initialized...\n");
 	}
-#endif
 
+	
 	if(GetBoolArg("-mining", false))
 		Core::StartMiningLLP();
 	

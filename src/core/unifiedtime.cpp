@@ -145,7 +145,7 @@ int GetUnifiedAverage()
 	for(int index = 0; index < std::min(MAX_UNIFIED_SAMPLES, (int)UNIFIED_TIME_DATA.size()); index++)
 		nAverage += UNIFIED_TIME_DATA[index];
 		
-	return round(nAverage / (double) std::min(MAX_UNIFIED_SAMPLES, (int)UNIFIED_TIME_DATA.size()));
+	return (int) (nAverage / (double) std::min(MAX_UNIFIED_SAMPLES, (int)UNIFIED_TIME_DATA.size()) + 0.5);
 }
 
 /* This method will make sure the clock isn't changed at any point. */
