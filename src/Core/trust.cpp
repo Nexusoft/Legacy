@@ -45,7 +45,7 @@ namespace Wallet
 		}
 		
 		random_shuffle(vCoins.begin(), vCoins.end(), GetRandInt);
-		for(auto pcoin : vCoins)
+		BOOST_FOREACH(const CWalletTx* pcoin, vCoins)
 		{
 			if (!pcoin->IsFinal() || pcoin->GetDepthInMainChain() < 60)
 				continue;
