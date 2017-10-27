@@ -114,7 +114,7 @@ contains(BITCOIN_NEED_QT_PLUGINS, 1) {
     # do not enable this on windows, as it will result in a non-working executable!
 }
 
-QMAKE_CXXFLAGS += -D_FORTIFY_SOURCE=2 -fpermissive
+QMAKE_CXXFLAGS += -D_FORTIFY_SOURCE=2 -fpermissive -std=c++11
 
 QMAKE_CXXFLAGS_WARN_ON = -Wall -Wextra -Wformat -Wformat-security -Wno-invalid-offsetof -Wno-sign-compare -Wno-unused-parameter
 !macx {
