@@ -1,5 +1,4 @@
 Nexus Core - Tritium Alpha (3.0)
-=====================================
 
 nex·usˈneksəs' : a connection or series of connections linking two or more things.
 
@@ -56,6 +55,3 @@ Contact
 
 Contact colin@nexus.io or join the public slack to get introduced to the community and help get in contact with 
 other developers.
-
-### Invite Link Here:
-http://nexusearth.com:3000
