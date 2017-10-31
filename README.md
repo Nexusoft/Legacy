@@ -40,7 +40,7 @@ will be provided soon on our standard for development.
 License
 -------
 
-Nexus is released under the terms of the MIT license. See [COPYING](COPYING) for more
+Nexus is released under the terms of the MIT license. See [COPYING](COPYING.MD) for more
 information or see https://opensource.org/licenses/MIT.
 
 
