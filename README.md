@@ -1,28 +1,51 @@
-<h1>Nexus</h1>
+Nexus Core - 0.2.3.0 (Stake)
+=====================================
 
 nex·usˈneksəs' : a connection or series of connections linking two or more things.
 
-"It is not the concept of money – monetary value – that is the issue; it is the implementation of it."
+http://nexusearth.com 
 
-Money is only a container of energy allowing exchange of value between two parties. Nexus applies a decentralized, mathematically regulated, transparent currency designed for stability and sustainability: Its denomination is termed Nexus, traded with the currency ticker NXS on exchanges. Decentralization is inherent to success, as centralized points only serve as fail points, as malleable targets to be exploited for the benefit of few. In order for a system to be designed in service of the people, its creation must be forged under like principals. This has been brought forth through history, in its successful implementations of self governance, of liberty, and the right to sustenance for all life. This right has been circumvented, in which, our only choice is to form a Nexus, to combine our strength as a single global race – and preserve our right to life, freedom, and the pursuit of happiness.
 
-<h2>This Current v0.2.2.2 Release contains:</h4>
-+ Trust System Security Updates<br>
-+ Lower Level Database Integration<br>
-+ Build Commands for LLD<br>
-+ Unified Time Security Updates<br>
-+ Block Download Updates<br>
-+ RPC Command Updates<br>
-+ GUI Updates to Increase Stability<br>
-+ Updates to the Wallet for increased Reliability<br><br>
-+ GUI Updates<br>
-+ Database Optimization<br>
-+ Unlock Wallet Option (Settings -> Unlock Wallet)<br>
-+ Lock Wallet Option (Settings -> Lock Wallet)<br>
-+ Mining LLP Push Packets<br>
+What is Nexus?
+--------------
 
-<h2>Development</h2>
-Hash(BEGIN(Satoshi[2010]), END(Sunny[2012])) == Videlicet[2014] ++
+Nexus is a framework of tools that can be used to create most of the applications on
+the internet as we know it today. The core implementation is of a digital currency
+that rides on the backbones of the network and provides a stable storage and transmission
+of value from party to party. 
 
-http://www.opensource.org/licenses/mit-license.php
-Contact colin@nexusoft.io to get involved.
+Nexus is a connection between two or more things, with this following code being a set of
+tools to facilitate this connection between individuals. 
+
+Why Nexus?
+----------
+
+Nexus provides the ability to improve the technology in digital currencies in the form of
+continued development of new architecture, organizations, financial contracts, and even 
+distributed consensus and voting with the proper checks and balances. When the entire
+framework is complete, it will provide value to many other currencies besides nexus, and
+be capable of allowing the world to form structured systems together that can operate 
+independent of one another, and be connected through the distrubted network. This will 
+create greater opportunity for those that have limited access to such things.
+
+Development
+-----------
+
+Anyone is free to work on the source, `master` branch is regulary build and tested, but do
+not consider it completely stable until full releases. Please submit pull requests at your
+descretion if you would like to contribute to the core codebase. a contributing schematic
+will be provided soon on our standard for development.
+
+
+License
+-------
+
+Nexus is released under the terms of the MIT license. See [COPYING](COPYING) for more
+information or see https://opensource.org/licenses/MIT.
+
+
+Contact
+-------
+
+Contact colin@nexus.io or join the public slack to get introduced to the community and help get in contact with 
+other developers.
