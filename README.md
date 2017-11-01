@@ -1,9 +1,4 @@
-<<<<<<< HEAD
 Nexus Core - Tritium Alpha (3.0)
-=======
-Nexus Core - 0.2.3.0 (Stake)
-=====================================
->>>>>>> master
 
 nex·usˈneksəs' : a connection or series of connections linking two or more things.
 
@@ -40,7 +35,7 @@ not consider it completely stable until full releases. Please submit pull reques
 descretion if you would like to contribute to the core codebase. a contributing schematic
 will be provided soon on our standard for development.
 
-<<<<<<< HEAD
+
 Tritium
 -------
 
@@ -48,8 +43,6 @@ Tritium is the foundation of a series of updates called the TAO, which are desig
 this vision to full fruition through the development code. Tritium addresses some major parts
 of the codebase See [RELEASE NOTES](doc/release-notes) for more information on the change logs.
 
-=======
->>>>>>> master
 
 License
 -------
