@@ -1,14 +1,5 @@
 #!/bin/bash
 
-<<<<<<< HEAD
-# Change these values to match your preferences
-# Usually your home dir:
-BASEDIR=${HOME}
-# Default directory which contains nexus:
-NEXUSDEF=${BASEDIR}/code/Nexus
-
-=======
->>>>>>> master
 # Copyright 2017 The Nexus Core Developers
 # Initial Author: Bryan Gmyrek <bryangmyrekcom@gmail.com>
 # License: GPL v2
@@ -59,12 +50,7 @@ trap 'error ${LINENO}' ERR
 set -v
 set -x
 
-<<<<<<< HEAD
-
-[[ "${NEXUS:-}" == "" ]] && NEXUS="${NEXUSDEF}/nexus"
-=======
 [[ "${NEXUS:-}" == "" ]] && NEXUS="${HOME}/code/Nexus/nexus"
->>>>>>> master
 echo "NEXUS=${NEXUS}"
 if [[ -x ${NEXUS} ]]; then
 	echo "Nexus executable exists."
@@ -81,21 +67,12 @@ if [[ ${NEXUS_TEST_NODE_NUM:-} > 2 ]]; then
     echo "NEXUS_TEST_NODE_NUM > 2 is not currently supported."
 fi
 
-<<<<<<< HEAD
-NEXUS_DATADIR_BASE=${BASEDIR}/nexustest
-NEXUS_TEST_TESTNET=1
-NEXUS_DATADIR=${NEXUS_DATADIR_BASE}/localnode${NEXUS_TEST_NODE_NUM}
-NEXUS_CONF=${NEXUS_DATADIR}/nexus.conf
-NEXUS_DEBUG_LOG=${NEXUS_DATADIR}/testnet/debug.log
-NEXUS_LOCK=${NEXUS_DATADIR}/testnet/.lock
-=======
 NEXUS_DATADIR_BASE=${HOME}/nexustest
 NEXUS_TEST_TESTNET=1
 NEXUS_DATADIR=${NEXUS_DATADIR_BASE}/testnet${NEXUS_TEST_NODE_NUM}
 NEXUS_CONF=${NEXUS_DATADIR}/nexus.conf
 NEXUS_DEBUG_LOG=${NEXUS_DATADIR}/testnet25/debug.log
 NEXUS_LOCK=${NEXUS_DATADIR}/testnet25/.lock
->>>>>>> master
 if [[ "${NEXUS_TEST_MAIN:-}" == 1 ]]
 then
     NEXUS_TEST_TESTNET=0
@@ -132,10 +109,7 @@ else
     if [[ "${NEXUS_TEST_TESTNET:-}" != "1" ]]
     then
         echo "Setting Up Nexus block chain bootstrap file."
-<<<<<<< HEAD
 
-=======
->>>>>>> master
         LLD_BOOTSTRAP="recent.rar"
         if [[ -s ${NEXUS_TEST_STORAGE_LLD} ]]
         then
@@ -289,9 +263,3 @@ sleep 1
 tail -f ${NEXUS_DEBUG_LOG}
 
 echo "The nexus daemon should end when you kill this script with Ctrl-C."
-
-echo "THE TRUTH IS OUT THERE."
-<<<<<<< HEAD
-
-=======
->>>>>>> master
