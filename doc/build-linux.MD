@@ -1,82 +1,86 @@
-<h2>Dependencies</h2>
+## Dependencies
 
-<table>
-<tr><td>Library</td><td>Purpose</td><td>Description</td></tr>
-<tr><td>libssl</td><td>SSL Support</td><td>Secure communications</td></tr>
-<tr><td>libdb4.8</td><td>Berkeley DB</td><td>Blockchain & wallet storage</td></tr>
-<tr><td>libboost</td><td>Boost</td><td>C++ Library</td></tr>
-<tr><td>miniupnpc</td><td>UPnP Support</td><td>Optional firewall-jumping support</td></tr>
-<tr><td>libqrencode</td><td>QRCode generation</td><td>Optional QRCode generation</td></tr>
-</table>
+| Library      | Purpose           | Description                       |
+| ------------ | ----------------- | --------------------------------- |
+| libssl       | SSL Support       | Secure communications             |
+| libdb4.8     | Berkeley DB       | Blockchain & wallet storage       |
+| libboost     | Boost             | C++ Library                       |
+| miniupnpc    | UPnP Support      | Optional firewall-jumping support |
+| libqrencode  | QRCode generation | Optional QRCode generation        |
 
+## Compile Options
 
-<h2>Compile Options</h3>
+**miniupnpc** may be used for UPnP port mapping. Set USE_UPNP to control this.
 
-<table>
-<tr><td colspan="2">miniupnpc may be used for UPnP port mapping.</td></tr>
-<tr><td colspan="2">Set USE_UPNP to a different value to control this:</td></tr>
-<tr><td>USE_UPNP=-</td><td>No UPnP support - miniupnp not required</td></tr>
-<tr><td>USE_UPNP=0</td><td>(the default) UPnP support turned off by default at runtime</td></tr>
-<tr><td>USE_UPNP=1</td><td>UPnP support turned on by default at runtime</td></tr>
-</table>
+**libqrencode** may be used for QRCode image generation. Set USE_QRCODE to control this.
 
-<table>
-<tr><td colspan="2">libqrencode may be used for QRCode image generation.</td></tr>
-<tr><td colspan="2">Set USE_QRCODE to control this:</td></tr>
-<tr><td>USE_QRCODE=0</td><td>(the default) No QRCode support - libqrcode not required</td></tr>
-<tr><td>USE_QRCODE=1</td><td>QRCode support enabled</td></tr>
-</table>
- 
-<h2>Dependency Build Instructions: Ubuntu & Debian</h2>
+| Option       | Description |
+| ------------ | ----------- |
+| USE_UPNP=0   | (the default) UPnP support turned off by default at runtime |
+| USE_UPNP=1   | UPnP support turned on by default at runtime |
+| USE_QRCODE=0 | (the default) No QRCode support - libqrcode not required |
+| USE_QRCODE=1 | QRCode support enabled |
 
-<b>First ensure you have build essentials installed:</b><br>
-<i>sudo apt-get install build-essential</i>
+## Dependency Build Instructions: Ubuntu & Debian
 
-<b>Install Boost:</b><br>
-<i>sudo apt-get install libboost-all-dev</i>
+1. First ensure you have build essentials installed:
 
-<b>Install Berklee DB:</b><br>
-<i>sudo apt-get install libdb-dev libdb++-dev</i>
+       sudo apt-get install build-essential
+    
+2. Install Boost:
 
-<b>Install Open SSL:</b><br>
-<i>sudo apt-get install libssl1.0-dev</i>
+       sudo apt-get install libboost-all-dev
+    
+3. Install Berklee DB:
 
-If this fails to install because your linux system still supports 0.X versions of openssl use this command:
+       sudo apt-get install libdb-dev libdb++-dev
+    
+4. Install Open SSL:
 
-<i>sudo apt-get install libssl-dev</i>
+       sudo apt-get install libssl1.0-dev
+    
+   * If this fails to install because your linux system still supports 0.X
+     versions of openssl use this command:
+   
+         sudo apt-get install libssl-dev
+    
+5. Install Mini UPNP:
 
-<b>Install Mini UPNP:</b><br>
-<i>sudo apt-get install libminiupnpc-dev</i>
+       sudo apt-get install libminiupnpc-dev
+    
+6. Install QrenCode:
 
-<b>Install QrenCode:</b><br>
-<i>sudo apt-get install libqrencode-dev</i>
+       sudo apt-get install libqrencode-dev
+    
+7. For the Qt, install QT Framework:
 
-<b>For the Qt, install QT Framework:</b><br>
-<i>sudo apt-get install qt4-qmake libqt4-dev</i>
+       sudo apt-get install qt4-qmake libqt4-dev
 
-<b>If you get a filed to build because "-lz" was not found this is due to the fact that your linux operating system is trying to use a 64 bit version of zlib. You can solve this by installing the 32 bit version here:
-<i>sudo apt-get install lib32z1-dev</i>
+* If you get a failed to build because "-lz" was not found this is due to the
+fact that your linux operating system is trying to use a 64 bit version of
+zlib. You can solve this by installing the 32 bit version here:
 
+       sudo apt-get install lib32z1-dev
 
-<h2>Build Instructions (Daemon): Ubuntu & Debian</h2>
+## Build Instructions (Daemon): Ubuntu & Debian
 
-cd ~<br>
-git clone https://github.com/Nexusoft/Nexus.git Nexus<br>
-cd Nexus<br>
-make -f makefile.unix<br>
+    cd ~
+    git clone https://github.com/Nexusoft/Nexus.git Nexus
+    cd Nexus
+    make -f makefile.unix
 
-<b>To Execute:</b><br>
-./nexus
+To execute:
 
+    ./nexus
 
-<h2>Build Instructions (Qt): Ubuntu & Debian</h2>
+## Build Instructions (Qt): Ubuntu & Debian
 
-cd ~<br>
-git clone https://github.com/Nexusoft/Nexus.git Nexus<br>
-cd Nexus<br>
-qmake nexus-qt.pro "RELEASE=1" "USE_UPNP=1"<br>
-make<br>
+    cd ~
+    git clone https://github.com/Nexusoft/Nexus.git Nexus
+    cd Nexus
+    qmake nexus-qt.pro "RELEASE=1" "USE_UPNP=1"
+    make
 
-<b>To Execute:</b><br>
-./nexus-qt
+To execute:
 
+    ./nexus-qt
