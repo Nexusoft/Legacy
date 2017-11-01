@@ -37,7 +37,7 @@ If you want to build with Oracle DB support use the following command:
     
 If you want to build with LLD support use the following command:
 
-	qmake RELEASE=1 USE_UPNP=1 USE_QRCODE=1 nexus-qt.pro
+	qmake RELEASE=1 USE_UPNP=1 USE_QRCODE=1 USE_LLD=1 nexus-qt.pro
 	make
 	
 If you would like to deploy this *.app file, ensure appscript is installed to run the automated python script for easy deployment:
