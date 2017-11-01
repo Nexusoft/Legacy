@@ -63,20 +63,26 @@ Look in ~/nexustest after you run this.
 ## run-start-nexus-test.sh
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 (Make sure to check/change the values of the BASEDIR and NEXUSDEF variables in this script)
 
 =======
 >>>>>>> Support local test mode for regression/smoke tests
+=======
+>>>>>>> master
 This script will set up a test data directory and start nexus in test modes for you.
 It can also be used to set up an environment suitable for step through debugging.
 Check out the source for more info.
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 ## setup-two-local-test-nodes.sh
 
 This will set up a fresh local test net with 2 nodes that communicate with each other.
 Look in ~/nexustest after you run this.
 =======
+=======
+>>>>>>> master
 ## makefile.unix.test
 
 If you want to step-through debug, it's useful to compile with no optimizations.
@@ -84,7 +90,10 @@ Otherwise some variables get 'optimized out'.
 This file is identical to makefile.unix with the setting -O0.
 It's mostly for reference and if it gets out of date just grab the standard makefile.unix
 and change -O2 to -O0
+<<<<<<< HEAD
 >>>>>>> Support local test mode for regression/smoke tests
+=======
+>>>>>>> master
 
 ## setup-for-debugger.sh
 
@@ -96,6 +105,7 @@ The testnet, regtest, and istimeseed options are all important for successfully 
 Either use or copy the configs used in run-start-nexus-test.sh.
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 If you want to step-through debug, it's useful to compile with no optimizations.
 Otherwise some variables get 'optimized out'.
 This file is identical to makefile.unix with the setting -O0.
@@ -104,4 +114,6 @@ and change -O2 to -O0
 
 =======
 >>>>>>> Support local test mode for regression/smoke tests
+=======
+>>>>>>> master
 # THE TRUTH IS OUT THERE

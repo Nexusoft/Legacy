@@ -78,6 +78,10 @@ namespace Core
 	/* NOTE: For Blocks Version 5 and Above.
 	 *	 The Maximum Grace time before trust begins to be reduced from no trust blocks seen.. **/
 	int TRUST_KEY_MAX_TIMESPAN = 60 * 60 * 8;
+
+	
+	/* Difficulty Trheshold Weight for Trust Keys. MAX_TIMESPAN is influenced linearly with this number. */
+	double TRUST_KEY_DIFFICULTY_THRESHOLD = 8.8;
 	
 	
 	/* Difficulty Trheshold Weight for Trust Keys. MAX_TIMESPAN is influenced linearly with this number. */
@@ -236,11 +240,12 @@ namespace Core
 	/* Reference of the last checkpoint. */
 	uint1024 hashLastCheckpoint;
 	
+	
 	/** Initial Difficulty Adjustments. **/
 	CBigNum bnProofOfWorkLimit[] = { CBigNum(~uint1024(0) >> 5), CBigNum(20000000), CBigNum(~uint1024(0) >> 17) };
 	CBigNum bnProofOfWorkStart[] = { CBigNum(~uint1024(0) >> 7), CBigNum(25000000), CBigNum(~uint1024(0) >> 22) };
 
-
+	
     /** Alternate Difficulty Adjustments for Regression Tests. **/
 	CBigNum bnProofOfWorkLimitRegtest[] = { CBigNum(~uint1024(0) >> 5), CBigNum(100000), CBigNum(~uint1024(0) >> 17) };
 	CBigNum bnProofOfWorkStartRegtest[] = { CBigNum(~uint1024(0) >> 7), CBigNum(100000), CBigNum(~uint1024(0) >> 22) };

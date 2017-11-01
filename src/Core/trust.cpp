@@ -624,7 +624,7 @@ namespace Core
 		
 		/* Get the Trust Key from the Trust Pool. */
 		CTrustKey cTrustKey = Find(cKey);
-		
+
 		
 		/* The Trust Scores. */
 		double nPositiveTrust = 0.0, nNegativeTrust = 0.0;
@@ -638,8 +638,8 @@ namespace Core
 				
 			/* Calculate Consistency Moving Average over Scope of Consistency History. */
 			unsigned int nMaxTimespan = TRUST_KEY_MAX_TIMESPAN * ((GetDifficulty(mapBlockIndex[cTrustKey.hashPrevBlocks[nIndex]]->nBits, 0)) / TRUST_KEY_DIFFICULTY_THRESHOLD);
-			
 
+			
 			/* Calculate the Positive Trust Time in the Key. */
 			if(nTrustTime < nMaxTimespan)
 				nPositiveTrust += (double)((nMaxTimespan * log(((3.0 * nTrustTime) / nMaxTimespan) + 1.0)) / log(4));
@@ -744,6 +744,8 @@ namespace Core
 	}
 	
 	
+
+	/** Proof of Stake local CPU miner. Uses minimal resources. **/
 	void StakeMinter(void* parg)
 	{	
 		printf("Stake Minter Started\n");
@@ -838,6 +840,8 @@ namespace Core
 			}
 			else
 			{
+
+				/* Calculate the Average Coinstake Age. */
 				if(!pblock->vtx[0].GetCoinstakeAge(indexdb, nCoinAge))
 				{
 					if(GetArg("-verbose", 0) >= 2)
@@ -872,7 +876,7 @@ namespace Core
 					break;
 				}
 				
-				
+
 				for(int i = 0; i < 8; i++)
 				{
 					

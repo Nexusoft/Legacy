@@ -611,11 +611,11 @@ bool AppInit2(int argc, char* argv[])
     RandAddSeedPerfmon();
 	
 	
-<<<<<<< HEAD
+
     if (fServer) {
         CreateThread(RPC::ThreadRPCServer, NULL);
 	}
-=======
+
 	
 	if(GetBoolArg("-stake", false))
 	{
@@ -624,10 +624,9 @@ bool AppInit2(int argc, char* argv[])
 		printf("%%%%%%%%%%%%%%%%% Daemon Staking Thread Initialized...\n");
 	}
 
-	
 	if(GetBoolArg("-mining", false))
 		Core::StartMiningLLP();
->>>>>>> Core 0.2.3 Merge
+
 	
 	/* Start the Node Manager */
 	Core::pManager->Start();
