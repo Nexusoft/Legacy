@@ -82,7 +82,7 @@ LIBS+= \
 
 
 DEBUGFLAGS=-g
-CXXFLAGS=-O2 -std=c++11
+CXXFLAGS=-O2
 
 #add build support for the LLD vs Berklee DB
 ifdef USE_LLD
