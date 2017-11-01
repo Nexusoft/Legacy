@@ -223,7 +223,7 @@ namespace Core
 
 				
 				/* Check that previous block exists. */
-				if(blkPool.State(block.hashPrevBlock) == blkPool.NOTFOUND)
+				if(blkPool.State(block.hashPrevBlock) == blkPool.NOTFOUND || !mapBlockIndex.count(block.hashPrevBlock))
 				{
 					
 					/* Request blocks if there is a node. */
