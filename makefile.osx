@@ -16,6 +16,7 @@ INCLUDEPATHS= \
  -I"$(CURDIR)/src/hash" \
  -I"$(CURDIR)/src/json" \
  -I"$(CURDIR)/src/LLP" \
+ -I"$(CURDIR)/src/LLD" \
  -I"$(CURDIR)/src/net" \
  -I"$(CURDIR)/src/util" \
  -I"$(CURDIR)/src/wallet" \
@@ -98,6 +99,8 @@ OBJS= \
     build/util.o \
     build/wallet.o \
     build/walletdb.o \
+    build/index.o \
+    build/keychain.o \
     build/noui.o \
     build/kernel.o \
     build/debug.o \
@@ -164,6 +167,13 @@ build/%.o: src/hash/%.cpp $(HEADERS)
 	  rm -f $(@:%.o=%.d)
 
 build/%.o: src/json/%.cpp $(HEADERS)
+	$(CXX) -c $(CFLAGS) -MMD -o $@ $<
+	@cp $(@:%.o=%.d) $(@:%.o=%.P); \
+	  sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
+	      -e '/^$$/ d' -e 's/$$/ :/' < $(@:%.o=%.d) >> $(@:%.o=%.P); \
+	  rm -f $(@:%.o=%.d)
+	  
+build/%.o: src/LLD/%.cpp $(HEADERS)
 	$(CXX) -c $(CFLAGS) -MMD -o $@ $<
 	@cp $(@:%.o=%.d) $(@:%.o=%.P); \
 	  sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \

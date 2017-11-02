@@ -836,7 +836,7 @@ namespace Core
 			else
 			{
 				/* Calculate the Average Coinstake Age. */
-				if(!pblock->vtx[0].GetCoinstakeAge(indexdb, nCoinAge))
+				if(!block[0].vtx[0].GetCoinstakeAge(indexdb, nCoinAge))
 				{
 					if(GetArg("-verbose", 0) >= 2)
 						error("Stake Minter : Failed to Get Coinstake Age.");
@@ -854,7 +854,7 @@ namespace Core
 			dBlockWeight = nBlockWeight;
 			
 			
-			if(GetArg("-verbose", 0) >= 1)			
+			if(GetArg("-verbose", 0) >= 0)			
 				printf("Stake Minter : Staking at Trust Weight %f | Block Weight %f | Coin Age %"PRIu64" | Trust Age %"PRIu64"| Block Age %"PRIu64"\n", nTrustWeight, nBlockWeight, nCoinAge, nTrustAge, nBlockAge);
 			
 			bool fFound = false;
@@ -898,7 +898,7 @@ namespace Core
 					{
 						
 						/* Sign the new Proof of Stake Block. */
-						if(GetArg("-verbose", 0) >= 1)
+						if(GetArg("-verbose", 0) >= 0)
 							printf("Stake Minter : Found New Block Hash %s\n", block[i].GetHash().ToString().substr(0, 20).c_str());
 						
 						if (!block[i].SignBlock(*pwalletMain))

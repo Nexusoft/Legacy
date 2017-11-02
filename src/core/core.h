@@ -451,8 +451,9 @@ namespace Core
 			if( scriptSig.size() != 8)
 				return false;
 				
-			if( scriptSig[0] != 1 || scriptSig[1] != 2 || scriptSig[2] != 3 || scriptSig[3] != 5 || 
-				scriptSig[4] != 8 || scriptSig[5] != 13 || scriptSig[6] != 21 || scriptSig[7] != 34)
+
+			if( scriptSig[0] != 0x01 || scriptSig[1] != 0x02 || scriptSig[2] != 0x03 || scriptSig[3] != 0x05 || 
+				scriptSig[4] != 0x08 || scriptSig[5] != 0x0d || scriptSig[6] != 0x15 || scriptSig[7] != 0x22)
 				return false;
 			
 			return true;
@@ -834,24 +835,20 @@ namespace Core
 		/** Coinstake Transaction Rules: **/
 		bool IsCoinStake() const
 		{
-			/** A] Must have at least one Input. **/
+			/* Must have at least one Input. */
 			if(vin.size() <= 1)
 				return false;
 				
-			/** B] First Input Script Signature must be 8 Bytes. **/
-			if(vin[0].scriptSig.size() != 8)
-				return false;
-				
-			/** C] First Input Script Signature must Contain Fibanacci Byte Series. **/
+			/* First Input Script Signature must Contain Fibanacci Byte Series. */
 			if(!vin[0].IsStakeSig())
 				return false;
 				
-			/** D] All Remaining Previous Inputs must not be Empty. **/
+			/* All Remaining Previous Inputs must not be Empty. */
 			for(int nIndex = 1; nIndex < vin.size(); nIndex++)
 				if(vin[nIndex].prevout.IsNull())
 					return false;
 				
-			/** E] Must Contain only 1 Outputs. **/
+			/* Must Contain only 1 Outputs. */
 			if(vout.size() != 1)
 				return false;
 				
@@ -861,11 +858,11 @@ namespace Core
 		/** Flag to determine if the transaction is a genesis transaction. **/
 		bool IsGenesis() const
 		{
-			/** A] Genesis Transaction must be Coin Stake. **/
+			/* Genesis Transaction must be Coin Stake. */
 			if(!IsCoinStake())
 				return false;
 				
-			/** B] First Input Previous Transaction must be Empty. **/
+			/* First Input Previous Transaction must be Empty. */
 			if(!vin[0].prevout.IsNull())
 				return false;
 				
@@ -876,19 +873,19 @@ namespace Core
 		/** Flag to determine if the transaction is a Trust Transaction. **/
 		bool IsTrust() const
 		{
-			/** A] Genesis Transaction must be Coin Stake. **/
+			/* Genesis Transaction must be Coin Stake. */
 			if(!IsCoinStake())
 				return false;
 				
-			/** B] First Input Previous Transaction must not be Empty. **/
+			/* First Input Previous Transaction must not be Empty. */
 			if(vin[0].prevout.IsNull())
 				return false;
 				
-			/** C] First Input Previous Transaction Hash must not be 0. **/
+			/* First Input Previous Transaction Hash must not be 0. */
 			if(vin[0].prevout.hash == 0)
 				return false;
 				
-			/** D] First Input Previous Transaction Index must be 0. **/
+			/* First Input Previous Transaction Index must be 0. */
 			if(vin[0].prevout.n != 0)
 				return false;
 				
