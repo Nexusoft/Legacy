@@ -887,26 +887,19 @@ namespace Core
 	// Return transaction in tx, and if it was found inside a block, its hash is placed in hashBlock
 	bool GetTransaction(const uint512 &hash, CTransaction &tx, uint1024 &hashBlock)
 	{
+		if (pManager->txPool.Has(hash))
+			return pManager->txPool.Get(hash, tx);
+			
+		LLD::CIndexDB txdb("r");
+		CTxIndex txindex;
+		if (tx.ReadFromDisk(txdb, COutPoint(hash, 0), txindex))
 		{
-			LOCK(cs_main);
-			{
-				LOCK(mempool.cs);
-				if (mempool.exists(hash))
-				{
-					tx = mempool.lookup(hash);
-					return true;
-				}
-			}
-			LLD::CIndexDB txdb("r");
-			CTxIndex txindex;
-			if (tx.ReadFromDisk(txdb, COutPoint(hash, 0), txindex))
-			{
-				CBlock block;
-				if (block.ReadFromDisk(txindex.pos.nFile, txindex.pos.nBlockPos, false))
-					hashBlock = block.GetHash();
-				return true;
-			}
+			CBlock block;
+			if (block.ReadFromDisk(txindex.pos.nFile, txindex.pos.nBlockPos, false))
+				hashBlock = block.GetHash();
+			return true;
 		}
+		
 		return false;
 	}
 

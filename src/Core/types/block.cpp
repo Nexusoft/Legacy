@@ -957,30 +957,29 @@ namespace Core
 		uint1024 hashTarget = CBigNum().SetCompact(pblock->nBits).getuint1024();
 		
 		if(pblock->GetChannel() > 0 && !pblock->VerifyWork())
-			return error("Nexus Miner : proof of work not meeting target.");
+			return error("CheckWork : Work not meeting Target");
 		
-		if(GetArg("-verbose", 0) >= 1){		
-			printf("Nexus Miner: new %s block found\n", GetChannelName(pblock->GetChannel()).c_str());
-			printf("  hash: %s  \n", hash.ToString().substr(0, 30).c_str());
-		}
 		
 		if(pblock->GetChannel() == 1)
 			printf("  prime cluster verified of size %f\n", GetDifficulty(pblock->nBits, 1));
 		else
+		{
+			printf("  hash:   %s  \n", hash.ToString().substr(0, 30).c_str());
 			printf("  target: %s\n", hashTarget.ToString().substr(0, 30).c_str());
-			
+		}
+		
 		printf("%s ", DateTimeStrFormat(UnifiedTimestamp()).c_str());
 		//printf("generated %s\n", FormatMoney(pblock->vtx[0].vout[0].nValue).c_str());
 
 		
 		{
 			if (pblock->hashPrevBlock != hashBestChain && mapBlockIndex[pblock->hashPrevBlock]->GetChannel() == pblock->GetChannel())
-				return error("Nexus Miner : generated block is stale");
+				return error("CheckWork : Generated work is Stale (Orphaned)");
 
 
 			/** Process the Block to see if it gets Accepted into Blockchain. **/
 			if (!pManager->blkPool.Process(*pblock))
-				return error("Nexus Miner : ProcessBlock, block not accepted\n");
+				return error("CheckWork : ProcessBlock, block not accepted\n");
 				
 			/** Keep the Reserve Key only if it was used in a block. **/
 			reservekey.KeepKey();

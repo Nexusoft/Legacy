@@ -76,6 +76,14 @@ namespace Core
 	extern CBigNum bnProofOfWorkStart[];
 	
 	
+	/* The minimum difficulty that any one channel can have (For Regression Tests) */
+	extern CBigNum bnProofOfWorkLimitRegtest[];
+	
+	
+	/* The starting difficulty of each channel (For Regression Tests) */
+	extern CBigNum bnProofOfWorkStartRegtest[];
+	
+	
 	
 	/* __________________________________________________ (Time-Lock Activation Constants) __________________________________________________  */
 	

@@ -17,6 +17,7 @@ ________________________________________________________________________________
 
 #include "../Core/include/difficulty.h"
 #include "../Core/include/supply.h"
+#include "../Core/include/dispatch.h"
 #include "../Core/include/manager.h"
 
 #include "../LLC/include/random.h"
@@ -261,8 +262,6 @@ namespace RPC
 		
 		/* Used for determining the average block times. 
 		 * TODO START: Make this its own RPC command */
-		uint64 nTotalTime = 0;
-		
 		const Core::CBlockIndex* pindex = Core::GetLastChannelIndex(Core::pindexBest, 2);
 		unsigned int nAverageTime = 0, nTotal = 0;
 		double nAverageDifficulty = 0.0;
@@ -307,8 +306,6 @@ namespace RPC
 		
 		/* Used for determining the average block times. 
 		 * TODO START: Make this its own RPC command */
-		uint64 nTotalTime = 0;
-		
 		const Core::CBlockIndex* pindex = Core::GetLastChannelIndex(Core::pindexBest, 1);
 		unsigned int nAverageTime = 0, nTotal = 0;
 		double nAverageDifficulty = 0.0;
@@ -350,7 +347,7 @@ namespace RPC
 		Object obj;
 		for(std::map<uint576, Core::CTrustKey>::iterator it = Core::cTrustPool.mapTrustKeys.begin(); it != Core::cTrustPool.mapTrustKeys.end(); ++it)
 		{
-			if(it->second.Expired(GetUnifiedTimestamp()))
+			if(it->second.Expired(Core::UnifiedTimestamp()))
 				continue;
 				
 			/** Check the Wallet and Trust Keys in Trust Pool to see if we own any keys. **/
@@ -358,7 +355,7 @@ namespace RPC
 			address.SetPubKey(it->second.vchPubKey);
 
 			obj.push_back(Pair("address", address.ToString()));
-			obj.push_back(Pair("interest rate", 100.0 * Core::cTrustPool.InterestRate(it->first, GetUnifiedTimestamp())));
+			obj.push_back(Pair("interest rate", 100.0 * Core::cTrustPool.InterestRate(it->first, Core::UnifiedTimestamp())));
 			obj.push_back(Pair("trust key", it->second.ToString()));
 			
 			nTotalActive ++;
@@ -503,7 +500,7 @@ namespace RPC
                 "Default timestamp is the current Unified Timestamp. The timestamp is recorded as a UNIX timestamp");
             
         Object obj;
-        unsigned int nMinutes = (GetUnifiedTimestamp() - Core::NEXUS_NETWORK_TIMELOCK) / 60;
+        unsigned int nMinutes = (Core::UnifiedTimestamp() - Core::NEXUS_NETWORK_TIMELOCK) / 60;
         
         obj.push_back(Pair("chainage", ValueFromAmount(nMinutes)));
         obj.push_back(Pair("miners", ValueFromAmount(Core::CompoundSubsidy(nMinutes, 0))));
@@ -1925,12 +1922,14 @@ namespace RPC
 		{
 			// push to local node
 			LLD::CIndexDB txdb("r");
-			if (!tx.AcceptToMemoryPool(txdb, fCheckInputs))
+			if (!Core::pManager->txPool.Accept(txdb, tx, fCheckInputs))
 				throw JSONRPCError(-22, "TX rejected");
 
 			SyncWithWallets(tx, NULL, true);
 		}
-		RelayMessage(CInv(MSG_TX, hashTx), tx);
+		
+		//TODO: Relay in Manager.cpp
+		//RelayMessage(CInv(MSG_TX, hashTx), tx);
 
 		return hashTx.GetHex();
 	}

@@ -47,6 +47,8 @@ using namespace boost;
 
 Wallet::CWallet* pwalletMain;
 
+LLP::Server<LLP::TimeLLP>* LLP_SERVER;
+
 //////////////////////////////////////////////////////////////////////////////
 //
 // Shutdown
@@ -299,8 +301,6 @@ bool AppInit2(int argc, char* argv[])
     }
 
     fTestNet = GetBoolArg("-testnet", false);
-
-    fIsTimeSeed = GetBoolArg("-istimeseed", false);
 
     fDebug = GetBoolArg("-debug", false);
     Wallet::fDetachDB = GetBoolArg("-detachdb", false);
@@ -594,7 +594,7 @@ bool AppInit2(int argc, char* argv[])
     }
     else {
         printf("Waiting for unified time...\n");
-        while(!fTimeUnified)
+        while(!Core::fTimeUnified)
             Sleep(10);
     }
 
@@ -602,7 +602,7 @@ bool AppInit2(int argc, char* argv[])
 	if(GetBoolArg("-unified", false)) {
 		InitMessage(_("Initializing Core LLP..."));
 		printf("Initializing Core LLP...\n");
-		LLP_SERVER = new LLP::Server<LLP::CoreLLP>(fTestNet ? TESTNET_CORE_LLP_PORT : NEXUS_CORE_LLP_PORT, 5, true, 1, 3, 1);
+		LLP_SERVER = new LLP::Server<LLP::TimeLLP>(fTestNet ? TESTNET_CORE_LLP_PORT : MAINNET_CORE_LLP_PORT, 5, true, 1, 10, 30, 120, true, true);
 	}
 
     if (!Core::CheckDiskSpace())
@@ -619,13 +619,13 @@ bool AppInit2(int argc, char* argv[])
 	
 	if(GetBoolArg("-stake", false))
 	{
-		CreateThread(Core::StakeMinter, pwalletMain); 
+		CreateThread(Core::StakeMinter, NULL);
 
 		printf("%%%%%%%%%%%%%%%%% Daemon Staking Thread Initialized...\n");
 	}
 
-	if(GetBoolArg("-mining", false))
-		Core::StartMiningLLP();
+	//if(GetBoolArg("-mining", false))
+	//	Core::StartMiningLLP();
 
 	
 	/* Start the Node Manager */

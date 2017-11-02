@@ -29,7 +29,7 @@ namespace Core
 	
 
 	/* Compound the subsidy from a start point to an interval point. */
-	int64 CompoundSubsidy(int nMinutes, int nInterval)
+	int64 SubsidyInterval(int nMinutes, int nInterval)
 	{
 		int64 nMoneySupply = 0;
 		nInterval += nMinutes;

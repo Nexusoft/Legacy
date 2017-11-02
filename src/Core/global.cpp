@@ -77,16 +77,8 @@ namespace Core
 	
 	/* NOTE: For Blocks Version 5 and Above.
 	 *	 The Maximum Grace time before trust begins to be reduced from no trust blocks seen.. **/
-	int TRUST_KEY_MAX_TIMESPAN = 60 * 60 * 8;
+	const int TRUST_KEY_MAX_TIMESPAN = 60 * 60 * 8;
 
-	
-	/* Difficulty Trheshold Weight for Trust Keys. MAX_TIMESPAN is influenced linearly with this number. */
-	double TRUST_KEY_DIFFICULTY_THRESHOLD = 8.8;
-	
-	
-	/* Difficulty Trheshold Weight for Trust Keys. MAX_TIMESPAN is influenced linearly with this number. */
-	double TRUST_KEY_DIFFICULTY_THRESHOLD = 8.8;
-	
 	
 	/* Difficulty Trheshold Weight for Trust Keys. MAX_TIMESPAN is influenced linearly with this number. */
 	double TRUST_KEY_DIFFICULTY_THRESHOLD = 8.8;
@@ -213,13 +205,18 @@ namespace Core
 	/* Maximum numver of samples in the Unified Time moving Average. */
 	int MAX_PER_NODE_SAMPLES	= 20;
 	
-	
-	/** List of Registered Transactions to Queue adding to Wallet. **/
+
+	/* List of Registered Transactions to Queue adding to Wallet. */
 	set<Wallet::CWallet*> setpwalletRegistered;
+	
+
+	/* Main Critical Section for the Wallet Registry Functions (TODO: Remove in Tritium or Post Tritium. TO BE DETERMINED). */
+	Mutex_t cs_setpwalletRegistered;
 
 	
-	/** Main Mutex to enable thread Synchronization and Queueing while working on main Data Objects. **/
+	/* Main Mutex to enable thread Synchronization and Queueing while working on main Data Objects. */
 	Mutex_t cs_main;
+	
 	
 	/** Trust Key Holding Structure To Verify Trust Keys Seen on Blockchain. **/
 	CTrustPool cTrustPool;

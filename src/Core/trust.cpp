@@ -14,10 +14,13 @@ ________________________________________________________________________________
 #include "../main.h"
 
 #include "include/trust.h"
+#include "include/manager.h"
+
 #include "types/include/block.h"
 #include "include/difficulty.h"
 #include "include/unifiedtime.h"
 
+#include "../LLC/include/random.h"
 #include "../LLD/include/index.h"
 #include "../Util/include/runtime.h"
 
@@ -749,11 +752,9 @@ namespace Core
 	void StakeMinter(void* parg)
 	{	
 		printf("Stake Minter Started\n");
-		SetThreadPriority(THREAD_PRIORITY_LOWEST);
 
 		// Each thread has its own key and counter
 		Wallet::CReserveKey reservekey(pwalletMain);
-
 
 		while(!fShutdown)
 		{
@@ -762,10 +763,6 @@ namespace Core
 
 			/* Don't stake if the wallet is locked. */
 			if (pwalletMain->IsLocked())
-				continue;
-
-			/* Don't stake if there are no available nodes. */
-			if (Net::vNodes.empty() || IsInitialBlockDownload())
 				continue;
 			
 			/* Lower Level Database Instance. */
@@ -861,7 +858,7 @@ namespace Core
 			
 			
 			if(GetArg("-verbose", 0) >= 1)			
-				printf("Stake Minter : Staking at Trust Weight %f | Block Weight %f | Coin Age %"PRIu64" | Trust Age %"PRIu64"| Block Age %"PRIu64"\n", nTrustWeight, nBlockWeight, nCoinAge, nTrustAge, nBlockAge);
+				printf("Stake Minter : Staking at Trust Weight %f | Block Weight %f | Coin Age %" PRIu64 " | Trust Age %" PRIu64 "| Block Age %" PRIu64 "\n", nTrustWeight, nBlockWeight, nCoinAge, nTrustAge, nBlockAge);
 			
 			bool fFound = false;
 			while(!fFound)
@@ -899,7 +896,7 @@ namespace Core
 					hashTarget.SetCompact(block[i].nBits);
 					
 					if(block[i].nNonce % (unsigned int)((nTrustWeight + nBlockWeight) * 5) == 0 && GetArg("-verbose", 0) >= 3)
-						printf("Stake Minter : Below Threshold %f Required %f Incrementing nNonce %"PRIu64"\n", nThreshold, nRequired, block[i].nNonce);
+						printf("Stake Minter : Below Threshold %f Required %f Incrementing nNonce %" PRIu64 "\n", nThreshold, nRequired, block[i].nNonce);
 							
 					if (block[i].GetHash() < hashTarget.getuint1024())
 					{
@@ -924,7 +921,7 @@ namespace Core
 							break;
 						}
 						
-						if (!block[i].CheckBlock())
+						if (!pManager->blkPool.Check(block[i]))
 						{
 							if(GetArg("-verbose", 0) >= 1)
 								error("Stake Minter : Check Block Failed...");
@@ -935,9 +932,7 @@ namespace Core
 						if(GetArg("-verbose", 0) >= 1)
 							block[i].print();
 						
-						SetThreadPriority(THREAD_PRIORITY_NORMAL);
 						CheckWork(&block[i], *pwalletMain, reservekey);
-						SetThreadPriority(THREAD_PRIORITY_LOWEST);
 						
 						fFound = true;
 					}

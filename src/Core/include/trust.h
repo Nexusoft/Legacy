@@ -14,6 +14,7 @@ ________________________________________________________________________________
 #ifndef NEXUS_CORE_INCLUDE_TRUST_H
 #define NEXUS_CORE_INCLUDE_TRUST_H
 
+
 #include "../../Util/templates/serialize.h"
 #include "../../Util/include/mutex.h"
 #include "../../Util/include/runtime.h"
@@ -109,23 +110,28 @@ namespace Core
 		
 		
 		/* Dump to Console information about current Trust Key. */
-		void Print()
+		std::string ToString()
 		{
 			uint576 cKey;
 			cKey.SetBytes(vchPubKey);
 			
-			printf("CTrustKey(Hash = %s, Key = %s, Genesis = %s, Tx = %s, Time = %u, Age = %" PRIu64 ", BlockAge = %" PRIu64 ", Expired = %s)\n", GetHash().ToString().c_str(), cKey.ToString().c_str(), hashGenesisBlock.ToString().c_str(), hashGenesisTx.ToString().c_str(), nGenesisTime, Age(Timestamp()), BlockAge(Timestamp()), Expired(Timestamp()) ? "TRUE" : "FALSE");
+			return strprintf("CTrustKey(Hash = %s, Key = %s, Genesis = %s, Tx = %s, Time = %u, Age = %" PRIu64 ", BlockAge = %" PRIu64 ", Expired = %s)", GetHash().ToString().c_str(), cKey.ToString().c_str(), hashGenesisBlock.ToString().c_str(), hashGenesisTx.ToString().c_str(), nGenesisTime, Age(Timestamp()), BlockAge(Timestamp()), Expired(Timestamp()) ? "TRUE" : "FALSE");
 		}
+		
+		void Print(){ printf("%s\n", ToString().c_str()); }
 	};	
 	
 	
 	/* Holding Class Structure to contain the Trust Keys. */
 	class CTrustPool
 	{
-	private:
-		mutable std::map<uint576, CTrustKey> mapTrustKeys;
-
 	public:
+		
+		/* Trust Keys internal Map. */
+		mutable std::map<uint576, CTrustKey> mapTrustKeys;
+		
+		
+		/* Internal Mutex. */
 		Mutex_t MUTEX;
 		
 		
@@ -183,7 +189,7 @@ namespace Core
 	
 	
 	/* Declration of the Function that will act for the Staking Thread. */
-	void StakeMinter();
+	void StakeMinter(void* parg);
 	
 }
 

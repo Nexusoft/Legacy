@@ -35,11 +35,11 @@ namespace Core
 	
 	
 	/* Calculate the Compounded amount of NXS to be released over the (nInterval) minutes. */
-	int64 CompoundSubsidy(int nMinutes, int nInterval);
+	int64 SubsidyInterval(int nMinutes, int nInterval);
 	
 	
 	/* Calculate the Compounded amount of NXS that should "ideally" have been created to this minute. */
-	int64 CompoundSubsidy(int nMinutes);
+	int64 CompoundSubsidy(int nMinutes, int nTypes = 3);
 	
 	
 	/* Get the total supply of NXS in the chain from the Index Objects that is calculated as chain is built. */
