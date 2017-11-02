@@ -1,4 +1,4 @@
-# Install Prerequisites
+## Install Prerequisites
 
 Using MacPorts (or HomeBrew, but these instructions will assume MacPorts), install the required libraries. +universal option for easy compiling of i386 or x86_64 architectures
 
@@ -14,7 +14,7 @@ Install QT (Ensure to use +framework for deployment)
 
 **Important**: The makefile and QT project file assume a build for a 32-bit target for maximum compatibility. Edit /opt/local/etc/macports/macports.conf and uncomment "build_arch i386". It is possible to have a second 32-bit install just for these builds.
 
-# Building Nexus Daemon
+## Building Nexus Daemon
 
 Make sure yua are in your home directory, or the directory you would like the source code to be.
 
@@ -23,7 +23,7 @@ Make sure yua are in your home directory, or the directory you would like the so
     make -f makefile.osx RELEASE=1 STATIC=1 USE_UPNP=1
     strip nexus
 
-# Building Nexus-Qt
+## Building Nexus-Qt
 
 With the prerequisite software installed, do the following:
 
