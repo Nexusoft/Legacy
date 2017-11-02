@@ -3,13 +3,13 @@
 Some of the code in this software was written by Satoshi Nakamoto, and some
 was written by the Bitcoin Core Developers over the years of 2008 - 2012. 
 Most of the code has been written by Videlicet and the Nexus Core Developers
-over the years of 2014 to 2017 with aim to provide backwards compatability
+over the years of 2014 to 2017 with aim to provide backwards compatibility
 to upgrades in the Bitcoin protocol proving stability and security of new
 architectures to create opportunities for other currencies to enhance their
 technology. It is asked in light of this for those that wish to copy and learn
 from this source code to examine it carefully and learn thoroughly rather than
-doing a copy/paste. Add to the technology as we have added to the technolgoy of
-Bitcoin and Crypto Currencies, and share it in effort to provide coopeartion in
+doing a copy/paste. Add to the technology as we have added to the technology of
+Bitcoin and Crypto Currencies, and share it in effort to provide cooperation in
 technology that has the potential to reinvent the world as we know it.
 
 
