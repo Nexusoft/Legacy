@@ -24,15 +24,15 @@ continued development of new architecture, organizations, financial contracts, a
 distributed consensus and voting with the proper checks and balances. When the entire
 framework is complete, it will provide value to many other currencies besides nexus, and
 be capable of allowing the world to form structured systems together that can operate 
-independent of one another, and be connected through the distrubted network. This will 
+independent of one another, and be connected through the distributed network. This will 
 create greater opportunity for those that have limited access to such things.
 
 Development
 -----------
 
-Anyone is free to work on the source, `master` branch is regulary build and tested, but do
+Anyone is free to work on the source, `master` branch is regularly build and tested, but do
 not consider it completely stable until full releases. Please submit pull requests at your
-descretion if you would like to contribute to the core codebase. a contributing schematic
+discretion if you would like to contribute to the core codebase. A contributing schematic
 will be provided soon on our standard for development.
 
 
