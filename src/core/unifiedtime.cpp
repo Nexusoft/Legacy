@@ -41,7 +41,7 @@ const char* DNS_SeedNodes[] =
 	"node2.nexusearth.com",
 	"node2.mercuryminer.com",
 	"node2.nexusminingpool.com",
-        "node2.nexus2.space",
+	"node2.nexus2.space",
 	"node2.barbequemedia.com",
 	"node2.nxsorbitalscan.com",
 	"node2.nxs.efficienthash.com",
@@ -103,9 +103,9 @@ const char* DNS_SeedNodes[] =
 /** Declarations for the DNS Seed Nodes. **/
 const char* DNS_SeedNodes_Testnet[] =
 {
-		"nexustestnet.cryptocurrency.ninja",
-		"nexustestnet03.cryptocurrency.ninja",
-		'\0'
+	"nexustestnet.cryptocurrency.ninja",
+	"nexustestnet03.cryptocurrency.ninja",
+	'\0'
 };
 
 /** Seed Nodes for Unified Time. **/
@@ -164,7 +164,7 @@ void ThreadTimeRegulator(void* parg)
 		if(nElapsed > (MAX_UNIFIED_DRIFT + 10) || nElapsed < ((MAX_UNIFIED_DRIFT - 10) * -1))
 		{
 			UNIFIED_TIME_DATA.clear();
-			UNIFIED_AVERAGE_OFFSET -= nElapsed;
+			UNIFIED_AVERAGE_OFFSET -= (nElapsed - 10);
 						
 			printf("***** LLP Clock Regulator: Time Changed by %"PRId64" Seconds. New Offset %i\n", nElapsed, UNIFIED_AVERAGE_OFFSET);
 		}
