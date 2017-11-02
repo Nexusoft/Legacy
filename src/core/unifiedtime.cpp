@@ -130,7 +130,6 @@ void InitializeUnifiedTime()
 {
 	printf("***** Unified Time Initialized to %i\n", UNIFIED_AVERAGE_OFFSET);
 	
-	CreateThread(ThreadTimeRegulator,  NULL);
 	CreateThread(ThreadUnifiedSamples, NULL);
 }
 
@@ -148,43 +147,12 @@ int GetUnifiedAverage()
 	return (int) (nAverage / (double) std::min(MAX_UNIFIED_SAMPLES, (int)UNIFIED_TIME_DATA.size()) + 0.5);
 }
 
-/* This method will make sure the clock isn't changed at any point. */
-void ThreadTimeRegulator(void* parg)
-{
-	while(!fShutdown)
-	{
-		/** Regulate the Clock while Waiting, and Break if the Clock Changes. **/
-		int64 nTimestamp = GetLocalTimestamp();
-		Sleep(10000);
-		
-		if(!fTimeUnified)
-			continue;
-					
-		int64 nElapsed = GetLocalTimestamp() - nTimestamp;
-		if(nElapsed > (MAX_UNIFIED_DRIFT + 10) || nElapsed < ((MAX_UNIFIED_DRIFT - 10) * -1))
-		{
-			UNIFIED_TIME_DATA.clear();
-			UNIFIED_AVERAGE_OFFSET -= (nElapsed - 10);
-						
-			printf("***** LLP Clock Regulator: Time Changed by %"PRId64" Seconds. New Offset %i\n", nElapsed, UNIFIED_AVERAGE_OFFSET);
-		}
-	}
-}
-
 
 /** Regulator of the Unified Clock **/
 void ThreadUnifiedSamples(void* parg)
 {
 	/** Compile the Seed Nodes into a set of Vectors. **/
 	SEED_NODES    = DNS_Lookup(fTestNet ? DNS_SeedNodes_Testnet : DNS_SeedNodes);
-	
-	/* If the node happens to be offline, wait and recursively attempt to get the DNS seeds. */
-	if(SEED_NODES.empty()) {
-		Sleep(10000);
-		
-		fTimeUnified = true;
-		ThreadUnifiedSamples(parg);
-	}
 	
 	/** Iterator to be used to ensure every time seed is giving an equal weight towards the Global Seeds. **/
 	int nIterator = -1;
@@ -264,6 +232,8 @@ void ThreadUnifiedSamples(void* parg)
 			if(nSamples.Samples() == 0)
 			{
 				printf("***** Core LLP: Failed To Get Time Samples.\n");
+				SEEDS.erase(SEEDS.begin() + nIterator);
+				
 				SERVER.Close();
 				
 				continue;
@@ -315,8 +285,28 @@ void ThreadUnifiedSamples(void* parg)
 					printf("***** %i Iterator | %i Offset | %i Current | %"PRId64"\n", UNIFIED_MOVING_ITERATOR, nSamples.Majority(), UNIFIED_AVERAGE_OFFSET, GetUnifiedTimestamp());
 			}
 			
-			/* Sleep for 5 Minutes Between Sample. */
-			Sleep(60000);
+			
+			/* Sleep for 1 Minutes Between Sample. */
+			for(int sec = 0; sec < 60; sec ++)
+			{
+				/** Regulate the Clock while Waiting, and Break if the Clock Changes. **/
+				int64 nTimestamp = GetLocalTimestamp();
+				Sleep(1000);
+							
+				int64 nElapsed = GetLocalTimestamp() - nTimestamp;
+				if(nElapsed != 1)
+				{
+					UNIFIED_TIME_DATA.clear();
+					UNIFIED_AVERAGE_OFFSET -= (nElapsed + 1);
+					
+					fTimeUnified = false;
+								
+					printf("***** LLP Clock Regulator: Time Changed by %"PRId64" Seconds. New Offset %i\n", nElapsed, UNIFIED_AVERAGE_OFFSET);
+					
+					break;
+				}
+			}
+			
 		}
 		catch(std::exception& e){ printf("UTM ERROR: %s\n", e.what()); }
 	}
