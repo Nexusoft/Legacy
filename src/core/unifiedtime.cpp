@@ -197,7 +197,7 @@ void ThreadUnifiedSamples(void* parg)
 			/** Read the Samples from the Server. **/
 			while(SERVER.Connected() && !SERVER.Errors() && !SERVER.Timeout(5))
 			{
-				Sleep(100);
+				Sleep(1);
 			
 				SERVER.ReadPacket();
 				if(SERVER.PacketComplete())
@@ -220,7 +220,7 @@ void ThreadUnifiedSamples(void* parg)
 				}
 				
 				/** Close the Connection Gracefully if Received all Packets. **/
-				if(nSamples.Samples() == 9)
+				if(nSamples.Samples() >= 5)
 				{
 					SERVER.Close();
 					break;
@@ -287,14 +287,14 @@ void ThreadUnifiedSamples(void* parg)
 			
 			
 			/* Sleep for 1 Minutes Between Sample. */
-			for(int sec = 0; sec < 60; sec ++)
+			for(int sec = 0; sec < 6; sec ++)
 			{
 				/** Regulate the Clock while Waiting, and Break if the Clock Changes. **/
 				int64 nTimestamp = GetLocalTimestamp();
-				Sleep(1000);
+				Sleep(10000);
 							
 				int64 nElapsed = GetLocalTimestamp() - nTimestamp;
-				if(nElapsed != 1)
+				if(nElapsed != 10)
 				{
 					UNIFIED_TIME_DATA.clear();
 					UNIFIED_AVERAGE_OFFSET -= (nElapsed + 1);
