@@ -92,6 +92,13 @@ namespace LLP
 		{
 			Packet PACKET   = this->INCOMING;
 			
+			/* Drop all connections if the clock is not in Unified Time.
+			 * Could happen on initialization or if your clock is reset by the OS
+			 */
+			if(!fTimeUnified)
+				return false;
+			
+			
 			//TODO: Calculate the latency of the request and put that into the time equation
 			if(PACKET.HEADER == GET_OFFSET)
 			{

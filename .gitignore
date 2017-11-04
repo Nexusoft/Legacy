@@ -7,3 +7,7 @@
 *.Release
 *.kate-swp
 *.db
+build/moc/
+build/ui/
+build/obj/
+dist/
