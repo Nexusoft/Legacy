@@ -754,9 +754,9 @@ public:
 // Note: It turns out we might have been able to use boost::thread
 // by using TerminateThread(boost::thread.native_handle(), 0);
 #ifdef WIN32
-typedef HANDLE bitcoin_pthread_t;
+typedef HANDLE nexus_pthread_t;
 
-inline bitcoin_pthread_t CreateThread(void(*pfn)(void*), void* parg, bool fWantHandle=false)
+inline nexus_pthread_t CreateThread(void(*pfn)(void*), void* parg, bool fWantHandle=false)
 {
     DWORD nUnused = 0;
     HANDLE hthread =
@@ -770,12 +770,12 @@ inline bitcoin_pthread_t CreateThread(void(*pfn)(void*), void* parg, bool fWantH
     if (hthread == NULL)
     {
         printf("Error: CreateThread() returned %d\n", GetLastError());
-        return (bitcoin_pthread_t)0;
+        return (nexus_pthread_t)0;
     }
     if (!fWantHandle)
     {
         CloseHandle(hthread);
-        return (bitcoin_pthread_t)-1;
+        return (nexus_pthread_t)-1;
     }
     return hthread;
 }

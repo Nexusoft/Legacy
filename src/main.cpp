@@ -48,7 +48,7 @@ void ExitTimeout(void* parg)
 void StartShutdown()
 {
 #ifdef QT_GUI
-    // ensure we leave the Qt main loop for a clean GUI exit (Shutdown() is called in bitcoin.cpp afterwards)
+    // ensure we leave the Qt main loop for a clean GUI exit (Shutdown() is called afterwards)
     QueueShutdown();
 #else
     // Without UI, Shutdown() can simply be started in a new thread
@@ -85,7 +85,7 @@ void Shutdown(void* parg)
         printf("Nexus exiting\n\n");
         fExit = true;
 #ifndef QT_GUI
-        // ensure non UI client get's exited here, but let Nexus-Qt reach return 0; in bitcoin.cpp
+        // ensure non UI client get's exited here, but let Nexus-Qt reach return 0;
         exit(0);
 #endif
     }

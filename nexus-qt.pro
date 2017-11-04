@@ -7,17 +7,17 @@ CONFIG += no_include_pwd
 CONFIG += warn_off
 
 #Manually Link to Windoze Library Locations
-windows:BOOST_LIB_SUFFIX=-mgw49-mt-s-1_55
-windows:BOOST_INCLUDE_PATH=C:/Deps/boost_1_55_0
-windows:BOOST_LIB_PATH=C:/Deps/boost_1_55_0/stage/lib
+windows:BOOST_LIB_SUFFIX=-mgw49-mt-s-1_57
+windows:BOOST_INCLUDE_PATH=C:/Deps/boost_1_57_0
+windows:BOOST_LIB_PATH=C:/Deps/boost_1_57_0/stage/lib
 windows:BDB_INCLUDE_PATH=C:/Deps/db-4.8.30.NC/build_unix
 windows:BDB_LIB_PATH=C:/Deps/db-4.8.30.NC/build_unix
-windows:OPENSSL_INCLUDE_PATH=C:/Deps/openssl-1.0.1p/include
-windows:OPENSSL_LIB_PATH=C:/Deps/openssl-1.0.1p
+windows:OPENSSL_INCLUDE_PATH=C:/Deps/openssl-1.0.1l/include
+windows:OPENSSL_LIB_PATH=C:/Deps/openssl-1.0.1l
 windows:MINIUPNPC_INCLUDE_PATH=C:/Deps/
 windows:MINIUPNPC_LIB_PATH=C:/Deps/miniupnpc
-windows:QRENCODE_INCLUDE_PATH=C:/Deps/qrencode-3.4.3
-windows:QRENCODE_LIB_PATH=C:/Deps/qrencode-3.4.3/.libs
+windows:QRENCODE_INCLUDE_PATH=C:/Deps/qrencode-3.4.4
+windows:QRENCODE_LIB_PATH=C:/Deps/qrencode-3.4.4/.libs
 
 
 # for boost 1.37, add -mt to the boost libraries 
@@ -33,6 +33,13 @@ windows:QRENCODE_LIB_PATH=C:/Deps/qrencode-3.4.3/.libs
 OBJECTS_DIR = build/obj
 MOC_DIR = build/moc
 UI_DIR = build/ui
+
+#debug symbols for QT
+contains(DEBUG, 1) {
+    message("Building with Debug Symbols")
+    QMAKE_CXXFLAGS += -g
+	CONFIG += DEBUG
+}
 
 # use: qmake "RELEASE=1"
 contains(RELEASE, 1) {
@@ -59,7 +66,7 @@ contains(RELEASE, 1) {
 # use: qmake "USE_QRCODE=1"
 # libqrencode (http://fukuchi.org/works/qrencode/index.en.html) must be installed for support
 contains(USE_QRCODE, 1) {
-    message(Building with QRCode support)
+    message("Building with QRCode support")
     DEFINES += USE_QRCODE
     LIBS += -lqrencode
 }
@@ -69,7 +76,7 @@ contains(USE_QRCODE, 1) {
 #  or: qmake "USE_UPNP=-" (not supported)
 # miniupnpc (http://miniupnp.free.fr/files/) must be installed for support
 contains(USE_UPNP, 1) {
-    message(Building with UPNP support)
+    message("Building with UPNP support")
     count(USE_UPNP, 0) {
         USE_UPNP=1
     }
@@ -78,13 +85,13 @@ contains(USE_UPNP, 1) {
     LIBS += $$join(MINIUPNPC_LIB_PATH,,-L,) -lminiupnpc
     win32:LIBS += -liphlpapi
 } else {
-    message(Building without UPNP support)
+    message("Building without UPNP support")
 }
 
 #handle the LLD build option
-contains(USE_LLD, 1)
+contains(USE_LLD, 0)
 {
-	message(Building with Lower Level Database Support)
+	message("Building with Lower Level Database Support")
 	
 	DEFINES += USE_LLD
 }
@@ -102,8 +109,8 @@ contains(FIRST_CLASS_MESSAGING, 1) {
     DEFINES += FIRST_CLASS_MESSAGING
 }
 
-contains(BITCOIN_NEED_QT_PLUGINS, 1) {
-    DEFINES += BITCOIN_NEED_QT_PLUGINS
+contains(NEXUS_NEED_QT_PLUGINS, 1) {
+    DEFINES += NEXUS_NEED_QT_PLUGINS
     QTPLUGIN += qcncodecs qjpcodecs qtwcodecs qkrcodecs qtaccessiblewidgets
 }
 
@@ -328,7 +335,7 @@ PRE_TARGETDEPS += compiler_TSQM_make_all
 
 # "Other files" to show in Qt Creator
 OTHER_FILES += \
-    doc/*.rst doc/*.txt doc/README src/qt/res/nexus-qt.rc
+    #doc/*.rst doc/*.txt doc/README src/qt/res/nexus-qt.rc
 
 # platform specific defaults, if not overridden on command line
 isEmpty(BOOST_LIB_SUFFIX) {
