@@ -151,16 +151,19 @@ int GetUnifiedAverage()
 /** Regulator of the Unified Clock **/
 void ThreadUnifiedSamples(void* parg)
 {
-	/** Compile the Seed Nodes into a set of Vectors. **/
+	/* set the proper Thread priorities. */
+	SetThreadPriority(THREAD_PRIORITY_ABOVE_NORMAL);
+	
+	/* Compile the Seed Nodes into a set of Vectors. */
 	SEED_NODES    = DNS_Lookup(fTestNet ? DNS_SeedNodes_Testnet : DNS_SeedNodes);
 	
-	/** Iterator to be used to ensure every time seed is giving an equal weight towards the Global Seeds. **/
+	/* Iterator to be used to ensure every time seed is giving an equal weight towards the Global Seeds. */
 	int nIterator = -1;
 	
 	for(int nIndex = 0; nIndex < SEED_NODES.size(); nIndex++)
 		SEEDS.push_back(SEED_NODES[nIndex].ToStringIP());
 	
-	/** The Entry Client Loop for Core LLP. **/
+	/* The Entry Client Loop for Core LLP. */
 	string ADDRESS = "";
 	LLP::CoreOutbound SERVER("", strprintf("%u", (fTestNet ? TESTNET_CORE_LLP_PORT : NEXUS_CORE_LLP_PORT)));
 	loop
@@ -168,16 +171,16 @@ void ThreadUnifiedSamples(void* parg)
 		try
 		{
 		
-			/** Randomize the Time Seed Connection Iterator. **/
+			/* Randomize the Time Seed Connection Iterator. */
 			nIterator = GetRandInt(SEEDS.size() - 1);
 			
 			
-			/** Connect to the Next Seed in the Iterator. **/
+			/* Connect to the Next Seed in the Iterator. */
 			SERVER.IP = SEEDS[nIterator];
 			SERVER.Connect();
 			
 			
-			/** If the Core LLP isn't connected, Retry in 10 Seconds. **/
+			/* If the Core LLP isn't connected, Retry in 10 Seconds. */
 			if(!SERVER.Connected())
 			{
 				printf("***** Core LLP: Failed To Connect To %s:%s\n", SERVER.IP.c_str(), SERVER.PORT.c_str());
@@ -186,11 +189,11 @@ void ThreadUnifiedSamples(void* parg)
 			}
 
 			
-			/** Use a CMajority to Find the Sample with the Most Weight. **/
+			/* Use a CMajority to Find the Sample with the Most Weight. */
 			CMajority<int> nSamples;
 			
 			
-			/** Get 10 Samples From Server. **/
+			/* Get 10 Samples From Server. */
 			SERVER.GetOffset((unsigned int)GetLocalTimestamp());
 				
 				
@@ -204,7 +207,7 @@ void ThreadUnifiedSamples(void* parg)
 				{
 					LLP::Packet PACKET = SERVER.NewPacket();
 					
-					/** Add a New Sample each Time Packet Arrives. **/
+					/* Add a New Sample each Time Packet Arrives. */
 					if(PACKET.HEADER == SERVER.TIME_OFFSET)
 					{
 						int nOffset = bytes2int(PACKET.DATA);
@@ -219,7 +222,7 @@ void ThreadUnifiedSamples(void* parg)
 					SERVER.ResetPacket();
 				}
 				
-				/** Close the Connection Gracefully if Received all Packets. **/
+				/* Close the Connection Gracefully if Received all Packets. */
 				if(nSamples.Samples() >= 5)
 				{
 					SERVER.Close();
@@ -228,7 +231,7 @@ void ThreadUnifiedSamples(void* parg)
 			}
 			
 			
-			/** If there are no Successful Samples, Try another Connection. **/
+			/* If there are no Successful Samples, Try another Connection. */
 			if(nSamples.Samples() == 0)
 			{
 				printf("***** Core LLP: Failed To Get Time Samples.\n");
@@ -240,8 +243,9 @@ void ThreadUnifiedSamples(void* parg)
 			}
 			
 			/* These checks are for after the first time seed has been established. 
-				TODO: Look at the possible attack vector of the first time seed being manipulated.
-						This could be easily done by allowing the time seed to be created by X nodes and then check the drift. */
+			 * 
+			 * TODO: Look at the possible attack vector of the first time seed being manipulated.
+			 * This could be easily done by allowing the time seed to be created by X nodes and then check the drift. */
 			if(fTimeUnified)
 			{
 			
@@ -256,7 +260,7 @@ void ThreadUnifiedSamples(void* parg)
 				}
 			}
 			
-			/** If the Moving Average is filled with samples, continue iterating to keep it moving. **/
+			/* If the Moving Average is filled with samples, continue iterating to keep it moving. */
 			if(UNIFIED_TIME_DATA.size() >= MAX_UNIFIED_SAMPLES)
 			{
 				if(UNIFIED_MOVING_ITERATOR >= MAX_UNIFIED_SAMPLES)
@@ -267,7 +271,7 @@ void ThreadUnifiedSamples(void* parg)
 			}
 				
 				
-			/** If The Moving Average is filling, move the iterator along with the Time Data Size. **/
+			/* If The Moving Average is filling, move the iterator along with the Time Data Size. */
 			else
 			{
 				UNIFIED_MOVING_ITERATOR = UNIFIED_TIME_DATA.size();
@@ -275,7 +279,7 @@ void ThreadUnifiedSamples(void* parg)
 			}
 			
 
-			/** Update Iterators and Flags. **/
+			/* Update Iterators and Flags. */
 			if((UNIFIED_TIME_DATA.size() > 0))
 			{
 				fTimeUnified = true;
@@ -286,7 +290,12 @@ void ThreadUnifiedSamples(void* parg)
 			}
 			
 			
-			/* Sleep for 1 Minutes Between Sample. */
+			/* Sleep for 1 Minutes Between Sample.
+			 * 
+			 * Check this for Time Drift.
+			 * This is useful if the clock is changed by the operating system
+			 * 
+			 */
 			for(int sec = 0; sec < 6; sec ++)
 			{
 				/** Regulate the Clock while Waiting, and Break if the Clock Changes. **/
@@ -312,7 +321,7 @@ void ThreadUnifiedSamples(void* parg)
 	}
 }
 
-/** DNS Query of Domain Names Associated with Seed Nodes **/
+/* DNS Query of Domain Names Associated with Seed Nodes */
 vector<Net::CAddress> DNS_Lookup(const char* DNS_Seed[])
 {
 	vector<Net::CAddress> vNodes;
