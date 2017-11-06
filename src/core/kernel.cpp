@@ -767,7 +767,7 @@ namespace Core
 			LLD::CIndexDB indexdb("r");
 			
 			/* Take a snapshot of the best block. */
-			CBlockIndex* pindex = pindexBest;
+			uint1024 hashBest = hashBestChain;
 			
 			/* Create the block(s) to work on. */
 			CBlock* pblock = CreateNewBlock(reservekey, pwalletMain, 0);
@@ -785,20 +785,25 @@ namespace Core
 				if (!pwalletMain->AddCoinstakeInputs(block[i].vtx[0]))
 					break;
 				
-				AddTransactions(block[i].vtx, pindex);
+				AddTransactions(block[i].vtx, pindexBest);
 				
 				block[i].hashMerkleRoot   = block[i].BuildMerkleTree();
 			}
-			if(i != 8 || pindex->GetBlockHash() != pindexBest->GetBlockHash())
+			
+			/* Clean up memory. */
+			delete pblock;
+			
+			/* Retry if coinstake wasn't created properly. */
+			if(i != 8)
 				continue;
 			
 			if(GetArg("-verbose", 0) >= 2)
-				printf("Stake Minter : Created New Block %s\n", pblock->GetHash().ToString().substr(0, 20).c_str());
+				printf("Stake Minter : Created New Block %s\n", block[0].GetHash().ToString().substr(0, 20).c_str());
 			
 			/* Extract the public key from the block. */
 			vector< std::vector<unsigned char> > vKeys;
 			Wallet::TransactionType keyType;
-			if (!Wallet::Solver(pblock->vtx[0].vout[0].scriptPubKey, keyType, vKeys))
+			if (!Wallet::Solver(block[0].vtx[0].vout[0].scriptPubKey, keyType, vKeys))
 			{
 				if(GetArg("-verbose", 0) >= 2)
 					error("Stake Minter : Failed To Solve Trust Key Script.");
@@ -824,8 +829,8 @@ namespace Core
 			double nTrustWeight = 0.0, nBlockWeight = 0.0;
 			if(cTrustPool.Exists(cKey))
 			{
-				nTrustAge = cTrustPool.Find(cKey).Age(pindex->GetBlockTime());
-				nBlockAge = cTrustPool.Find(cKey).BlockAge(pindex->GetBlockTime());
+				nTrustAge = cTrustPool.Find(cKey).Age(pindexBest->GetBlockTime());
+				nBlockAge = cTrustPool.Find(cKey).BlockAge(pindexBest->GetBlockTime());
 					
 				/* Trust Weight Reaches Maximum at 30 day Limit. */
 				nTrustWeight = min(17.5, (((16.5 * log(((2.0 * nTrustAge) / (60 * 60 * 24 * 28)) + 1.0)) / log(3))) + 1.0);
@@ -862,7 +867,7 @@ namespace Core
 			{
 				Sleep(120);
 				
-				if(pindex->GetBlockHash() != pindexBest->GetBlockHash())
+				if(hashBestChain != hashBest)
 				{
 					if(GetArg("-verbose", 0) >= 2)
 						printf("Stake Minter : New Best Block\n");
