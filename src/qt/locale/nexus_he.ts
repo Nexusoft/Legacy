@@ -226,7 +226,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="102"/>
-        <source>WARNING: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR NexusS&lt;/b&gt;!
+        <source>WARNING: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR NXS&lt;/b&gt;!
 Are you sure you wish to encrypt your wallet?</source>
         <translation>אזהרה: אם תצפין את הארנק שלך ותאבד את הסיסמה אתה &lt;b&gt;תאבד את כל הביטקוין שלך&lt;/b&gt;!
 אתה בטוח שברצונך להצפין את הארנק?</translation>
@@ -239,7 +239,7 @@ Are you sure you wish to encrypt your wallet?</source>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="112"/>
-        <source>Nexus will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your Nexuss from being stolen by malware infecting your computer.</source>
+        <source>Nexus will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your NXS from being stolen by malware infecting your computer.</source>
         <translation>ביטקוין ייסגר עכשיו כדי להשלים את תהליך ההצפנה. זכור שהצפנת הארנק שלך אינו יכול להגן באופן מלא על הביטקוינים שלך מתוכנות זדוניות המושתלות על המחשב.</translation>
     </message>
     <message>

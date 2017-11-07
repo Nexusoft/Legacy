@@ -226,9 +226,9 @@ Dette produktet inneholder programvare utviklet av OpenSSL prosjektet for bruk i
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="102"/>
-        <source>WARNING: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR NexusS&lt;/b&gt;!
+        <source>WARNING: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR NXS&lt;/b&gt;!
 Are you sure you wish to encrypt your wallet?</source>
-        <translation>ADVARSEL: Hvis du krypterer lommeboken og mister adgangsfrasen vil du &lt;b&gt;MISTE ALLE DINE NexusS&lt;/b&gt;!
+        <translation>ADVARSEL: Hvis du krypterer lommeboken og mister adgangsfrasen vil du &lt;b&gt;MISTE ALLE DINE NXS&lt;/b&gt;!
 Er du sikker på at du vil kryptere lommeboken?</translation>
     </message>
     <message>
@@ -239,8 +239,8 @@ Er du sikker på at du vil kryptere lommeboken?</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="112"/>
-        <source>Nexus will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your Nexuss from being stolen by malware infecting your computer.</source>
-        <translation>Nexus vil nå lukkes for å fullføre krypteringsprosessen. Husk at kryptering av lommeboken ikke fullt ut kan beskytte dine Nexuss fra å bli stjålet om skadevare infiserer datamaskinen.</translation>
+        <source>Nexus will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your NXS from being stolen by malware infecting your computer.</source>
+        <translation>Nexus vil nå lukkes for å fullføre krypteringsprosessen. Husk at kryptering av lommeboken ikke fullt ut kan beskytte dine NXS fra å bli stjålet om skadevare infiserer datamaskinen.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="208"/>
@@ -341,7 +341,7 @@ Er du sikker på at du vil kryptere lommeboken?</translation>
     <message>
         <location filename="../core/gui.cpp" line="194"/>
         <source>&amp;Receive coins</source>
-        <translation>&amp;Motta Nexuss</translation>
+        <translation>&amp;Motta NXS</translation>
     </message>
     <message>
         <location filename="../core/gui.cpp" line="195"/>
@@ -351,12 +351,12 @@ Er du sikker på at du vil kryptere lommeboken?</translation>
     <message>
         <location filename="../core/gui.cpp" line="200"/>
         <source>&amp;Send coins</source>
-        <translation>&amp;Send Nexuss</translation>
+        <translation>&amp;Send NXS</translation>
     </message>
     <message>
         <location filename="../core/gui.cpp" line="201"/>
         <source>Send coins to a Nexus address</source>
-        <translation>Send Nexuss til en adresse</translation>
+        <translation>Send NXS til en adresse</translation>
     </message>
     <message>
         <location filename="../core/gui.cpp" line="206"/>
@@ -1025,7 +1025,7 @@ p, li { white-space: pre-wrap; }
         <location filename="../sendcoinsdialog.cpp" line="148"/>
         <location filename="../sendcoinsdialog.cpp" line="153"/>
         <source>Send Coins</source>
-        <translation>Send Nexuss</translation>
+        <translation>Send NXS</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="64"/>
@@ -1075,7 +1075,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../sendcoinsdialog.cpp" line="99"/>
         <source>Confirm send coins</source>
-        <translation>Bekreft sending av Nexuss</translation>
+        <translation>Bekreft sending av NXS</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="100"/>
@@ -1676,12 +1676,12 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../core/strings.cpp" line="11"/>
         <source>Generate coins</source>
-        <translation>Generér Nexuss</translation>
+        <translation>Generér NXS</translation>
     </message>
     <message>
         <location filename="../core/strings.cpp" line="12"/>
         <source>Don&apos;t generate coins</source>
-        <translation>Ikke generér Nexuss</translation>
+        <translation>Ikke generér NXS</translation>
     </message>
     <message>
         <location filename="../core/strings.cpp" line="13"/>

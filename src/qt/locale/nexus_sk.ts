@@ -220,7 +220,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="102"/>
-        <source>WARNING: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR NexusS&lt;/b&gt;!
+        <source>WARNING: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR NXS&lt;/b&gt;!
 Are you sure you wish to encrypt your wallet?</source>
         <translation>VAROVANIE: Ak zašifrujete peňaženku a stratíte heslo, &lt;b&gt;STRATÍTE VŠETKY VAŠE NexusY&lt;/b&gt;!⏎
 Ste si istí, že si želáte zašifrovať peňaženku?</translation>
@@ -233,7 +233,7 @@ Ste si istí, že si želáte zašifrovať peňaženku?</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="112"/>
-        <source>Nexus will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your Nexuss from being stolen by malware infecting your computer.</source>
+        <source>Nexus will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your NXS from being stolen by malware infecting your computer.</source>
         <translation type="unfinished"/>
     </message>
     <message>
@@ -335,7 +335,7 @@ Ste si istí, že si želáte zašifrovať peňaženku?</translation>
     <message>
         <location filename="../core/gui.cpp" line="194"/>
         <source>&amp;Receive coins</source>
-        <translation>&amp;Prijať Nexuss</translation>
+        <translation>&amp;Prijať NXS</translation>
     </message>
     <message>
         <location filename="../core/gui.cpp" line="195"/>
@@ -345,12 +345,12 @@ Ste si istí, že si želáte zašifrovať peňaženku?</translation>
     <message>
         <location filename="../core/gui.cpp" line="200"/>
         <source>&amp;Send coins</source>
-        <translation>&amp;Poslať Nexuss</translation>
+        <translation>&amp;Poslať NXS</translation>
     </message>
     <message>
         <location filename="../core/gui.cpp" line="201"/>
         <source>Send coins to a Nexus address</source>
-        <translation>Poslať Nexuss na adresu</translation>
+        <translation>Poslať NXS na adresu</translation>
     </message>
     <message>
         <location filename="../core/gui.cpp" line="206"/>
@@ -1014,7 +1014,7 @@ p, li { white-space: pre-wrap; }
         <location filename="../sendcoinsdialog.cpp" line="148"/>
         <location filename="../sendcoinsdialog.cpp" line="153"/>
         <source>Send Coins</source>
-        <translation>Poslať Nexuss</translation>
+        <translation>Poslať NXS</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="64"/>
@@ -1064,7 +1064,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../sendcoinsdialog.cpp" line="99"/>
         <source>Confirm send coins</source>
-        <translation>Potvrdiť odoslanie Nexuss</translation>
+        <translation>Potvrdiť odoslanie NXS</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="100"/>
@@ -1665,12 +1665,12 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../core/strings.cpp" line="11"/>
         <source>Generate coins</source>
-        <translation>Počítaj Nexuss</translation>
+        <translation>Počítaj NXS</translation>
     </message>
     <message>
         <location filename="../core/strings.cpp" line="12"/>
         <source>Don&apos;t generate coins</source>
-        <translation>Nepočítaj Nexuss</translation>
+        <translation>Nepočítaj NXS</translation>
     </message>
     <message>
         <location filename="../core/strings.cpp" line="13"/>
