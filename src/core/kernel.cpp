@@ -749,6 +749,9 @@ namespace Core
 
 		// Each thread has its own key and counter
 		Wallet::CReserveKey reservekey(pwalletMain);
+		
+		/* Stake Intensity. */
+		unsigned int nIntensity = GetArg("-stakeintensity", 8);
 
 		while(!fShutdown)
 		{
@@ -778,8 +781,8 @@ namespace Core
 			int i = 0;
 			
 			/* Copy the block pointers. */
-			CBlock block[8];
-			for(i = 0; i < 8; i++)
+			CBlock block[nIntensity];
+			for(i = 0; i < nIntensity; i++)
 			{
 				block[i] = (*pblock);
 				if (!pwalletMain->AddCoinstakeInputs(block[i].vtx[0]))
@@ -794,7 +797,7 @@ namespace Core
 			delete pblock;
 			
 			/* Retry if coinstake wasn't created properly. */
-			if(i != 8)
+			if(i != nIntensity)
 				continue;
 			
 			if(GetArg("-verbose", 0) >= 2)
@@ -875,7 +878,7 @@ namespace Core
 					break;
 				}
 				
-				for(int i = 0; i < 8; i++)
+				for(int i = 0; i < nIntensity; i++)
 				{
 					
 					/* Update the block time for difficulty accuracy. */
