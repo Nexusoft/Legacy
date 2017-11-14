@@ -1237,7 +1237,7 @@ namespace Wallet
 		
 							// Fill a vout to ourself
 							// TODO: pass in scriptChange instead of reservekey so
-							// change transaction isn't always pay-to-bitcoin-address
+							// change transaction isn't always pay-to-nexus-address
 							scriptChange.SetNexusAddress(vchPubKey);
 						}
 
@@ -1394,7 +1394,7 @@ namespace Wallet
 		if (nValue + Core::nTransactionFee > GetBalance())
 			return _("Insufficient funds");
 
-		// Parse bitcoin address
+		// Parse nexus address
 		CScript scriptPubKey;
 		scriptPubKey.SetNexusAddress(address);
 

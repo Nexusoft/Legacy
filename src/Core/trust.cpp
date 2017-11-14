@@ -755,6 +755,9 @@ namespace Core
 
 		// Each thread has its own key and counter
 		Wallet::CReserveKey reservekey(pwalletMain);
+		
+		/* Stake Intensity. */
+		unsigned int nIntensity = GetArg("-stakeintensity", 8);
 
 		while(!fShutdown)
 		{
@@ -769,7 +772,7 @@ namespace Core
 			LLD::CIndexDB indexdb("r");
 			
 			/* Take a snapshot of the best block. */
-			CBlockIndex* pindex = pindexBest;
+			uint1024 hashBest = hashBestChain;
 			
 			/* Create the block(s) to work on. */
 			CBlock* pblock = CreateNewBlock(reservekey, pwalletMain, 0);
@@ -780,27 +783,32 @@ namespace Core
 			int i = 0;
 			
 			/* Copy the block pointers. */
-			CBlock block[8];
-			for(i = 0; i < 8; i++)
+			CBlock block[nIntensity];
+			for(i = 0; i < nIntensity; i++)
 			{
 				block[i] = (*pblock);
 				if (!pwalletMain->AddCoinstakeInputs(block[i].vtx[0]))
 					break;
 				
-				AddTransactions(block[i].vtx, pindex);
+				AddTransactions(block[i].vtx, pindexBest);
 				
 				block[i].hashMerkleRoot   = block[i].BuildMerkleTree();
 			}
-			if(i != 8 || pindex->GetBlockHash() != pindexBest->GetBlockHash())
+			
+			/* Clean up memory. */
+			delete pblock;
+			
+			/* Retry if coinstake wasn't created properly. */
+			if(i != nIntensity)
 				continue;
 			
 			if(GetArg("-verbose", 0) >= 2)
-				printf("Stake Minter : Created New Block %s\n", pblock->GetHash().ToString().substr(0, 20).c_str());
+				printf("Stake Minter : Created New Block %s\n", block[0].GetHash().ToString().substr(0, 20).c_str());
 			
 			/* Extract the public key from the block. */
 			vector< std::vector<unsigned char> > vKeys;
 			Wallet::TransactionType keyType;
-			if (!Wallet::Solver(pblock->vtx[0].vout[0].scriptPubKey, keyType, vKeys))
+			if (!Wallet::Solver(block[0].vtx[0].vout[0].scriptPubKey, keyType, vKeys))
 			{
 				if(GetArg("-verbose", 0) >= 2)
 					error("Stake Minter : Failed To Solve Trust Key Script.");
@@ -826,8 +834,8 @@ namespace Core
 			double nTrustWeight = 0.0, nBlockWeight = 0.0;
 			if(cTrustPool.Exists(cKey))
 			{
-				nTrustAge = cTrustPool.Find(cKey).Age(pindex->GetBlockTime());
-				nBlockAge = cTrustPool.Find(cKey).BlockAge(pindex->GetBlockTime());
+				nTrustAge = cTrustPool.Find(cKey).Age(pindexBest->GetBlockTime());
+				nBlockAge = cTrustPool.Find(cKey).BlockAge(pindexBest->GetBlockTime());
 					
 				/* Trust Weight Reaches Maximum at 30 day Limit. */
 				nTrustWeight = min(17.5, (((16.5 * log(((2.0 * nTrustAge) / (60 * 60 * 24 * 28)) + 1.0)) / log(3))) + 1.0);
@@ -839,7 +847,7 @@ namespace Core
 			{
 
 				/* Calculate the Average Coinstake Age. */
-				if(!pblock->vtx[0].GetCoinstakeAge(indexdb, nCoinAge))
+				if(!block[0].vtx[0].GetCoinstakeAge(indexdb, nCoinAge))
 				{
 					if(GetArg("-verbose", 0) >= 2)
 						error("Stake Minter : Failed to Get Coinstake Age.");
@@ -856,16 +864,16 @@ namespace Core
 			dTrustWeight = nTrustWeight;
 			dBlockWeight = nBlockWeight;
 			
-			
-			if(GetArg("-verbose", 0) >= 1)			
-				printf("Stake Minter : Staking at Trust Weight %f | Block Weight %f | Coin Age %" PRIu64 " | Trust Age %" PRIu64 "| Block Age %" PRIu64 "\n", nTrustWeight, nBlockWeight, nCoinAge, nTrustAge, nBlockAge);
+
+			if(GetArg("-verbose", 0) >= 0)			
+				printf("Stake Minter : Staking at Trust Weight %f | Block Weight %f | Coin Age %"PRIu64" | Trust Age %"PRIu64"| Block Age %"PRIu64"\n", nTrustWeight, nBlockWeight, nCoinAge, nTrustAge, nBlockAge);
 			
 			bool fFound = false;
 			while(!fFound)
 			{
 				Sleep(120);
-
-				if(pindex->GetBlockHash() != pindexBest->GetBlockHash())
+				
+				if(hashBestChain != hashBest)
 				{
 					if(GetArg("-verbose", 0) >= 2)
 						printf("Stake Minter : New Best Block\n");
@@ -873,8 +881,7 @@ namespace Core
 					break;
 				}
 				
-
-				for(int i = 0; i < 8; i++)
+				for(int i = 0; i < nIntensity; i++)
 				{
 					
 					/* Update the block time for difficulty accuracy. */
@@ -902,7 +909,7 @@ namespace Core
 					{
 						
 						/* Sign the new Proof of Stake Block. */
-						if(GetArg("-verbose", 0) >= 1)
+						if(GetArg("-verbose", 0) >= 0)
 							printf("Stake Minter : Found New Block Hash %s\n", block[i].GetHash().ToString().substr(0, 20).c_str());
 						
 						if (!block[i].SignBlock(*pwalletMain))

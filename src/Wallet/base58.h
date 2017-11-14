@@ -258,7 +258,7 @@ namespace Wallet
 		bool operator> (const CBase58Data& b58) const { return CompareTo(b58) >  0; }
 	};
 
-	/** base58-encoded bitcoin addresses.
+	/** base58-encoded nexus addresses.
 	 * Public-key-hash-addresses have version 55 (or 111 testnet).
 	 * The data vector contains RIPEMD160(SHA256(pubkey)), where pubkey is the serialized public key.
 	 * Script-hash-addresses have version 117 (or 196 testnet).

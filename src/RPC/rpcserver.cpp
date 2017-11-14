@@ -1366,7 +1366,7 @@ namespace RPC
 		{
 			const std::string& ks = keys[i].get_str();
 
-			// Case 1: bitcoin address and we have full public key:
+			// Case 1: nexus address and we have full public key:
 			Wallet::NexusAddress address(ks);
 			if (address.IsValid())
 			{

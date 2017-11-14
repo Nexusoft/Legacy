@@ -198,6 +198,13 @@ build/%.o: src/LLD/%.cpp $(HEADERS)
 	  sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
 	      -e '/^$$/ d' -e 's/$$/ :/' < $(@:%.o=%.d) >> $(@:%.o=%.P); \
 	  rm -f $(@:%.o=%.d)
+	  
+build/%.o: src/LLD/%.cpp $(HEADERS)
+	$(CXX) -c $(CFLAGS) -MMD -o $@ $<
+	@cp $(@:%.o=%.d) $(@:%.o=%.P); \
+	  sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
+	      -e '/^$$/ d' -e 's/$$/ :/' < $(@:%.o=%.d) >> $(@:%.o=%.P); \
+	  rm -f $(@:%.o=%.d)
 
 build/%.o: src/LLP/%.cpp $(HEADERS)
 	$(CXX) -c $(CFLAGS) -MMD -o $@ $<

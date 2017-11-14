@@ -65,7 +65,11 @@ void ExitTimeout(void* parg)
 void StartShutdown()
 {
 #ifdef QT_GUI
+<<<<<<< HEAD
     // ensure we leave the Qt main loop for a clean GUI exit (Shutdown() is called in nexus.cpp afterwards)
+=======
+    // ensure we leave the Qt main loop for a clean GUI exit (Shutdown() is called afterwards)
+>>>>>>> master
     QueueShutdown();
 #else
     // Without UI, Shutdown() can simply be started in a new thread
@@ -102,7 +106,7 @@ void Shutdown(void* parg)
         printf("Nexus exiting\n\n");
         fExit = true;
 #ifndef QT_GUI
-        // ensure non UI client get's exited here, but let Nexus-Qt reach return 0; in bitcoin.cpp
+        // ensure non UI client get's exited here, but let Nexus-Qt reach return 0;
         exit(0);
 #endif
     }
@@ -611,18 +615,22 @@ bool AppInit2(int argc, char* argv[])
     RandAddSeedPerfmon();
 	
 	
-
     if (fServer) {
         CreateThread(RPC::ThreadRPCServer, NULL);
 	}
 
 	
+#ifndef QT_GUI
 	if(GetBoolArg("-stake", false))
 	{
+#endif
+		
 		CreateThread(Core::StakeMinter, NULL);
-
+		
+#ifndef QT_GUI
 		printf("%%%%%%%%%%%%%%%%% Daemon Staking Thread Initialized...\n");
 	}
+#endif
 
 	//if(GetBoolArg("-mining", false))
 	//	Core::StartMiningLLP();
