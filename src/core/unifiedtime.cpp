@@ -97,7 +97,7 @@ const char* DNS_SeedNodes[] =
 	"node19.mercuryminer.com",
 	"node20.mercuryminer.com",
 	"node21.mercuryminer.com",
-	'\0'
+	"\0"
 };
 
 /** Declarations for the DNS Seed Nodes. **/
@@ -105,7 +105,7 @@ const char* DNS_SeedNodes_Testnet[] =
 {
 	"nexustestnet.cryptocurrency.ninja",
 	"nexustestnet03.cryptocurrency.ninja",
-	'\0'
+	"\0"
 };
 
 /** Seed Nodes for Unified Time. **/
@@ -326,7 +326,7 @@ vector<Net::CAddress> DNS_Lookup(const char* DNS_Seed[])
 {
 	vector<Net::CAddress> vNodes;
 	int scount = 0;
-	for (int seed = 0; DNS_Seed[seed] != '\0'; seed++)
+	for (int seed = 0; DNS_Seed[seed] != "\0"; seed++)
 	{
 		printf("%u Host: %s\n", seed, DNS_Seed[seed]);
 		scount++;
