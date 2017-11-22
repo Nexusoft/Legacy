@@ -842,10 +842,8 @@ namespace Core
 				if (!txindex.vSpent[prevout.n].IsNull())
 					return error("ConnectInputs() : %s prev tx already used at %s", GetHash().ToString().substr(0,10).c_str(), txindex.vSpent[prevout.n].ToString().c_str());
 					
-				// Skip ECDSA signature verification when connecting blocks (fBlock=true)
-				// before the last blockchain checkpoint. This is safe because block merkle hashes are
-				// still computed and checked, and any change will be caught at the next checkpoint.
-				if (!IsInitialBlockDownload() && !Wallet::VerifySignature(txPrev, *this, i, 0))
+				// Skip ECDSA signature verification when mining blocks (fMiner=true) since they are already checked on memory pool
+				if (!IsInitialBlockDownload() && !fMiner && !Wallet::VerifySignature(txPrev, *this, i, 0))
 					return error("ConnectInputs() : %s Wallet::VerifySignature failed prev %s", GetHash().ToString().substr(0,10).c_str(), txPrev.GetHash().ToString().substr(0, 10).c_str());
 
 				// Mark outpoints as spent

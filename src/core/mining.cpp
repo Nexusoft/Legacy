@@ -110,7 +110,9 @@ namespace LLP
 		Core::CBlockIndex* pindexBest = NULL;
 		
 		Wallet::CReserveKey* pMiningKey = NULL;
-		map<uint512, Core::CBlock*> MAP_BLOCKS;
+		map<uint512, Core::CBlock> MAP_BLOCKS;
+        
+        Core::CBlock BASE_BLOCK;
 		unsigned int nChannel, nBestHeight;
 		
 		/** Subscribed To Display how many Blocks connection Subscribed to. **/
@@ -169,24 +171,12 @@ namespace LLP
 		
 		~MiningLLP()
 		{
-			for(map<uint512, Core::CBlock*>::iterator IT = MAP_BLOCKS.begin(); IT != MAP_BLOCKS.end(); ++ IT)
-			{
-				if(GetArg("-verbose", 0) >= 2)
-					printf("%%%%%%%%%% Mining LLP: Deleting Block %s\n", IT->second->hashMerkleRoot.ToString().substr(0, 10).c_str());
-				
-				delete IT->second;
-			}
-				
 			delete pMiningKey;
 			delete pCoinbaseTx;
 		}
 		
 		inline void ClearMap()
 		{
-			for(map<uint512, Core::CBlock*>::iterator IT = MAP_BLOCKS.begin(); IT != MAP_BLOCKS.end(); ++ IT)
-				delete IT->second;
-
-			delete pCoinbaseTx;
 			pCoinbaseTx = NULL;
 			
 			MAP_BLOCKS.clear();
@@ -277,17 +267,23 @@ namespace LLP
 					Packet RESPONSE;
 					RESPONSE.HEADER = NEW_ROUND;
 					this->WritePacket(RESPONSE);
+                    
+                    /* Create a new base block. */
+                    BASE_BLOCK = Core::CreateNewBlock(*pMiningKey, pwalletMain, nChannel, MAP_BLOCKS.size() + 1, pCoinbaseTx);
+                    if(BASE_BLOCK.IsNull())
+                        return;
 					
 					/** Create all Blocks Worker Subscribed to. **/
 					for(int nBlock = 0; nBlock < nSubscribed; nBlock++) {
-						Core::CBlock* NEW_BLOCK = Core::CreateNewBlock(*pMiningKey, pwalletMain, nChannel, MAP_BLOCKS.size() + 1, pCoinbaseTx);
-						
-						/** Fault Tolerance Check. **/
-						if(!NEW_BLOCK)
-							continue;
+                        
+                        /* Create new block from the base block. */
+                        Core::CBlock NEW_BLOCK = BASE_BLOCK;
+                        NEW_BLOCK.vtx[0].vin[0].scriptSig = (Wallet::CScript() << MAP_BLOCKS.size() * 513513512151);
+                        NEW_BLOCK.BuildMerkleTree();
+                        NEW_BLOCK.UpdateTime();
 						
 						/** Handle the Block Key as Merkle Root for Block Submission. **/
-						MAP_BLOCKS[NEW_BLOCK->hashMerkleRoot] = NEW_BLOCK;
+						MAP_BLOCKS[NEW_BLOCK.hashMerkleRoot] = NEW_BLOCK;
 							
 						/** Construct a response packet by serializing the Block. **/
 						Packet RESPONSE;
@@ -298,7 +294,7 @@ namespace LLP
 						this->WritePacket(RESPONSE);
 						
 						if(GetArg("-verbose", 0) >= 2)
-							printf("%%%%%%%%%% Mining LLP: Sent Block %s to Worker.\n\n", NEW_BLOCK->GetHash().ToString().c_str());
+							printf("%%%%%%%%%% Mining LLP: Sent Block %s to Worker.\n\n", NEW_BLOCK.GetHash().ToString().c_str());
 					}
 				}
 				
@@ -380,7 +376,10 @@ namespace LLP
 					RESPONSE.HEADER = COINBASE_SET;
 					this->WritePacket(RESPONSE);
 					
+                    ClearMap();
 					pCoinbaseTx = pCoinbase;
+                    
+                    BASE_BLOCK = Core::CreateNewBlock(*pMiningKey, pwalletMain, nChannel, MAP_BLOCKS.size() + 1, pCoinbaseTx);
 				}
 				
 				return true;
@@ -413,6 +412,8 @@ namespace LLP
 				{
 					ClearMap();
 					nBestHeight = Core::nBestHeight;
+                    
+                    BASE_BLOCK = Core::CreateNewBlock(*pMiningKey, pwalletMain, nChannel, 1, pCoinbaseTx);
 				}
 				
 				return true;
@@ -443,6 +444,8 @@ namespace LLP
 					RESPONSE.HEADER = NEW_ROUND;
 					
 					ClearMap();
+                    
+                    BASE_BLOCK = Core::CreateNewBlock(*pMiningKey, pwalletMain, nChannel, 1, pCoinbaseTx);
 				}
 				
 				this->WritePacket(RESPONSE);
@@ -489,18 +492,30 @@ namespace LLP
 				Clears map once new block is submitted successfully. **/
 			if(PACKET.HEADER == GET_BLOCK)
 			{
-				Core::CBlock* NEW_BLOCK = Core::CreateNewBlock(*pMiningKey, pwalletMain, nChannel, MAP_BLOCKS.size() + 1, pCoinbaseTx);
-				
-				if(!NEW_BLOCK)
-				{
+                /* Reject request if there is no base block created already. */
+                if(BASE_BLOCK.IsNull())
+                {
 					if(GetArg("-verbose", 0) >= 2)
-						printf("%%%%%%%%%% Mining LLP: Rejected Block Request. Incorrect Coinbase Tx.\n");
+						printf("%%%%%%%%%% Mining LLP: Rejected Block Request. No Base Block...\n");
 					
 					return true;
 				}
-				MAP_BLOCKS[NEW_BLOCK->hashMerkleRoot] = NEW_BLOCK;
+				
+				
+				/* Create new block from base block by changing the input script to search from new merkle root. */
+                Core::CBlock NEW_BLOCK = BASE_BLOCK;
+                NEW_BLOCK.vtx[0].vin[0].scriptSig = (Wallet::CScript() << MAP_BLOCKS.size() * GetRandInt(1024));
+                NEW_BLOCK.hashMerkleRoot = NEW_BLOCK.BuildMerkleTree();
+                NEW_BLOCK.UpdateTime();
+                
+                if(GetArg("-verbose", 0) >= 3)
+                    printf("%%%%%%%%%%% Mining LLP: Created new Block %s\n", NEW_BLOCK.hashMerkleRoot.ToString().substr(0, 20).c_str());
+                
+				/* Store the new block in the memory map of recent blocks being worked on. */
+				MAP_BLOCKS[NEW_BLOCK.hashMerkleRoot] = NEW_BLOCK;
 					
-				/** Construct a response packet by serializing the Block. **/
+                
+				/* Construct a response packet by serializing the Block. */
 				Packet RESPONSE;
 				RESPONSE.HEADER = BLOCK_DATA;
 				RESPONSE.DATA   = SerializeBlock(NEW_BLOCK);
@@ -533,7 +548,7 @@ namespace LLP
 					return true;
 				}
 				
-				Core::CBlock* NEW_BLOCK = MAP_BLOCKS[hashMerkleRoot];
+				Core::CBlock* NEW_BLOCK = &MAP_BLOCKS[hashMerkleRoot];
 				NEW_BLOCK->nNonce = bytes2uint64(std::vector<unsigned char>(PACKET.DATA.end() - 8, PACKET.DATA.end()));
 				NEW_BLOCK->UpdateTime();
 				NEW_BLOCK->print();
@@ -583,15 +598,15 @@ namespace LLP
 	private:
 	
 		/** Convert the Header of a Block into a Byte Stream for Reading and Writing Across Sockets. **/
-		std::vector<unsigned char> SerializeBlock(Core::CBlock* BLOCK)
+		std::vector<unsigned char> SerializeBlock(Core::CBlock BLOCK)
 		{
-			std::vector<unsigned char> VERSION  = uint2bytes(BLOCK->nVersion);
-			std::vector<unsigned char> PREVIOUS = BLOCK->hashPrevBlock.GetBytes();
-			std::vector<unsigned char> MERKLE   = BLOCK->hashMerkleRoot.GetBytes();
-			std::vector<unsigned char> CHANNEL  = uint2bytes(BLOCK->nChannel);
-			std::vector<unsigned char> HEIGHT   = uint2bytes(BLOCK->nHeight);
-			std::vector<unsigned char> BITS     = uint2bytes(BLOCK->nBits);
-			std::vector<unsigned char> NONCE    = uint2bytes64(BLOCK->nNonce);
+			std::vector<unsigned char> VERSION  = uint2bytes(BLOCK.nVersion);
+			std::vector<unsigned char> PREVIOUS = BLOCK.hashPrevBlock.GetBytes();
+			std::vector<unsigned char> MERKLE   = BLOCK.hashMerkleRoot.GetBytes();
+			std::vector<unsigned char> CHANNEL  = uint2bytes(BLOCK.nChannel);
+			std::vector<unsigned char> HEIGHT   = uint2bytes(BLOCK.nHeight);
+			std::vector<unsigned char> BITS     = uint2bytes(BLOCK.nBits);
+			std::vector<unsigned char> NONCE    = uint2bytes64(BLOCK.nNonce);
 			
 			std::vector<unsigned char> DATA;
 			DATA.insert(DATA.end(), VERSION.begin(),   VERSION.end());
@@ -644,20 +659,19 @@ namespace Core
 	
 	
 	/** Constructs a new block **/
-	CBlock* CreateNewBlock(Wallet::CReserveKey& reservekey, Wallet::CWallet* pwallet, unsigned int nChannel, unsigned int nID, LLP::Coinbase* pCoinbase)
+	CBlock CreateNewBlock(Wallet::CReserveKey& reservekey, Wallet::CWallet* pwallet, unsigned int nChannel, unsigned int nID, LLP::Coinbase* pCoinbase)
 	{
-		auto_ptr<CBlock> pblock(new CBlock());
-		if (!pblock.get())
-			return NULL;
+		CBlock cBlock;
+        cBlock.SetNull();
 		
 		/** Create the block from Previous Best Block. **/
 		CBlockIndex* pindexPrev = pindexBest;
 		
 		/** Modulate the Block Versions if they correspond to their proper time stamp **/
 		if(GetUnifiedTimestamp() >= (fTestNet ? TESTNET_VERSION_TIMELOCK[TESTNET_BLOCK_CURRENT_VERSION - 2] : NETWORK_VERSION_TIMELOCK[NETWORK_BLOCK_CURRENT_VERSION - 2]))
-			pblock->nVersion = fTestNet ? TESTNET_BLOCK_CURRENT_VERSION : NETWORK_BLOCK_CURRENT_VERSION; // --> New Block Versin Activation Switch
+			cBlock.nVersion = fTestNet ? TESTNET_BLOCK_CURRENT_VERSION : NETWORK_BLOCK_CURRENT_VERSION; // --> New Block Versin Activation Switch
 		else
-			pblock->nVersion = fTestNet ? TESTNET_BLOCK_CURRENT_VERSION - 1 : NETWORK_BLOCK_CURRENT_VERSION - 1;
+			cBlock.nVersion = fTestNet ? TESTNET_BLOCK_CURRENT_VERSION - 1 : NETWORK_BLOCK_CURRENT_VERSION - 1;
 		
 		/** Create the Coinbase / Coinstake Transaction. **/
 		CTransaction txNew;
@@ -733,7 +747,7 @@ namespace Core
 				
 				/** Double Check the Coinbase Transaction Fits in the Maximum Value. **/				
 				if(nMiningReward != GetCoinbaseReward(pindexPrev, nChannel, 0))
-					return NULL;
+					return cBlock;
 				
 			}
 			else
@@ -759,23 +773,23 @@ namespace Core
 		}
 		
 		/** Add our Coinbase / Coinstake Transaction. **/
-		pblock->vtx.push_back(txNew);
+		cBlock.vtx.push_back(txNew);
 		
 		/** Add in the Transaction from Memory Pool only if it is not a Genesis. **/
 		if(nChannel > 0)
-			AddTransactions(pblock->vtx, pindexPrev);
+			AddTransactions(cBlock.vtx, pindexPrev);
 			
 		/** Populate the Block Data. **/
-		pblock->hashPrevBlock  = pindexPrev->GetBlockHash();
-		pblock->hashMerkleRoot = pblock->BuildMerkleTree();
-		pblock->nChannel       = nChannel;
-		pblock->nHeight        = pindexPrev->nHeight + 1;
-		pblock->nBits          = GetNextTargetRequired(pindexPrev, pblock->GetChannel(), false);
-		pblock->nNonce         = 1;
+		cBlock.hashPrevBlock  = pindexPrev->GetBlockHash();
+		cBlock.hashMerkleRoot = cBlock.BuildMerkleTree();
+		cBlock.nChannel       = nChannel;
+		cBlock.nHeight        = pindexPrev->nHeight + 1;
+		cBlock.nBits          = GetNextTargetRequired(pindexPrev, cBlock.GetChannel(), false);
+		cBlock.nNonce         = 1;
 		
-		pblock->UpdateTime();
+		cBlock.UpdateTime();
 
-		return pblock.release();
+		return cBlock;
 	}
 	
 	
@@ -832,7 +846,7 @@ namespace Core
 
 					dPriority += (double) nValueIn * nConf;
 
-					if(GetArg("-verbose", 0) >= 2)
+					if(GetArg("-verbose", 0) >= 3)
 						printf("priority     nValueIn=%-12"PRI64d" nConf=%-5d dPriority=%-20.1f\n", nValueIn, nConf, dPriority);
 				}
 
