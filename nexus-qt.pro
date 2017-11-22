@@ -43,6 +43,7 @@ contains(DEBUG, 1) {
 
 # use: qmake "RELEASE=1"
 contains(RELEASE, 1) {
+    message("Building with Static Linking")
     # Mac: compile for Yosemite and Above (10.10, 32-bit)
     macx:QMAKE_CXXFLAGS += -O3 -mmacosx-version-min=10.10 -arch x86_64
 
@@ -53,9 +54,9 @@ contains(RELEASE, 1) {
     #Static Configuration
     windows:CONFIG += STATIC
 	
-	windows:QMAKE_LFLAGS += -Wl,--dynamicbase -Wl,--nxcompat
-	windows:QMAKE_LFLAGS += -Wl,--large-address-aware -static
-	windows:QMAKE_LFLAGS += -static-libgcc -static-libstdc++
+    windows:QMAKE_LFLAGS += -Wl,--dynamicbase -Wl,--nxcompat
+    windows:QMAKE_LFLAGS += -Wl,--large-address-aware -static
+    windows:QMAKE_LFLAGS += -static-libgcc -static-libstdc++
 
     !windows:!macx {
         # Linux: static link
