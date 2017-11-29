@@ -112,8 +112,8 @@ const char* DNS_SeedNodes_Testnet[] =
 vector<string> SEEDS;
 
 /** Baseline Maximum Values for Unified Time. **/
-int MAX_UNIFIED_DRIFT   = 1;
-int MAX_UNIFIED_SAMPLES = 100;
+int MAX_UNIFIED_DRIFT   = 10;
+int MAX_UNIFIED_SAMPLES = 1000;
 
 
 /** Gets the UNIX Timestamp from your Local Clock **/

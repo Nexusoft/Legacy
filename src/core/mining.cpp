@@ -536,6 +536,8 @@ namespace LLP
 				uint512 hashMerkleRoot;
 				hashMerkleRoot.SetBytes(std::vector<unsigned char>(PACKET.DATA.begin(), PACKET.DATA.end() - 8));
 				
+				
+				/* Check that the block exists. */
 				if(!MAP_BLOCKS.count(hashMerkleRoot))
 				{
 					Packet RESPONSE;
@@ -545,26 +547,55 @@ namespace LLP
 					
 					if(GetArg("-verbose", 0) >= 2)
 						printf("%%%%%%%%%% Mining LLP: Block Not Found %s\n", hashMerkleRoot.ToString().substr(0, 20).c_str());
+					
 					return true;
 				}
 				
+				
+				/* Create the pointer on the heap. */
 				Core::CBlock* NEW_BLOCK = &MAP_BLOCKS[hashMerkleRoot];
 				NEW_BLOCK->nNonce = bytes2uint64(std::vector<unsigned char>(PACKET.DATA.end() - 8, PACKET.DATA.end()));
 				NEW_BLOCK->UpdateTime();
 				NEW_BLOCK->print();
 				
-				Packet RESPONSE;
-				if(NEW_BLOCK->SignBlock(*pwalletMain) && Core::CheckWork(NEW_BLOCK, *pwalletMain, *pMiningKey))
+				
+				/* Check the Proof of Work for submitted block. */
+				if(!Core::CheckWork(NEW_BLOCK, *pwalletMain, *pMiningKey))
 				{
-					if(GetArg("-verbose", 0) >= 2)
-						printf("%%%%%%%%%% Mining LLP: Created New Block %s\n", NEW_BLOCK->hashMerkleRoot.ToString().substr(0, 10).c_str());
-					
-					RESPONSE.HEADER = BLOCK_ACCEPTED;
-					
-					ClearMap();
-				}
-				else
+					Packet RESPONSE;
 					RESPONSE.HEADER = BLOCK_REJECTED;
+					
+					this->WritePacket(RESPONSE);
+					
+					if(GetArg("-verbose", 0) >= 2)
+						printf("%%%%%%%%%% Mining LLP: Invalid Work for block %s\n", hashMerkleRoot.ToString().substr(0, 20).c_str());
+					
+					return true;
+				}
+				
+				
+				/* Sign the submitted block. */
+				if(!NEW_BLOCK->SignBlock(*pwalletMain))
+				{
+					Packet RESPONSE;
+					RESPONSE.HEADER = BLOCK_REJECTED;
+					
+					this->WritePacket(RESPONSE);
+					
+					if(GetArg("-verbose", 0) >= 2)
+						printf("%%%%%%%%%% Mining LLP: Unable to Sign block %s\n", hashMerkleRoot.ToString().substr(0, 20).c_str());
+					
+					return true;
+				}
+				
+				
+				if(GetArg("-verbose", 0) >= 2)
+						printf("%%%%%%%%%% Mining LLP: Found new Block %s\n", NEW_BLOCK->hashMerkleRoot.ToString().substr(0, 10).c_str());
+					
+				Packet RESPONSE;
+				RESPONSE.HEADER = BLOCK_ACCEPTED;
+					
+				ClearMap();
 				
 				this->WritePacket(RESPONSE);
 				
