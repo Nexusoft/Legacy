@@ -330,8 +330,10 @@ namespace Net
 				"List all the Trust Keys on the Network");
 			
 			
-		unsigned int nTotalActive = 0;	
+		unsigned int nTotalActive = 0;
+		Array trustkeys;	
 		Object obj;
+		Object ret;
 		for(std::map<uint576, Core::CTrustKey>::iterator it = Core::cTrustPool.mapTrustKeys.begin(); it != Core::cTrustPool.mapTrustKeys.end(); ++it)
 		{
 			if(it->second.Expired(GetUnifiedTimestamp()))
@@ -346,13 +348,15 @@ namespace Net
 			obj.push_back(Pair("trust key", it->second.ToString()));
 			
 			nTotalActive ++;
+
+			trustkeys.push_back( obj);
 		}
 		
+		ret.push_back(Pair("keys", trustkeys));
+		ret.push_back(Pair("total active", (int) nTotalActive));
+		ret.push_back(Pair("total expired", (int) (Core::cTrustPool.mapTrustKeys.size() - nTotalActive)));
 		
-		obj.push_back(Pair("total active", (int) nTotalActive));
-		obj.push_back(Pair("total expired", (int) (Core::cTrustPool.mapTrustKeys.size() - nTotalActive)));
-		
-		return obj;
+		return ret;
 	}
 
 
