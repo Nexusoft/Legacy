@@ -97,6 +97,7 @@ const char* DNS_SeedNodes[] =
 	"node19.mercuryminer.com",
 	"node20.mercuryminer.com",
 	"node21.mercuryminer.com",
+	"node1.henryskinner.net",
 	"\0"
 };
 
