@@ -38,6 +38,7 @@ const char* DNS_SeedNodes[] =
 	"node1.barbequemedia.com",
 	"node1.nxsorbitalscan.com",
 	"node1.nxs.efficienthash.com",
+	"node1.henryskinner.net",
 	"node2.nexusearth.com",
 	"node2.mercuryminer.com",
 	"node2.nexusminingpool.com",
@@ -97,7 +98,6 @@ const char* DNS_SeedNodes[] =
 	"node19.mercuryminer.com",
 	"node20.mercuryminer.com",
 	"node21.mercuryminer.com",
-	"node1.henryskinner.net",
 	"\0"
 };
 
