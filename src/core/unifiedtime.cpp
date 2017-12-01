@@ -103,8 +103,7 @@ const char* DNS_SeedNodes[] =
 /** Declarations for the DNS Seed Nodes. **/
 const char* DNS_SeedNodes_Testnet[] =
 {
-	"nexustestnet.cryptocurrency.ninja",
-	"nexustestnet03.cryptocurrency.ninja",
+	"node4.nexusearth.com",
 	"\0"
 };
 
