@@ -169,15 +169,15 @@ void ThreadUnifiedSamples(void* parg)
 	{
 		try
 		{
-		
+			Sleep(1000);
+			
+			
 			/* Randomize the Time Seed Connection Iterator. */
 			nIterator = GetRandInt(SEEDS.size() - 1);
 			
 			
 			/* Connect to the Next Seed in the Iterator. */
 			SERVER.IP = SEEDS[nIterator];
-			
-			printf("***** Core LLP: Attempting Connection to %s:%s\n", SERVER.IP.c_str(), SERVER.PORT.c_str());
 			SERVER.Connect();
 			
 			

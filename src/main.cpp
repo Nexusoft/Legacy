@@ -349,10 +349,14 @@ bool AppInit2(int argc, char* argv[])
 	LLD::RegisterKeychain("blkindex", "blkindex");
 #endif
 
-	InitMessage(_("Initializing Unified Time..."));
-	printf("Initializing Unified Time...\n");
-	
-	InitializeUnifiedTime();
+    if (GetBoolArg("-istimeseed",false)) {
+        printf("istimeseed flag set, not initializing unified time.");
+    }
+    else {
+        InitMessage(_("Initializing Unified Time..."));
+        printf("Initializing Unified Time...\n");
+        InitializeUnifiedTime();
+    }
 
 	if (!fDebug)
 		ShrinkDebugFile();
@@ -616,6 +620,8 @@ bool AppInit2(int argc, char* argv[])
     /** Wait for Unified Time if First Start. **/
     if (GetBoolArg("-istimeseed",false)) {
         printf("WARNING: -istimeseed Was set, not waiting for unified time.\n");
+		
+		fTimeUnified = true;
     }
     else {
         printf("Waiting for unified time...\n");
@@ -627,7 +633,7 @@ bool AppInit2(int argc, char* argv[])
 	if(GetBoolArg("-unified", false)) {
 		InitMessage(_("Initializing Core LLP..."));
 		printf("Initializing Core LLP...\n");
-		LLP_SERVER = new LLP::Server<LLP::CoreLLP>(fTestNet ? TESTNET_CORE_LLP_PORT : NEXUS_CORE_LLP_PORT, 5, true, 1, 3, 1);
+		LLP_SERVER = new LLP::Server<LLP::CoreLLP>(fTestNet ? TESTNET_CORE_LLP_PORT : NEXUS_CORE_LLP_PORT, 5, true, 2, 5, 5);
 	}
 	
     if (!Core::CheckDiskSpace())
