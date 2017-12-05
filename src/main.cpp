@@ -349,14 +349,10 @@ bool AppInit2(int argc, char* argv[])
 	LLD::RegisterKeychain("blkindex", "blkindex");
 #endif
 
-    if (GetBoolArg("-istimeseed",false)) {
-        printf("istimeseed flag set, not initializing unified time.");
-    }
-    else {
-        InitMessage(_("Initializing Unified Time..."));
-        printf("Initializing Unified Time...\n");
-        InitializeUnifiedTime();
-    }
+	InitMessage(_("Initializing Unified Time..."));
+	printf("Initializing Unified Time...\n");
+	
+	InitializeUnifiedTime();
 
 	if (!fDebug)
 		ShrinkDebugFile();
@@ -624,7 +620,7 @@ bool AppInit2(int argc, char* argv[])
     else {
         printf("Waiting for unified time...\n");
         while(!fTimeUnified)
-            Sleep(10);
+            Sleep(1000);
     }
 
 	/** Start sending Unified Samples. **/

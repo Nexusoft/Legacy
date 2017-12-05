@@ -103,7 +103,7 @@ const char* DNS_SeedNodes[] =
 /** Declarations for the DNS Seed Nodes. **/
 const char* DNS_SeedNodes_Testnet[] =
 {
-	"node4.nexusearth.com",
+	"node1.nexusearth.com",
 	"\0"
 };
 
@@ -176,6 +176,8 @@ void ThreadUnifiedSamples(void* parg)
 			
 			/* Connect to the Next Seed in the Iterator. */
 			SERVER.IP = SEEDS[nIterator];
+			
+			printf("***** Core LLP: Attempting Connection to %s:%s\n", SERVER.IP.c_str(), SERVER.PORT.c_str());
 			SERVER.Connect();
 			
 			
