@@ -506,7 +506,7 @@ Are you sure you wish to encrypt your wallet?</source>
     <message>
         <location filename="../core/gui.cpp" line="487"/>
         <source>Downloaded %1 blocks of transaction history.</source>
-        <translation>%1 blocs de l&apos;historique de transaction téléchargé.</translation>
+        <translation>%1 blocs de l&apos;historique de transaction téléchargés.</translation>
     </message>
     <message numerus="yes">
         <location filename="../core/gui.cpp" line="502"/>
@@ -698,7 +698,7 @@ Adresse : %4
     <message>
         <location filename="../optionsdialog.cpp" line="170"/>
         <source>&amp;Start Nexus on window system startup</source>
-        <translation>&amp;Démarrer Nexus avec le système de fenêtres</translation>
+        <translation>&amp;Démarrer Nexus avec Windows</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="171"/>
@@ -733,7 +733,7 @@ Adresse : %4
     <message>
         <location filename="../optionsdialog.cpp" line="186"/>
         <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Quit in the menu.</source>
-        <translation>Minimiser au lieu quitter l&apos;application lorsque la fenêtre est fermée. Lorsque cette option est activée, l&apos;application ne pourra être fermée qu&apos;en sélectionnant Quitter dans le menu déroulant.</translation>
+        <translation>Minimiser au lieu de quitter l&apos;application lorsque la fenêtre est fermée. Lorsque cette option est activée, l&apos;application ne pourra être fermée qu&apos;en sélectionnant Quitter dans le menu déroulant.</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="190"/>
@@ -768,7 +768,7 @@ Adresse : %4
     <message>
         <location filename="../optionsdialog.cpp" line="217"/>
         <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly.  Most transactions are 1 kB.  Fee 0.01 recommended.</source>
-        <translation>Frais de transaction optionnels par ko qui aident à garantir un traitement rapide des transactions.  La plupart des transactions occupent 1 ko.  Des frais de 0.01 sont recommandés.</translation>
+        <translation>Frais de transaction optionnels par Ko aidant à garantir un traitement rapide des transactions.  La plupart des transactions occupent 1 Ko.  Des frais de 0.01 sont recommandés.</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="223"/>
@@ -778,7 +778,7 @@ Adresse : %4
     <message>
         <location filename="../optionsdialog.cpp" line="226"/>
         <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly. Most transactions are 1 kB. Fee 0.01 recommended.</source>
-        <translation>Frais de transaction optionnels par ko qui aident à garantir un traitement rapide des transactions. La plupart des transactions occupent 1 ko. Des frais de 0.01 sont recommandés.</translation>
+        <translation>Frais de transaction optionnels par Ko qui aidant à garantir un traitement rapide des transactions. La plupart des transactions occupent 1 Ko. Des frais de 0.01 sont recommandés.</translation>
     </message>
 </context>
 <context>
@@ -791,7 +791,7 @@ Adresse : %4
     <message>
         <location filename="../forms/messagepage.ui" line="20"/>
         <source>You can sign messages with your addresses to prove you own them. Be careful not to sign anything vague, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
-        <translation>Vous pouvez signer des messages avec vos adresses pour prouver que les détenez. Faites attention à ne pas signer quoi que ce soit de vague car des attaques d&apos;hameçonnage peuvent essayer d&apos;obtenir votre identité par votre signature. Ne signez que des déclarations entièrement détaillées et avec lesquelles vous serez d&apos;accord.</translation>
+        <translation>Vous pouvez signer des messages avec vos adresses pour prouver que vous les détenez. Faites attention à ne pas signer quoi que ce soit de vague car des attaques d&apos;hameçonnage peuvent essayer d&apos;obtenir votre identité par votre signature. Ne signez que des déclarations entièrement détaillées et avec lesquelles vous serez d&apos;accord.</translation>
     </message>
     <message>
         <location filename="../forms/messagepage.ui" line="38"/>
