@@ -494,17 +494,12 @@ namespace LLP
 			{
                 /* Reject request if there is no base block created already. */
                 if(BASE_BLOCK.IsNull())
-                {
-					if(GetArg("-verbose", 0) >= 2)
-						printf("%%%%%%%%%% Mining LLP: Rejected Block Request. No Base Block...\n");
-					
-					return true;
-				}
+					BASE_BLOCK = Core::CreateNewBlock(*pMiningKey, pwalletMain, nChannel, 1, pCoinbaseTx);
 				
 				
 				/* Create new block from base block by changing the input script to search from new merkle root. */
                 Core::CBlock NEW_BLOCK = BASE_BLOCK;
-                NEW_BLOCK.vtx[0].vin[0].scriptSig = (Wallet::CScript() << MAP_BLOCKS.size() * GetRandInt(1024));
+                NEW_BLOCK.vtx[0].vin[0].scriptSig = (Wallet::CScript() << (1024 * (MAP_BLOCKS.size() + 1)));
                 NEW_BLOCK.hashMerkleRoot = NEW_BLOCK.BuildMerkleTree();
                 NEW_BLOCK.UpdateTime();
                 
@@ -559,21 +554,6 @@ namespace LLP
 				NEW_BLOCK->print();
 				
 				
-				/* Check the Proof of Work for submitted block. */
-				if(!Core::CheckWork(NEW_BLOCK, *pwalletMain, *pMiningKey))
-				{
-					Packet RESPONSE;
-					RESPONSE.HEADER = BLOCK_REJECTED;
-					
-					this->WritePacket(RESPONSE);
-					
-					if(GetArg("-verbose", 0) >= 2)
-						printf("%%%%%%%%%% Mining LLP: Invalid Work for block %s\n", hashMerkleRoot.ToString().substr(0, 20).c_str());
-					
-					return true;
-				}
-				
-				
 				/* Sign the submitted block. */
 				if(!NEW_BLOCK->SignBlock(*pwalletMain))
 				{
@@ -584,6 +564,21 @@ namespace LLP
 					
 					if(GetArg("-verbose", 0) >= 2)
 						printf("%%%%%%%%%% Mining LLP: Unable to Sign block %s\n", hashMerkleRoot.ToString().substr(0, 20).c_str());
+					
+					return true;
+				}
+				
+				
+				/* Check the Proof of Work for submitted block. */
+				if(!Core::CheckWork(NEW_BLOCK, *pwalletMain, *pMiningKey))
+				{
+					Packet RESPONSE;
+					RESPONSE.HEADER = BLOCK_REJECTED;
+					
+					this->WritePacket(RESPONSE);
+					
+					if(GetArg("-verbose", 0) >= 2)
+						printf("%%%%%%%%%% Mining LLP: Invalid Work for block %s\n", hashMerkleRoot.ToString().substr(0, 20).c_str());
 					
 					return true;
 				}
