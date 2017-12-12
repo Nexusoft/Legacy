@@ -612,19 +612,19 @@ namespace Core
 	
 	/** Constructs a new block **/
 	static int nCoinbaseCounter = 0;
-	CBlock* CreateNewBlock(Wallet::CReserveKey& reservekey, Wallet::CWallet* pwallet, unsigned int nChannel, unsigned int nID, LLP::Coinbase* pCoinbase)
+	CBlock CreateNewBlock(Wallet::CReserveKey& reservekey, Wallet::CWallet* pwallet, unsigned int nChannel, unsigned int nID, LLP::Coinbase* pCoinbase)
 	{
-		/* Create the new block pointer. */
-		CBlock* pblock = new CBlock();
+		CBlock cBlock;
+        cBlock.SetNull();
 		
 		/** Create the block from Previous Best Block. **/
 		CBlockIndex* pindexPrev = pindexBest;
 		
 		/** Modulate the Block Versions if they correspond to their proper time stamp **/
 		if(UnifiedTimestamp() >= (fTestNet ? TESTNET_VERSION_TIMELOCK[TESTNET_BLOCK_CURRENT_VERSION - 2] : NETWORK_VERSION_TIMELOCK[NETWORK_BLOCK_CURRENT_VERSION - 2]))
-			pblock->nVersion = fTestNet ? TESTNET_BLOCK_CURRENT_VERSION : NETWORK_BLOCK_CURRENT_VERSION; // --> New Block Versin Activation Switch
+			cBlock.nVersion = fTestNet ? TESTNET_BLOCK_CURRENT_VERSION : NETWORK_BLOCK_CURRENT_VERSION; // --> New Block Versin Activation Switch
 		else
-			pblock->nVersion = fTestNet ? TESTNET_BLOCK_CURRENT_VERSION - 1 : NETWORK_BLOCK_CURRENT_VERSION - 1;
+			cBlock.nVersion = fTestNet ? TESTNET_BLOCK_CURRENT_VERSION - 1 : NETWORK_BLOCK_CURRENT_VERSION - 1;
 		
 		/** Create the Coinbase / Coinstake Transaction. **/
 		CTransaction txNew;
@@ -638,7 +638,6 @@ namespace Core
 		/** Create the Coinstake Transaction if on Proof of Stake Channel. **/
 		if (nChannel == 0)
 		{
-			
 			/** Mark the Coinstake Transaction with First Input Byte Signature. **/
 			txNew.vin[0].scriptSig.resize(8);
 			txNew.vin[0].scriptSig[0] = 1;
@@ -650,10 +649,8 @@ namespace Core
 			txNew.vin[0].scriptSig[6] = 21;
 			txNew.vin[0].scriptSig[7] = 34;
 			
-			
 			/** Update the Coinstake Timestamp. **/
 			txNew.nTime = pindexPrev->GetBlockTime() + 1;
-			
 			
 			/** Check the Trust Keys. **/
 			if(!cTrustPool.HasTrustKey(pindexPrev->GetBlockTime()))
@@ -666,28 +663,18 @@ namespace Core
 				txNew.vout[0].scriptPubKey << cTrustPool.vchTrustKey << Wallet::OP_CHECKSIG;
 				txNew.vin[0].prevout.n = 0;
 				txNew.vin[0].prevout.hash = cTrustPool.Find(cKey).GetHash();
-				
-				//cTrustPool.Find(cKey).Print();
-				//printf("Previous Out Hash %s\n", txNew.vin[0].prevout.hash.ToString().c_str());
 			}
-			
-			if (!pwallet->AddCoinstakeInputs(txNew))
-				return NULL;
 				
 		}
-		
 		
 		/** Create the Coinbase Transaction if the Channel specifies. **/
 		else
 		{
-			
 			/** Set the Coinbase Public Key. **/
 			txNew.vout[0].scriptPubKey << reservekey.GetReservedKey() << Wallet::OP_CHECKSIG;
 
-			
 			/** Set the Proof of Work Script Signature. **/
 			txNew.vin[0].scriptSig = (Wallet::CScript() << nID * 513513512151);
-			
 			
 			/** Customized Coinbase Transaction if Submitted. **/
 			if(pCoinbase)
@@ -696,12 +683,10 @@ namespace Core
 				/** Dummy Transaction to Allow the Block to be Signed by Pool Wallet. [For Now] **/
 				txNew.vout[0].nValue = pCoinbase->nPoolFee;
 				
-				
 				unsigned int nTx = 1;
 				txNew.vout.resize(pCoinbase->vOutputs.size() + 1);
 				for(std::map<std::string, uint64>::iterator nIterator = pCoinbase->vOutputs.begin(); nIterator != pCoinbase->vOutputs.end(); nIterator++)
 				{
-					
 					/** Set the Appropriate Outputs. **/
 					txNew.vout[nTx].scriptPubKey.SetNexusAddress(nIterator->first);
 					txNew.vout[nTx].nValue = nIterator->second;
@@ -713,26 +698,18 @@ namespace Core
 				for(int nIndex = 0; nIndex < txNew.vout.size(); nIndex++)
 					nMiningReward += txNew.vout[nIndex].nValue;
 				
-				
-				/** Double Check the Coinbase Transaction Fits in the Maximum Value. **/				
-				if(nMiningReward != GetCoinbaseReward(pindexPrev, nChannel, 0))
-					return NULL;
-				
 			}
 			else
 				txNew.vout[0].nValue = GetCoinbaseReward(pindexPrev, nChannel, 0);
 				
-			
 			/** Reset the Coinbase Transaction Counter. **/
 			if(nCoinbaseCounter >= 13)
 				nCoinbaseCounter = 0;
 						
-			
 			/** Set the Proper Addresses for the Coinbase Transaction. **/
 			txNew.vout.resize(txNew.vout.size() + 2);
 			txNew.vout[txNew.vout.size() - 2].scriptPubKey.SetNexusAddress(fTestNet ? TESTNET_DUMMY_ADDRESS : AMBASSADOR_ADDRESSES[nCoinbaseCounter]);
 			txNew.vout[txNew.vout.size() - 1].scriptPubKey.SetNexusAddress(fTestNet ? TESTNET_DUMMY_ADDRESS : DEVELOPER_ADDRESSES[nCoinbaseCounter]);
-			
 			
 			/** Set the Proper Coinbase Output Amounts for Recyclers and Developers. **/
 			txNew.vout[txNew.vout.size() - 2].nValue = GetCoinbaseReward(pindexPrev, nChannel, 1);
@@ -741,27 +718,24 @@ namespace Core
 			nCoinbaseCounter++;
 		}
 		
-		
 		/** Add our Coinbase / Coinstake Transaction. **/
-		pblock->vtx.push_back(txNew);
-		
+		cBlock.vtx.push_back(txNew);
 		
 		/** Add in the Transaction from Memory Pool only if it is not a Genesis. **/
-		if(!pblock->vtx[0].IsGenesis())
-			AddTransactions(pblock->vtx, pindexPrev);
+		if(nChannel > 0)
+			AddTransactions(cBlock.vtx, pindexPrev);
 			
-		
 		/** Populate the Block Data. **/
-		pblock->hashPrevBlock  = pindexPrev->GetBlockHash();
-		pblock->hashMerkleRoot = pblock->BuildMerkleTree();
-		pblock->nChannel       = nChannel;
-		pblock->nHeight        = pindexPrev->nHeight + 1;
-		pblock->nBits          = GetNextTargetRequired(pindexPrev, pblock->GetChannel());
-		pblock->nNonce         = 1;
+		cBlock.hashPrevBlock  = pindexPrev->GetBlockHash();
+		cBlock.hashMerkleRoot = cBlock.BuildMerkleTree();
+		cBlock.nChannel       = nChannel;
+		cBlock.nHeight        = pindexPrev->nHeight + 1;
+		cBlock.nBits          = GetNextTargetRequired(pindexPrev, cBlock.GetChannel());
+		cBlock.nNonce         = 1;
 		
-		pblock->UpdateTime();
+		cBlock.UpdateTime();
 
-		return pblock;
+		return cBlock;
 	}
 	
 	

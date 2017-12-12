@@ -863,7 +863,7 @@ namespace Core
 			
 
 			if(GetArg("-verbose", 0) >= 0)			
-				printf("Stake Minter : Staking at Trust Weight %f | Block Weight %f | Coin Age %"PRIu64" | Trust Age %"PRIu64"| Block Age %"PRIu64"\n", nTrustWeight, nBlockWeight, nCoinAge, nTrustAge, nBlockAge);
+				printf("Stake Minter : Staking at Trust Weight %f | Block Weight %f | Coin Age %" PRIu64 " | Trust Age %" PRIu64 "| Block Age %" PRIu64 "\n", nTrustWeight, nBlockWeight, nCoinAge, nTrustAge, nBlockAge);
 			
 			bool fFound = false;
 			while(!fFound)

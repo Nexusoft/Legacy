@@ -37,7 +37,9 @@ namespace LLP
 		Core::CBlockIndex* pindexBest = NULL;
 		
 		Wallet::CReserveKey* pMiningKey = NULL;
-		map<uint512, Core::CBlock*> MAP_BLOCKS;
+		map<uint512, Core::CBlock> MAP_BLOCKS;
+        
+        Core::CBlock BASE_BLOCK;
 		unsigned int nChannel, nBestHeight;
 		
 		/* Subscribed To Display how many Blocks connection Subscribed to. */
@@ -96,24 +98,12 @@ namespace LLP
 		
 		~MiningLLP()
 		{
-			for(map<uint512, Core::CBlock*>::iterator IT = MAP_BLOCKS.begin(); IT != MAP_BLOCKS.end(); ++ IT)
-			{
-				if(GetArg("-verbose", 0) >= 2)
-					printf("%%%%%%%%%% Mining LLP: Deleting Block %s\n", IT->second->hashMerkleRoot.ToString().substr(0, 10).c_str());
-				
-				delete IT->second;
-			}
-				
 			delete pMiningKey;
 			delete pCoinbaseTx;
 		}
 		
 		inline void ClearMap()
 		{
-			for(map<uint512, Core::CBlock*>::iterator IT = MAP_BLOCKS.begin(); IT != MAP_BLOCKS.end(); ++ IT)
-				delete IT->second;
-
-			delete pCoinbaseTx;
 			pCoinbaseTx = NULL;
 			
 			MAP_BLOCKS.clear();
@@ -187,36 +177,42 @@ namespace LLP
 				return;
 			
 			
-			/* On Generic Event, Broadcast new block if flagged. */
+			/** On Generic Event, Broadcast new block if flagged. **/
 			if(EVENT == EVENT_GENERIC)
 			{
-				/* Skip Generic Event if not Subscribed to Work. */
+				/** Skip Generic Event if not Subscribed to Work. **/
 				if(nSubscribed == 0)
 					return;
 					
-				/* Check the Round Automatically on Subscribed Worker. */
+				/** Check the Round Automatically on Subscribed Worker. **/
 				if(pindexBest == NULL || !pindexBest || pindexBest->GetBlockHash() != Core::pindexBest->GetBlockHash())
 				{
 					pindexBest = Core::pindexBest;
 					ClearMap();
 					
-					/* Construct a response packet by serializing the Block. */
+					/** Construct a response packet by serializing the Block. **/
 					Packet RESPONSE;
 					RESPONSE.HEADER = NEW_ROUND;
 					this->WritePacket(RESPONSE);
+                    
+                    /* Create a new base block. */
+                    BASE_BLOCK = Core::CreateNewBlock(*pMiningKey, pwalletMain, nChannel, MAP_BLOCKS.size() + 1, pCoinbaseTx);
+                    if(BASE_BLOCK.IsNull())
+                        return;
 					
-					/* Create all Blocks Worker Subscribed to. */
+					/** Create all Blocks Worker Subscribed to. **/
 					for(int nBlock = 0; nBlock < nSubscribed; nBlock++) {
-						Core::CBlock* NEW_BLOCK = Core::CreateNewBlock(*pMiningKey, pwalletMain, nChannel, MAP_BLOCKS.size() + 1, pCoinbaseTx);
+                        
+                        /* Create new block from the base block. */
+                        Core::CBlock NEW_BLOCK = BASE_BLOCK;
+                        NEW_BLOCK.vtx[0].vin[0].scriptSig = (Wallet::CScript() << MAP_BLOCKS.size() * 513513512151);
+                        NEW_BLOCK.BuildMerkleTree();
+                        NEW_BLOCK.UpdateTime();
 						
-						/* Fault Tolerance Check. */
-						if(!NEW_BLOCK)
-							continue;
-						
-						/* Handle the Block Key as Merkle Root for Block Submission. */
-						MAP_BLOCKS[NEW_BLOCK->hashMerkleRoot] = NEW_BLOCK;
+						/** Handle the Block Key as Merkle Root for Block Submission. **/
+						MAP_BLOCKS[NEW_BLOCK.hashMerkleRoot] = NEW_BLOCK;
 							
-						/* Construct a response packet by serializing the Block. */
+						/** Construct a response packet by serializing the Block. **/
 						Packet RESPONSE;
 						RESPONSE.HEADER = BLOCK_DATA;
 						RESPONSE.DATA   = SerializeBlock(NEW_BLOCK);
@@ -225,12 +221,13 @@ namespace LLP
 						this->WritePacket(RESPONSE);
 						
 						if(GetArg("-verbose", 0) >= 2)
-							printf("%%%%%%%%%% Mining LLP: Sent Block %s to Worker.\n\n", NEW_BLOCK->GetHash().ToString().c_str());
+							printf("%%%%%%%%%% Mining LLP: Sent Block %s to Worker.\n\n", NEW_BLOCK.GetHash().ToString().c_str());
 					}
 				}
 				
 				return;
 			}
+			
 			
 			/* On Connect Event, Assign the Proper Daemon Handle. */
 			if(EVENT == EVENT_CONNECT)
@@ -242,22 +239,27 @@ namespace LLP
 		
 		}
 		
-		/* This function is necessary for a template LLP server. It handles your 
-			custom messaging system, and how to interpret it from raw packets. */
+		/** This function is necessary for a template LLP server. It handles your 
+			custom messaging system, and how to interpret it from raw packets. **/
 		bool ProcessPacket()
 		{
 			Packet PACKET   = this->INCOMING;
 			
-			if( pwalletMain->IsLocked()) 
+			
+			/** If There are no Active nodes, or it is Initial Block Download:
+				Send a failed response to the miners, unless this is a regression test. **/
+			if(pwalletMain->IsLocked()) 
+			{ 
 				printf("%%%%%%%%%% Mining LLP: Rejected Request...Wallet Locked\n"); return false; 
+			}
 			
 			
-			/* Set the Mining Channel this Connection will Serve Blocks for. */
+			/** Set the Mining Channel this Connection will Serve Blocks for. **/
 			if(PACKET.HEADER == SET_CHANNEL)
 			{ 
 				nChannel = bytes2uint(PACKET.DATA); 
 				
-				/* Don't allow Mining LLP Requests for Proof of Stake Channel. */
+				/** Don't allow Mining LLP Requests for Proof of Stake Channel. **/
 				if(nChannel == 0)
 					return false; 
 				
@@ -268,11 +270,11 @@ namespace LLP
 			}
 			
 			
-			/* Return a Ping if Requested. */
+			/** Return a Ping if Requested. **/
 			if(PACKET.HEADER == PING){ Packet PACKET; PACKET.HEADER = PING; this->WritePacket(PACKET); return true; }
 			
 			
-			/* Set the Mining Channel this Connection will Serve Blocks for. */
+			/** Set the Mining Channel this Connection will Serve Blocks for. **/
 			if(PACKET.HEADER == SET_COINBASE)
 			{
 				Coinbase* pCoinbase = new Coinbase(PACKET.DATA, GetCoinbaseReward(Core::pindexBest, nChannel, 0));
@@ -292,14 +294,17 @@ namespace LLP
 					RESPONSE.HEADER = COINBASE_SET;
 					this->WritePacket(RESPONSE);
 					
+                    ClearMap();
 					pCoinbaseTx = pCoinbase;
+                    
+                    BASE_BLOCK = Core::CreateNewBlock(*pMiningKey, pwalletMain, nChannel, MAP_BLOCKS.size() + 1, pCoinbaseTx);
 				}
 				
 				return true;
 			}
 			
 			
-			/* Clear the Block Map if Requested by Client. */
+			/** Clear the Block Map if Requested by Client. **/
 			if(PACKET.HEADER == CLEAR_MAP)
 			{
 				ClearMap();
@@ -308,9 +313,9 @@ namespace LLP
 			}
 			
 			
-			/* Get Height Process:
+			/** Get Height Process:
 				Responds to the Miner with the Height of Current Best Block.
-				Used to poll whether a new block needs to be created. */
+				Used to poll whether a new block needs to be created. **/
 			if(PACKET.HEADER == GET_HEIGHT)
 			{
 				Packet RESPONSE;
@@ -320,11 +325,13 @@ namespace LLP
 				
 				this->WritePacket(RESPONSE);
 
-				/* Clear the Maps if Requested Height that is a New Best Block. */
+				/** Clear the Maps if Requested Height that is a New Best Block. **/
 				if(Core::nBestHeight > nBestHeight)
 				{
 					ClearMap();
 					nBestHeight = Core::nBestHeight;
+                    
+                    BASE_BLOCK = Core::CreateNewBlock(*pMiningKey, pwalletMain, nChannel, 1, pCoinbaseTx);
 				}
 				
 				return true;
@@ -355,6 +362,8 @@ namespace LLP
 					RESPONSE.HEADER = NEW_ROUND;
 					
 					ClearMap();
+                    
+                    BASE_BLOCK = Core::CreateNewBlock(*pMiningKey, pwalletMain, nChannel, 1, pCoinbaseTx);
 				}
 				
 				this->WritePacket(RESPONSE);
@@ -363,8 +372,8 @@ namespace LLP
 			}
 			
 			
-			/* Get Reward Process:
-				Responds with the Current Block Reward. */
+			/** Get Reward Process:
+				Responds with the Current Block Reward. **/
 			if(PACKET.HEADER == GET_REWARD)
 			{
 				uint64 nCoinbaseReward = GetCoinbaseReward(Core::pindexBest, nChannel, 0);
@@ -381,12 +390,12 @@ namespace LLP
 				return true;
 			}
 			
-			/* Allow Block Subscriptions. */
+			/** Allow Block Subscriptions. **/
 			if(PACKET.HEADER == SUBSCRIBE)
 			{
 				nSubscribed = bytes2uint(PACKET.DATA); 
 				
-				/* Don't allow Mining LLP Requests for Proof of Stake Channel. */
+				/** Don't allow Mining LLP Requests for Proof of Stake Channel. **/
 				if(nSubscribed == 0)
 					return false; 
 				
@@ -396,22 +405,29 @@ namespace LLP
 				return true; 
 			}
 			
-			/* New block Process:
+			/** New block Process:
 				Keeps a map of requested blocks for this connection.
-				Clears map once new block is submitted successfully. */
+				Clears map once new block is submitted successfully. **/
 			if(PACKET.HEADER == GET_BLOCK)
 			{
-				Core::CBlock* NEW_BLOCK = Core::CreateNewBlock(*pMiningKey, pwalletMain, nChannel, MAP_BLOCKS.size() + 1, pCoinbaseTx);
+                /* Reject request if there is no base block created already. */
+                if(BASE_BLOCK.IsNull())
+					BASE_BLOCK = Core::CreateNewBlock(*pMiningKey, pwalletMain, nChannel, 1, pCoinbaseTx);
 				
-				if(!NEW_BLOCK)
-				{
-					if(GetArg("-verbose", 0) >= 2)
-						printf("%%%%%%%%%% Mining LLP: Rejected Block Request. Incorrect Coinbase Tx.\n");
+				
+				/* Create new block from base block by changing the input script to search from new merkle root. */
+                Core::CBlock NEW_BLOCK = BASE_BLOCK;
+                NEW_BLOCK.vtx[0].vin[0].scriptSig = (Wallet::CScript() << (1024 * (MAP_BLOCKS.size() + 1)));
+                NEW_BLOCK.hashMerkleRoot = NEW_BLOCK.BuildMerkleTree();
+                NEW_BLOCK.UpdateTime();
+                
+                if(GetArg("-verbose", 0) >= 3)
+                    printf("%%%%%%%%%%% Mining LLP: Created new Block %s\n", NEW_BLOCK.hashMerkleRoot.ToString().substr(0, 20).c_str());
+                
+				/* Store the new block in the memory map of recent blocks being worked on. */
+				MAP_BLOCKS[NEW_BLOCK.hashMerkleRoot] = NEW_BLOCK;
 					
-					return true;
-				}
-				MAP_BLOCKS[NEW_BLOCK->hashMerkleRoot] = NEW_BLOCK;
-					
+                
 				/* Construct a response packet by serializing the Block. */
 				Packet RESPONSE;
 				RESPONSE.HEADER = BLOCK_DATA;
@@ -424,15 +440,17 @@ namespace LLP
 			}
 			
 			
-			/* Submit Block Process:
+			/** Submit Block Process:
 				Accepts a new block Merkle and nNonce for submit.
 				This is to correlate where in memory the actual
-				block is from MAP_BLOCKS. */
+				block is from MAP_BLOCKS. **/
 			if(PACKET.HEADER == SUBMIT_BLOCK)
 			{
 				uint512 hashMerkleRoot;
 				hashMerkleRoot.SetBytes(std::vector<unsigned char>(PACKET.DATA.begin(), PACKET.DATA.end() - 8));
 				
+				
+				/* Check that the block exists. */
 				if(!MAP_BLOCKS.count(hashMerkleRoot))
 				{
 					Packet RESPONSE;
@@ -442,26 +460,55 @@ namespace LLP
 					
 					if(GetArg("-verbose", 0) >= 2)
 						printf("%%%%%%%%%% Mining LLP: Block Not Found %s\n", hashMerkleRoot.ToString().substr(0, 20).c_str());
+					
 					return true;
 				}
 				
-				Core::CBlock* NEW_BLOCK = MAP_BLOCKS[hashMerkleRoot];
+				
+				/* Create the pointer on the heap. */
+				Core::CBlock* NEW_BLOCK = &MAP_BLOCKS[hashMerkleRoot];
 				NEW_BLOCK->nNonce = bytes2uint64(std::vector<unsigned char>(PACKET.DATA.end() - 8, PACKET.DATA.end()));
 				NEW_BLOCK->UpdateTime();
 				NEW_BLOCK->print();
 				
-				Packet RESPONSE;
-				if(NEW_BLOCK->SignBlock(*pwalletMain) && Core::CheckWork(NEW_BLOCK, *pwalletMain, *pMiningKey))
+				
+				/* Sign the submitted block. */
+				if(!NEW_BLOCK->SignBlock(*pwalletMain))
 				{
-					if(GetArg("-verbose", 0) >= 2)
-						printf("%%%%%%%%%% Mining LLP: Created New Block %s\n", NEW_BLOCK->hashMerkleRoot.ToString().substr(0, 10).c_str());
-					
-					RESPONSE.HEADER = BLOCK_ACCEPTED;
-					
-					ClearMap();
-				}
-				else
+					Packet RESPONSE;
 					RESPONSE.HEADER = BLOCK_REJECTED;
+					
+					this->WritePacket(RESPONSE);
+					
+					if(GetArg("-verbose", 0) >= 2)
+						printf("%%%%%%%%%% Mining LLP: Unable to Sign block %s\n", hashMerkleRoot.ToString().substr(0, 20).c_str());
+					
+					return true;
+				}
+				
+				
+				/* Check the Proof of Work for submitted block. */
+				if(!Core::CheckWork(NEW_BLOCK, *pwalletMain, *pMiningKey))
+				{
+					Packet RESPONSE;
+					RESPONSE.HEADER = BLOCK_REJECTED;
+					
+					this->WritePacket(RESPONSE);
+					
+					if(GetArg("-verbose", 0) >= 2)
+						printf("%%%%%%%%%% Mining LLP: Invalid Work for block %s\n", hashMerkleRoot.ToString().substr(0, 20).c_str());
+					
+					return true;
+				}
+				
+				
+				if(GetArg("-verbose", 0) >= 2)
+						printf("%%%%%%%%%% Mining LLP: Found new Block %s\n", NEW_BLOCK->hashMerkleRoot.ToString().substr(0, 10).c_str());
+					
+				Packet RESPONSE;
+				RESPONSE.HEADER = BLOCK_ACCEPTED;
+					
+				ClearMap();
 				
 				this->WritePacket(RESPONSE);
 				
@@ -469,7 +516,7 @@ namespace LLP
 			}
 			
 			
-			/* Check Block Command: Allows Client to Check if a Block is part of the Main Chain. */
+			/** Check Block Command: Allows Client to Check if a Block is part of the Main Chain. **/
 			if(PACKET.HEADER == CHECK_BLOCK)
 			{
 				uint1024 hashBlock;
@@ -494,16 +541,16 @@ namespace LLP
 		
 	private:
 	
-		/* Convert the Header of a Block into a Byte Stream for Reading and Writing Across Sockets. */
-		std::vector<unsigned char> SerializeBlock(Core::CBlock* BLOCK)
+		/** Convert the Header of a Block into a Byte Stream for Reading and Writing Across Sockets. **/
+		std::vector<unsigned char> SerializeBlock(Core::CBlock BLOCK)
 		{
-			std::vector<unsigned char> VERSION  = uint2bytes(BLOCK->nVersion);
-			std::vector<unsigned char> PREVIOUS = BLOCK->hashPrevBlock.GetBytes();
-			std::vector<unsigned char> MERKLE   = BLOCK->hashMerkleRoot.GetBytes();
-			std::vector<unsigned char> CHANNEL  = uint2bytes(BLOCK->nChannel);
-			std::vector<unsigned char> HEIGHT   = uint2bytes(BLOCK->nHeight);
-			std::vector<unsigned char> BITS     = uint2bytes(BLOCK->nBits);
-			std::vector<unsigned char> NONCE    = uint2bytes64(BLOCK->nNonce);
+			std::vector<unsigned char> VERSION  = uint2bytes(BLOCK.nVersion);
+			std::vector<unsigned char> PREVIOUS = BLOCK.hashPrevBlock.GetBytes();
+			std::vector<unsigned char> MERKLE   = BLOCK.hashMerkleRoot.GetBytes();
+			std::vector<unsigned char> CHANNEL  = uint2bytes(BLOCK.nChannel);
+			std::vector<unsigned char> HEIGHT   = uint2bytes(BLOCK.nHeight);
+			std::vector<unsigned char> BITS     = uint2bytes(BLOCK.nBits);
+			std::vector<unsigned char> NONCE    = uint2bytes64(BLOCK.nNonce);
 			
 			std::vector<unsigned char> DATA;
 			DATA.insert(DATA.end(), VERSION.begin(),   VERSION.end());

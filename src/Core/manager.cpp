@@ -242,6 +242,7 @@ namespace Core
 					break;
 				}
 				
+				
 				/* Check the block to the blockchain. */
 				if(blkPool.Accept(block))
 				{

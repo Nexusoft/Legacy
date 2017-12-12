@@ -46,6 +46,8 @@ namespace Core
 		Thread_t InventoryThread;
 		Thread_t MeteringThread;
 		
+		//TODO: Put the LLD Instance here rather than LLD keychain class
+		
 		
 	public:
 		
