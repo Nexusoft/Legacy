@@ -64,17 +64,7 @@ void ExitTimeout(void* parg)
 
 void StartShutdown()
 {
-#ifdef QT_GUI
-<<<<<<< HEAD
-    // ensure we leave the Qt main loop for a clean GUI exit (Shutdown() is called in nexus.cpp afterwards)
-=======
-    // ensure we leave the Qt main loop for a clean GUI exit (Shutdown() is called afterwards)
->>>>>>> master
-    QueueShutdown();
-#else
-    // Without UI, Shutdown() can simply be started in a new thread
     CreateThread(Shutdown, NULL);
-#endif
 }
 
 void Shutdown(void* parg)
@@ -378,9 +368,11 @@ bool AppInit2(int argc, char* argv[])
 
 	InitMessage(_("Initializing Unified Time..."));
 	printf("Initializing Unified Time...\n");
-	
+
 	//TODO: PUT IN NODE MANAGER InitializeUnifiedTime();
 	CreateThread(Core::ThreadUnifiedSamples, NULL);
+	InitializeUnifiedTime();
+
 	if (!fDebug)
 		ShrinkDebugFile();
 	
@@ -595,11 +587,14 @@ bool AppInit2(int argc, char* argv[])
     /** Wait for Unified Time if First Start. **/
     if (GetBoolArg("-istimeseed",false)) {
         printf("WARNING: -istimeseed Was set, not waiting for unified time.\n");
+		
+		fTimeUnified = true;
     }
     else {
         printf("Waiting for unified time...\n");
         while(!Core::fTimeUnified)
             Sleep(10);
+
     }
 
 	/** Start sending Unified Samples. **/

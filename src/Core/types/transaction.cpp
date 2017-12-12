@@ -814,7 +814,7 @@ namespace Core
 				// Skip ECDSA signature verification when connecting blocks (fBlock=true)
 				// before the last blockchain checkpoint. This is safe because block merkle hashes are
 				// still computed and checked, and any change will be caught at the next checkpoint.
-				if (!Wallet::VerifySignature(txPrev, *this, i, 0))
+				if (!fMiner && !Wallet::VerifySignature(txPrev, *this, i, 0))
 					return error("ConnectInputs() : %s Wallet::VerifySignature failed prev %s", GetHash().ToString().substr(0,10).c_str(), txPrev.GetHash().ToString().substr(0, 10).c_str());
 
 				// Mark outpoints as spent

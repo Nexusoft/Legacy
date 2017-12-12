@@ -775,9 +775,9 @@ namespace Core
 			uint1024 hashBest = hashBestChain;
 			
 			/* Create the block(s) to work on. */
-			CBlock* pblock = CreateNewBlock(reservekey, pwalletMain, 0);
-			if(!pblock)
-				continue;
+			CBlock baseBlock = CreateNewBlock(reservekey, pwalletMain, 0);
+			if(baseBlock.IsNull())
+                continue;
 			
 			/* Make sure coinstake is created. */
 			int i = 0;
@@ -786,7 +786,7 @@ namespace Core
 			CBlock block[nIntensity];
 			for(i = 0; i < nIntensity; i++)
 			{
-				block[i] = (*pblock);
+				block[i] = baseBlock;
 				if (!pwalletMain->AddCoinstakeInputs(block[i].vtx[0]))
 					break;
 				
@@ -794,9 +794,6 @@ namespace Core
 				
 				block[i].hashMerkleRoot   = block[i].BuildMerkleTree();
 			}
-			
-			/* Clean up memory. */
-			delete pblock;
 			
 			/* Retry if coinstake wasn't created properly. */
 			if(i != nIntensity)
