@@ -1735,6 +1735,75 @@ namespace Net
 		return ret;
 	}
 
+	Value listNTransactions(const Array& params, bool fHelp)
+	{
+		if (fHelp || params.size() > 1)
+			throw runtime_error(
+				"listNTransactions [N]\n"
+				"Returns up to [N] most recent transactions. Default [N] is 10");
+
+		string strAccount = "*"; //just to get things working, this is not going to be in the final version of this method.
+		int nCount = 10; // list this many recent transactions.
+		if (params.size() > 0)
+			nCount = params[0].get_int();
+		int nFrom = 0; //skip this many recent transactions.	
+		if (nCount < 0)
+			throw JSONRPCError(-8, "Negative count");
+
+
+		Array ret;
+			Wallet::CWalletDB walletdb(pwalletMain->strWalletFile);
+
+			// First: get all Wallet::CWalletTx and Wallet::CAccountingEntry into a sorted-by-time multimap.
+			typedef pair<Wallet::CWalletTx*, Wallet::CAccountingEntry*> TxPair;
+			typedef multimap<int64, TxPair > TxItems;
+			TxItems txByTime;
+
+			for (map<uint512, Wallet::CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
+			{
+				Wallet::CWalletTx* wtx = &((*it).second);
+				txByTime.insert(make_pair(wtx->GetTxTime(), TxPair(wtx, (Wallet::CAccountingEntry*)0)));
+			}
+
+			list<Wallet::CAccountingEntry> acEntries;
+			walletdb.ListAccountCreditDebit(strAccount, acEntries);
+
+			BOOST_FOREACH(Wallet::CAccountingEntry& entry, acEntries)
+			{
+				txByTime.insert(make_pair(entry.nTime, TxPair((Wallet::CWalletTx*)0, &entry)));
+			}
+
+			// iterate backwards until we have nCount items to return:
+			for (TxItems::reverse_iterator it = txByTime.rbegin(); it != txByTime.rend(); ++it)
+			{
+				Wallet::CWalletTx *const pwtx = (*it).second.first;
+				if (pwtx != 0)
+					ListTransactions(*pwtx, strAccount, 0, true, ret); //for now i am reusing this function, will right one that doesn't take account etc.
+				Wallet::CAccountingEntry *const pacentry = (*it).second.second;
+				if (pacentry != 0)
+					AcentryToJSON(*pacentry, strAccount, ret);
+
+				if (ret.size() >= (nCount+nFrom)) break;
+			}
+			// ret is newest to oldest
+			
+			// if (nFrom > (int)ret.size())
+			// 	nFrom = ret.size();
+			// if ((nFrom + nCount) > (int)ret.size())
+			// 	nCount = ret.size() - nFrom;
+			// Array::iterator first = ret.begin();
+			// std::advance(first, nFrom);
+			// Array::iterator last = ret.begin();
+			// std::advance(last, nFrom+nCount);
+
+			// if (last != ret.end()) ret.erase(last, ret.end());
+			// if (first != ret.begin()) ret.erase(ret.begin(), first);
+
+			std::reverse(ret.begin(), ret.end()); // Return oldest to newest
+
+		return ret;
+	}
+
 	Value listaccounts(const Array& params, bool fHelp)
 	{
 		if (fHelp || params.size() > 1)
@@ -2579,26 +2648,26 @@ namespace Net
 	static const CRPCCommand vRPCCommands[] =
 	{ //  name                      function                 safe mode?
 	  //  ------------------------  -----------------------  ----------
-		{ "help",                   &help,                   true },
-		{ "stop",                   &stop,                   true },
-		{ "getblockcount",          &getblockcount,          true },
-		{ "getblocknumber",         &getblocknumber,         true },
-		{ "getconnectioncount",     &getconnectioncount,     true },
-		{ "getpeerinfo",            &getpeerinfo,            true },
-		{ "getdifficulty",          &getdifficulty,          true },
-		{ "getsupplyrates",         &getsupplyrate,          true },
-		{ "getinfo",                &getinfo,                true },
-		{ "getmininginfo",          &getmininginfo,          true },
-		{ "getnewaddress",          &getnewaddress,          true },
-		{ "getaccountaddress",      &getaccountaddress,      true },
-		{ "setaccount",             &setaccount,             true },
+		{ "help",                   &help,                   true  },
+		{ "stop",                   &stop,                   true  },
+		{ "getblockcount",          &getblockcount,          true  },
+		{ "getblocknumber",         &getblocknumber,         true  },
+		{ "getconnectioncount",     &getconnectioncount,     true  },
+		{ "getpeerinfo",            &getpeerinfo,            true  },
+		{ "getdifficulty",          &getdifficulty,          true  },
+		{ "getsupplyrates",         &getsupplyrate,          true  },
+		{ "getinfo",                &getinfo,                true  },
+		{ "getmininginfo",          &getmininginfo,          true  },
+		{ "getnewaddress",          &getnewaddress,          true  },
+		{ "getaccountaddress",      &getaccountaddress,      true  },
+		{ "setaccount",             &setaccount,             true  },
 		{ "getaccount",             &getaccount,             false },
-		{ "getaddressesbyaccount",  &getaddressesbyaccount,  true },
+		{ "getaddressesbyaccount",  &getaddressesbyaccount,  true  },
 		{ "sendtoaddress",          &sendtoaddress,          false },
-        { "getmoneysupply",         &getmoneysupply,         true },
-		{ "getnetworkhashps",       &getnetworkhashps,       true },
-		{ "getnetworkpps",       	&getnetworkpps,          true },
-		{ "getnetworktrustkeys",    &getnetworktrustkeys,    true },
+        { "getmoneysupply",         &getmoneysupply,         true  },
+		{ "getnetworkhashps",       &getnetworkhashps,       true  },
+		{ "getnetworkpps",       	&getnetworkpps,          true  },
+		{ "getnetworktrustkeys",    &getnetworktrustkeys,    true  },
 		{ "getreceivedbyaddress",   &getreceivedbyaddress,   false },
 		{ "getreceivedbyaccount",   &getreceivedbyaccount,   false },
 		{ "listreceivedbyaddress",  &listreceivedbyaddress,  false },
@@ -2606,13 +2675,13 @@ namespace Net
 		{ "exportkeys",             &exportkeys,             false },
 		{ "importkeys",             &importkeys,             false },
 		{ "rescan",                 &rescan,                 false },
-		{ "backupwallet",           &backupwallet,           true },
-		{ "keypoolrefill",          &keypoolrefill,          true },
-		{ "walletpassphrase",       &walletpassphrase,       true },
+		{ "backupwallet",           &backupwallet,           true  },
+		{ "keypoolrefill",          &keypoolrefill,          true  },
+		{ "walletpassphrase",       &walletpassphrase,       true  },
 		{ "walletpassphrasechange", &walletpassphrasechange, false },
-		{ "walletlock",             &walletlock,             true },
+		{ "walletlock",             &walletlock,             true  },
 		{ "encryptwallet",          &encryptwallet,          false },
-		{ "validateaddress",        &validateaddress,        true },
+		{ "validateaddress",        &validateaddress,        true  },
 		{ "getbalance",             &getbalance,             false },
 		{ "move",                   &movecmd,                false },
 		{ "sendfrom",               &sendfrom,               false },
@@ -2626,7 +2695,7 @@ namespace Net
 		{ "getglobaltransaction",   &getglobaltransaction,   false },
 		{ "getaddressbalance",   	&getaddressbalance,   	 false },
 		{ "dumprichlist",   	    &dumprichlist,		   	 false },
-		//{ "dumptrustkeys",   	    &dumptrustkeys,		   	 false },
+		{ "listNTransactions",      &listNTransactions,      false },
 		{ "listtransactions",       &listtransactions,       false },
 		{ "signmessage",            &signmessage,            false },
 		{ "verifymessage",          &verifymessage,          false },
@@ -2642,7 +2711,7 @@ namespace Net
 		{ "checkwallet",            &checkwallet,            false },
 		{ "repairwallet",           &repairwallet,           false },
 		{ "makekeypair",            &makekeypair,            false },
-		{ "getMapCommandsKeyVector", &getMapCommandsKeyVector, false }
+		{ "getMapCommandsKeyVector",&getMapCommandsKeyVector,false }
 
 	};
 
@@ -3250,6 +3319,7 @@ namespace Net
 		if (strMethod == "sendfrom"               && n > 3) ConvertTo<boost::int64_t>(params[3]);
 		if (strMethod == "listtransactions"       && n > 1) ConvertTo<boost::int64_t>(params[1]);
 		if (strMethod == "listtransactions"       && n > 2) ConvertTo<boost::int64_t>(params[2]);
+		if (strMethod == "listNTransactions"      && n > 0) ConvertTo<boost::int64_t>(params[0]);
 		if (strMethod == "listaccounts"           && n > 0) ConvertTo<boost::int64_t>(params[0]);
 		if (strMethod == "walletpassphrase"       && n > 1) ConvertTo<boost::int64_t>(params[1]);
 		if (strMethod == "walletpassphrase"       && n > 2) ConvertTo<bool>(params[2]);
