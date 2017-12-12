@@ -371,7 +371,6 @@ bool AppInit2(int argc, char* argv[])
 
 	//TODO: PUT IN NODE MANAGER InitializeUnifiedTime();
 	CreateThread(Core::ThreadUnifiedSamples, NULL);
-	InitializeUnifiedTime();
 
 	if (!fDebug)
 		ShrinkDebugFile();
@@ -588,7 +587,7 @@ bool AppInit2(int argc, char* argv[])
     if (GetBoolArg("-istimeseed",false)) {
         printf("WARNING: -istimeseed Was set, not waiting for unified time.\n");
 		
-		fTimeUnified = true;
+		Core::fTimeUnified = true;
     }
     else {
         printf("Waiting for unified time...\n");
