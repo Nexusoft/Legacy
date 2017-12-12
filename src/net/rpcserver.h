@@ -56,6 +56,12 @@ namespace Net
 			 * @throws an exception (json_spirit::Value) when an error happens.
 			 */
 			json_spirit::Value execute(const std::string &method, const json_spirit::Array &params) const;
+
+			/**
+			 * Get RPC command map.
+			 * 
+			 */
+			std::vector<std::string> getMapCommandsKeyVector() const;
 	};
 
 	extern const CRPCTable tableRPC;
