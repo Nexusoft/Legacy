@@ -39,21 +39,21 @@ LLP::Server<LLP::CoreLLP>* LLP_SERVER;
 
 void ExitTimeout(void* parg)
 {
-#ifdef WIN32
-    Sleep(5000);
-    ExitProcess(0);
-#endif
+    #ifdef WIN32
+        Sleep(5000);
+        ExitProcess(0);
+    #endif
 }
 
 void StartShutdown()
 {
-#ifdef QT_GUI
-    // ensure we leave the Qt main loop for a clean GUI exit (Shutdown() is called afterwards)
-    QueueShutdown();
-#else
-    // Without UI, Shutdown() can simply be started in a new thread
-    CreateThread(Shutdown, NULL);
-#endif
+    #ifdef QT_GUI
+        // ensure we leave the Qt main loop for a clean GUI exit (Shutdown() is called afterwards)
+        QueueShutdown();
+    #else
+        // Without UI, Shutdown() can simply be started in a new thread
+        CreateThread(Shutdown, NULL);
+    #endif
 }
 
 void Shutdown(void* parg)
@@ -84,10 +84,10 @@ void Shutdown(void* parg)
         Sleep(50);
         printf("Nexus exiting\n\n");
         fExit = true;
-#ifndef QT_GUI
-        // ensure non UI client get's exited here, but let Nexus-Qt reach return 0;
-        exit(0);
-#endif
+    #ifndef QT_GUI
+            // ensure non UI client get's exited here, but let Nexus-Qt reach return 0;
+            exit(0);
+    #endif
     }
     else
     {
@@ -102,11 +102,6 @@ void HandleSIGTERM(int)
 {
     fRequestShutdown = true;
 }
-
-
-
-
-
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -144,47 +139,47 @@ bool AppInit(int argc, char* argv[])
 
 bool AppInit2(int argc, char* argv[])
 {
-#ifdef _MSC_VER
-    // Turn off microsoft heap dump noise
-    _CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_FILE);
-    _CrtSetReportFile(_CRT_WARN, CreateFileA("NUL", GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, 0));
-#endif
-#if _MSC_VER >= 1400
-    // Disable confusing "helpful" text message on abort, ctrl-c
-    _set_abort_behavior(0, _WRITE_ABORT_MSG | _CALL_REPORTFAULT);
-#endif
-#ifndef WIN32
-    umask(077);
-#endif
-#ifndef WIN32
-    // Clean shutdown on SIGTERM
-    struct sigaction sa;
-    sa.sa_handler = HandleSIGTERM;
-    sigemptyset(&sa.sa_mask);
-    sa.sa_flags = 0;
-    sigaction(SIGTERM, &sa, NULL);
-    sigaction(SIGINT, &sa, NULL);
-    sigaction(SIGHUP, &sa, NULL);
-#else
-    signal(SIGINT, HandleSIGTERM);
-    signal(SIGTERM, HandleSIGTERM);
-#ifdef SIGBREAK
-    signal(SIGBREAK, HandleSIGTERM);
-#endif
-#endif
+    #ifdef _MSC_VER
+        // Turn off microsoft heap dump noise
+        _CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_FILE);
+        _CrtSetReportFile(_CRT_WARN, CreateFileA("NUL", GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, 0));
+    #endif
+    #if _MSC_VER >= 1400
+        // Disable confusing "helpful" text message on abort, ctrl-c
+        _set_abort_behavior(0, _WRITE_ABORT_MSG | _CALL_REPORTFAULT);
+    #endif
+    #ifndef WIN32
+        umask(077);
+    #endif
+    #ifndef WIN32
+        // Clean shutdown on SIGTERM
+        struct sigaction sa;
+        sa.sa_handler = HandleSIGTERM;
+        sigemptyset(&sa.sa_mask);
+        sa.sa_flags = 0;
+        sigaction(SIGTERM, &sa, NULL);
+        sigaction(SIGINT, &sa, NULL);
+        sigaction(SIGHUP, &sa, NULL);
+    #else
+        signal(SIGINT, HandleSIGTERM);
+        signal(SIGTERM, HandleSIGTERM);
+    #ifdef SIGBREAK
+        signal(SIGBREAK, HandleSIGTERM);
+    #endif
+    #endif
 
     //
     // Parameters
     //
-#if !defined(QT_GUI)
-    ParseParameters(argc, argv);
-    if (!boost::filesystem::is_directory(GetDataDir(false)))
-    {
-        fprintf(stderr, "Error: Specified directory does not exist\n");
-        Shutdown(NULL);
-    }
-    ReadConfigFile(mapArgs, mapMultiArgs);
-#endif
+    #if !defined(QT_GUI)
+        ParseParameters(argc, argv);
+        if (!boost::filesystem::is_directory(GetDataDir(false)))
+        {
+            fprintf(stderr, "Error: Specified directory does not exist\n");
+            Shutdown(NULL);
+        }
+        ReadConfigFile(mapArgs, mapMultiArgs);
+    #endif
 
     if (mapArgs.count("-?") || mapArgs.count("--help"))
     {
@@ -213,70 +208,70 @@ bool AppInit2(int argc, char* argv[])
             "  -addnode=<ip>    \t  "   + _("Add a node to connect to and attempt to keep the connection open") + "\n" +
             "  -connect=<ip>    \t\t  " + _("Connect only to the specified node") + "\n" +
             "  -listen          \t  "   + _("Accept connections from outside (default: 1)") + "\n" +
-#ifdef QT_GUI
-            "  -lang=<lang>     \t\t  " + _("Set language, for example \"de_DE\" (default: system locale)") + "\n" +
-#endif
-            "  -dnsseed         \t  "   + _("Find peers using DNS lookup (default: 1)") + "\n" +
-            "  -banscore=<n>    \t  "   + _("Threshold for disconnecting misbehaving peers (default: 100)") + "\n" +
-            "  -bantime=<n>     \t  "   + _("Number of seconds to keep misbehaving peers from reconnecting (default: 86400)") + "\n" +
-            "  -maxreceivebuffer=<n>\t  " + _("Maximum per-connection receive buffer, <n>*1000 bytes (default: 10000)") + "\n" +
-            "  -maxsendbuffer=<n>\t  "   + _("Maximum per-connection send buffer, <n>*1000 bytes (default: 10000)") + "\n" +
-#ifdef USE_UPNP
-#if USE_UPNP
-            "  -upnp            \t  "   + _("Use Universal Plug and Play to map the listening port (default: 1)") + "\n" +
-#else
-            "  -upnp            \t  "   + _("Use Universal Plug and Play to map the listening port (default: 0)") + "\n" +
-#endif
-            "  -detachdb        \t  "   + _("Detach block and address databases. Increases shutdown time (default: 0)") + "\n" +
-#endif
-            "  -paytxfee=<amt>  \t  "   + _("Fee per KB to add to transactions you send") + "\n" +
-#ifdef QT_GUI
-            "  -server          \t\t  " + _("Accept command line and JSON-RPC commands") + "\n" +
-#endif
-#if !defined(WIN32) && !defined(QT_GUI)
-            "  -daemon          \t\t  " + _("Run in the background as a daemon and accept commands") + "\n" +
-#endif
-            "  -testnet         \t\t  " + _("Use the test network") + "\n" +
-            "  -regtest         \t\t  " + _("Run nexus in regression test mode for lower difficulty, etc. For local code testing only.") + "\n" +
-            "  -istimeseed      \t\t  " + _("Advanced option. Use to set this as a dns time seed e.g. for bootstraping new test block chain.") + "\n" +
-            "  -debug           \t\t  " + _("Output extra debugging information") + "\n" +
-            "  -logtimestamps   \t  "   + _("Prepend debug output with timestamp") + "\n" +
-            "  -printtoconsole  \t  "   + _("Send trace/debug info to console instead of debug.log file") + "\n" +
-#ifdef WIN32
-            "  -printtodebugger \t  "   + _("Send trace/debug info to debugger") + "\n" +
-#endif
-            "  -llpallowip=<ip> \t  "   + _("Allow mining from specified IP address or range (192.168.6.* for example") + "\n" +
-			"  -mining 			\t  "   + _("Allow mining (default: 0)") + "\n" +
-            "  -rpcuser=<user>  \t  "   + _("Username for JSON-RPC connections") + "\n" +
-            "  -rpcpassword=<pw>\t  "   + _("Password for JSON-RPC connections") + "\n" +
-            "  -rpcport=<port>  \t\t  " + _("Listen for JSON-RPC connections on <port> (default: 9325)") + "\n" +
-            "  -rpcallowip=<ip> \t\t  " + _("Allow JSON-RPC connections from specified IP address") + "\n" +
-            "  -rpcconnect=<ip> \t  "   + _("Send commands to node running on <ip> (default: 127.0.0.1)") + "\n" +
-            "  -blocknotify=<cmd> "     + _("Execute command when the best block changes (%s in cmd is replaced by block hash)") + "\n" +
-            "  -upgradewallet   \t  "   + _("Upgrade wallet to latest format") + "\n" +
-            "  -keypool=<n>     \t  "   + _("Set key pool size to <n> (default: 100)") + "\n" +
-            "  -rescan          \t  "   + _("Rescan the block chain for missing wallet transactions") + "\n" +
-            "  -checkblocks=<n> \t\t  " + _("How many blocks to check at startup (default: 2500, 0 = all)") + "\n" +
-            "  -checklevel=<n>  \t\t  " + _("How thorough the block verification is (0-6, default: 1)") + "\n";
+        #ifdef QT_GUI
+                    "  -lang=<lang>     \t\t  " + _("Set language, for example \"de_DE\" (default: system locale)") + "\n" +
+        #endif
+                    "  -dnsseed         \t  "   + _("Find peers using DNS lookup (default: 1)") + "\n" +
+                    "  -banscore=<n>    \t  "   + _("Threshold for disconnecting misbehaving peers (default: 100)") + "\n" +
+                    "  -bantime=<n>     \t  "   + _("Number of seconds to keep misbehaving peers from reconnecting (default: 86400)") + "\n" +
+                    "  -maxreceivebuffer=<n>\t  " + _("Maximum per-connection receive buffer, <n>*1000 bytes (default: 10000)") + "\n" +
+                    "  -maxsendbuffer=<n>\t  "   + _("Maximum per-connection send buffer, <n>*1000 bytes (default: 10000)") + "\n" +
+        #ifdef USE_UPNP
+        #if USE_UPNP
+                    "  -upnp            \t  "   + _("Use Universal Plug and Play to map the listening port (default: 1)") + "\n" +
+        #else
+                    "  -upnp            \t  "   + _("Use Universal Plug and Play to map the listening port (default: 0)") + "\n" +
+        #endif
+                    "  -detachdb        \t  "   + _("Detach block and address databases. Increases shutdown time (default: 0)") + "\n" +
+        #endif
+                    "  -paytxfee=<amt>  \t  "   + _("Fee per KB to add to transactions you send") + "\n" +
+        #ifdef QT_GUI
+                    "  -server          \t\t  " + _("Accept command line and JSON-RPC commands") + "\n" +
+        #endif
+        #if !defined(WIN32) && !defined(QT_GUI)
+                    "  -daemon          \t\t  " + _("Run in the background as a daemon and accept commands") + "\n" +
+        #endif
+                    "  -testnet         \t\t  " + _("Use the test network") + "\n" +
+                    "  -regtest         \t\t  " + _("Run nexus in regression test mode for lower difficulty, etc. For local code testing only.") + "\n" +
+                    "  -istimeseed      \t\t  " + _("Advanced option. Use to set this as a dns time seed e.g. for bootstraping new test block chain.") + "\n" +
+                    "  -debug           \t\t  " + _("Output extra debugging information") + "\n" +
+                    "  -logtimestamps   \t  "   + _("Prepend debug output with timestamp") + "\n" +
+                    "  -printtoconsole  \t  "   + _("Send trace/debug info to console instead of debug.log file") + "\n" +
+        #ifdef WIN32
+                    "  -printtodebugger \t  "   + _("Send trace/debug info to debugger") + "\n" +
+        #endif
+                    "  -llpallowip=<ip> \t  "   + _("Allow mining from specified IP address or range (192.168.6.* for example") + "\n" +
+                    "  -mining 			\t  "   + _("Allow mining (default: 0)") + "\n" +
+                    "  -rpcuser=<user>  \t  "   + _("Username for JSON-RPC connections") + "\n" +
+                    "  -rpcpassword=<pw>\t  "   + _("Password for JSON-RPC connections") + "\n" +
+                    "  -rpcport=<port>  \t\t  " + _("Listen for JSON-RPC connections on <port> (default: 9325)") + "\n" +
+                    "  -rpcallowip=<ip> \t\t  " + _("Allow JSON-RPC connections from specified IP address") + "\n" +
+                    "  -rpcconnect=<ip> \t  "   + _("Send commands to node running on <ip> (default: 127.0.0.1)") + "\n" +
+                    "  -blocknotify=<cmd> "     + _("Execute command when the best block changes (%s in cmd is replaced by block hash)") + "\n" +
+                    "  -upgradewallet   \t  "   + _("Upgrade wallet to latest format") + "\n" +
+                    "  -keypool=<n>     \t  "   + _("Set key pool size to <n> (default: 100)") + "\n" +
+                    "  -rescan          \t  "   + _("Rescan the block chain for missing wallet transactions") + "\n" +
+                    "  -checkblocks=<n> \t\t  " + _("How many blocks to check at startup (default: 2500, 0 = all)") + "\n" +
+                    "  -checklevel=<n>  \t\t  " + _("How thorough the block verification is (0-6, default: 1)") + "\n";
 
-        strUsage += string() +
-            _("\nSSL options: (see the Nexus Wiki for SSL setup instructions)") + "\n" +
-            "  -rpcssl                                \t  " + _("Use OpenSSL (https) for JSON-RPC connections") + "\n" +
-            "  -rpcsslcertificatechainfile=<file.cert>\t  " + _("Server certificate file (default: server.cert)") + "\n" +
-            "  -rpcsslprivatekeyfile=<file.pem>       \t  " + _("Server private key (default: server.pem)") + "\n" +
-            "  -rpcsslciphers=<ciphers>               \t  " + _("Acceptable ciphers (default: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)") + "\n";
+                strUsage += string() +
+                    _("\nSSL options: (see the Nexus Wiki for SSL setup instructions)") + "\n" +
+                    "  -rpcssl                                \t  " + _("Use OpenSSL (https) for JSON-RPC connections") + "\n" +
+                    "  -rpcsslcertificatechainfile=<file.cert>\t  " + _("Server certificate file (default: server.cert)") + "\n" +
+                    "  -rpcsslprivatekeyfile=<file.pem>       \t  " + _("Server private key (default: server.pem)") + "\n" +
+                    "  -rpcsslciphers=<ciphers>               \t  " + _("Acceptable ciphers (default: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)") + "\n";
 
-        strUsage += string() +
-            "  -?               \t\t  " + _("This help message") + "\n";
+                strUsage += string() +
+                    "  -?               \t\t  " + _("This help message") + "\n";
 
-        // Remove tabs
-        strUsage.erase(std::remove(strUsage.begin(), strUsage.end(), '\t'), strUsage.end());
-#if defined(QT_GUI) && defined(WIN32)
-        // On windows, show a message box, as there is no stderr
-        ThreadSafeMessageBox(strUsage, _("Usage"), wxOK | wxMODAL);
-#else
-        fprintf(stderr, "%s", strUsage.c_str());
-#endif
+                // Remove tabs
+                strUsage.erase(std::remove(strUsage.begin(), strUsage.end(), '\t'), strUsage.end());
+        #if defined(QT_GUI) && defined(WIN32)
+                // On windows, show a message box, as there is no stderr
+                ThreadSafeMessageBox(strUsage, _("Usage"), wxOK | wxMODAL);
+        #else
+                fprintf(stderr, "%s", strUsage.c_str());
+        #endif
         return false;
     }
 
@@ -287,67 +282,67 @@ bool AppInit2(int argc, char* argv[])
     fDebug = GetBoolArg("-debug", false);
     Wallet::fDetachDB = GetBoolArg("-detachdb", false);
 
-#if !defined(WIN32) && !defined(QT_GUI)
-    fDaemon = GetBoolArg("-daemon");
-#else
-    fDaemon = false;
-#endif
+    #if !defined(WIN32) && !defined(QT_GUI)
+        fDaemon = GetBoolArg("-daemon");
+    #else
+        fDaemon = false;
+    #endif
 
-    if (fDaemon)
+        if (fDaemon)
+            fServer = true;
+        else
+            fServer = GetBoolArg("-server");
+
+        /* force fServer when running without GUI */
+    #if !defined(QT_GUI)
         fServer = true;
-    else
-        fServer = GetBoolArg("-server");
-
-    /* force fServer when running without GUI */
-#if !defined(QT_GUI)
-    fServer = true;
-#endif
+    #endif
     fPrintToConsole = GetBoolArg("-printtoconsole");
     fPrintToDebugger = GetBoolArg("-printtodebugger");
     fLogTimestamps = GetBoolArg("-logtimestamps");
 
-#ifndef QT_GUI
-    for (int i = 1; i < argc; i++)
-        if (!IsSwitchChar(argv[i][0]) && !(strlen(argv[i]) >= 7 && strncasecmp(argv[i], "Nexus:", 7) == 0))
-            fCommandLine = true;
+    #ifndef QT_GUI
+        for (int i = 1; i < argc; i++)
+            if (!IsSwitchChar(argv[i][0]) && !(strlen(argv[i]) >= 7 && strncasecmp(argv[i], "Nexus:", 7) == 0))
+                fCommandLine = true;
 
-    if (fCommandLine)
-    {
-        int ret = Net::CommandLineRPC(argc, argv);
-        exit(ret);
-    }
-#endif
-
-#if !defined(WIN32) && !defined(QT_GUI)
-    if (fDaemon)
-    {
-        // Daemonize
-        pid_t pid = fork();
-        if (pid < 0)
+        if (fCommandLine)
         {
-            fprintf(stderr, "Error: fork() returned %d errno %d\n", pid, errno);
-            return false;
+            int ret = Net::CommandLineRPC(argc, argv);
+            exit(ret);
         }
-        if (pid > 0)
-        {
-            CreatePidFile(GetPidFile(), pid);
-            return true;
-        }
+    #endif
 
-        pid_t sid = setsid();
-        if (sid < 0)
-            fprintf(stderr, "Error: setsid() returned %d errno %d\n", sid, errno);
-    }
-#endif
+    #if !defined(WIN32) && !defined(QT_GUI)
+        if (fDaemon)
+        {
+            // Daemonize
+            pid_t pid = fork();
+            if (pid < 0)
+            {
+                fprintf(stderr, "Error: fork() returned %d errno %d\n", pid, errno);
+                return false;
+            }
+            if (pid > 0)
+            {
+                CreatePidFile(GetPidFile(), pid);
+                return true;
+            }
+
+            pid_t sid = setsid();
+            if (sid < 0)
+                fprintf(stderr, "Error: setsid() returned %d errno %d\n", sid, errno);
+        }
+    #endif
 
 	printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
 	printf("Nexus version %s (%s)\n", FormatFullVersion().c_str(), CLIENT_DATE.c_str());
 	printf("Default data directory %s\n", GetDefaultDataDir().string().c_str());
 
-#ifdef USE_LLD
-	InitMessage(_("Initializing LLD Keychains..."));
-	LLD::RegisterKeychain("blkindex", "blkindex");
-#endif
+    #ifdef USE_LLD
+        InitMessage(_("Initializing LLD Keychains..."));
+        LLD::RegisterKeychain("blkindex", "blkindex");
+    #endif
 
 	InitMessage(_("Initializing Unified Time..."));
 	printf("Initializing Unified Time...\n");
@@ -639,16 +634,16 @@ bool AppInit2(int argc, char* argv[])
     if (!CreateThread(Net::StartNode, NULL))
         ThreadSafeMessageBox(_("Error: CreateThread(StartNode) failed"), _("Nexus"), wxOK | wxMODAL);
 	
-#ifndef QT_GUI
-	if(GetBoolArg("-stake", false))
-	{
-#endif
+    #ifndef QT_GUI
+        if(GetBoolArg("-stake", false))
+        {
+    #endif
 		CreateThread(Core::StakeMinter, NULL);
 		
-#ifndef QT_GUI
-		printf("%%%%%%%%%%%%%%%%% Daemon Staking Thread Initialized...\n");
-	}
-#endif
+    #ifndef QT_GUI
+            printf("%%%%%%%%%%%%%%%%% Daemon Staking Thread Initialized...\n");
+        }
+    #endif
 
 	
 	if(GetBoolArg("-mining", false))
@@ -658,15 +653,15 @@ bool AppInit2(int argc, char* argv[])
         CreateThread(Net::ThreadRPCServer, NULL);
 
 	//CreateThread(DebugThread, NULL);
-#ifdef QT_GUI
-    if (GetStartOnSystemStartup())
-        SetStartOnSystemStartup(true); // Remove startup links
-#endif
+    #ifdef QT_GUI
+        if (GetStartOnSystemStartup())
+            SetStartOnSystemStartup(true); // Remove startup links
+    #endif
 
-#if !defined(QT_GUI)
-    while (!fShutdown)
-        Sleep(5000);
-#endif
+    #if !defined(QT_GUI)
+        while (!fShutdown)
+            Sleep(5000);
+    #endif
 
     return true;
 }

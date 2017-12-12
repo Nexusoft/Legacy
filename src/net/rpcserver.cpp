@@ -218,6 +218,33 @@ namespace Net
 		return tableRPC.help(strCommand);
 	}
 
+	// Adding the getRPCMapComands function.
+	// string CRPCTable::help(string strCommand) const
+	std::vector<std::string> CRPCTable::getMapCommandsKeyVector() const
+	{
+		std::vector<std::string> rpcTableKeys; // a standard vector of strings...
+		for(map<string, const CRPCCommand*>::const_iterator it = this->mapCommands.begin(); it!= this->mapCommands.end(); ++it) {
+			rpcTableKeys.push_back(it->first);
+		}
+		return rpcTableKeys;
+	}
+
+	Value getMapCommandsKeyVector(const Array& params, bool fHelp) {
+		// if (fHelp || params.size() != 0)
+		// 	throw runtime_error(
+		// 		"getMapCommandsKeyVector\n"
+		// 		"returns a Vector of the keys for the RPC");
+		// std::stringstream result;
+		// std::copy(tableRPC.getMapCommandsKeyVector().begin(), tableRPC.getMapCommandsKeyVector().end(), std::ostream_iterator<string>(result, ", "));
+		Array ret;
+		BOOST_FOREACH(const std::string it, tableRPC.getMapCommandsKeyVector())
+		{
+			ret.push_back(it);
+		}
+
+		return ret;
+	}
+
 
 	Value stop(const Array& params, bool fHelp)
 	{
@@ -531,6 +558,7 @@ namespace Net
 		obj.push_back(Pair("stakeweight",    dPercent * 100.0));
 		obj.push_back(Pair("trustweight",    (double)Core::dTrustWeight * 100.0 / 17.5));
 		obj.push_back(Pair("blockweight",    (double)Core::dBlockWeight * 100.0  / 20.0));
+		obj.push_back(Pair("txtotal",        (int)pwalletMain->mapWallet.size()));
 
 		obj.push_back(Pair("blocks",        (int)Core::nBestHeight));
 		obj.push_back(Pair("timestamp", (int)GetUnifiedTimestamp()));
@@ -2548,7 +2576,6 @@ namespace Net
 	// Call Table
 	//
 
-
 	static const CRPCCommand vRPCCommands[] =
 	{ //  name                      function                 safe mode?
 	  //  ------------------------  -----------------------  ----------
@@ -2614,7 +2641,9 @@ namespace Net
 		{ "listtrustkeys",          &listtrustkeys,          false },
 		{ "checkwallet",            &checkwallet,            false },
 		{ "repairwallet",           &repairwallet,           false },
-		{ "makekeypair",            &makekeypair,            false }
+		{ "makekeypair",            &makekeypair,            false },
+		{ "getMapCommandsKeyVector", &getMapCommandsKeyVector, false }
+
 	};
 
 	CRPCTable::CRPCTable()
@@ -3321,6 +3350,8 @@ namespace Net
 		}
 		return nRet;
 	}
+
+
 
 	const CRPCTable tableRPC;
 

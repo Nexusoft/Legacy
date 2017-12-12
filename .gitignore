@@ -11,3 +11,4 @@ build/moc/
 build/ui/
 build/obj/
 dist/
+*.vscode

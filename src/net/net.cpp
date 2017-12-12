@@ -343,14 +343,14 @@ namespace Net
 			printf("connected %s\n", addrConnect.ToString().c_str());
 
 			// Set to nonblocking
-	#ifdef WIN32
-			u_long nOne = 1;
-			if (ioctlsocket(hSocket, FIONBIO, &nOne) == SOCKET_ERROR)
-				printf("ConnectSocket() : ioctlsocket nonblocking setting failed, error %d\n", WSAGetLastError());
-	#else
-			if (fcntl(hSocket, F_SETFL, O_NONBLOCK) == SOCKET_ERROR)
-				printf("ConnectSocket() : fcntl nonblocking setting failed, error %d\n", errno);
-	#endif
+		#ifdef WIN32
+				u_long nOne = 1;
+				if (ioctlsocket(hSocket, FIONBIO, &nOne) == SOCKET_ERROR)
+					printf("ConnectSocket() : ioctlsocket nonblocking setting failed, error %d\n", WSAGetLastError());
+		#else
+				if (fcntl(hSocket, F_SETFL, O_NONBLOCK) == SOCKET_ERROR)
+					printf("ConnectSocket() : fcntl nonblocking setting failed, error %d\n", errno);
+		#endif
 
 			// Add node
 			CNode* pnode = new CNode(hSocket, addrConnect, false);
@@ -908,15 +908,15 @@ namespace Net
 			}
 
 			string strDesc = "Nexus " + FormatFullVersion();
-	#ifndef UPNPDISCOVER_SUCCESS
-			/* miniupnpc 1.5 */
-			r = UPNP_AddPortMapping(urls.controlURL, data.first.servicetype,
-								port, port, lanaddr, strDesc.c_str(), "TCP", 0);
-	#else
-			/* miniupnpc 1.6 */
-			r = UPNP_AddPortMapping(urls.controlURL, data.first.servicetype,
-								port, port, lanaddr, strDesc.c_str(), "TCP", 0, "0");
-	#endif
+		#ifndef UPNPDISCOVER_SUCCESS
+				/* miniupnpc 1.5 */
+				r = UPNP_AddPortMapping(urls.controlURL, data.first.servicetype,
+									port, port, lanaddr, strDesc.c_str(), "TCP", 0);
+		#else
+				/* miniupnpc 1.6 */
+				r = UPNP_AddPortMapping(urls.controlURL, data.first.servicetype,
+									port, port, lanaddr, strDesc.c_str(), "TCP", 0, "0");
+		#endif
 
 			if(r!=UPNPCOMMAND_SUCCESS)
 				printf("AddPortMapping(%s, %s, %s) failed with code %d (%s)\n",
@@ -935,15 +935,15 @@ namespace Net
 				}
 				if (i % 600 == 0) // Refresh every 20 minutes
 				{
-	#ifndef UPNPDISCOVER_SUCCESS
-					/* miniupnpc 1.5 */
-					r = UPNP_AddPortMapping(urls.controlURL, data.first.servicetype,
-										port, port, lanaddr, strDesc.c_str(), "TCP", 0);
-	#else
-					/* miniupnpc 1.6 */
-					r = UPNP_AddPortMapping(urls.controlURL, data.first.servicetype,
-										port, port, lanaddr, strDesc.c_str(), "TCP", 0, "0");
-	#endif
+		#ifndef UPNPDISCOVER_SUCCESS
+						/* miniupnpc 1.5 */
+						r = UPNP_AddPortMapping(urls.controlURL, data.first.servicetype,
+											port, port, lanaddr, strDesc.c_str(), "TCP", 0);
+		#else
+						/* miniupnpc 1.6 */
+						r = UPNP_AddPortMapping(urls.controlURL, data.first.servicetype,
+											port, port, lanaddr, strDesc.c_str(), "TCP", 0, "0");
+		#endif
 
 					if(r!=UPNPCOMMAND_SUCCESS)
 						printf("AddPortMapping(%s, %s, %s) failed with code %d (%s)\n",
@@ -1407,17 +1407,17 @@ namespace Net
 		int nOne = 1;
 		addrLocalHost.SetPort(GetListenPort());
 
-	#ifdef WIN32
-		// Initialize Windows Sockets
-		WSADATA wsadata;
-		int ret = WSAStartup(MAKEWORD(2,2), &wsadata);
-		if (ret != NO_ERROR)
-		{
-			strError = strprintf("Error: TCP/IP socket library failed to start (WSAStartup returned error %d)", ret);
-			printf("%s\n", strError.c_str());
-			return false;
-		}
-	#endif
+		#ifdef WIN32
+			// Initialize Windows Sockets
+			WSADATA wsadata;
+			int ret = WSAStartup(MAKEWORD(2,2), &wsadata);
+			if (ret != NO_ERROR)
+			{
+				strError = strprintf("Error: TCP/IP socket library failed to start (WSAStartup returned error %d)", ret);
+				printf("%s\n", strError.c_str());
+				return false;
+			}
+		#endif
 
 		// Create socket for listening for incoming connections
 		hListenSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -1428,23 +1428,23 @@ namespace Net
 			return false;
 		}
 
-	#ifdef SO_NOSIGPIPE
-		// Different way of disabling SIGPIPE on BSD
-		setsockopt(hListenSocket, SOL_SOCKET, SO_NOSIGPIPE, (void*)&nOne, sizeof(int));
-	#endif
+		#ifdef SO_NOSIGPIPE
+			// Different way of disabling SIGPIPE on BSD
+			setsockopt(hListenSocket, SOL_SOCKET, SO_NOSIGPIPE, (void*)&nOne, sizeof(int));
+		#endif
 
-	#ifndef WIN32
-		// Allow binding if the port is still in TIME_WAIT state after
-		// the program was closed and restarted.  Not an issue on windows.
-		setsockopt(hListenSocket, SOL_SOCKET, SO_REUSEADDR, (void*)&nOne, sizeof(int));
-	#endif
+		#ifndef WIN32
+			// Allow binding if the port is still in TIME_WAIT state after
+			// the program was closed and restarted.  Not an issue on windows.
+			setsockopt(hListenSocket, SOL_SOCKET, SO_REUSEADDR, (void*)&nOne, sizeof(int));
+		#endif
 
-	#ifdef WIN32
-		// Set to nonblocking, incoming connections will also inherit this
-		if (ioctlsocket(hListenSocket, FIONBIO, (u_long*)&nOne) == SOCKET_ERROR)
-	#else
-		if (fcntl(hListenSocket, F_SETFL, O_NONBLOCK) == SOCKET_ERROR)
-	#endif
+		#ifdef WIN32
+			// Set to nonblocking, incoming connections will also inherit this
+			if (ioctlsocket(hListenSocket, FIONBIO, (u_long*)&nOne) == SOCKET_ERROR)
+		#else
+			if (fcntl(hListenSocket, F_SETFL, O_NONBLOCK) == SOCKET_ERROR)
+		#endif
 		{
 			strError = strprintf("Error: Couldn't set properties on socket for incoming connections (error %d)", WSAGetLastError());
 			printf("%s\n", strError.c_str());
@@ -1489,71 +1489,71 @@ namespace Net
 			semOutbound = new CSemaphore(nMaxOutbound);
 		}
 
-	#ifdef USE_UPNP
-	#if USE_UPNP
-		fUseUPnP = GetBoolArg("-upnp", true);
-	#else
-		fUseUPnP = GetBoolArg("-upnp", false);
-	#endif
-	#endif
+		#ifdef USE_UPNP
+		#if USE_UPNP
+			fUseUPnP = GetBoolArg("-upnp", true);
+		#else
+			fUseUPnP = GetBoolArg("-upnp", false);
+		#endif
+		#endif
 
 		if (pnodeLocalHost == NULL)
 			pnodeLocalHost = new CNode(INVALID_SOCKET, CAddress(CService("127.0.0.1", 0), nLocalServices));
 
-	#ifdef WIN32
-		// Get local host ip
-		char pszHostName[1000] = "";
-		if (gethostname(pszHostName, sizeof(pszHostName)) != SOCKET_ERROR)
-		{
-			vector<CNetAddr> vaddr;
-			if (LookupHost(pszHostName, vaddr))
+		#ifdef WIN32
+			// Get local host ip
+			char pszHostName[1000] = "";
+			if (gethostname(pszHostName, sizeof(pszHostName)) != SOCKET_ERROR)
 			{
-				BOOST_FOREACH (const CNetAddr &addr, vaddr)
+				vector<CNetAddr> vaddr;
+				if (LookupHost(pszHostName, vaddr))
 				{
-					if (!addr.IsLocal())
+					BOOST_FOREACH (const CNetAddr &addr, vaddr)
 					{
-						addrLocalHost.SetIP(addr);
-						break;
+						if (!addr.IsLocal())
+						{
+							addrLocalHost.SetIP(addr);
+							break;
+						}
 					}
 				}
 			}
-		}
-	#else
-		// Get local host ip
-		struct ifaddrs* myaddrs;
-		if (getifaddrs(&myaddrs) == 0)
-		{
-			for (struct ifaddrs* ifa = myaddrs; ifa != NULL; ifa = ifa->ifa_next)
+		#else
+			// Get local host ip
+			struct ifaddrs* myaddrs;
+			if (getifaddrs(&myaddrs) == 0)
 			{
-				if (ifa->ifa_addr == NULL) continue;
-				if ((ifa->ifa_flags & IFF_UP) == 0) continue;
-				if (strcmp(ifa->ifa_name, "lo") == 0) continue;
-				if (strcmp(ifa->ifa_name, "lo0") == 0) continue;
-				char pszIP[100];
-				if (ifa->ifa_addr->sa_family == AF_INET)
+				for (struct ifaddrs* ifa = myaddrs; ifa != NULL; ifa = ifa->ifa_next)
 				{
-					struct sockaddr_in* s4 = (struct sockaddr_in*)(ifa->ifa_addr);
-					if (inet_ntop(ifa->ifa_addr->sa_family, (void*)&(s4->sin_addr), pszIP, sizeof(pszIP)) != NULL)
-						printf("ipv4 %s: %s\n", ifa->ifa_name, pszIP);
+					if (ifa->ifa_addr == NULL) continue;
+					if ((ifa->ifa_flags & IFF_UP) == 0) continue;
+					if (strcmp(ifa->ifa_name, "lo") == 0) continue;
+					if (strcmp(ifa->ifa_name, "lo0") == 0) continue;
+					char pszIP[100];
+					if (ifa->ifa_addr->sa_family == AF_INET)
+					{
+						struct sockaddr_in* s4 = (struct sockaddr_in*)(ifa->ifa_addr);
+						if (inet_ntop(ifa->ifa_addr->sa_family, (void*)&(s4->sin_addr), pszIP, sizeof(pszIP)) != NULL)
+							printf("ipv4 %s: %s\n", ifa->ifa_name, pszIP);
 
-					// Take the first IP that isn't loopback 127.x.x.x
-					CAddress addr(CService(s4->sin_addr, GetListenPort()), nLocalServices);
-					if (addr.IsValid() && !addr.IsLocal())
+						// Take the first IP that isn't loopback 127.x.x.x
+						CAddress addr(CService(s4->sin_addr, GetListenPort()), nLocalServices);
+						if (addr.IsValid() && !addr.IsLocal())
+						{
+							addrLocalHost = addr;
+							break;
+						}
+					}
+					else if (ifa->ifa_addr->sa_family == AF_INET6)
 					{
-						addrLocalHost = addr;
-						break;
+						struct sockaddr_in6* s6 = (struct sockaddr_in6*)(ifa->ifa_addr);
+						if (inet_ntop(ifa->ifa_addr->sa_family, (void*)&(s6->sin6_addr), pszIP, sizeof(pszIP)) != NULL)
+							printf("ipv6 %s: %s\n", ifa->ifa_name, pszIP);
 					}
 				}
-				else if (ifa->ifa_addr->sa_family == AF_INET6)
-				{
-					struct sockaddr_in6* s6 = (struct sockaddr_in6*)(ifa->ifa_addr);
-					if (inet_ntop(ifa->ifa_addr->sa_family, (void*)&(s6->sin6_addr), pszIP, sizeof(pszIP)) != NULL)
-						printf("ipv6 %s: %s\n", ifa->ifa_name, pszIP);
-				}
+				freeifaddrs(myaddrs);
 			}
-			freeifaddrs(myaddrs);
-		}
-	#endif
+		#endif
 		printf("addrLocalHost = %s\n", addrLocalHost.ToString().c_str());
 
 		if (fUseProxy || mapArgs.count("-connect") || fNoListen)
@@ -1628,25 +1628,25 @@ namespace Net
 
 	class CNetCleanup
 	{
-	public:
-		CNetCleanup()
-		{
-		}
-		~CNetCleanup()
-		{
-			// Close sockets
-			BOOST_FOREACH(CNode* pnode, vNodes)
-				if (pnode->hSocket != INVALID_SOCKET)
-					closesocket(pnode->hSocket);
-			if (hListenSocket != INVALID_SOCKET)
-				if (closesocket(hListenSocket) == SOCKET_ERROR)
-					printf("closesocket(hListenSocket) failed with error %d\n", WSAGetLastError());
+		public:
+			CNetCleanup()
+			{
+			}
+			~CNetCleanup()
+			{
+				// Close sockets
+				BOOST_FOREACH(CNode* pnode, vNodes)
+					if (pnode->hSocket != INVALID_SOCKET)
+						closesocket(pnode->hSocket);
+				if (hListenSocket != INVALID_SOCKET)
+					if (closesocket(hListenSocket) == SOCKET_ERROR)
+						printf("closesocket(hListenSocket) failed with error %d\n", WSAGetLastError());
 
-	#ifdef WIN32
-			// Shutdown Windows Sockets
-			WSACleanup();
-	#endif
-		}
+				#ifdef WIN32
+						// Shutdown Windows Sockets
+						WSACleanup();
+				#endif
+			}
 	}
 	instance_of_cnetcleanup;
 }
