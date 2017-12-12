@@ -778,7 +778,7 @@ Adresse : %4
     <message>
         <location filename="../optionsdialog.cpp" line="226"/>
         <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly. Most transactions are 1 kB. Fee 0.01 recommended.</source>
-        <translation>Frais de transaction optionnels par Ko qui aidant à garantir un traitement rapide des transactions. La plupart des transactions occupent 1 Ko. Des frais de 0.01 sont recommandés.</translation>
+        <translation>Frais de transaction optionnels par Ko aidant à garantir un traitement rapide des transactions. La plupart des transactions occupent 1 Ko. Des frais de 0.01 sont recommandés.</translation>
     </message>
 </context>
 <context>
