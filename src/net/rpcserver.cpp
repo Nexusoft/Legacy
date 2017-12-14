@@ -286,6 +286,10 @@ namespace Net
 			pindex = Core::GetLastChannelIndex(pindex->pprev, 2);
 		}
 		
+		if(nTotal == 0)
+		throw runtime_error("getnetworkhashps\n"
+							"No Blocks produced on Hashing Channel.");
+
 		nAverageTime       /= nTotal;
 		nAverageDifficulty /= nTotal;
 		/* TODO END **/
