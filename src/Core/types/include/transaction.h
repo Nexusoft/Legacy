@@ -321,7 +321,7 @@ namespace Core
 				nBlockTime = Timestamp();
 			if ((int64)nLockTime < ((int64)nLockTime < LOCKTIME_THRESHOLD ? (int64)nBlockHeight : nBlockTime))
 				return true;
-			BOOST_FOREACH(const CTxIn& txin, vin)
+			for(auto txin : vin)
 				if (!txin.IsFinal())
 					return false;
 			return true;

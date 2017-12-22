@@ -32,7 +32,7 @@ namespace LLP
 		
 		
 		/* Variables to track Connection / Request Count. */
-		bool fDDOS, fACTIVE, fMETER; unsigned int nConnections, ID, REQUESTS, TIMEOUT, DDOS_rSCORE, DDOS_cSCORE;
+		bool fDDOS, fMETER; unsigned int nConnections, ID, REQUESTS, TIMEOUT, DDOS_rSCORE, DDOS_cSCORE;
 		
 		
 		/* Vector to store Connections. */
@@ -44,15 +44,10 @@ namespace LLP
 		
 		
 		DataThread<ProtocolType>(unsigned int id, bool isDDOS, unsigned int rScore, unsigned int cScore, unsigned int nTimeout, bool fMeter = false) : 
-			fDDOS(isDDOS), fACTIVE(true), fMETER(fMeter), nConnections(0), ID(id), REQUESTS(0), TIMEOUT(nTimeout),  DDOS_rSCORE(rScore), DDOS_cSCORE(cScore), CONNECTIONS(0), DATA_THREAD(boost::bind(&DataThread::Thread, this)) { }
+			fDDOS(isDDOS), fMETER(fMeter), nConnections(0), ID(id), REQUESTS(0), TIMEOUT(nTimeout),  DDOS_rSCORE(rScore), DDOS_cSCORE(cScore), CONNECTIONS(0), DATA_THREAD(boost::bind(&DataThread::Thread, this)) { }
 			
 			
-		virtual ~DataThread<ProtocolType>()
-		{
-			fACTIVE = false;
-			fMETER  = false;
-			
-		}
+		virtual ~DataThread<ProtocolType>() { fMETER  = false; }
 		
 		
 		/* Returns the index of a component of the CONNECTIONS vector that has been flagged Disconnected */
@@ -134,7 +129,7 @@ namespace LLP
 			Creates a Packet QUEUE on this connection to be processed by an LLP Messaging Thread. */
 		void Thread()
 		{
-			while(fACTIVE)
+			while(!Core::fShutdown)
 			{
 				/* Keep data threads at 1000 FPS Maximum. */
 				Sleep(1);
@@ -214,7 +209,9 @@ namespace LLP
 					}
 					catch(std::exception& e)
 					{
-						printf("error: %s\n", e.what());
+						printf("data connection:  %s\n", e.what());
+						
+						RemoveConnection(nIndex);
 					}
 				}
 			}

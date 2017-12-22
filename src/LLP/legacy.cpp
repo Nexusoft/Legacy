@@ -115,6 +115,8 @@ namespace LLP
 				
 				PushMessage("ping", nSessionID);
 			}
+			
+			//TODO: mapRequests data, if no response given retry the request at given times 
 		}
 			
 			
@@ -320,7 +322,7 @@ namespace LLP
 
 				
 			/* Make sure it's not an already process(ing) block. */
-			if(Core::pManager->blkPool.Has(hashBlock))
+			if(Core::pManager->blkPool.State(hashBlock) != Core::pManager->blkPool.REQUESTED)
 			{
 				
 				if(GetArg("-verbose", 0) >= 3)
@@ -437,10 +439,9 @@ namespace LLP
 			/* Push our version back since we just completed getting the version from the other node. */
 			if (fOUTGOING)
 			{
-				PushMessage("getblocks", Core::CBlockLocator(Core::pindexBest), uint1024(0));
-
-				/* Add to the Majority Peer Block Count. */
 				Core::cPeerBlockCounts.Add(nStartingHeight);
+				
+				PushMessage("getheaders", Core::CBlockLocator(Core::pindexBest), uint1024(0));
 			}
 			else
 				PushVersion();
@@ -499,8 +500,14 @@ namespace LLP
 					printf("***** Node recieved inventory: %s\n", vInv[i].ToString().c_str());
 				
 				/* Skip asking for inventory that is already known. */
-				if(vInv[i].type == MSG_BLOCK && Core::pManager->blkPool.Has(vInv[i].hash))
-					continue;
+				if(vInv[i].type == MSG_BLOCK)
+				{
+					if(Core::pManager->blkPool.Has(vInv[i].hash))
+						continue;
+					
+					Core::CBlock blk;
+					Core::pManager->blkPool.Add(vInv[i].hash, blk, Core::pManager->blkPool.REQUESTED);
+				}
 				
 				/* Skip asking for inventory that is already known. */
 				if(vInv[i].type == MSG_TX && Core::pManager->txPool.Has(vInv[i].hash.getuint512()))
@@ -528,7 +535,7 @@ namespace LLP
 			
 			
 			if(GetArg("-verbose", 0) >= 1)
-				printf("***** Recieved Message of %u Headers\n", vBlocks.size());
+				printf("***** Recieved Message of %u Headers %u - %u\n", vBlocks.size(), vBlocks.front().nHeight, vBlocks.back().nHeight);
 			
 			
 			/* Make sure it is not beyond limits */
@@ -544,13 +551,7 @@ namespace LLP
 			/* Add the list of new block headers into the block pool. */
 			std::vector<CInv> vRequest;
 			for(auto block : vBlocks)
-			{
-				/* Add the block data to the block pool. */
-				if(Core::pManager->blkPool.Add(block.GetHash(), block, Core::pManager->blkPool.HEADER))
-					vRequest.push_back(CInv(MSG_BLOCK, block.GetHash()));
-			}
-			
-			PushMessage("getdata", vRequest);
+				Core::pManager->blkPool.Add(block.GetHash(), block, Core::pManager->blkPool.HEADER);
 
 			
 			return true;

@@ -243,11 +243,11 @@ namespace Core
 	
 	
 	/* Memory Only Map of Blocks that are in orphan holding until their dependent blocks arrive to this node. */
-	extern std::map<uint1024, CBlock*> mapOrphanBlocks;
+	extern std::map<uint1024, CBlock> mapOrphanBlocks;
 	
 	
 	/* Memory Only Map of Orphan Blocks indexed by their previous block for easier reassembly of long or short block orphan chains. */
-	extern std::multimap<uint1024, CBlock*> mapOrphanBlocksByPrev;
+	extern std::multimap<uint1024, CBlock> mapOrphanBlocksByPrev;
 		
 		
 	/* Memory Only Map of Transactions that are in orphan holding since they don't have any known previous transactions to spend the UTXO. */

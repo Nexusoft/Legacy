@@ -13,6 +13,7 @@ ________________________________________________________________________________
 
 #include "include/global.h"
 #include "include/unifiedtime.h"
+#include "include/manager.h"
 
 #include "../Util/include/runtime.h"
 #include "../Util/include/args.h"
@@ -66,6 +67,9 @@ namespace Core
         /** Compile the Seed Nodes into a set of Vectors. **/
 		std::vector<LLP::CAddress> SEED_NODES = LLP::DNS_Lookup(fTestNet ? LLP::DNS_SeedNodes_Testnet : LLP::DNS_SeedNodes);
         
+		for(int nIndex = 0; nIndex < SEED_NODES.size(); nIndex++)
+			pManager->AddAddress(SEED_NODES[nIndex]);
+			
         /* If the node happens to be offline, wait and recursively attempt to get the DNS seeds. */
         if(SEED_NODES.empty()) {
             Sleep(10000);

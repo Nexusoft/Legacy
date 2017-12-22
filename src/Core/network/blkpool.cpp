@@ -67,20 +67,20 @@ namespace Core
 		cTimer.Reset();
 		
 		/* Get the block Hash. */
-		uint1024 hashBlock = blk.GetHash();
+		uint1024 hash = blk.GetHash();
 			
 		/* Check the Block validity. */
 		if(Check(blk))
 		{
 
 			/* Set the state to verified. */
-			if(State(hashBlock) == HEADER)
-				Update(hashBlock, blk, CHECKED);
-			else
-				Add(hashBlock, blk, CHECKED);
+			Update(hash, blk, CHECKED);
+			
 			
 			if(GetArg("-verbose", 0) >= 3)
-				printf("PASSED %s checks in %" PRIu64 " us\n", hashBlock.ToString().substr(0, 20).c_str(), cTimer.ElapsedMicroseconds());
+				printf("PASSED %s checks in %" PRIu64 " us\n", hash.ToString().substr(0, 20).c_str(), cTimer.ElapsedMicroseconds());
+			
+			Core::pManager->nProcessed ++;
 		}
 		else
 		{
@@ -88,7 +88,7 @@ namespace Core
 				return error("INVALID checks in %" PRIu64 " us\n", cTimer.ElapsedMicroseconds());
 			
 			/* Set the proper state for the new block. */
-			Add(hashBlock, blk, ERROR_CHECK);
+			Add(hash, blk, ERROR_CHECK);
 				
 			return false;
 		}
@@ -251,29 +251,23 @@ namespace Core
 	bool CBlkPool::Accept(CBlock blk)
 	{
 		
-		/** Find the Previous block from hashPrevBlock. **/
-		std::map<uint1024, CBlockIndex*>::iterator mi = mapBlockIndex.find(blk.hashPrevBlock);
-		if (mi == mapBlockIndex.end())
+		/* Get the Previous block from the Pool. */
+		CBlock blkPrev;
+		if(!Get(blk.hashPrevBlock, blkPrev))
 			return error("CBlkPool::Accept() : prev block not found");
 		
-		
-		CBlockIndex* pindexPrev = (*mi).second;
-		int nPrevHeight = pindexPrev->nHeight + 1;
-		
-		
 		/** Check the Height of Block to Previous Block. **/
-		if(nPrevHeight != blk.nHeight)
+		if(blkPrev.nHeight != blk.nHeight)
 			return error("CBlkPool::Accept() : incorrect block height.");
 		
-
-		/** Check that the nBits match the current Difficulty. **/
+		/* Check that the nBits match the current Difficulty. */
 		if (blk.nBits != GetNextTargetRequired(pindexPrev, blk.GetChannel()))
 			return error("CBlkPool::Accept() : incorrect proof-of-work/proof-of-stake %s", blk.GetHash().ToString().substr(0, 20).c_str());
 			
 			
 		/** Check that Block is Descendant of Hardened Checkpoints. **/
-		if(pindexPrev && !IsDescendant(pindexPrev))
-			return error("CBlkPool::Accept() : Not a descendant of Last Checkpoint");
+		//if(pindexPrev && !IsDescendant(pindexPrev))
+		//	return error("CBlkPool::Accept() : Not a descendant of Last Checkpoint");
 
 			
 		/** Check That Block Timestamp is not before previous block. **/
@@ -345,7 +339,11 @@ namespace Core
 		/* Write Index to DB. */
 		indexdb.TxnBegin();
 		if (!indexdb.WriteBlockIndex(CDiskBlockIndex(pindexNew)))
+		{
+			indexdb.TxnAbort();
+			
 			return error("CBlkPool::Accept() : Failed to Write Index %s Height %u\n", blk.GetHash().ToString().substr(0, 20).c_str(), blk.nHeight);
+		}
 				
 		
 		/* Set the best chain if is best block. */

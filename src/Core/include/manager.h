@@ -64,7 +64,7 @@ namespace Core
 		
 		
 		/* Processing for Meter. */
-		int nProcessed, nLastHeight;
+		int nProcessed, nLastHeight, nConnected;
 		
 		
 		/* Mutex for Node Management. */
@@ -75,7 +75,7 @@ namespace Core
 		CMajority<int> cPeerBlocks;
 		
 		
-		Manager() : ConnectionThread(boost::bind(&Manager::ConnectionManager, this)), ProcessorThread(boost::bind(&Manager::BlockProcessor, this)), InventoryThread(boost::bind(&Manager::InventoryProcessor, this)), MeteringThread(boost::bind(&Manager::ProcessorMeter, this)), hashLastBlock(0), fSynchronizing(false), cPeerBlocks(), txPool(), blkPool(), vTried(), vNew(), fStarted(false) 
+		Manager() : ConnectionThread(boost::bind(&Manager::ConnectionManager, this)), ProcessorThread(boost::bind(&Manager::BlockProcessor, this)), InventoryThread(boost::bind(&Manager::InventoryProcessor, this)), MeteringThread(boost::bind(&Manager::ProcessorMeter, this)), hashLastBlock(0), fSynchronizing(false), nProcessed(0), nLastHeight(0), nConnected(0),  cPeerBlocks(), txPool(), blkPool(), vTried(), vNew(), fStarted(false) 
 		{
 			
 		}
@@ -83,6 +83,10 @@ namespace Core
 		
 		/* Time Seed Manager. */
 		void TimestampManager();
+		
+		
+		/* Helper thread for connections (FOR NOW TODO: use better connect timeouts) */
+		void CreateConnection(int nRandom);
 		
 		
 		/* Connection Manager Thread. */

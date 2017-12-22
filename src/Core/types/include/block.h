@@ -80,7 +80,7 @@ namespace Core
 		
 		/* Memory Only Data. */
 		mutable std::vector<uint512> vMerkleTree;
-		uint512 hashPrevChecksum;
+		uint512 hashPrevChecksum; //for new seignature hash input. Checksum of previous block signature for block signature chains
 
 		IMPLEMENT_SERIALIZE
 		(
@@ -305,10 +305,6 @@ namespace Core
 		/* Verify the Proof of Stake satisfies network requirements. */
 		bool VerifyStake() const;
 		
-		/* bdg note: StakeWeight is not implemented. */
-		/* Determine the Stake Weight of Given Block. */
-		bool StakeWeight();
-		
 		
 		/* Sign the block with the key that found the block. */
 		bool SignBlock(const Wallet::CKeyStore& keystore);
@@ -318,10 +314,74 @@ namespace Core
 		bool CheckBlockSignature() const;
 		
 	};
+	
+	
+	/** Blockchain Speicific State variables for a block after it is processed.
+	 * 
+	 * This can be broadcast to other nodes as a fully state locked block, with
+	 * optional signature of data or validated and generated individually by each
+	 * node. 
+	 * 
+	 */
+	class CBlockState : public CBlock
+	{
+	public:
+		
+		/* The Trust of the Chain to this Block. */
+		uint64 nChainTrust;
+		
+		
+		/* The Total NXS released to date */
+		uint64 nMoneySupply;
+		
+		
+		/* The height of this channel. */
+		unsigned int nChannelHeight;
+		
+		
+		/* The reserves that are released. */
+		unsigned int nReleasedReserve[2];
+		
+		
+		/* The checkpoint this block was made from. */
+		uint1024 hashCheckpoint;
+		
+		
+		IMPLEMENT_SERIALIZE
+		(
+			READWRITE(nChainTrust);
+			READWRITE(nMoneySupply);
+			READWRITE(nChannelHeight);
+			READWRITE(nReleasedReserve[0]);
+			READWRITE(nReleasedReserve[1]);
+			READWRITE(nReleasedReserve[2]);
+			READWRITE(hashCheckpoint);
+		)
+		
+		
+		CBlockState() : nChainTrust(0), nMoneySupply(0), nChannelHeight(0), nReleasedReserve(0, 0, 0), hashCheckpoint(0) { SetNull(); }
+		CBlockState(CBlock blk) : CBlock(blk), nChainTrust(0), nMoneySupply(0), nChannelHeight(0), nReleasedReserve(0, 0, 0), hashCheckpoint(0) { }
+		
+		
+		/* Set a Block State from Regular Block. */
+		void SetBlock(CBlock blk)
+		{
+			nVersion       = blk.nVersion;
+			hashPrevBlock  = blk.hashPrevBlock;
+			hashMerkleRoot = blk.hashMerkleRoot;
+			nChannel       = blk.nChannel;
+			nBits          = blk.nBits;
+			nNonce         = blk.nNonce;
+			vtx            = blk.vtx;
+			vchBlockSig    = blk.vchBlockSig;
+		}
+	};
 
 
 
-	/** The block chain is a tree shaped structure starting with the
+	/** DEPRECATED
+	 * 
+	 * The block chain is a tree shaped structure starting with the
 	 * genesis block at the root, with each block potentially having multiple
 	 * candidates to be the next block.  pprev and pnext link a path through the
 	 * main/longest chain.  A blockindex may have multiple pprev pointing back
@@ -508,7 +568,9 @@ namespace Core
 	};
 	
 	
-	/** Used to marshal pointers into hashes for db storage. */
+	/** DEPRECATED
+	 *
+	 * Used to marshal pointers into hashes for db storage. */
 	class CDiskBlockIndex : public CBlockIndex
 	{
 	public:
@@ -597,7 +659,9 @@ namespace Core
 
 
 
-	/** Describes a place in the block chain to another node such that if the
+	/** DEPRECATED: 
+	 * 
+	 * Describes a place in the block chain to another node such that if the
 	 * other node doesn't have the same branch, it can find a recent common trunk.
 	 * The further back it is, the further before the fork it may be.
 	 */
@@ -694,15 +758,15 @@ namespace Core
 	bool CheckDiskSpace(uint64 nAdditionalBytes = 0);
 	
 	
-	/* Read the block from file and binary position (blk0001.dat), */
+	/* DEPRECATED: Find the block from file and binary position (blk0001.dat), */
 	FILE* OpenBlockFile(unsigned int nFile, unsigned int nBlockPos, const char* pszMode);
 	
 	
-	/* Add a block to the block file and binary position (blk0001.dat). */
+	/* DEPRECATED: Add a block to the block file and binary position (blk0001.dat). */
 	FILE* AppendBlockFile(unsigned int& nFileRet);
 	
 	
-	/* Load the Genesis and other blocks from the BDB/LLD Indexes. */
+	/* DEPRECATED: Load the Genesis and other blocks from the BDB/LLD Indexes. */
 	bool LoadBlockIndex(bool fAllowNew = true);
 
 	

@@ -145,6 +145,7 @@ namespace LLP
 		Thread_t    LISTEN_THREAD;
 		Thread_t    METER_THREAD;
 		Mutex_t     DDOS_MUTEX;
+		
 	
 		/* Determine the thread with the least amount of active connections. 
 			This keeps the load balanced across all server threads. */
@@ -190,7 +191,7 @@ namespace LLP
 			LISTENER.listen(1000, ERROR_HANDLE);
 			
 			//printf("LLP Server Listening on Port %u\n", PORT);
-			for(;;)
+			while(!Core::fShutdown)
 			{
 				/** Limit listener to allow maximum of 100 new connections per second. **/
 				Sleep(10);

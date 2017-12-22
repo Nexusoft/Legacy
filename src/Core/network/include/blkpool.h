@@ -40,6 +40,8 @@ namespace Core
 		
 		LLD::CIndexDB indexdb;
 		
+		Mutex_t ACCEPT;
+		
 
 		/** State level messages to hold information about holding data. */
 		enum
@@ -51,6 +53,8 @@ namespace Core
 			INDEXED    = 3,
 			CONNECTED  = 4,
 			RECEIVED   = 5,
+			REQUESTED  = 6,
+			INVENTORY  = 7,
 			
 			
 			//invalid states

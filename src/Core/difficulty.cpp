@@ -195,7 +195,7 @@ namespace Core
 
 			
 		/* Verbose Debug Output. */
-		if(GetArg("-verbose", 0) >= 2)
+		if(GetArg("-verbose", 0) >= 3)
 		{
 			unsigned int nDays, nHours, nMinutes;
 			GetChainTimes(GetChainAge(pindexFirst->GetBlockTime()), nDays, nHours, nMinutes);
@@ -213,12 +213,12 @@ namespace Core
 	unsigned int RetargetPrime(const CBlockIndex* pindex)
 	{
 
-		/** For regression testing only, allow low difficulty. **/
+		/* For regression testing only, allow low difficulty. */
 		if (GetBoolArg("-regtest",false)) {
 			return bnProofOfWorkStartRegtest[1].getuint();
 		}
 
-		/** Get Last Block Index [1st block back in Channel]. **/
+		/* Get Last Block Index [1st block back in Channel]. */
 		const CBlockIndex* pindexFirst = GetLastChannelIndex(pindex, 1);
 		if (!pindexFirst->pprev)
 			return bnProofOfWorkStart[1].getuint();
@@ -330,7 +330,7 @@ namespace Core
 		}
 			
 		/* Console Output */
-		if(GetArg("-verbose", 0) >= 2)
+		if(GetArg("-verbose", 0) >= 3)
 		{
 			unsigned int nDays, nHours, nMinutes;
 			GetChainTimes(GetChainAge(pindexFirst->GetBlockTime()), nDays, nHours, nMinutes);
@@ -460,7 +460,7 @@ namespace Core
 			
 			
 		/* Console Output if Flagged. */
-		if(GetArg("-verbose", 0) >= 2)
+		if(GetArg("-verbose", 0) >= 3)
 		{
 			unsigned int nDays, nHours, nMinutes;
 			GetChainTimes(GetChainAge(pindexFirst->GetBlockTime()), nDays, nHours, nMinutes);

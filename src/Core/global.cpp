@@ -273,8 +273,8 @@ namespace Core
 
 	CMajority<int> cPeerBlockCounts; // Amount of blocks that other nodes claim to have
 
-	map<uint1024, CBlock*> mapOrphanBlocks;
-	multimap<uint1024, CBlock*> mapOrphanBlocksByPrev;
+	map<uint1024, CBlock> mapOrphanBlocks;
+	multimap<uint1024, CBlock> mapOrphanBlocksByPrev;
 	map<uint1024, uint1024> mapProofOfStake;
 
 	map<uint512, CDataStream*> mapOrphanTransactions;
