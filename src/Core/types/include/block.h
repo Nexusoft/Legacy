@@ -347,6 +347,7 @@ namespace Core
 		uint1024 hashCheckpoint;
 		
 		
+        /* Serialization Macros */
 		IMPLEMENT_SERIALIZE
 		(
 			READWRITE(nChainTrust);
@@ -375,6 +376,12 @@ namespace Core
 			vtx            = blk.vtx;
 			vchBlockSig    = blk.vchBlockSig;
 		}
+        
+        /* The hash of this current block state. */
+        uint1024 StateHash() const
+        {
+            return LLC::HASH::SK1024(BEGIN(nVersion), END(nReleasedReserve));
+        }
 	};
 
 
