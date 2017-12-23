@@ -377,6 +377,22 @@ namespace Core
 			vchBlockSig    = blk.vchBlockSig;
 		}
         
+        /* Get the block header. */
+        CBlock GetHeader() const
+        {
+            CBlock block;
+            block.nVersion       = nVersion;
+            block.hashPrevBlock  = hashPrevBlock;
+            block.hashMerkleRoot = hashMerkleRoot;
+            block.nChannel       = nChannel;
+            block.nHeight        = nHeight;
+            block.nBits          = nBits;
+            block.nNonce         = nNonce;
+            block.nTime          = nTime;
+            
+            return block;
+        }
+        
         /* The hash of this current block state. */
         uint1024 StateHash() const
         {
