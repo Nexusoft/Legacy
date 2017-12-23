@@ -144,10 +144,12 @@ namespace LLD
 			Into Memory on Database Initialization. **/
 		mutable typename std::map< std::vector<unsigned char>, unsigned int > mapKeys;
 		
+        
 		/** Caching Memory Map. Keep within caching limits. Pop on and off like a stack
 			using seperate caching class if over limits. **/
 		mutable typename std::map< std::vector<unsigned char>, SectorKey > mapKeysCache;
 		
+        
 		/** The Database Constructor. To determine file location and the Bytes per Record. **/
 		KeyDatabase(std::string strBaseLocationIn, std::string strDatabaseNameIn) : strBaseLocation(strBaseLocationIn), strDatabaseName(strDatabaseNameIn) { strLocation = strBaseLocation + strDatabaseName + ".keys"; }
 		
