@@ -34,7 +34,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/addressbookpage.ui" line="20"/>
         <source>These are your Nexus addresses for receiving payments.  You may want to give a different one to each sender so you can keep track of who is paying you.</source>
-        <translation>Ceux-ci sont vos adresses Nexus qui vous permettent de recevoir des paiements.  Vous pouvez en donner une différente à chaque expédieur afin de savoir qui vous payent.</translation>
+        <translation>Vos adresses Nexus vous permettant de recevoir des paiements.  Vous pouvez en donner une différente à chaque expédieur afin de savoir qui vous paye.</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="33"/>
@@ -54,7 +54,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/addressbookpage.ui" line="71"/>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation>Copier l&apos;adresse surligné a votre presse-papier</translation>
+        <translation>Copier l&apos;adresse sélectionnée vers votre presse-papier</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="74"/>
@@ -79,7 +79,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/addressbookpage.ui" line="110"/>
         <source>Delete the currently selected address from the list. Only sending addresses can be deleted.</source>
-        <translation>Supprimer l&apos;adresse sélectionnée dans la liste. Seules les adresses d&apos;envoi peuvent être supprimé.</translation>
+        <translation>Supprimer l&apos;adresse sélectionnée dans la liste. Seules les adresses d&apos;envoi peuvent être supprimées.</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="113"/>
@@ -119,12 +119,12 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../addressbookpage.cpp" line="295"/>
         <source>Error exporting</source>
-        <translation type="unfinished"/>
+        <translation>Erreur lors de l&apos;export</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="295"/>
         <source>Could not write to file %1.</source>
-        <translation type="unfinished"/>
+        <translation>Impossible d&apos;écrire vers le fichier %1.</translation>
     </message>
 </context>
 <context>
@@ -137,12 +137,12 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../addresstablemodel.cpp" line="77"/>
         <source>Address</source>
-        <translation type="unfinished"/>
+        <translation>Adresse</translation>
     </message>
     <message>
         <location filename="../addresstablemodel.cpp" line="113"/>
         <source>(no label)</source>
-        <translation type="unfinished"/>
+        <translation>(sans étiquette)</translation>
     </message>
 </context>
 <context>
@@ -161,27 +161,27 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="50"/>
         <source>Enter passphrase</source>
-        <translation type="unfinished"/>
+        <translation>Saisir le mot de passe</translation>
     </message>
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="64"/>
         <source>New passphrase</source>
-        <translation type="unfinished"/>
+        <translation>Nouveau mot de passe</translation>
     </message>
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="78"/>
         <source>Repeat new passphrase</source>
-        <translation type="unfinished"/>
+        <translation>Répéter le mot nouveau mot de passe</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="34"/>
         <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;10 or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation type="unfinished"/>
+        <translation>Entrez le nouveau mot de passe du portefeuille.&lt;br/&gt;Utilisez &lt;b&gt;10 caractères aléatoires&lt;/b&gt;, ou &lt;b&gt;huit mots ou plus&lt;/b&gt;.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="35"/>
         <source>Encrypt wallet</source>
-        <translation type="unfinished"/>
+        <translation>Encrypter le portefeuille</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="38"/>
