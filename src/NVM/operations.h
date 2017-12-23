@@ -29,8 +29,8 @@ namespace Core
 	enum
 	{
 		/* State Storage */
-		WRITE_REGISTER = 0,  //WRITE_STATE <lexer-id>
-		READ_REGISTER  = 1,   //READ_STATE  <lexer-id>
+		WRITE_REGISTER = 0,  //WRITE_STATE <genesis-id : register-id>
+		READ_REGISTER  = 1,   //READ_STATE <genesis-id : register-id>
 		
 		/* Control Flow */
 		IF     = 2, // if(boolean) {
