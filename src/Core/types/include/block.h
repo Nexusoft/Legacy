@@ -347,6 +347,10 @@ namespace Core
 		uint1024 hashCheckpoint;
         
         
+        /* The last channel index hash (for efficiency in difficulty.cpp / supply.cpp) */
+        uint1024 hashPrevChannel;
+        
+        
         /* Boolean flag for if this block is connected. */
         bool fConnected;
 		
@@ -408,14 +412,16 @@ namespace Core
         /* The hash of this current block state. */
         uint1024 StateHash() const
         {
-            return LLC::HASH::SK1024(BEGIN(nVersion), END(nReleasedReserve));
+            return LLC::HASH::SK1024(BEGIN(nVersion), END(hashCheckpoint));
         }
+        
         
         /* Flag to determine if this block is a Proof-of-Work block. */
         bool IsProofOfWork() const
         {
             return (nChannel > 0);
         }
+        
         
         /* Flag to determine if this block is a Proof-of-Stake block. */
         bool IsProofOfStake() const

@@ -271,8 +271,8 @@ namespace Core
 
 			
 		/** Check That Block Timestamp is not before previous block. **/
-		if (blk.GetBlockTime() <= pindexPrev->GetBlockTime())
-			return error("CBlkPool::Accept() : block's timestamp too early Block: % " PRId64 " Prev: %" PRId64 "", blk.GetBlockTime(), pindexPrev->GetBlockTime());
+		if (blk.GetBlockTime() <= blkPrev.GetBlockTime())
+			return error("CBlkPool::Accept() : block's timestamp too early Block: % " PRId64 " Prev: %" PRId64 "", blk.GetBlockTime(), blkPool.GetBlockTime());
 			
 			
 		/** Check the Coinbase Transactions in Block Version 3. **/
