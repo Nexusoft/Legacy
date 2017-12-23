@@ -80,7 +80,7 @@ namespace Core
 		
 		/* Memory Only Data. */
 		mutable std::vector<uint512> vMerkleTree;
-		uint512 hashPrevChecksum; //for new seignature hash input. Checksum of previous block signature for block signature chains
+		uint512 hashPrevChecksum; //for new signature hash input. Checksum of previous block signature for block signature chains
 
 		IMPLEMENT_SERIALIZE
 		(
