@@ -44,16 +44,18 @@ namespace LLP
 	 * B. It can process data locked as orphans
 	 * 
 	 */
-	template<typename IndexType, typename ObjectType, typename HoldingType = CHoldingObject<ObjectType> > class CHoldingPool
+	template<typename IndexType, typename ObjectType> class CHoldingPool
 	{
 		
 	protected:
 		
 		/* Map of the current holding data. */
-		std::map<IndexType, HoldingType > mapObjects;
+		std::map<IndexType, CHoldingObject<ObjectType> > mapObjects;
+        
 		
 		/* The Expiration Time of Holding Data. */
 		unsigned int nExpirationTime;
+        
 		
 		/* Mutex for thread concurrencdy. */
 		Mutex_t MUTEX;
@@ -152,7 +154,7 @@ namespace LLP
 		{
 			LOCK(MUTEX);
 			
-			for(auto const& i : mapObjects)
+			for(auto i : mapObjects)
 			{
 				if(nLimit != 0 && vIndexes.size() >= nLimit)
 					return true;
@@ -177,7 +179,7 @@ namespace LLP
 		{
 			LOCK(MUTEX);
 			
-			for(auto const& i : mapObjects)
+			for(auto i : mapObjects)
 			{
 				if(nLimit != 0 && vIndexes.size() >= nLimit)
 					return true;
@@ -368,7 +370,7 @@ namespace LLP
 			std::vector<IndexType> vClean;
 			
 			{ LOCK(MUTEX);
-				for(auto const& i : mapObjects)
+				for(auto i : mapObjects)
 					if(Expired(i.first, nExpirationTime))
 						vClean.push_back(i.first);
 			}
@@ -402,7 +404,7 @@ namespace LLP
 			LOCK(MUTEX);
 			
 			int nCount = 0;
-			for(auto const& i : mapObjects)
+			for(auto i : mapObjects)
 				if(i.second.State == State)
 					nCount++;
 				

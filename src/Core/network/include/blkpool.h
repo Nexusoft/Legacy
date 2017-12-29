@@ -15,7 +15,7 @@ ________________________________________________________________________________
 #define NEXUS_CORE_NETWORK_INCLUDE_BLKPOOL_H
 
 #include "../../../LLC/types/uint1024.h"
-#include "../../../LLD/include/index.h"
+#include "../../../LLD/include/blockdb.h"
 #include "../../../LLP/templates/pool.h"
 #include "../../../LLP/templates/types.h"
 
@@ -24,21 +24,11 @@ ________________________________________________________________________________
 namespace Core
 {		
 	
-	/* Holding Object for Memory Maps. */
-	class CBlockHolding : public LLP::CHoldingObject<CBlock>
+	class CBlkPool : public LLP::CHoldingPool<uint1024, CBlockState>
 	{
 	public:
 		
-		CBlockHolding() : LLP::CHoldingObject<CBlock>() {}
-		CBlockHolding(uint64 TimestampIn, unsigned char StateIn, CBlock ObjectIn) : LLP::CHoldingObject<CBlock>(TimestampIn, StateIn, ObjectIn) {}
-	};
-	
-	
-	class CBlkPool : public LLP::CHoldingPool<uint1024, CBlock, CBlockHolding>
-	{
-	public:
-		
-		LLD::CIndexDB indexdb;
+		LLD::CBlockDB blockdb;
 		
 		Mutex_t ACCEPT;
 		
@@ -77,8 +67,17 @@ namespace Core
 		
 		
 		/** Default Constructor. */
-		CBlkPool() : LLP::CHoldingPool<uint1024, CBlock, CBlockHolding>(60 * 60 * 24), indexdb("r+") {}
+		CBlkPool() : LLP::CHoldingPool<uint1024, CBlockState>(60 * 60 * 24), blockdb("r+") { }
 		
+        
+        /** Get Previous Block on the Channel
+         *  
+         *  Gets the previous block from either LLD instance or Cache Pool
+         *
+         *  @param[out] The previous block data
+         */
+        bool PreviousBlock(uint1024 hashPrevBlock, CBlock& blkPrev);
+        
 		
 		/** Run Basic Processing Checks for Block
 		 * 

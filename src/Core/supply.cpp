@@ -11,10 +11,10 @@
   
 ____________________________________________________________________________________________*/
 
-#include "types/include/block.h"
-
 #include "include/supply.h"
 #include "include/unifiedtime.h"
+
+#include "network/include/blkpool.h"
 
 using namespace std;
 namespace Core
@@ -55,24 +55,18 @@ namespace Core
 	
 	
 	/* Calculates the Actual Money Supply from nReleasedReserve and nMoneySupply. */
-	int64 GetMoneySupply(CBlockIndex* pindex)
+    uint64 GetMoneySupply(const CBlockState blk)
 	{
-		int64 nMoneySupply = pindex->nMoneySupply;
-			
-		return nMoneySupply;
+        return blk.nMoneySupply;
 	}
 	
 	
 	/* Get the Age of the Block Chain in Minutes. */
-	int64 GetChainAge(int64 nTime) { return floor((nTime - (int64)(fTestNet ? NEXUS_TESTNET_TIMELOCK : NEXUS_NETWORK_TIMELOCK)) / 60.0); }
-	
-	
-	/* Get 2% of the Money Supply for interval nMinutes. */
-	int64 GetInflation(int nMinutes, int64 nMoneySupply){ return (nMinutes * nMoneySupply * 0.02) / (365 * 24 * 60); }
+	int64 GetChainAge(int64 nTime) { return floor((nTime - (int64)(fTestNet ? NEXUS_TESTNET_TIMELOCK : NEXUS_NETWORK_TIMELOCK)) / 60.0); }ß
 	
 	
 	/* Returns the Time Based value of the Block which is a Fraction of Time's worth of Full Minutes Subsidy. */
-	int64 GetFractionalSubsidy(int nMinutes, int nType, double nFraction)
+    int64 GetFractionalSubsidy(int nMinutes, int nType, double nFraction)
 	{
 		int nInterval = floor(nFraction);
 		double nRemainder   = nFraction - nInterval;
@@ -82,49 +76,6 @@ namespace Core
 			nSubsidy += GetSubsidy(nMinutes + nMinute, nType);
 
 		return nSubsidy + (GetSubsidy(nMinutes + nInterval, nType) * nRemainder);
-	}
-
-	
-	/* Returns the Coinbase Reward Generated for Block Timespan */
-	int64 GetCoinbaseReward(const CBlockIndex* pindex, int nChannel, int nType)
-	{
-		const CBlockIndex* pindexFirst = GetLastChannelIndex(pindex, nChannel);
-		if(!pindexFirst->pprev)
-			return COIN;
-		const CBlockIndex* pindexLast = GetLastChannelIndex(pindexFirst->pprev, nChannel);
-		if(!pindexLast->pprev)
-			return GetSubsidy(1, nType);
-			
-			
-		int64 nBlockTime = max(pindexFirst->GetBlockTime() - pindexLast->GetBlockTime(), (int64) 1 );
-		int64 nMinutes   = ((pindex->nVersion >= 3) ? GetChainAge(pindexFirst->GetBlockTime()) : min(pindexFirst->nChannelHeight,  GetChainAge(pindexFirst->GetBlockTime())));
-
-		
-		/* Block Version 3 Coinbase Tx Calculations. */
-		if(pindex->nVersion >= 3)
-		{
-		
-			/* For Block Version 3: Release 3 Minute Reward decayed at Channel Height when Reserves are above 20 Minute Supply. */
-			if(pindexFirst->nReleasedReserve[nType] > GetFractionalSubsidy(pindexFirst->nChannelHeight, nType, 20.0))
-				return GetFractionalSubsidy(pindexFirst->nChannelHeight, nType, 3.0);
-				
-				
-			/* Otherwise release 2.5 Minute Reward decayed at Chain Age when Reserves are above 4 Minute Supply. */
-			else if(pindexFirst->nReleasedReserve[nType] > GetFractionalSubsidy(nMinutes, nType, 4.0))
-				return GetFractionalSubsidy(nMinutes, nType, 2.5);
-				
-		}
-		
-		/* Block Version 1 Coinbase Tx Calculations: Release 2.5 minute reward if supply is behind 4 minutes */
-		else if(pindexFirst->nReleasedReserve[nType] > GetFractionalSubsidy(nMinutes, nType, 4.0))
-			return GetFractionalSubsidy(nMinutes, nType, 2.5);
-
-					
-		double nFraction = min(nBlockTime / 60.0, 2.5);
-		if(pindexFirst->nReleasedReserve[nType] == 0 && ReleaseAvailable(pindex, nChannel))
-			return GetFractionalSubsidy(nMinutes, nType, nFraction);
-			
-		return min(GetFractionalSubsidy(nMinutes, nType, nFraction), pindexFirst->nReleasedReserve[nType]);
 	}
 
 
@@ -148,22 +99,67 @@ namespace Core
 		printf("Inflation: %f Nexus | Timespan %i - %i Minutes\n", (double)nSubsidy / COIN, nStart, (nStart + nTimespan));
 		return nSubsidy;
 	}
+    
+    
+    /* Returns the Coinbase Reward Generated for Block Timespan */
+    int64 CBlkPool::GetCoinbaseReward(const CBlock blk, int nChannel, int nType)
+    {
+        const CBlockState blkFirst = GetLastBlock(blk.GetHash(), nChannel);
+        if(!blkFirst.hashPrevBlock == 0)
+            return COIN;
+        
+        const CBlockState blkLast = GetLastBlock(blkFirst.GetHash(), nChannel);
+        if(!blkLast.hashPrevBlock == 0)
+            return GetSubsidy(1, nType);
+        
+        
+        int64 nBlockTime = max(blkFirst.GetBlockTime() - blkLast.GetBlockTime(), (int64) 1 );
+        int64 nMinutes   = ((blk.nVersion >= 3) ? GetChainAge(blkFirst.GetBlockTime()) : min(blkFirst.nChannelHeight,  GetChainAge(blkFirst.GetBlockTime())));
+        
+        
+        /* Block Version 3 Coinbase Tx Calculations. */
+        if(blk.nVersion >= 3)
+        {
+            
+            /* For Block Version 3: Release 3 Minute Reward decayed at Channel Height when Reserves are above 20 Minute Supply. */
+            if(blkFirst.nReleasedReserve[nType] > GetFractionalSubsidy(blkFirst.nChannelHeight, nType, 20.0))
+                return GetFractionalSubsidy(blkFirst.nChannelHeight, nType, 3.0);
+            
+            
+            /* Otherwise release 2.5 Minute Reward decayed at Chain Age when Reserves are above 4 Minute Supply. */
+            else if(blkFirst.nReleasedReserve[nType] > GetFractionalSubsidy(nMinutes, nType, 4.0))
+                return GetFractionalSubsidy(nMinutes, nType, 2.5);
+            
+        }
+        
+        /* Block Version 1 Coinbase Tx Calculations: Release 2.5 minute reward if supply is behind 4 minutes */
+        else if(blkFirst.nReleasedReserve[nType] > GetFractionalSubsidy(nMinutes, nType, 4.0))
+            return GetFractionalSubsidy(nMinutes, nType, 2.5);
+        
+        
+        double nFraction = min(nBlockTime / 60.0, 2.5);
+        
+        //TODO: DEPRECATE AND TEST
+        if(blkFirst.nReleasedReserve[nType] == 0 && ReleaseAvailable(blk, nChannel))
+            return GetFractionalSubsidy(nMinutes, nType, nFraction);
+        
+        return min(GetFractionalSubsidy(nMinutes, nType, nFraction), blkFirst.nReleasedReserve[nType]);
+    }
 	
 
 	/* Calculates the release of new rewards based on the Network Time */
-	int64 GetReleasedReserve(const CBlockIndex* pindex, int nChannel, int nType)
+    int64 CBlkPool::GetReleasedReserve(const CBlockState blk, int nChannel, int nType)
 	{
-		const CBlockIndex* pindexFirst = GetLastChannelIndex(pindex, nChannel);
-		int nMinutes = GetChainAge(pindexFirst->GetBlockTime());
-		if(!pindexFirst->pprev)
-			return COIN;
-		
-		const CBlockIndex* pindexLast = GetLastChannelIndex(pindexFirst->pprev, nChannel);
-		if(!pindexLast->pprev)
-			return ReleaseRewards(nMinutes + 5, 1, nType);
+        const CBlockState blkFirst = GetLastBlock(blk.GetHash(), nChannel);
+        if(!blkFirst.hashPrevBlock == 0)
+            return COIN;
+        
+        const CBlockState blkLast = GetLastBlock(blkFirst.GetHash(), nChannel);
+        if(!blkLast.hashPrevBlock == 0)
+            return ReleaseRewards(nMinutes + 5, 1, nType);
 			
 		/* Only allow rewards to be released one time per minute */
-		int nLastMinutes = GetChainAge(pindexLast->GetBlockTime());
+		int nLastMinutes = GetChainAge(blkLast.GetBlockTime());
 		if(nMinutes == nLastMinutes)
 			return 0;
 		
@@ -171,14 +167,15 @@ namespace Core
 	}
 	
 	
-	/* If the Reserves are Depleted, this Tells a miner if there is a new Time Interval with their Previous Block which would signal new release into reserve.
-	 *	If for some reason this is a false flag, the block will be rejected by the network for attempting to deplete the reserves past 0 */
-	bool ReleaseAvailable(const CBlockIndex* pindex, int nChannel)
+	/* TODO: DEPRECATE THIS METHOD
+     * If the Reserves are Depleted, this Tells a miner if there is a new Time Interval with their Previous Block which would signal new release into reserve.
+	 * If for some reason this is a false flag, the block will be rejected by the network for attempting to deplete the reserves past 0 */
+    bool CBlkPool::ReleaseAvailable(const CBlockState blk, int nChannel)
 	{
-		const CBlockIndex* pindexLast = GetLastChannelIndex(pindex, nChannel);
-		if(!pindexLast->pprev)
+		const CBlockState blkLast = GetLastBlock(blk.GetHash(), nChannel);
+		if(blkLast.hashPrevBlock == 0)
 			return true;
 			
-		return !(GetChainAge(UnifiedTimestamp()) == GetChainAge(pindexLast->GetBlockTime()));
+		return !(GetChainAge(UnifiedTimestamp()) == GetChainAge(blkLast.GetBlockTime()));
 	}
 }

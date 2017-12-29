@@ -37,6 +37,7 @@ namespace Wallet
 	class CReserveKey; 
 }
 
+
 namespace Core
 {
 	class CBlockIndex;
@@ -80,6 +81,7 @@ namespace Core
 		
 		/* Memory Only Data. */
 		mutable std::vector<uint512> vMerkleTree;
+        
 		uint512 hashPrevChecksum; //for new signature hash input. Checksum of previous block signature for block signature chains
 
 		IMPLEMENT_SERIALIZE
@@ -369,6 +371,7 @@ namespace Core
 		
 		
 		CBlockState() : nChainTrust(0), nMoneySupply(0), nChannelHeight(0), nReleasedReserve(0, 0, 0), hashCheckpoint(0), fConnected(false) { SetNull(); }
+        
 		CBlockState(CBlock blk) : CBlock(blk), nChainTrust(0), nMoneySupply(0), nChannelHeight(0), nReleasedReserve(0, 0, 0), hashCheckpoint(0), fConnected(false) { }
 		
 		

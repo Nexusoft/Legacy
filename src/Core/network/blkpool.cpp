@@ -56,6 +56,34 @@ namespace Core
 				
 		return false;
 	}
+    
+    
+    /* Get Last block in a specific Channel. */
+    CBlockState CBlkPool::GetLastBlock(uint1024 hashBlock, unsigned int nChannel) const
+    {
+        CBlockState blk;
+        while(GetBlockState(hashBlock, blk) && blk.GetChannel() != nChannel)
+            hashBlock = blk.hashPrevBlock;
+        
+        return blk;
+    }
+    
+    
+    /* Read a previous block from the LLD instance. */
+    bool CBlkPool::GetBlockState(uint1024 hashBlock, CBlockState& blk)
+    {
+        /* Check for the Block from the Memory Pool. */
+        if(Get(hashBlock, blk))
+            return true;
+        
+        /* Check for the Block from the LLD. */
+        if(blockdb.ReadBlockState(hashBlock, blk))
+            return true;
+        
+        /* Block hasn't been seen if not in memory or on disk. */
+        return false;
+    }
+    
 	
 	/* This function is responsible for running the basic process checks for (check and accept)
 	 * In order to determine if the block is a valid block, but allow multiprocessing of the data.
@@ -252,8 +280,8 @@ namespace Core
 	{
 		
 		/* Get the Previous block from the Pool. */
-		CBlock blkPrev;
-		if(!Get(blk.hashPrevBlock, blkPrev))
+		CBlockState blkPrev;
+		if(!GetBlockState(blk.hashPrevBlock, blkPrev))
 			return error("CBlkPool::Accept() : prev block not found");
 		
 		/** Check the Height of Block to Previous Block. **/
@@ -261,11 +289,11 @@ namespace Core
 			return error("CBlkPool::Accept() : incorrect block height.");
 		
 		/* Check that the nBits match the current Difficulty. */
-		if (blk.nBits != GetNextTargetRequired(pindexPrev, blk.GetChannel()))
+		if (blk.nBits != GetNextTargetRequired(blkPrev, blk.GetChannel()))
 			return error("CBlkPool::Accept() : incorrect proof-of-work/proof-of-stake %s", blk.GetHash().ToString().substr(0, 20).c_str());
 			
 			
-		/** Check that Block is Descendant of Hardened Checkpoints. **/
+		/* TODO: CBlockState - Check that Block is Descendant of Hardened Checkpoints. **/
 		//if(pindexPrev && !IsDescendant(pindexPrev))
 		//	return error("CBlkPool::Accept() : Not a descendant of Last Checkpoint");
 
@@ -286,15 +314,15 @@ namespace Core
 				nMiningReward += blk.vtx[0].vout[nIndex].nValue;
 					
 			/** Check that the Mining Reward Matches the Coinbase Calculations. **/
-			if (nMiningReward != GetCoinbaseReward(pindexPrev, blk.GetChannel(), 0))
-				return error("CBlkPool::Accept() : miner reward mismatch %" PRId64 " : %" PRId64 "", nMiningReward, GetCoinbaseReward(pindexPrev, blk.GetChannel(), 0));
+			if (nMiningReward != GetCoinbaseReward(blkPrev, blk.GetChannel(), 0))
+				return error("CBlkPool::Accept() : miner reward mismatch %" PRId64 " : %" PRId64 "", nMiningReward, GetCoinbaseReward(blkPrev, blk.GetChannel(), 0));
 					
 			/** Check that the Exchange Reward Matches the Coinbase Calculations. **/
-			if (blk.vtx[0].vout[nSize - 2].nValue != GetCoinbaseReward(pindexPrev, blk.GetChannel(), 1))
-				return error("CBlkPool::Accept() : exchange reward mismatch %" PRId64 " : %" PRId64 "\n", blk.vtx[0].vout[1].nValue, GetCoinbaseReward(pindexPrev, blk.GetChannel(), 1));
+			if (blk.vtx[0].vout[nSize - 2].nValue != GetCoinbaseReward(blkPrev, blk.GetChannel(), 1))
+				return error("CBlkPool::Accept() : exchange reward mismatch %" PRId64 " : %" PRId64 "\n", blk.vtx[0].vout[1].nValue, GetCoinbaseReward(blkPrev, blk.GetChannel(), 1));
 						
 			/** Check that the Developer Reward Matches the Coinbase Calculations. **/
-			if (blk.vtx[0].vout[nSize - 1].nValue != GetCoinbaseReward(pindexPrev, blk.GetChannel(), 2))
+			if (blk.vtx[0].vout[nSize - 1].nValue != GetCoinbaseReward(blkPrev, blk.GetChannel(), 2))
 				return error("CBlkPool::Accept() : developer reward mismatch %" PRId64 " : %" PRId64 "\n", blk.vtx[0].vout[2].nValue, GetCoinbaseReward(pindexPrev, blk.GetChannel(), 2));
 					
 		}
@@ -316,128 +344,72 @@ namespace Core
 		for(auto tx : blk.vtx)
 			if (!tx.IsFinal(blk.nHeight, blk.GetBlockTime()))
 				return error("CBlkPool::Accept() : contains a non-final transaction");
-			
-							
-		/* Check Block Disk Usage. */
-		if (!CheckDiskSpace(::GetSerializeSize(blk, SER_DISK, DATABASE_VERSION)))
-			return error("CBlkPool::Accept() : Out of Disk Space.");
-						
-				
-		/* Write Block to Disk. */
-		unsigned int nFile = 0;
-		unsigned int nBlockPos = 0;
-		if (!blk.WriteToDisk(nFile, nBlockPos))
-			return error("CBlkPool::Accept() : Writing Failed %s Height %u\n", blk.GetHash().ToString().substr(0, 20).c_str(), blk.nHeight);
-						
-				
-		/* Write Block Index Data. */
-		Core::CBlockIndex* pindexNew = new Core::CBlockIndex(nFile, nBlockPos, blk);
-		if (!Index(blk, pindexNew))
-			return error("CBlkPool::Accept() : Indexing Failed %s Height %u\n", blk.GetHash().ToString().substr(0, 20).c_str(), blk.nHeight);
-		
-		
-		/* Write Index to DB. */
-		indexdb.TxnBegin();
-		if (!indexdb.WriteBlockIndex(CDiskBlockIndex(pindexNew)))
-		{
-			indexdb.TxnAbort();
-			
-			return error("CBlkPool::Accept() : Failed to Write Index %s Height %u\n", blk.GetHash().ToString().substr(0, 20).c_str(), blk.nHeight);
-		}
+        
+        /* Create the State object. */
+        CBlockState blkState(blk);
+        
+        /* Compute the Chain Trust */
+        blkState.nChainTrust = (blkState.hashPrevBlock == 0 ? blkPrev.nChainTrust : 0) + blkPrev.GetBlockTrust();
+        
+        
+        /* Compute the Channel Height. */
+        blkPrev = GetLastBlock(blkPrev, blkPrev.GetChannel();
+        blkState.nChannelHeight = (blkPrev.IsNull() ? blkPrev.nChannelHeight : 0) + 1;
+        
+        
+        /** Compute the Released Reserves. **/
+        for(int nType = 0; nType < 3; nType++)
+        {
+            if(blkState.IsProofOfWork() && !blkPrev.IsNull())
+            {
+                /** Calculate the Reserves from the Previous Block in Channel's reserve and new Release. **/
+                int64 nReserve  = blkPrev.nReleasedReserve[nType] + GetReleasedReserve(blkState, blkState.GetChannel(), nType);
+                
+                /** Block Version 3 Check. Disable Reserves from going below 0. **/
+                if(blkState.nVersion >= 3 && blkState.nCoinbaseRewards[nType] >= nReserve)
+                    return error("CBlkPool::Accept() : Coinbase Transaction too Large. Out of Reserve Limits");
+                
+                blkState.nReleasedReserve[nType] =  nReserve - pindexNew->nCoinbaseRewards[nType];
+                
+                if(GetArg("-verbose", 0) >= 3)
+                    printf("Reserve Balance %i | %f Nexus | Released %f\n", nType, blkState.nReleasedReserve[nType] / 1000000.0, (nReserve - blkPrev.nReleasedReserve[nType]) / 1000000.0 );
+            }
+            else
+                blkState.nReleasedReserve[nType] = 0;
+            
+        }
+        
+        /** TODO:: New checkpointing system
+            Add the Pending Checkpoint into the Blockchain.
+        if(!pindexNew->pprev || HardenCheckpoint(pindexNew))
+        {
+            pindexNew->PendingCheckpoint = std::make_pair(pindexNew->nHeight, pindexNew->GetBlockHash());
+            
+            if(GetArg("-verbose", 0) >= 3)
+                printf("===== New Pending Checkpoint Hash = %s Height = %u\n", pindexNew->PendingCheckpoint.second.ToString().substr(0, 15).c_str(), pindexNew->nHeight);
+        }
+        else
+        {
+            pindexNew->PendingCheckpoint = pindexNew->pprev->PendingCheckpoint;
+            
+            unsigned int nAge = pindexNew->pprev->GetBlockTime() - mapBlockIndex[pindexNew->PendingCheckpoint.second]->GetBlockTime();
+            
+            if(GetArg("-verbose", 0) >= 3)
+                printf("===== Pending Checkpoint Age = %u Hash = %s Height = %u\n", nAge, pindexNew->PendingCheckpoint.second.ToString().substr(0, 15).c_str(), pindexNew->PendingCheckpoint.first);
+        }
+         **/
 				
 		
 		/* Set the best chain if is best block. */
-		if (pindexNew->nChainTrust > nBestChainTrust)
+		if (blkState.nChainTrust > nBestChainTrust)
 		{
-			/* Connect the block and commit to LLD. */
-			if (!Connect(pindexNew))
-			{
-				printf("##### Block Processor::Connect failed %s\n", blk.GetHash().ToString().substr(0, 20).c_str());
-				indexdb.TxnAbort();
-									
-				return error("CBlkPool::Accept() : Failed to Connect Best Block");
-			}
-		}
-		
-		indexdb.TxnCommit();
-		SetState(blk.GetHash(), ACCEPTED);
-		
 
-		return true;
-	}
+		}
+                               
+        /* Update the new state object into pool to be written. */
+		Update(blkState.GetHash(), blkState, ACCEPTED);
 
-
-	/* AddToBlockIndex: Adds a new Block into the Block Index. 
-		This is where it is categorized and dealt with in the Blockchain.
-		
-		TODO: Remove this Indexing Function when moved to LLD indexing
-	*/
-	bool CBlkPool::Index(CBlock blk, CBlockIndex* pindexNew)
-	{
-		/* Get blocks hash. */
-		const uint1024 hash = blk.GetHash();
-		
-		
-		/* Add to the MapBlockIndex */
-		std::map<uint1024, CBlockIndex*>::iterator mi = mapBlockIndex.insert(std::make_pair(hash, pindexNew)).first;
-		pindexNew->phashBlock = &((*mi).first);
-		
-			
-		/* Find Previous Block. */
-		std::map<uint1024, CBlockIndex*>::iterator miPrev = mapBlockIndex.find(blk.hashPrevBlock);
-		if (miPrev != mapBlockIndex.end())
-			pindexNew->pprev = (*miPrev).second;
-		
-		
-		/* Compute the Chain Trust */
-		pindexNew->nChainTrust = (pindexNew->pprev ? pindexNew->pprev->nChainTrust : 0) + pindexNew->GetBlockTrust();
-		
-		
-		/* Compute the Channel Height. */
-		const CBlockIndex* pindexPrev = GetLastChannelIndex(pindexNew->pprev, pindexNew->GetChannel());
-		pindexNew->nChannelHeight = (pindexPrev ? pindexPrev->nChannelHeight : 0) + 1;
-		
-		
-		/** Compute the Released Reserves. **/
-		for(int nType = 0; nType < 3; nType++)
-		{
-			if(pindexNew->IsProofOfWork() && pindexPrev)
-			{
-				/** Calculate the Reserves from the Previous Block in Channel's reserve and new Release. **/
-				int64 nReserve  = pindexPrev->nReleasedReserve[nType] + GetReleasedReserve(pindexNew, pindexNew->GetChannel(), nType);
-				
-				/** Block Version 3 Check. Disable Reserves from going below 0. **/
-				if(pindexNew->nVersion >= 3 && pindexNew->nCoinbaseRewards[nType] >= nReserve)
-					return error("CBlkPool::Index() : Coinbase Transaction too Large. Out of Reserve Limits");
-				
-				pindexNew->nReleasedReserve[nType] =  nReserve - pindexNew->nCoinbaseRewards[nType];
-				
-				if(GetArg("-verbose", 0) >= 3)
-					printf("Reserve Balance %i | %f Nexus | Released %f\n", nType, pindexNew->nReleasedReserve[nType] / 1000000.0, (nReserve - pindexPrev->nReleasedReserve[nType]) / 1000000.0 );
-			}
-			else
-				pindexNew->nReleasedReserve[nType] = 0;
-				
-		}
-												
-		/** Add the Pending Checkpoint into the Blockchain. **/
-		if(!pindexNew->pprev || HardenCheckpoint(pindexNew))
-		{
-			pindexNew->PendingCheckpoint = std::make_pair(pindexNew->nHeight, pindexNew->GetBlockHash());
-			
-			if(GetArg("-verbose", 0) >= 3)
-				printf("===== New Pending Checkpoint Hash = %s Height = %u\n", pindexNew->PendingCheckpoint.second.ToString().substr(0, 15).c_str(), pindexNew->nHeight);
-		}
-		else
-		{
-			pindexNew->PendingCheckpoint = pindexNew->pprev->PendingCheckpoint;
-			
-			unsigned int nAge = pindexNew->pprev->GetBlockTime() - mapBlockIndex[pindexNew->PendingCheckpoint.second]->GetBlockTime();
-			
-			if(GetArg("-verbose", 0) >= 3)
-				printf("===== Pending Checkpoint Age = %u Hash = %s Height = %u\n", nAge, pindexNew->PendingCheckpoint.second.ToString().substr(0, 15).c_str(), pindexNew->PendingCheckpoint.first);
-		}
-		
+                               
 		return true;
 	}
 	
