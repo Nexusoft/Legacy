@@ -95,6 +95,13 @@ namespace Core
 			READWRITE(nBits);
 			READWRITE(nNonce);
 			READWRITE(nTime);
+         
+            //TODO: Serialize vtx on network, but not on disk
+            //Only serialize the hashes of the transactions (as precurser to light blocks)
+            //Then blocks can be relayed with no need for transactional data, which can be represented by L1 locks later down.
+            //Block size will not exist, blocks will only keep record of transactions in merkle done by processing buckets.
+            //Until done in the future with Amine these will be at the descretion of Miners what buckets to include.
+            //possibly assess a penalty if a bucket exists that a miner doesn't include.
 
 			// ConnectBlock depends on vtx following header to generate CDiskTxPos
 			if (!(nType & (SER_GETHASH|SER_BLOCKHEADERONLY)))
@@ -349,12 +356,17 @@ namespace Core
 		uint1024 hashCheckpoint;
         
         
-        /* The last channel index hash (for efficiency in difficulty.cpp / supply.cpp) */
-        uint1024 hashPrevChannel;
+        /* Used to Iterate forward in the chain */
+        uint1024 hashNextBlock;
         
         
         /* Boolean flag for if this block is connected. */
         bool fConnected;
+        
+        //Network Register states tree for advanced contract final register states
+        //cost of each register based on byte space they require.
+        //register are 64 bit, and can be purchased for an amount / byte
+        //TODO: Determine how to change the costs of registers in a stable valuation (possibly higher PoW, lower costs)
 		
 		
         /* Serialization Macros */
@@ -373,20 +385,7 @@ namespace Core
 		CBlockState() : nChainTrust(0), nMoneySupply(0), nChannelHeight(0), nReleasedReserve(0, 0, 0), hashCheckpoint(0), fConnected(false) { SetNull(); }
         
 		CBlockState(CBlock blk) : CBlock(blk), nChainTrust(0), nMoneySupply(0), nChannelHeight(0), nReleasedReserve(0, 0, 0), hashCheckpoint(0), fConnected(false) { }
-		
-		
-		/* Set a Block State from Regular Block. */
-		void SetBlock(CBlock blk)
-		{
-			nVersion       = blk.nVersion;
-			hashPrevBlock  = blk.hashPrevBlock;
-			hashMerkleRoot = blk.hashMerkleRoot;
-			nChannel       = blk.nChannel;
-			nBits          = blk.nBits;
-			nNonce         = blk.nNonce;
-			vtx            = blk.vtx;
-			vchBlockSig    = blk.vchBlockSig;
-		}
+
         
         /* Get the block header. */
         CBlock GetHeader() const

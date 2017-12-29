@@ -275,6 +275,11 @@ namespace Core
 		std::vector<CTxIn> vin;
 		std::vector<CTxOut> vout;
 		unsigned int nLockTime;
+        
+        //TODO: CTransactionState (hash) - get from prevout on ctxIn
+        //{ std::vector<bool> vSpent; { out1, out2, out3 } }
+        //To hold the spend data on disk transactions.
+        //If it is unspent the vout index will false
 
 		CTransaction()
 		{

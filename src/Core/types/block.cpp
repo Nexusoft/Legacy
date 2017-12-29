@@ -193,22 +193,12 @@ namespace Core
 
 	
 	/* Disconnect block could be seen as the same as following comment on ConnectBlock. */
-	bool CBlock::DisconnectBlock(LLD::CIndexDB& indexdb, CBlockIndex* pindex)
+	bool CBlock::DisconnectBlock(LLD::CIndexDB& indexdb)
 	{
 		// Disconnect in reverse order
 		for (int i = vtx.size() - 1; i >= 0; i--)
 			if (!vtx[i].DisconnectInputs(indexdb))
 				return false;
-
-		// Update block index on disk without changing it in memory.
-		// The memory index structure will be changed after the db commits.
-		if (pindex->pprev)
-		{
-			CDiskBlockIndex blockindexPrev(pindex->pprev);
-			blockindexPrev.hashNext = 0;
-			if (!indexdb.WriteBlockIndex(blockindexPrev))
-				return error("DisconnectBlock() : WriteBlockIndex failed");
-		}
 
 		// Nexus: clean up wallet after disconnecting coinstake
 		for(auto tx : vtx)
@@ -228,7 +218,7 @@ namespace Core
 	 * 
 	 * TODO: Depricate this method.
 	 */
-	bool CBlock::ConnectBlock(LLD::CIndexDB& indexdb, CBlockIndex* pindex)
+	bool CBlock::ConnectBlock(LLD::CIndexDB& indexdb)
 	{
 
 		// Do not allow blocks that contain transactions which 'overwrite' older transactions,
@@ -236,19 +226,8 @@ namespace Core
 		// If such overwrites are allowed, coinbases and transactions depending upon those
 		// can be duplicated to remove the ability to spend the first instance -- even after
 		// being sent to another address.
-		for(auto tx : vtx)
-		{
-			CTxIndex txindexOld;
-			if (indexdb.ReadTxIndex(tx.GetHash(), txindexOld))
-			{
-				for(auto pos : txindexOld.vSpent)
-					if (pos.IsNull()){
-						
-						return error("ConnectBlock() : Transaction Disk Index is Null %s", tx.GetHash().ToString().c_str());
-					}
-						
-			}
-		}
+        
+		// TODO: Check the transactions being spent. don't let a transaction be overwritten.
 
 		//// issue here: it doesn't know the version
 		unsigned int nTxPos = pindex->nBlockPos + ::GetSerializeSize(CBlock(), SER_DISK, DATABASE_VERSION) - (2 * GetSizeOfCompactSize(0)) + GetSizeOfCompactSize(vtx.size());
