@@ -57,11 +57,6 @@ contains(RELEASE, 1) {
     windows:QMAKE_LFLAGS += -Wl,--dynamicbase -Wl,--nxcompat
     windows:QMAKE_LFLAGS += -Wl,--large-address-aware -static
     windows:QMAKE_LFLAGS += -static-libgcc -static-libstdc++
-
-    !windows:!macx {
-        # Linux: static link
-        LIBS += -Wl,-Bstatic
-    }
 }
 
 # use: qmake "USE_QRCODE=1"
