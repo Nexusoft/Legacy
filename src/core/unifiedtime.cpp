@@ -28,6 +28,8 @@ int UNIFIED_MOVING_ITERATOR = 0;
 vector<int> UNIFIED_TIME_DATA;
 vector<Net::CAddress> SEED_NODES;
 
+std::map<std::string, int> MAP_TIME_DATA;
+
 /** Declarations for the DNS Seed Nodes. **/
 const char* DNS_SeedNodes[] = 
 {
@@ -142,20 +144,6 @@ void InitializeUnifiedTime()
 }
 
 
-/** Calculate the Average Unified Time. Called after Time Data is Added **/
-int GetUnifiedAverage()
-{
-	if(UNIFIED_TIME_DATA.empty())
-		return UNIFIED_AVERAGE_OFFSET;
-		
-	int nAverage = 0;
-	for(int index = 0; index < std::min(MAX_UNIFIED_SAMPLES, (int)UNIFIED_TIME_DATA.size()); index++)
-		nAverage += UNIFIED_TIME_DATA[index];
-		
-	return (int) (nAverage / (double) std::min(MAX_UNIFIED_SAMPLES, (int)UNIFIED_TIME_DATA.size()) + 0.5);
-}
-
-
 /** Regulator of the Unified Clock **/
 void ThreadUnifiedSamples(void* parg)
 {
@@ -174,6 +162,8 @@ void ThreadUnifiedSamples(void* parg)
 	/* The Entry Client Loop for Core LLP. */
 	string ADDRESS = "";
 	LLP::CoreOutbound SERVER("", strprintf("%u", (fTestNet ? TESTNET_CORE_LLP_PORT : NEXUS_CORE_LLP_PORT)));
+    
+    /* Latency Timer. */
 	loop
 	{
 		try
@@ -182,8 +172,9 @@ void ThreadUnifiedSamples(void* parg)
 			
 			
 			/* Randomize the Time Seed Connection Iterator. */
-			nIterator = GetRandInt(SEEDS.size() - 1);
-			
+            nIterator ++;
+			if(nIterator == SEEDS.size())
+                nIterator = 0;
 			
 			/* Connect to the Next Seed in the Iterator. */
 			SERVER.IP = SEEDS[nIterator];
@@ -203,7 +194,12 @@ void ThreadUnifiedSamples(void* parg)
 			CMajority<int> nSamples;
 			
 			
-			/* Get 10 Samples From Server. */
+			/* Create Latency Timer Object. */
+            LLP::Timer LatencyTimer;
+            LatencyTimer.Reset();
+            
+            
+            /* Request an initial offset from Unified Time servers. */
 			SERVER.GetOffset((unsigned int)GetLocalTimestamp());
 				
 				
@@ -220,13 +216,20 @@ void ThreadUnifiedSamples(void* parg)
 					/* Add a New Sample each Time Packet Arrives. */
 					if(PACKET.HEADER == SERVER.TIME_OFFSET)
 					{
-						int nOffset = bytes2int(PACKET.DATA);
+                        
+                        /* Calculate the Latency Round Trip Time. */
+                        unsigned int nLatency = LatencyTimer.ElapsedMilliseconds();
+                        
+                        /* Calculate this particular sample. */
+						int nOffset = bytes2int(PACKET.DATA) + (nLatency / 2000);
 						nSamples.Add(nOffset);
 						
+                        /* Reset the Timer and request another sample. */
+                        LatencyTimer.Reset();
 						SERVER.GetOffset((unsigned int)GetLocalTimestamp());
 						
 						if(GetArg("-verbose", 0) >= 2)
-							printf("***** Core LLP: Added Sample %i | Seed %s\n", nOffset, SERVER.IP.c_str());
+							printf("***** Core LLP: Added Sample %i | Seed %s | Latency %u ms\n", nOffset, SERVER.IP.c_str(), nLatency);
 					}
 					
 					SERVER.ResetPacket();
@@ -235,6 +238,8 @@ void ThreadUnifiedSamples(void* parg)
 				/* Close the Connection Gracefully if Received all Packets. */
 				if(nSamples.Samples() >= 5)
 				{
+                    MAP_TIME_DATA[SERVER.IP] = nSamples.Majority();
+                    
 					SERVER.Close();
 					break;
 				}
@@ -245,58 +250,43 @@ void ThreadUnifiedSamples(void* parg)
 			if(nSamples.Samples() == 0)
 			{
 				printf("***** Core LLP: Failed To Get Time Samples.\n");
-				SEEDS.erase(SEEDS.begin() + nIterator);
+				//SEEDS.erase(SEEDS.begin() + nIterator);
 				
-				SERVER.Close();
+				//SERVER.Close();
 				
 				continue;
 			}
-			
-			/* These checks are for after the first time seed has been established. 
-			 * 
-			 * TODO: Look at the possible attack vector of the first time seed being manipulated.
-			 * This could be easily done by allowing the time seed to be created by X nodes and then check the drift. */
-			if(fTimeUnified)
-			{
-			
-				/* Check that the samples don't violate time changes too drastically. */
-				if(nSamples.Majority() > GetUnifiedAverage() + MAX_UNIFIED_DRIFT ||
-					nSamples.Majority() < GetUnifiedAverage() - MAX_UNIFIED_DRIFT ) {
-				
-					printf("***** Core LLP: Unified Samples Out of Drift Scope Current (%u) Samples (%u)\n", GetUnifiedAverage(), nSamples.Majority());
-					SERVER.Close();
-				
-					continue;
-				}
-			}
-			
-			/* If the Moving Average is filled with samples, continue iterating to keep it moving. */
-			if(UNIFIED_TIME_DATA.size() >= MAX_UNIFIED_SAMPLES)
-			{
-				if(UNIFIED_MOVING_ITERATOR >= MAX_UNIFIED_SAMPLES)
-					UNIFIED_MOVING_ITERATOR = 0;
-									
-				UNIFIED_TIME_DATA[UNIFIED_MOVING_ITERATOR] = nSamples.Majority();
-				UNIFIED_MOVING_ITERATOR ++;
-			}
-				
-				
-			/* If The Moving Average is filling, move the iterator along with the Time Data Size. */
-			else
-			{
-				UNIFIED_MOVING_ITERATOR = UNIFIED_TIME_DATA.size();
-				UNIFIED_TIME_DATA.push_back(nSamples.Majority());
-			}
-			
 
 			/* Update Iterators and Flags. */
-			if((UNIFIED_TIME_DATA.size() > 0))
+			if((MAP_TIME_DATA.size() > 0))
 			{
 				fTimeUnified = true;
-				UNIFIED_AVERAGE_OFFSET = GetUnifiedAverage();
+                
+                /* Majority Object to check for consensus on time samples. */
+                CMajority<int> UNIFIED_MAJORITY;
+                
+                /* Info tracker to see the total samples. */
+                std::map<int, unsigned int> TOTAL_SAMPLES;
+                
+                /* Iterate the Time Data map to find the majority time seed. */
+                for(std::map<std::string, int>::iterator it=MAP_TIME_DATA.begin(); it != MAP_TIME_DATA.end(); ++it)
+                {
+                    
+                    /* Update the Unified Majority. */
+                    UNIFIED_MAJORITY.Add(it->second);
+                    
+                    /* Increase the count per samples (for debugging only). */
+                    if(!TOTAL_SAMPLES.count(it->second))
+                        TOTAL_SAMPLES[it->second] = 1;
+                    else
+                        TOTAL_SAMPLES[it->second] ++;
+                }
+                
+                /* Set the Unified Average to the Majority Seed. */
+                UNIFIED_AVERAGE_OFFSET = UNIFIED_MAJORITY.Majority();
 				
 				if(GetArg("-verbose", 0) >= 1)
-					printf("***** %i Iterator | %i Offset | %i Current | %"PRId64"\n", UNIFIED_MOVING_ITERATOR, nSamples.Majority(), UNIFIED_AVERAGE_OFFSET, GetUnifiedTimestamp());
+					printf("***** %i Total Samples | %i Offset (%u) | %i Majority (%u) | %"PRId64"\n", MAP_TIME_DATA.size(), nSamples.Majority(), TOTAL_SAMPLES[nSamples.Majority()], UNIFIED_AVERAGE_OFFSET, TOTAL_SAMPLES[UNIFIED_AVERAGE_OFFSET], GetUnifiedTimestamp());
 			}
 			
 			
@@ -306,7 +296,7 @@ void ThreadUnifiedSamples(void* parg)
 			 * This is useful if the clock is changed by the operating system
 			 * 
 			 */
-			for(int sec = 0; sec < 6; sec ++)
+			for(int sec = 0; sec < 1; sec ++)
 			{
 				/** Regulate the Clock while Waiting, and Break if the Clock Changes. **/
 				int64 nTimestamp = GetLocalTimestamp();
