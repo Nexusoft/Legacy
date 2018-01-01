@@ -296,7 +296,7 @@ void ThreadUnifiedSamples(void* parg)
 			 * This is useful if the clock is changed by the operating system
 			 * 
 			 */
-			for(int sec = 0; sec < 1; sec ++)
+			for(int sec = 0; sec < 6; sec ++)
 			{
 				/** Regulate the Clock while Waiting, and Break if the Clock Changes. **/
 				int64 nTimestamp = GetLocalTimestamp();
@@ -305,7 +305,7 @@ void ThreadUnifiedSamples(void* parg)
 				int64 nElapsed = GetLocalTimestamp() - nTimestamp;
 				if(nElapsed != 10)
 				{
-					UNIFIED_TIME_DATA.clear();
+                    MAP_TIME_DATA.clear();
 					UNIFIED_AVERAGE_OFFSET -= (nElapsed + 1);
 					
 					fTimeUnified = false;
