@@ -236,7 +236,7 @@ void ThreadUnifiedSamples(void* parg)
 				}
 				
 				/* Close the Connection Gracefully if Received all Packets. */
-				if(nSamples.Samples() >= 5)
+				if(nSamples.Samples() >= 11)
 				{
                     MAP_TIME_DATA[SERVER.IP] = nSamples.Majority();
                     
@@ -288,6 +288,10 @@ void ThreadUnifiedSamples(void* parg)
 				if(GetArg("-verbose", 0) >= 1)
 					printf("***** %i Total Samples | %i Offset (%u) | %i Majority (%u) | %"PRId64"\n", MAP_TIME_DATA.size(), nSamples.Majority(), TOTAL_SAMPLES[nSamples.Majority()], UNIFIED_AVERAGE_OFFSET, TOTAL_SAMPLES[UNIFIED_AVERAGE_OFFSET], GetUnifiedTimestamp());
 			}
+            
+            Sleep(30000);
+            
+            continue;
 			
 			
 			/* Sleep for 1 Minutes Between Sample.
