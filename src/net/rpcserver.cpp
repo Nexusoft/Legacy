@@ -981,6 +981,9 @@ namespace Net
 	/** Dump the top balances of the Rich List to RPC console. **/
 	Value dumprichlist(const Array& params, bool fHelp)
 	{
+        if(!GetBoolArg("-richlist", false))
+            throw runtime_error("please enable -richlist to use this command");
+            
 		if (fHelp || params.size() != 1)
 			throw runtime_error(
 				"dumprichlist <count>\n"

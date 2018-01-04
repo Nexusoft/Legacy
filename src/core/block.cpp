@@ -384,50 +384,53 @@ namespace Core
 			printf("SetBestChain: new best=%s  height=%d  trust=%"PRIu64"  moneysupply=%s\n", hashBestChain.ToString().substr(0,20).c_str(), nBestHeight, nBestChainTrust, FormatMoney(pindexBest->nMoneySupply).c_str());
 		
 		/** Grab the transactions for the block and set the address balances. **/
-		for(int nTx = 0; nTx < vtx.size(); nTx++)
-		{
-			for(int nOut = 0; nOut < vtx[nTx].vout.size(); nOut++)
-			{	
-				Wallet::NexusAddress cAddress;
-				if(!Wallet::ExtractAddress(vtx[nTx].vout[nOut].scriptPubKey, cAddress))
-					continue;
-							
-				mapAddressTransactions[cAddress.GetHash256()] += (uint64) vtx[nTx].vout[nOut].nValue;
-						
-				if(GetArg("-verbose", 0) >= 2)
-					printf("%s Credited %f Nexus | Balance : %f Nexus\n", cAddress.ToString().c_str(), (double)vtx[nTx].vout[nOut].nValue / COIN, (double)mapAddressTransactions[cAddress.GetHash256()] / COIN);
-			}
-					
-			if(!vtx[nTx].IsCoinBase())
-			{
-				BOOST_FOREACH(const CTxIn& txin, vtx[nTx].vin)
-				{
-					if(txin.prevout.IsNull())
-						continue;
-						
-					CTransaction tx;
-					CTxIndex txind;
-							
-					if(!indexdb.ReadTxIndex(txin.prevout.hash, txind))
-						continue;
-								
-					if(!tx.ReadFromDisk(txind.pos))
-						continue;
-							
-					Wallet::NexusAddress cAddress;
-					if(!Wallet::ExtractAddress(tx.vout[txin.prevout.n].scriptPubKey, cAddress))
-						continue;
-							
-					if(tx.vout[txin.prevout.n].nValue > mapAddressTransactions[cAddress.GetHash256()])
-						mapAddressTransactions[cAddress.GetHash256()] = 0;
-					else
-						mapAddressTransactions[cAddress.GetHash256()] -= (uint64) tx.vout[txin.prevout.n].nValue;
-					
-					if(GetArg("-verbose", 0) >= 2)
-						printf("%s Debited %f Nexus | Balance : %f Nexus\n", cAddress.ToString().c_str(), (double)tx.vout[txin.prevout.n].nValue / COIN, (double)mapAddressTransactions[cAddress.GetHash256()] / COIN);
-				}
-			}
-		}
+        if(GetBoolArg("-richlist", false))
+        {
+            for(int nTx = 0; nTx < vtx.size(); nTx++)
+            {
+                for(int nOut = 0; nOut < vtx[nTx].vout.size(); nOut++)
+                {	
+                    Wallet::NexusAddress cAddress;
+                    if(!Wallet::ExtractAddress(vtx[nTx].vout[nOut].scriptPubKey, cAddress))
+                        continue;
+                                
+                    mapAddressTransactions[cAddress.GetHash256()] += (uint64) vtx[nTx].vout[nOut].nValue;
+                            
+                    if(GetArg("-verbose", 0) >= 2)
+                        printf("%s Credited %f Nexus | Balance : %f Nexus\n", cAddress.ToString().c_str(), (double)vtx[nTx].vout[nOut].nValue / COIN, (double)mapAddressTransactions[cAddress.GetHash256()] / COIN);
+                }
+                        
+                if(!vtx[nTx].IsCoinBase())
+                {
+                    BOOST_FOREACH(const CTxIn& txin, vtx[nTx].vin)
+                    {
+                        if(txin.prevout.IsNull())
+                            continue;
+                            
+                        CTransaction tx;
+                        CTxIndex txind;
+                                
+                        if(!indexdb.ReadTxIndex(txin.prevout.hash, txind))
+                            continue;
+                                    
+                        if(!tx.ReadFromDisk(txind.pos))
+                            continue;
+                                
+                        Wallet::NexusAddress cAddress;
+                        if(!Wallet::ExtractAddress(tx.vout[txin.prevout.n].scriptPubKey, cAddress))
+                            continue;
+                                
+                        if(tx.vout[txin.prevout.n].nValue > mapAddressTransactions[cAddress.GetHash256()])
+                            mapAddressTransactions[cAddress.GetHash256()] = 0;
+                        else
+                            mapAddressTransactions[cAddress.GetHash256()] -= (uint64) tx.vout[txin.prevout.n].nValue;
+                        
+                        if(GetArg("-verbose", 0) >= 2)
+                            printf("%s Debited %f Nexus | Balance : %f Nexus\n", cAddress.ToString().c_str(), (double)tx.vout[txin.prevout.n].nValue / COIN, (double)mapAddressTransactions[cAddress.GetHash256()] / COIN);
+                    }
+                }
+            }
+        }
 
 		
 		std::string strCmd = GetArg("-blocknotify", "");

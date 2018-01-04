@@ -169,22 +169,70 @@ namespace LLD
 			/** Detect the Genesis Block on Loading. */
 			if(hashBlock == Core::hashGenesisBlock)
 				Core::pindexGenesisBlock = pindexNew;
+            else
+			{
+                //TODO: Optimize Correctly
+                if(GetBoolArg("-richlist", false))
+                {
+                    Core::CBlock block;
+                    if(!block.ReadFromDisk(pindexNew))
+                        break;
+                
+                    /** Grab the transactions for the block and set the address balances. **/
+                    for(int nTx = 0; nTx < block.vtx.size(); nTx++)
+                    {
+                        for(int nOut = 0; nOut < block.vtx[nTx].vout.size(); nOut++)
+                        {	
+                            Wallet::NexusAddress cAddress;
+                            if(!ExtractAddress(block.vtx[nTx].vout[nOut].scriptPubKey, cAddress))
+                                continue;
+                                
+                            Core::mapAddressTransactions[cAddress.GetHash256()] += block.vtx[nTx].vout[nOut].nValue;
+                        }
+                        
+                        if(!block.vtx[nTx].IsCoinBase())
+                        {
+                            BOOST_FOREACH(const Core::CTxIn& txin, block.vtx[nTx].vin)
+                            {
+                                if(txin.IsStakeSig())
+                                    continue;
+                                
+                                Core::CTransaction tx;
+                                Core::CTxIndex txind;
+                                
+                                if(!ReadTxIndex(txin.prevout.hash, txind))
+                                    continue;
+                                    
+                                if(!tx.ReadFromDisk(txind.pos))
+                                    continue;
+                                
+                                Wallet::NexusAddress cAddress;
+                                if(!ExtractAddress(tx.vout[txin.prevout.n].scriptPubKey, cAddress))
+                                    continue;
+                                
+                                Core::mapAddressTransactions[cAddress.GetHash256()] -= tx.vout[txin.prevout.n].nValue;
+                            }
+                        }
+                    }
+                }
+                
+                if(pindexNew->IsProofOfStake())
+                {
+                    Core::CBlock block;
+                    if(!block.ReadFromDisk(pindexNew))
+                        return error("CTxDB::LoadBlockIndex() : Failed to Read Block");
+                    
+                    if(!Core::cTrustPool.Accept(block, true))
+                        return error("CTxDB::LoadBlockIndex() : Failed To Accept Trust Key Block.");
+                }
+				
+			}
 				
 			/** Add the Pending Checkpoint into the Blockchain. **/
 			if(!pindexNew->pprev || Core::HardenCheckpoint(pindexNew, true))
 				pindexNew->PendingCheckpoint = make_pair(pindexNew->nHeight, pindexNew->GetBlockHash());
 			else
 				pindexNew->PendingCheckpoint = pindexNew->pprev->PendingCheckpoint;
-				
-			/** Accept the Trust Keys into the Trust Pool. **/
-			if(pindexNew->IsProofOfStake()) {
-				Core::CBlock block;
-				if (!block.ReadFromDisk(pindexNew))
-					break;
-					
-				if(!Core::cTrustPool.Accept(block, true))
-					return error("CIndexDB::LoadBlockIndex() : Failed To Accept Trust Key Block.");
-			}
 				
 			Core::pindexBest  = pindexNew;
 			hashBlock = diskindex.hashNext;
@@ -458,42 +506,48 @@ namespace LLD
 					return error("CTxDB::LoadBlockIndex() : Failed To Accept Trust Key Block.");
 				
 				/** Grab the transactions for the block and set the address balances. **/
-				for(int nTx = 0; nTx < block.vtx.size(); nTx++)
-				{
-					for(int nOut = 0; nOut < block.vtx[nTx].vout.size(); nOut++)
-					{	
-						Wallet::NexusAddress cAddress;
-						if(!ExtractAddress(block.vtx[nTx].vout[nOut].scriptPubKey, cAddress))
-							continue;
-							
-						Core::mapAddressTransactions[cAddress.GetHash256()] += block.vtx[nTx].vout[nOut].nValue;
-							
-						//printf("%s Credited %f Nexus | Balance : %f Nexus\n", cAddress.ToString().c_str(), (double)block.vtx[nTx].vout[nOut].nValue / COIN, (double)Core::mapAddressTransactions[cAddress.GetHash256()] / COIN);
-					}
-					
-					if(!block.vtx[nTx].IsCoinBase())
-					{
-						BOOST_FOREACH(const Core::CTxIn& txin, block.vtx[nTx].vin)
-						{
-							Core::CTransaction tx;
-							Core::CTxIndex txind;
-							
-							if(!ReadTxIndex(txin.prevout.hash, txind))
-								continue;
-								
-							if(!tx.ReadFromDisk(txind.pos))
-								continue;
-							
-							Wallet::NexusAddress cAddress;
-							if(!ExtractAddress(tx.vout[txin.prevout.n].scriptPubKey, cAddress))
-								continue;
-							
-							Core::mapAddressTransactions[cAddress.GetHash256()] -= tx.vout[txin.prevout.n].nValue;
-							
-							//printf("%s Debited %f Nexus | Balance : %f Nexus\n", cAddress.ToString().c_str(), (double)tx.vout[txin.prevout.n].nValue / COIN, (double)Core::mapAddressTransactions[cAddress.GetHash256()] / COIN);
-						}
-					}
-				}
+                if(GetBoolArg("-richlist", false))
+                {
+                    for(int nTx = 0; nTx < block.vtx.size(); nTx++)
+                    {
+                        for(int nOut = 0; nOut < block.vtx[nTx].vout.size(); nOut++)
+                        {	
+                            Wallet::NexusAddress cAddress;
+                            if(!ExtractAddress(block.vtx[nTx].vout[nOut].scriptPubKey, cAddress))
+                                continue;
+                                
+                            Core::mapAddressTransactions[cAddress.GetHash256()] += block.vtx[nTx].vout[nOut].nValue;
+                                
+                            //printf("%s Credited %f Nexus | Balance : %f Nexus\n", cAddress.ToString().c_str(), (double)block.vtx[nTx].vout[nOut].nValue / COIN, (double)Core::mapAddressTransactions[cAddress.GetHash256()] / COIN);
+                        }
+                        
+                        if(!block.vtx[nTx].IsCoinBase())
+                        {
+                            BOOST_FOREACH(const Core::CTxIn& txin, block.vtx[nTx].vin)
+                            {
+                                if(txin.IsStakeSig())
+                                    continue;
+                                
+                                Core::CTransaction tx;
+                                Core::CTxIndex txind;
+                                
+                                if(!ReadTxIndex(txin.prevout.hash, txind))
+                                    continue;
+                                    
+                                if(!tx.ReadFromDisk(txind.pos))
+                                    continue;
+                                
+                                Wallet::NexusAddress cAddress;
+                                if(!ExtractAddress(tx.vout[txin.prevout.n].scriptPubKey, cAddress))
+                                    continue;
+                                
+                                Core::mapAddressTransactions[cAddress.GetHash256()] -= tx.vout[txin.prevout.n].nValue;
+                                
+                                //printf("%s Debited %f Nexus | Balance : %f Nexus\n", cAddress.ToString().c_str(), (double)tx.vout[txin.prevout.n].nValue / COIN, (double)Core::mapAddressTransactions[cAddress.GetHash256()] / COIN);
+                            }
+                        }
+                    }
+                }
 				
 			}
 			else
