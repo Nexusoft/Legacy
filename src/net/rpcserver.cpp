@@ -1078,6 +1078,9 @@ namespace Net
 			Array txinputs;
 			BOOST_FOREACH(const Core::CTxIn& txin, cTransaction.vin)
 			{
+                if(txin.IsStakeSig())
+                    continue;
+                
 				Core::CTransaction tx;
 				Core::CTxIndex txind;
 				
