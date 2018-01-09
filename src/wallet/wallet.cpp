@@ -1018,7 +1018,7 @@ namespace Wallet
 				if (pcoin->nTime > nSpendTime)
 					continue;
 
-				if(nValueRet >= nTargetValue + Core::nTransactionFee)
+				if(nValueRet >= nTargetValue)
 					break;
 
 				setCoinsRet.insert(make_pair(pcoin, i));
@@ -1036,8 +1036,8 @@ namespace Wallet
 			printf("total %s\n", FormatMoney(nValueRet).c_str());
 		}
 		
-		if(nValueRet < nTargetValue + Core::nTransactionFee)
-			return error("CWallet::SelectCoins() : Insufficient Balance Target: %" PRI64d " Actual %" PRI64d, nTargetValue + Core::nTransactionFee, nValueRet);
+		if(nValueRet < nTargetValue)
+			return error("CWallet::SelectCoins() : Insufficient Balance Target: %" PRI64d " Actual %" PRI64d, nTargetValue, nValueRet);
 
 		return true;
 	}
