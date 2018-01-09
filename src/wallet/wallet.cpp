@@ -983,155 +983,65 @@ namespace Wallet
 
 	bool CWallet::SelectCoinsMinConf(int64 nTargetValue, unsigned int nSpendTime, int nConfMine, int nConfTheirs, set<pair<const CWalletTx*,unsigned int> >& setCoinsRet, int64& nValueRet) const
 	{
+		/* Add Each Input to Transaction. */
 		setCoinsRet.clear();
-		nValueRet = 0;
-
-		// List of values less than target
-		pair<int64, pair<const CWalletTx*,unsigned int> > coinLowestLarger;
-		coinLowestLarger.first = std::numeric_limits<int64>::max();
-		coinLowestLarger.second.first = NULL;
+		vector<const CWalletTx*> vCoins;
 		
-		vector<pair<int64, pair<const CWalletTx*,unsigned int> > > vValue;
-		int64 nTotalLower = 0;
-
+		nValueRet = 0;
+		
 		{
 		   LOCK(cs_wallet);
-		   vector<const CWalletTx*> vCoins;
+		   
 		   vCoins.reserve(mapWallet.size());
 		   for (map<uint512, CWalletTx>::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
 			   vCoins.push_back(&(*it).second);
-		   random_shuffle(vCoins.begin(), vCoins.end(), GetRandInt);
+		}
+		
+		random_shuffle(vCoins.begin(), vCoins.end(), GetRandInt);
+		BOOST_FOREACH(const CWalletTx* pcoin, vCoins)
+		{
+			if (!pcoin->IsFinal() || !pcoin->IsConfirmed())
+				continue;
 
-		   BOOST_FOREACH(const CWalletTx* pcoin, vCoins)
-		   {
-				if (!pcoin->IsFinal() || !pcoin->IsConfirmed())
+			if ((pcoin->IsCoinBase() || pcoin->IsCoinStake()) && pcoin->GetBlocksToMaturity() > 0)
+				continue;
+
+			for (unsigned int i = 0; i < pcoin->vout.size(); i++)
+			{
+				if (pcoin->IsSpent(i) || !IsMine(pcoin->vout[i]))
 					continue;
-
-				if ((pcoin->IsCoinBase() || pcoin->IsCoinStake()) && pcoin->GetBlocksToMaturity() > 0)
-					continue;
-
+				
 				int nDepth = pcoin->GetDepthInMainChain();
 				if (nDepth < (pcoin->IsFromMe() ? nConfMine : nConfTheirs))
 					continue;
+				
+				if (pcoin->nTime > nSpendTime)
+					continue;
 
-				for (unsigned int i = 0; i < pcoin->vout.size(); i++)
-				{
-					if (pcoin->IsSpent(i) || !IsMine(pcoin->vout[i]))
-						continue;
+				if(nValueRet >= nTargetValue + Core::nTransactionFee)
+					break;
 
-					if (pcoin->nTime > nSpendTime)
-						continue;  // Nexus: timestamp must not exceed spend time
-
-					int64 n = pcoin->vout[i].nValue;
-
-					if (n <= 0)
-						continue;
-
-					pair<int64,pair<const CWalletTx*,unsigned int> > coin = make_pair(n,make_pair(pcoin,i));
-
-					if (n == nTargetValue)
-					{
-						setCoinsRet.insert(coin.second);
-						nValueRet += coin.first;
-						return true;
-					}
-					else if (n < nTargetValue + CENT)
-					{
-						vValue.push_back(coin);
-						nTotalLower += n;
-					}
-					else if (n < coinLowestLarger.first)
-					{
-						coinLowestLarger = coin;
-					}
-				}
+				setCoinsRet.insert(make_pair(pcoin, i));
+				nValueRet += pcoin->vout[i].nValue;
 			}
 		}
-
-		if (nTotalLower == nTargetValue || nTotalLower == nTargetValue + CENT)
+		
+		//// debug print
+		if (GetBoolArg("-printselectcoin"))
 		{
-			for (unsigned int i = 0; i < vValue.size(); ++i)
-			{
-				setCoinsRet.insert(vValue[i].second);
-				nValueRet += vValue[i].first;
-			}
-			return true;
+			printf("SelectCoins() selected: ");
+			BOOST_FOREACH(PAIRTYPE(const CWalletTx*, unsigned int) pcoin, setCoinsRet)
+				pcoin.first->print();
+			
+			printf("total %s\n", FormatMoney(nValueRet).c_str());
 		}
-
-		if (nTotalLower < nTargetValue + (coinLowestLarger.second.first ? CENT : 0))
-		{
-			if (coinLowestLarger.second.first == NULL)
-				return false;
-			setCoinsRet.insert(coinLowestLarger.second);
-			nValueRet += coinLowestLarger.first;
-			return true;
-		}
-
-		if (nTotalLower >= nTargetValue + CENT)
-			nTargetValue += CENT;
-
-		// Solve subset sum by stochastic approximation
-		sort(vValue.rbegin(), vValue.rend());
-		vector<char> vfIncluded;
-		vector<char> vfBest(vValue.size(), true);
-		int64 nBest = nTotalLower;
-
-		for (int nRep = 0; nRep < 1000 && nBest != nTargetValue; nRep++)
-		{
-			vfIncluded.assign(vValue.size(), false);
-			int64 nTotal = 0;
-			bool fReachedTarget = false;
-			for (int nPass = 0; nPass < 2 && !fReachedTarget; nPass++)
-			{
-				for (unsigned int i = 0; i < vValue.size(); i++)
-				{
-					if (nPass == 0 ? rand() % 2 : !vfIncluded[i])
-					{
-						nTotal += vValue[i].first;
-						vfIncluded[i] = true;
-						if (nTotal >= nTargetValue)
-						{
-							fReachedTarget = true;
-							if (nTotal < nBest)
-							{
-								nBest = nTotal;
-								vfBest = vfIncluded;
-							}
-							nTotal -= vValue[i].first;
-							vfIncluded[i] = false;
-						}
-					}
-				}
-			}
-		}
-
-		// If the next larger is still closer, return it
-		if (coinLowestLarger.second.first && coinLowestLarger.first - nTargetValue <= nBest - nTargetValue)
-		{
-			setCoinsRet.insert(coinLowestLarger.second);
-			nValueRet += coinLowestLarger.first;
-		}
-		else {
-			for (unsigned int i = 0; i < vValue.size(); i++)
-				if (vfBest[i])
-				{
-					setCoinsRet.insert(vValue[i].second);
-					nValueRet += vValue[i].first;
-				}
-
-			//// debug print
-			if (fDebug && GetBoolArg("-printselectcoin"))
-			{
-				printf("SelectCoins() best subset: ");
-				for (unsigned int i = 0; i < vValue.size(); i++)
-					if (vfBest[i])
-						printf("%s ", FormatMoney(vValue[i].first).c_str());
-				printf("total %s\n", FormatMoney(nBest).c_str());
-			}
-		}
+		
+		if(nValueRet < nTargetValue + Core::nTransactionFee)
+			return error("CWallet::SelectCoins() : Insufficient Balance Target: %" PRI64d " Actual %" PRI64d, nTargetValue + Core::nTransactionFee, nValueRet);
 
 		return true;
 	}
+	
 
 	bool CWallet::SelectCoins(int64 nTargetValue, unsigned int nSpendTime, set<pair<const CWalletTx*,unsigned int> >& setCoinsRet, int64& nValueRet) const
 	{
