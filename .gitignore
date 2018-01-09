@@ -7,9 +7,15 @@
 *.Release
 *.kate-swp
 *.db
+*.app
+*.dmg
 build/moc/
 build/ui/
 build/obj/
 dist/
 *.vscode
 *.qm
+Makefile
+Makefile.Debug
+Makefile.Release
+qrc_nexus.cpp
