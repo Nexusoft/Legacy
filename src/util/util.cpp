@@ -75,6 +75,7 @@ bool fServer = false;
 bool fCommandLine = false;
 string strMiscWarning;
 bool fTestNet = false;
+bool fLispNet = false;
 bool fNoListen = false;
 bool fLogTimestamps = false;
 
@@ -1117,6 +1118,8 @@ const boost::filesystem::path &GetDataDir(bool fNetSpecific)
     }
     if (fNetSpecific && GetBoolArg("-testnet", false))
         path /= "testnet25";
+    else if(fNetSpecific && GetBoolArg("-lispnet", false))
+        path /= "lispnet";
 
     fs::create_directory(path);
 

@@ -235,6 +235,7 @@ extern bool fServer;
 extern bool fCommandLine;
 extern std::string strMiscWarning;
 extern bool fTestNet;
+extern bool fLispNet;
 extern bool fNoListen;
 extern bool fLogTimestamps;
 
