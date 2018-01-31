@@ -2510,7 +2510,6 @@ namespace Net
 		set<Wallet::NexusAddress> setOfAddresses;
 		if (params.size() > 0)
 		{
-			// Array inputs = params[2].get_array();
 			for(int i = 0; i < params.size(); i++)
 			{
 				Wallet::NexusAddress address(params[i].get_str());
@@ -2522,15 +2521,6 @@ namespace Net
 				}
 			   setOfAddresses.insert(address);
 			}
-			// BOOST_FOREACH(Value& input, inputs)
-			// {
-			// 	Wallet::NexusAddress address(input.get_str());
-			// 	if (!address.IsValid())
-			// 		throw JSONRPCError(-5, string("Invalid Nexus address: ")+input.get_str());
-			// 	if (setOfAddresses.count(address))
-			// 		throw JSONRPCError(-8, string("Invalid parameter, duplicated address: ")+input.get_str());
-			//    setOfAddresses.insert(address);
-			// }
 		}
 
 		vector<Wallet::COutput> vecOutputs;
