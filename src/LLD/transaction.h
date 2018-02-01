@@ -12,7 +12,7 @@ namespace LLD
 {
 		/** ACID Transactions:
 	
-		Atonimicy - All or nothing. The full transaction muts complete. Transaction Recrod in Memory is held until commited to disk. If any part fails it needs
+		Atomicity - All or nothing. The full transaction muts complete. Transaction Recrod in Memory is held until commited to disk. If any part fails it needs
 		To Roll Back to all the original data.
 		I.   If any transactionf fails, roll back to original data
 		II.  This can happen if it fails due to a power failure or system or application crash
