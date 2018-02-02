@@ -3342,6 +3342,8 @@ namespace Net
 		if (strMethod == "listtransactions"       && n > 2) ConvertTo<boost::int64_t>(params[2]);
 		if (strMethod == "listNTransactions"      && n > 0) ConvertTo<boost::int64_t>(params[0]);
 		if (strMethod == "listaccounts"           && n > 0) ConvertTo<boost::int64_t>(params[0]);
+		if (strMethod == "listunspent"           && n > 0) ConvertTo<boost::int64_t>(params[0]);
+		if (strMethod == "listunspent"           && n > 1) ConvertTo<boost::int64_t>(params[1]);
 		if (strMethod == "walletpassphrase"       && n > 1) ConvertTo<boost::int64_t>(params[1]);
 		if (strMethod == "walletpassphrase"       && n > 2) ConvertTo<bool>(params[2]);
 		if (strMethod == "listsinceblock"         && n > 1) ConvertTo<boost::int64_t>(params[1]);
@@ -3352,6 +3354,15 @@ namespace Net
 			if (!read_string(s, v) || v.type() != obj_type)
 				throw runtime_error("type mismatch");
 			params[1] = v.get_obj();
+		}
+		if (strMethod == "listunspent"           && n > 2){
+			params[3] = params[3].get_array();
+			// ConvertTo<Array>(params[2]);
+			// Array param3;
+			// for(int i = 3; i <= n; i++){
+			// 	param3.push_back(param[n]?)
+			// }
+			// ConvertTo<boost::int64_t>(params[2]);
 		}
 		
 		if (strMethod == "importkeys"             && n > 0)
