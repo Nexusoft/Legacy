@@ -363,10 +363,11 @@ namespace Net
 			
 		unsigned int nTotalActive = 0;
 		Array trustkeys;	
-		Object obj;
 		Object ret;
 		for(std::map<uint576, Core::CTrustKey>::iterator it = Core::cTrustPool.mapTrustKeys.begin(); it != Core::cTrustPool.mapTrustKeys.end(); ++it)
 		{
+			Object obj;
+			
 			if(it->second.Expired(GetUnifiedTimestamp()))
 				continue;
 				
@@ -2507,18 +2508,19 @@ namespace Net
 				"Returns the total amount of unspent Nexus for given address\n"
 				"This is a more accurate command than Get Balance.\n");
 
-		set<Wallet::NexusAddress> setAddress;
+		set<Wallet::NexusAddress> setAddresses;
 		if (params.size() > 0)
 		{
-			Array inputs = params[2].get_array();
-			BOOST_FOREACH(Value& input, inputs)
+			for(int i = 0; i < params.size(); i++)
 			{
-				Wallet::NexusAddress address(input.get_str());
-				if (!address.IsValid())
-					throw JSONRPCError(-5, string("Invalid Nexus address: ")+input.get_str());
-				if (setAddress.count(address))
-					throw JSONRPCError(-8, string("Invalid parameter, duplicated address: ")+input.get_str());
-			   setAddress.insert(address);
+				Wallet::NexusAddress address(params[i].get_str());
+				if (!address.IsValid()) {
+					throw JSONRPCError(-5, string("Invalid Nexus address: ")+params[i].get_str());
+				}
+				if (setAddresses.count(address)){
+					throw JSONRPCError(-8, string("Invalid parameter, duplicated address: ")+params[i].get_str()); 
+				}
+			   setAddresses.insert(address);
 			}
 		}
 
@@ -2528,13 +2530,13 @@ namespace Net
 		int64 nCredit = 0;
 		BOOST_FOREACH(const Wallet::COutput& out, vecOutputs)
 		{
-			if(setAddress.size())
+			if(setAddresses.size())
 			{
 				Wallet::NexusAddress address;
 				if(!ExtractAddress(out.tx->vout[out.i].scriptPubKey, address))
 					continue;
 
-				if (!setAddress.count(address))
+				if (!setAddresses.count(address))
 					continue;
 			}
 			
@@ -3331,6 +3333,8 @@ namespace Net
 		if (strMethod == "listtransactions"       && n > 2) ConvertTo<boost::int64_t>(params[2]);
 		if (strMethod == "listNTransactions"      && n > 0) ConvertTo<boost::int64_t>(params[0]);
 		if (strMethod == "listaccounts"           && n > 0) ConvertTo<boost::int64_t>(params[0]);
+		if (strMethod == "listunspent"           && n > 0) ConvertTo<boost::int64_t>(params[0]);
+		if (strMethod == "listunspent"           && n > 1) ConvertTo<boost::int64_t>(params[1]);
 		if (strMethod == "walletpassphrase"       && n > 1) ConvertTo<boost::int64_t>(params[1]);
 		if (strMethod == "walletpassphrase"       && n > 2) ConvertTo<bool>(params[2]);
 		if (strMethod == "listsinceblock"         && n > 1) ConvertTo<boost::int64_t>(params[1]);
@@ -3341,6 +3345,14 @@ namespace Net
 			if (!read_string(s, v) || v.type() != obj_type)
 				throw runtime_error("type mismatch");
 			params[1] = v.get_obj();
+		}
+		if (strMethod == "listunspent"           && n > 2)		
+		{
+			string s = params[2].get_str();
+			Value v;
+			if (!read_string(s, v) || v.type() != array_type)
+				throw runtime_error("type mismatch "+s);
+			params[2] = v.get_array();
 		}
 		
 		if (strMethod == "importkeys"             && n > 0)
