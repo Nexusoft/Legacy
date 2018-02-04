@@ -2507,30 +2507,20 @@ namespace Net
 				"Returns the total amount of unspent Nexus for given address\n"
 				"This is a more accurate command than Get Balance.\n");
 
-		set<Wallet::NexusAddress> setOfAddresses;
+		set<Wallet::NexusAddress> setAddresses;
 		if (params.size() > 0)
 		{
-			// Array inputs = params[2].get_array();
 			for(int i = 0; i < params.size(); i++)
 			{
 				Wallet::NexusAddress address(params[i].get_str());
 				if (!address.IsValid()) {
 					throw JSONRPCError(-5, string("Invalid Nexus address: ")+params[i].get_str());
 				}
-				if (setOfAddresses.count(address)){
+				if (setAddresses.count(address)){
 					throw JSONRPCError(-8, string("Invalid parameter, duplicated address: ")+params[i].get_str()); 
 				}
-			   setOfAddresses.insert(address);
+			   setAddresses.insert(address);
 			}
-			// BOOST_FOREACH(Value& input, inputs)
-			// {
-			// 	Wallet::NexusAddress address(input.get_str());
-			// 	if (!address.IsValid())
-			// 		throw JSONRPCError(-5, string("Invalid Nexus address: ")+input.get_str());
-			// 	if (setOfAddresses.count(address))
-			// 		throw JSONRPCError(-8, string("Invalid parameter, duplicated address: ")+input.get_str());
-			//    setOfAddresses.insert(address);
-			// }
 		}
 
 		vector<Wallet::COutput> vecOutputs;
@@ -2539,13 +2529,13 @@ namespace Net
 		int64 nCredit = 0;
 		BOOST_FOREACH(const Wallet::COutput& out, vecOutputs)
 		{
-			if(setOfAddresses.size())
+			if(setAddresses.size())
 			{
 				Wallet::NexusAddress address;
 				if(!ExtractAddress(out.tx->vout[out.i].scriptPubKey, address))
 					continue;
 
-				if (!setOfAddresses.count(address))
+				if (!setAddresses.count(address))
 					continue;
 			}
 			
