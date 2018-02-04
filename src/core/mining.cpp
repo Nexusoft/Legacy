@@ -721,23 +721,9 @@ namespace Core
 			txNew.vin[0].scriptSig[5] = 13;
 			txNew.vin[0].scriptSig[6] = 21;
 			txNew.vin[0].scriptSig[7] = 34;
-			
-			/** Update the Coinstake Timestamp. **/
+				
+            /** Update the Coinstake Timestamp. **/
 			txNew.nTime = pindexPrev->GetBlockTime() + 1;
-			
-			/** Check the Trust Keys. **/
-			if(!cTrustPool.HasTrustKey(pindexPrev->GetBlockTime()))
-				txNew.vout[0].scriptPubKey << reservekey.GetReservedKey() << Wallet::OP_CHECKSIG;
-			else
-			{
-				uint576 cKey;
-				cKey.SetBytes(cTrustPool.vchTrustKey);
-				
-				txNew.vout[0].scriptPubKey << cTrustPool.vchTrustKey << Wallet::OP_CHECKSIG;
-				txNew.vin[0].prevout.n = 0;
-				txNew.vin[0].prevout.hash = cTrustPool.Find(cKey).GetHash();
-			}
-				
 		}
 		
 		/** Create the Coinbase Transaction if the Channel specifies. **/
@@ -884,7 +870,7 @@ namespace Core
 				else
 					mapPriority.insert(make_pair(-dPriority, &(*mi).second));
 
-				if(GetArg("-verbose", 0) >= 2)
+				if(GetArg("-verbose", 0) >= 3)
 				{
 					printf("priority %-20.1f %s\n%s", dPriority, tx.GetHash().ToString().substr(0,10).c_str(), tx.ToString().c_str());
 					if (porphan)

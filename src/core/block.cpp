@@ -393,6 +393,9 @@ namespace Core
                     Wallet::NexusAddress cAddress;
                     if(!Wallet::ExtractAddress(vtx[nTx].vout[nOut].scriptPubKey, cAddress))
                         continue;
+                    
+                    if(!mapAddressTransactions.count(cAddress.GetHash256()))
+                        mapAddressTransactions[cAddress.GetHash256()] = 0;
                                 
                     mapAddressTransactions[cAddress.GetHash256()] += (uint64) vtx[nTx].vout[nOut].nValue;
                             
@@ -405,6 +408,9 @@ namespace Core
                     BOOST_FOREACH(const CTxIn& txin, vtx[nTx].vin)
                     {
                         if(txin.prevout.IsNull())
+                            continue;
+                        
+                        if(txin.IsStakeSig())
                             continue;
                             
                         CTransaction tx;
@@ -420,7 +426,9 @@ namespace Core
                         if(!Wallet::ExtractAddress(tx.vout[txin.prevout.n].scriptPubKey, cAddress))
                             continue;
                                 
-                        if(tx.vout[txin.prevout.n].nValue > mapAddressTransactions[cAddress.GetHash256()])
+                        if(!mapAddressTransactions.count(cAddress.GetHash256()))
+                            mapAddressTransactions[cAddress.GetHash256()] = 0;
+                        else if(tx.vout[txin.prevout.n].nValue > mapAddressTransactions[cAddress.GetHash256()])
                             mapAddressTransactions[cAddress.GetHash256()] = 0;
                         else
                             mapAddressTransactions[cAddress.GetHash256()] -= (uint64) tx.vout[txin.prevout.n].nValue;
