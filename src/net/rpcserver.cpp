@@ -363,10 +363,11 @@ namespace Net
 			
 		unsigned int nTotalActive = 0;
 		Array trustkeys;	
-		Object obj;
 		Object ret;
 		for(std::map<uint576, Core::CTrustKey>::iterator it = Core::cTrustPool.mapTrustKeys.begin(); it != Core::cTrustPool.mapTrustKeys.end(); ++it)
 		{
+			Object obj;
+			
 			if(it->second.Expired(GetUnifiedTimestamp()))
 				continue;
 				
@@ -3355,14 +3356,13 @@ namespace Net
 				throw runtime_error("type mismatch");
 			params[1] = v.get_obj();
 		}
-		if (strMethod == "listunspent"           && n > 2){
-			params[3] = params[3].get_array();
-			// ConvertTo<Array>(params[2]);
-			// Array param3;
-			// for(int i = 3; i <= n; i++){
-			// 	param3.push_back(param[n]?)
-			// }
-			// ConvertTo<boost::int64_t>(params[2]);
+		if (strMethod == "listunspent"           && n > 2)		
+		{
+			string s = params[2].get_str();
+			Value v;
+			if (!read_string(s, v) || v.type() != array_type)
+				throw runtime_error("type mismatch "+s);
+			params[2] = v.get_array();
 		}
 		
 		if (strMethod == "importkeys"             && n > 0)
