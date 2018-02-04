@@ -808,10 +808,23 @@ namespace Core
 			else
 			{
 				/* Calculate the Average Coinstake Age. */
-				if(!baseBlock.vtx[0].GetCoinstakeAge(indexdb, nCoinAge))
+                CTransaction txNew = baseBlock.vtx[0];
+                if (!pwalletMain->AddCoinstakeInputs(txNew))
+                {
+                    if(GetArg("-verbose", 0) >= 2)
+                        error("Stake Minter : Genesis - Failed to Add Coinstake Inputs");
+                    
+                    Sleep(1000);
+                    
+                    continue;
+                }
+                
+				if(!txNew.GetCoinstakeAge(indexdb, nCoinAge))
 				{
 					if(GetArg("-verbose", 0) >= 2)
-						error("Stake Minter : Failed to Get Coinstake Age.");
+						error("Stake Minter : Genesis - Failed to Get Coinstake Age.");
+                    
+                    Sleep(1000);
 						
 					continue;
 				}

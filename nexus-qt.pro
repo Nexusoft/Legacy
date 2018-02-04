@@ -45,11 +45,10 @@ contains(DEBUG, 1) {
 contains(RELEASE, 1) {
     message("Building with Static Linking")
     # Mac: compile for Yosemite and Above (10.10, 32-bit)
-    macx:QMAKE_CXXFLAGS += -O3 -mmacosx-version-min=10.10 -arch x86_64
+    #macx:QMAKE_CXXFLAGS += -O3 -mmacosx-version-min=10.10 -arch x86_64
+    macx:QMAKE_CXXFLAGS += -O3 -mmacosx-version-min=10.10 -arch i386 
 
-    #TODO compile qt with +framework and +universal option (-arch i386)
-
-    #-sysroot /Developer/SDKs/MacOSX10.10.sdk
+#-isysroot /Developer/SDKs/MacOSX10.10.sdk
 
     #Static Configuration
     windows:CONFIG += STATIC
