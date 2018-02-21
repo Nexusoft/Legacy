@@ -594,19 +594,39 @@ namespace Net
 				"getmininginfo\n"
 				"Returns an object containing mining-related information.");
 
-		double nAverageDifficulty = 0.0;
-		unsigned int nAverageTime = 0;
-		uint64 nTimeConstant = 276758250000;		
-		for( ; nTotal < 1440 && pindex->pprev; nTotal ++) {
+		double nPrimeAverageDifficulty = 0.0;
+		unsigned int nPrimeAverageTime = 0;
+		unsigned int nPrimeTimeConstant = 2480;
+		int nTotal = 0;
+		const Core::CBlockIndex* pindex = Core::GetLastChannelIndex(Core::pindexBest, 1);
+		for(; (nTotal < 1440 && pindex->pprev); nTotal ++) {
 			
-			nAverageTime += (pindex->GetBlockTime() - Core::GetLastChannelIndex(pindex->pprev, 2)->GetBlockTime());
-			nAverageDifficulty += (Core::GetDifficulty(pindex->nBits, 2));
+			nPrimeAverageTime += (pindex->GetBlockTime() - Core::GetLastChannelIndex(pindex->pprev, 1)->GetBlockTime());
+			nPrimeAverageDifficulty += (Core::GetDifficulty(pindex->nBits, 1));
 			
-			pindex = Core::GetLastChannelIndex(pindex->pprev, 2);
+			pindex = Core::GetLastChannelIndex(pindex->pprev, 1);
 		}
+		nPrimeAverageDifficulty /= nTotal;
+		nPrimeAverageTime /= nTotal;
+		uint64 nPrimePS = (nPrimeTimeConstant / nPrimeAverageTime) * std::pow(50.0, (nPrimeAverageDifficulty - 3.0));
 
-		uint64 nPrimePS = (nTimeConstant / nAverageTime) * std::pow(50.0, (nAverageDifficulty - 3.0));
-		uint64 nHashRate = (nTimeConstant / nAverageTime) * nAverageDifficulty;
+		// Hash
+		int nHTotal = 0;
+		unsigned int nHashAverageTime = 0;		
+		double nHashAverageDifficulty = 0.0;
+		uint64 nTimeConstant = 276758250000;
+		const Core::CBlockIndex* hindex = Core::GetLastChannelIndex(Core::pindexBest, 2);
+		for(;  (nHTotal < 1440 && hindex->pprev); nHTotal ++) {
+			
+			nHashAverageTime += (hindex->GetBlockTime() - Core::GetLastChannelIndex(hindex->pprev, 2)->GetBlockTime());
+			nHashAverageDifficulty += (Core::GetDifficulty(hindex->nBits, 2));
+			
+			hindex = Core::GetLastChannelIndex(hindex->pprev, 2);
+		}
+		nHashAverageDifficulty /= nHTotal;
+		nHashAverageTime /= nHTotal;
+
+		uint64 nHashRate = (nTimeConstant / nHashAverageTime) * nHashAverageDifficulty;
 
 		Object obj;
 		obj.push_back(Pair("blocks",        (int)Core::nBestHeight));
@@ -617,17 +637,15 @@ namespace Net
 		
 		const Core::CBlockIndex* pindexCPU = Core::GetLastChannelIndex(Core::pindexBest, 1);
 		const Core::CBlockIndex* pindexGPU = Core::GetLastChannelIndex(Core::pindexBest, 2);
-		obj.push_back(Pair("primeDifficulty",        Core::GetDifficulty(Core::GetNextTargetRequired(Core::pindexBest, 1, false), 1)));
-		obj.push_back(Pair("hashDifficulty",         Core::GetDifficulty(Core::GetNextTargetRequired(Core::pindexBest, 2, false), 2)));
-		obj.push_back(Pair("primeReserve",       ValueFromAmount(pindexCPU->nReleasedReserve[0])));
-		obj.push_back(Pair("hashReserve",        ValueFromAmount(pindexGPU->nReleasedReserve[0])));
-		obj.push_back(Pair("primeValue",       ValueFromAmount(Core::GetCoinbaseReward(Core::pindexBest, 1, 0))));
-		obj.push_back(Pair("hashValue",        ValueFromAmount(Core::GetCoinbaseReward(Core::pindexBest, 2, 0))));
-		obj.push_back(Pair("pooledtx",      (uint64_t)Core::mempool.size()));	
-		obj.push_back(Pair("primesPerSecond", (boost::uint64_t)nPrimePS));
-		obj.push_back(Pair("hashPerSecond", (boost::uint64_t)nPrimePS));
-
-		
+		obj.push_back(Pair("primeDifficulty",       Core::GetDifficulty(Core::GetNextTargetRequired(Core::pindexBest, 1, false), 1)));
+		obj.push_back(Pair("hashDifficulty",        Core::GetDifficulty(Core::GetNextTargetRequired(Core::pindexBest, 2, false), 2)));
+		obj.push_back(Pair("primeReserve",       	ValueFromAmount(pindexCPU->nReleasedReserve[0])));
+		obj.push_back(Pair("hashReserve",        	ValueFromAmount(pindexGPU->nReleasedReserve[0])));
+		obj.push_back(Pair("primeValue",       		ValueFromAmount(Core::GetCoinbaseReward(Core::pindexBest, 1, 0))));
+		obj.push_back(Pair("hashValue",        		ValueFromAmount(Core::GetCoinbaseReward(Core::pindexBest, 2, 0))));
+		obj.push_back(Pair("pooledtx",      		(boost::uint64_t)Core::mempool.size()));	
+		obj.push_back(Pair("primesPerSecond", 		(boost::uint64_t)nPrimePS));
+		obj.push_back(Pair("hashPerSecond", 		(boost::uint64_t)nHashRate));
 		return obj;
 	}
 
@@ -2745,9 +2763,7 @@ namespace Net
 		{ "checkwallet",            &checkwallet,            false },
 		{ "repairwallet",           &repairwallet,           false },
 		{ "makekeypair",            &makekeypair,            false },
-		{ "getMapCommandsKeyVector",&getMapCommandsKeyVector,false },
-		{ "getsupplyrate",			&getsupplyrate,			 false }
-
+		{ "getMapCommandsKeyVector",&getMapCommandsKeyVector,false }
 	};
 
 	CRPCTable::CRPCTable()
