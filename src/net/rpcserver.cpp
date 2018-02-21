@@ -438,6 +438,7 @@ namespace Net
 			vstats.push_back(stats);
 		}
 	}
+	
 
 	Value getpeerinfo(const Array& params, bool fHelp)
 	{
@@ -493,11 +494,12 @@ namespace Net
 		return obj;
 	}
 	
-	Value getsupplyrate(const Array& params, bool fHelp)
+	
+	Value getsupplyrates(const Array& params, bool fHelp)
 	{
 		if (fHelp || params.size() != 0)
 			throw runtime_error(
-				"getsupplyrate\n"
+				"getsupplyrates\n"
 				"Returns an object containing current Nexus production rates in set time intervals.\n"
 				"Time Frequency is in base 13 month, 28 day totalling 364 days.\n"
 				"This is to prevent error from Gregorian Figures.");
@@ -512,7 +514,7 @@ namespace Net
 		
 		obj.push_back(Pair("moneysupply",   ValueFromAmount(nSupply)));
 		obj.push_back(Pair("targetsupply",   ValueFromAmount(nTarget)));
-		obj.push_back(Pair("inflationrate",   (nSupply * 100.0) / nTarget));
+		obj.push_back(Pair("inflationrate",   ((nSupply * 100.0) / nTarget) - 100.0));
 		
 		obj.push_back(Pair("minuteSupply",  ValueFromAmount(Core::SubsidyInterval(nMinutes, 1)))); //1
 		obj.push_back(Pair("hourSupply",    ValueFromAmount(Core::SubsidyInterval(nMinutes, 60)))); //60
@@ -524,6 +526,7 @@ namespace Net
 		return obj;
 	}
 	
+	
 	Value getmoneysupply(const Array& params, bool fHelp)
     {
         if(fHelp || params.size() != 0)
@@ -533,15 +536,16 @@ namespace Net
                 "Default timestamp is the current Unified Timestamp. The timestamp is recorded as a UNIX timestamp");
             
         Object obj;
-        unsigned int nMinutes = (GetUnifiedTimestamp() - Core::NEXUS_NETWORK_TIMELOCK) / 60;
+        unsigned int nMinutes = Core::GetChainAge(Core::pindexBest->GetBlockTime());
         
-        obj.push_back(Pair("chainage", ValueFromAmount(nMinutes)));
+        obj.push_back(Pair("chainAge",       (int)nMinutes));
         obj.push_back(Pair("miners", ValueFromAmount(Core::CompoundSubsidy(nMinutes, 0))));
         obj.push_back(Pair("ambassadors", ValueFromAmount(Core::CompoundSubsidy(nMinutes, 1))));
         obj.push_back(Pair("developers", ValueFromAmount(Core::CompoundSubsidy(nMinutes, 2))));
         
         return obj;
     }
+    
 
 	Value getinfo(const Array& params, bool fHelp)
 	{
@@ -2667,7 +2671,7 @@ namespace Net
 		{ "getconnectioncount",     &getconnectioncount,     true  },
 		{ "getpeerinfo",            &getpeerinfo,            true  },
 		{ "getdifficulty",          &getdifficulty,          true  },
-		{ "getsupplyrates",         &getsupplyrate,          true  },
+		{ "getsupplyrates",         &getsupplyrates,          true  },
 		{ "getinfo",                &getinfo,                true  },
 		{ "getmininginfo",          &getmininginfo,          true  },
 		{ "getnewaddress",          &getnewaddress,          true  },
