@@ -2727,7 +2727,8 @@ namespace Net
 		{ "checkwallet",            &checkwallet,            false },
 		{ "repairwallet",           &repairwallet,           false },
 		{ "makekeypair",            &makekeypair,            false },
-		{ "getMapCommandsKeyVector",&getMapCommandsKeyVector,false }
+		{ "getMapCommandsKeyVector",&getMapCommandsKeyVector,false },
+		{ "getsupplyrate",			&getsupplyrate,			 false }
 
 	};
 
