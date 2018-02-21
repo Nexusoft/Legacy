@@ -459,6 +459,7 @@ bool AppInit2(int argc, char* argv[])
 
     Core::RegisterWallet(pwalletMain);
     Core::CBlockIndex *pindexRescan = Core::pindexBest;
+	
     if (GetBoolArg("-rescan"))
         pindexRescan = Core::pindexGenesisBlock;
 	 

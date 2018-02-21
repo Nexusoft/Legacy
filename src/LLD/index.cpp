@@ -176,7 +176,7 @@ namespace LLD
                 {
                     Core::CBlock block;
                     if(!block.ReadFromDisk(pindexNew))
-                        break;
+                        continue;
                 
                     /** Grab the transactions for the block and set the address balances. **/
                     for(int nTx = 0; nTx < block.vtx.size(); nTx++)

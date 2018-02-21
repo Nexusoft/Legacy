@@ -363,10 +363,11 @@ namespace Net
 			
 		unsigned int nTotalActive = 0;
 		Array trustkeys;	
-		Object obj;
 		Object ret;
 		for(std::map<uint576, Core::CTrustKey>::iterator it = Core::cTrustPool.mapTrustKeys.begin(); it != Core::cTrustPool.mapTrustKeys.end(); ++it)
 		{
+			Object obj;
+			
 			if(it->second.Expired(GetUnifiedTimestamp()))
 				continue;
 				
@@ -437,6 +438,7 @@ namespace Net
 			vstats.push_back(stats);
 		}
 	}
+	
 
 	Value getpeerinfo(const Array& params, bool fHelp)
 	{
@@ -492,11 +494,12 @@ namespace Net
 		return obj;
 	}
 	
-	Value getsupplyrate(const Array& params, bool fHelp)
+	
+	Value getsupplyrates(const Array& params, bool fHelp)
 	{
 		if (fHelp || params.size() != 0)
 			throw runtime_error(
-				"getsupplyrate\n"
+				"getsupplyrates\n"
 				"Returns an object containing current Nexus production rates in set time intervals.\n"
 				"Time Frequency is in base 13 month, 28 day totalling 364 days.\n"
 				"This is to prevent error from Gregorian Figures.");
@@ -511,7 +514,7 @@ namespace Net
 		
 		obj.push_back(Pair("moneysupply",   ValueFromAmount(nSupply)));
 		obj.push_back(Pair("targetsupply",   ValueFromAmount(nTarget)));
-		obj.push_back(Pair("inflationrate",   (nSupply * 100.0) / nTarget));
+		obj.push_back(Pair("inflationrate",   ((nSupply * 100.0) / nTarget) - 100.0));
 		
 		obj.push_back(Pair("minuteSupply",  ValueFromAmount(Core::SubsidyInterval(nMinutes, 1)))); //1
 		obj.push_back(Pair("hourSupply",    ValueFromAmount(Core::SubsidyInterval(nMinutes, 60)))); //60
@@ -523,6 +526,7 @@ namespace Net
 		return obj;
 	}
 	
+	
 	Value getmoneysupply(const Array& params, bool fHelp)
     {
         if(fHelp || params.size() != 0)
@@ -532,15 +536,16 @@ namespace Net
                 "Default timestamp is the current Unified Timestamp. The timestamp is recorded as a UNIX timestamp");
             
         Object obj;
-        unsigned int nMinutes = (GetUnifiedTimestamp() - Core::NEXUS_NETWORK_TIMELOCK) / 60;
+        unsigned int nMinutes = Core::GetChainAge(Core::pindexBest->GetBlockTime());
         
-        obj.push_back(Pair("chainage", ValueFromAmount(nMinutes)));
+        obj.push_back(Pair("chainAge",       (int)nMinutes));
         obj.push_back(Pair("miners", ValueFromAmount(Core::CompoundSubsidy(nMinutes, 0))));
         obj.push_back(Pair("ambassadors", ValueFromAmount(Core::CompoundSubsidy(nMinutes, 1))));
         obj.push_back(Pair("developers", ValueFromAmount(Core::CompoundSubsidy(nMinutes, 2))));
         
         return obj;
     }
+    
 
 	Value getinfo(const Array& params, bool fHelp)
 	{
@@ -2525,18 +2530,19 @@ namespace Net
 				"Returns the total amount of unspent Nexus for given address\n"
 				"This is a more accurate command than Get Balance.\n");
 
-		set<Wallet::NexusAddress> setAddress;
+		set<Wallet::NexusAddress> setAddresses;
 		if (params.size() > 0)
 		{
-			Array inputs = params[2].get_array();
-			BOOST_FOREACH(Value& input, inputs)
+			for(int i = 0; i < params.size(); i++)
 			{
-				Wallet::NexusAddress address(input.get_str());
-				if (!address.IsValid())
-					throw JSONRPCError(-5, string("Invalid Nexus address: ")+input.get_str());
-				if (setAddress.count(address))
-					throw JSONRPCError(-8, string("Invalid parameter, duplicated address: ")+input.get_str());
-			   setAddress.insert(address);
+				Wallet::NexusAddress address(params[i].get_str());
+				if (!address.IsValid()) {
+					throw JSONRPCError(-5, string("Invalid Nexus address: ")+params[i].get_str());
+				}
+				if (setAddresses.count(address)){
+					throw JSONRPCError(-8, string("Invalid parameter, duplicated address: ")+params[i].get_str()); 
+				}
+			   setAddresses.insert(address);
 			}
 		}
 
@@ -2546,13 +2552,13 @@ namespace Net
 		int64 nCredit = 0;
 		BOOST_FOREACH(const Wallet::COutput& out, vecOutputs)
 		{
-			if(setAddress.size())
+			if(setAddresses.size())
 			{
 				Wallet::NexusAddress address;
 				if(!ExtractAddress(out.tx->vout[out.i].scriptPubKey, address))
 					continue;
 
-				if (!setAddress.count(address))
+				if (!setAddresses.count(address))
 					continue;
 			}
 			
@@ -2683,7 +2689,7 @@ namespace Net
 		{ "getconnectioncount",     &getconnectioncount,     true  },
 		{ "getpeerinfo",            &getpeerinfo,            true  },
 		{ "getdifficulty",          &getdifficulty,          true  },
-		{ "getsupplyrates",         &getsupplyrate,          true  },
+		{ "getsupplyrates",         &getsupplyrates,          true  },
 		{ "getinfo",                &getinfo,                true  },
 		{ "getmininginfo",          &getmininginfo,          true  },
 		{ "getnewaddress",          &getnewaddress,          true  },
@@ -2739,7 +2745,8 @@ namespace Net
 		{ "checkwallet",            &checkwallet,            false },
 		{ "repairwallet",           &repairwallet,           false },
 		{ "makekeypair",            &makekeypair,            false },
-		{ "getMapCommandsKeyVector",&getMapCommandsKeyVector,false }
+		{ "getMapCommandsKeyVector",&getMapCommandsKeyVector,false },
+		{ "getsupplyrate",			&getsupplyrate,			 false }
 
 	};
 
@@ -3349,6 +3356,8 @@ namespace Net
 		if (strMethod == "listtransactions"       && n > 2) ConvertTo<boost::int64_t>(params[2]);
 		if (strMethod == "listNTransactions"      && n > 0) ConvertTo<boost::int64_t>(params[0]);
 		if (strMethod == "listaccounts"           && n > 0) ConvertTo<boost::int64_t>(params[0]);
+		if (strMethod == "listunspent"           && n > 0) ConvertTo<boost::int64_t>(params[0]);
+		if (strMethod == "listunspent"           && n > 1) ConvertTo<boost::int64_t>(params[1]);
 		if (strMethod == "walletpassphrase"       && n > 1) ConvertTo<boost::int64_t>(params[1]);
 		if (strMethod == "walletpassphrase"       && n > 2) ConvertTo<bool>(params[2]);
 		if (strMethod == "listsinceblock"         && n > 1) ConvertTo<boost::int64_t>(params[1]);
@@ -3359,6 +3368,14 @@ namespace Net
 			if (!read_string(s, v) || v.type() != obj_type)
 				throw runtime_error("type mismatch");
 			params[1] = v.get_obj();
+		}
+		if (strMethod == "listunspent"           && n > 2)		
+		{
+			string s = params[2].get_str();
+			Value v;
+			if (!read_string(s, v) || v.type() != array_type)
+				throw runtime_error("type mismatch "+s);
+			params[2] = v.get_array();
 		}
 		
 		if (strMethod == "importkeys"             && n > 0)

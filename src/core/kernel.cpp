@@ -749,9 +749,6 @@ namespace Core
 
 		// Each thread has its own key and counter
 		Wallet::CReserveKey reservekey(pwalletMain);
-		
-		/* Stake Intensity. */
-		unsigned int nIntensity = GetArg("-stakeintensity", 8);
 
 		while(!fShutdown)
 		{
@@ -777,54 +774,24 @@ namespace Core
 			if(baseBlock.IsNull())
                 continue;
 			
-			/* Make sure coinstake is created. */
-			int i = 0;
-			
-			/* Copy the block pointers. */
-			CBlock block[nIntensity];
-			for(i = 0; i < nIntensity; i++)
+			/* Check the Trust Keys. */
+            uint576 cKey;
+			if(!cTrustPool.HasTrustKey(pindexBest->GetBlockTime()))
+            {
+                cKey.SetBytes(reservekey.GetReservedKey());
+				baseBlock.vtx[0].vout[0].scriptPubKey << reservekey.GetReservedKey() << Wallet::OP_CHECKSIG;
+            }
+			else
 			{
-				block[i] = baseBlock;
-				if (!pwalletMain->AddCoinstakeInputs(block[i].vtx[0]))
-					break;
+				cKey.SetBytes(cTrustPool.vchTrustKey);
 				
-				AddTransactions(block[i].vtx, pindexBest);
-				
-				block[i].hashMerkleRoot   = block[i].BuildMerkleTree();
+				baseBlock.vtx[0].vout[0].scriptPubKey << cTrustPool.vchTrustKey << Wallet::OP_CHECKSIG;
+				baseBlock.vtx[0].vin[0].prevout.n = 0;
+				baseBlock.vtx[0].vin[0].prevout.hash = cTrustPool.Find(cKey).GetHash();
 			}
 			
-			/* Retry if coinstake wasn't created properly. */
-			if(i != nIntensity)
-				continue;
 			
-			if(GetArg("-verbose", 0) >= 2)
-				printf("Stake Minter : Created New Block %s\n", block[0].GetHash().ToString().substr(0, 20).c_str());
-			
-			/* Extract the public key from the block. */
-			vector< std::vector<unsigned char> > vKeys;
-			Wallet::TransactionType keyType;
-			if (!Wallet::Solver(block[0].vtx[0].vout[0].scriptPubKey, keyType, vKeys))
-			{
-				if(GetArg("-verbose", 0) >= 2)
-					error("Stake Minter : Failed To Solve Trust Key Script.");
-					
-				continue;
-			}
-				
-			/* Ensure the Key is Public Key. No Pay Hash or Script Hash for Trust Keys. */
-			if (keyType != Wallet::TX_PUBKEY)
-			{
-				if(GetArg("-verbose", 0) >= 2)
-					error("Stake Minter : Trust Key must be of Public Key Type Created from Keypool.");
-					
-				continue;
-			}
-				
-			/* Set the Public Key Integer Key from Bytes. */
-			uint576 cKey;
-			cKey.SetBytes(vKeys[0]);
-				
-			/* Determine Trust Age if the Trust Key Exists. */
+            /* Determine Trust Age if the Trust Key Exists. */
 			uint64 nCoinAge = 0, nTrustAge = 0, nBlockAge = 0;
 			double nTrustWeight = 0.0, nBlockWeight = 0.0;
 			if(cTrustPool.Exists(cKey))
@@ -841,10 +808,23 @@ namespace Core
 			else
 			{
 				/* Calculate the Average Coinstake Age. */
-				if(!block[0].vtx[0].GetCoinstakeAge(indexdb, nCoinAge))
+                CTransaction txNew = baseBlock.vtx[0];
+                if (!pwalletMain->AddCoinstakeInputs(txNew))
+                {
+                    if(GetArg("-verbose", 0) >= 2)
+                        error("Stake Minter : Genesis - Failed to Add Coinstake Inputs");
+                    
+                    Sleep(1000);
+                    
+                    continue;
+                }
+                
+				if(!txNew.GetCoinstakeAge(indexdb, nCoinAge))
 				{
 					if(GetArg("-verbose", 0) >= 2)
-						error("Stake Minter : Failed to Get Coinstake Age.");
+						error("Stake Minter : Genesis - Failed to Get Coinstake Age.");
+                    
+                    Sleep(1000);
 						
 					continue;
 				}
@@ -853,6 +833,34 @@ namespace Core
 				/** Trust Weight For Genesis Transaction Reaches Maximum at 90 day Limit. **/
 				nTrustWeight = min(17.5, (((16.5 * log(((2.0 * nCoinAge) / (60 * 60 * 24 * 28 * 3)) + 1.0)) / log(3))) + 1.0);
 			}
+			
+			/* Get the Total Weight. */
+            unsigned int nTotalWeight = nTrustWeight + nBlockWeight;
+			
+			
+			/* Make sure coinstake is created. */
+			int i = 0;
+			
+			/* Copy the block pointers. */
+			CBlock block[nTotalWeight];
+			for(i = 0; i < nTotalWeight; i++)
+			{
+				block[i] = baseBlock;
+				if (!pwalletMain->AddCoinstakeInputs(block[i].vtx[0]))
+					break;
+				
+				AddTransactions(block[i].vtx, pindexBest);
+				
+				block[i].hashMerkleRoot   = block[i].BuildMerkleTree();
+			}
+			
+			/* Retry if coinstake wasn't created properly. */
+			if(i != nTotalWeight)
+				continue;
+			
+			if(GetArg("-verbose", 0) >= 2)
+				printf("Stake Minter : Created New Block %s\n", block[0].GetHash().ToString().substr(0, 20).c_str());
+				
 				
 			/* Set the Reporting Variables for the Qt. */
 			dTrustWeight = nTrustWeight;
@@ -860,7 +868,7 @@ namespace Core
 			
 			
 			if(GetArg("-verbose", 0) >= 0)			
-				printf("Stake Minter : Staking at Trust Weight %f | Block Weight %f | Coin Age %"PRIu64" | Trust Age %"PRIu64"| Block Age %"PRIu64"\n", nTrustWeight, nBlockWeight, nCoinAge, nTrustAge, nBlockAge);
+				printf("Stake Minter : Staking at Total Weight %u | Trust Weight %f | Block Weight %f | Coin Age %"PRIu64" | Trust Age %"PRIu64"| Block Age %"PRIu64"\n", nTotalWeight, nTrustWeight, nBlockWeight, nCoinAge, nTrustAge, nBlockAge);
 			
 			bool fFound = false;
 			while(!fFound)
@@ -875,7 +883,7 @@ namespace Core
 					break;
 				}
 				
-				for(int i = 0; i < nIntensity; i++)
+				for(int i = 0; i < nTotalWeight; i++)
 				{
 					
 					/* Update the block time for difficulty accuracy. */

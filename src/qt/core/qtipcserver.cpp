@@ -27,25 +27,7 @@ void ipcShutdown()
 
 void ipcThread(void* parg)
 {
-    message_queue* mq = (message_queue*)parg;
-    char strBuf[257];
-    size_t nSize;
-    unsigned int nPriority;
-    loop
-    {
-        ptime d = boost::posix_time::microsec_clock::universal_time() + millisec(100);
-        if(mq->timed_receive(&strBuf, sizeof(strBuf), nSize, nPriority, d))
-        {
-            ThreadSafeHandleURI(std::string(strBuf, nSize));
-            Sleep(1000);
-        }
-        if (fShutdown)
-        {
-            ipcShutdown();
-            break;
-        }
-    }
-    ipcShutdown();
+
 }
 
 void ipcInit()
@@ -61,34 +43,4 @@ void ipcInit()
     return;
 #endif
 
-    message_queue* mq;
-    char strBuf[257];
-    size_t nSize;
-    unsigned int nPriority;
-    try {
-        mq = new message_queue(open_or_create, NEXUS_URI_QUEUE_NAME, 2, 256);
-
-        // Make sure we don't lose any Nexus: URIs
-        for (int i = 0; i < 2; i++)
-        {
-            ptime d = boost::posix_time::microsec_clock::universal_time() + millisec(1);
-            if(mq->timed_receive(&strBuf, sizeof(strBuf), nSize, nPriority, d))
-            {
-                ThreadSafeHandleURI(std::string(strBuf, nSize));
-            }
-            else
-                break;
-        }
-
-        // Make sure only one Nexus instance is listening
-        message_queue::remove(NEXUS_URI_QUEUE_NAME);
-        mq = new message_queue(open_or_create, NEXUS_URI_QUEUE_NAME, 2, 256);
-    }
-    catch (interprocess_exception &ex) {
-        return;
-    }
-    if (!CreateThread(ipcThread, mq))
-    {
-        delete mq;
-    }
 }

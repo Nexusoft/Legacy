@@ -292,34 +292,7 @@ void ThreadUnifiedSamples(void* parg)
             Sleep(30000);
             
             continue;
-			
-			
-			/* Sleep for 1 Minutes Between Sample.
-			 * 
-			 * Check this for Time Drift.
-			 * This is useful if the clock is changed by the operating system
-			 * 
-			 */
-			for(int sec = 0; sec < 6; sec ++)
-			{
-				/** Regulate the Clock while Waiting, and Break if the Clock Changes. **/
-				int64 nTimestamp = GetLocalTimestamp();
-				Sleep(10000);
-							
-				int64 nElapsed = GetLocalTimestamp() - nTimestamp;
-				if(nElapsed != 10)
-				{
-                    MAP_TIME_DATA.clear();
-					UNIFIED_AVERAGE_OFFSET -= (nElapsed + 1);
-					
-					fTimeUnified = false;
-								
-					printf("***** LLP Clock Regulator: Time Changed by %"PRId64" Seconds. New Offset %i\n", nElapsed, UNIFIED_AVERAGE_OFFSET);
-					
-					break;
-				}
-			}
-			
+            
 		}
 		catch(std::exception& e){ printf("UTM ERROR: %s\n", e.what()); }
 	}

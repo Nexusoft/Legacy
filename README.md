@@ -1,4 +1,4 @@
-Nexus Core - 0.2.3.4 (Stake)
+Nexus Core - 0.2.3.5 (Stake)
 =====================================
 
 nex·usˈneksəs' : a connection or series of connections linking two or more things.

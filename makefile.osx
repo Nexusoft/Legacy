@@ -27,6 +27,8 @@ LIBPATHS= \
  -L"$(DEPSDIR)/lib" \
  -L"$(DEPSDIR)/lib/db48"
 
+USE_LLD=1
+
 USE_UPNP:=1
 
 LIBS= -dead_strip

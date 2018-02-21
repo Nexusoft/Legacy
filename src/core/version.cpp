@@ -14,9 +14,9 @@ const std::string CLIENT_NAME("Nexus");
 
 /* The database type used (Berklee DB or Lower Level Database) */
 #ifdef USE_LLD
-const std::string CLIENT_BUILD("0.2.3.4 [LLD]");
+const std::string CLIENT_BUILD("0.2.3.5 [LLD]");
 #else
-const std::string CLIENT_BUILD("0.2.3.4 [BDB]");
+const std::string CLIENT_BUILD("0.2.3.5 [BDB]");
 #endif
 
 const std::string CLIENT_DATE(__DATE__ " " __TIME__);
