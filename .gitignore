@@ -13,3 +13,4 @@ build/obj/
 dist/
 *.vscode
 *.qm
+nexus

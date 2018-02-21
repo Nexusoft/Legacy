@@ -589,6 +589,20 @@ namespace Net
 				"getmininginfo\n"
 				"Returns an object containing mining-related information.");
 
+		double nAverageDifficulty = 0.0;
+		unsigned int nAverageTime = 0;
+		uint64 nTimeConstant = 276758250000;		
+		for( ; nTotal < 1440 && pindex->pprev; nTotal ++) {
+			
+			nAverageTime += (pindex->GetBlockTime() - Core::GetLastChannelIndex(pindex->pprev, 2)->GetBlockTime());
+			nAverageDifficulty += (Core::GetDifficulty(pindex->nBits, 2));
+			
+			pindex = Core::GetLastChannelIndex(pindex->pprev, 2);
+		}
+
+		uint64 nPrimePS = (nTimeConstant / nAverageTime) * std::pow(50.0, (nAverageDifficulty - 3.0));
+		uint64 nHashRate = (nTimeConstant / nAverageTime) * nAverageDifficulty;
+
 		Object obj;
 		obj.push_back(Pair("blocks",        (int)Core::nBestHeight));
 		obj.push_back(Pair("timestamp", (int)GetUnifiedTimestamp()));
@@ -605,6 +619,10 @@ namespace Net
 		obj.push_back(Pair("primeValue",       ValueFromAmount(Core::GetCoinbaseReward(Core::pindexBest, 1, 0))));
 		obj.push_back(Pair("hashValue",        ValueFromAmount(Core::GetCoinbaseReward(Core::pindexBest, 2, 0))));
 		obj.push_back(Pair("pooledtx",      (uint64_t)Core::mempool.size()));	
+		obj.push_back(Pair("primesPerSecond", (boost::uint64_t)nPrimePS));
+		obj.push_back(Pair("hashPerSecond", (boost::uint64_t)nPrimePS));
+
+		
 		return obj;
 	}
 
