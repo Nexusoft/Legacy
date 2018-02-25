@@ -60,12 +60,12 @@ Ce produit inclut des logiciels développés par OpenSSL Project pour utilisatio
     <message>
         <location filename="../forms/addressbookpage.ui" line="71"/>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation>Copier l&apos;adresse surlignée dans votre presse-papiers</translation>
+        <translation>Copier l&apos;adresse surlignée dans votre presse-papier</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="74"/>
         <source>&amp;Copy to Clipboard</source>
-        <translation>&amp;Copier dans le presse-papiers</translation>
+        <translation>&amp;Copier dans le presse-papier</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="85"/>
@@ -811,7 +811,7 @@ Adresse : %4
     <message>
         <location filename="../forms/messagepage.ui" line="71"/>
         <source>Paste address from clipboard</source>
-        <translation>Coller une adresse depuis le presse-papiers</translation>
+        <translation>Coller une adresse depuis le presse-papier</translation>
     </message>
     <message>
         <location filename="../forms/messagepage.ui" line="81"/>
@@ -841,12 +841,12 @@ Adresse : %4
     <message>
         <location filename="../forms/messagepage.ui" line="131"/>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation>Copier l&apos;adresse surlignée dans votre presse-papiers</translation>
+        <translation>Copier l&apos;adresse surlignée dans votre presse-papier</translation>
     </message>
     <message>
         <location filename="../forms/messagepage.ui" line="134"/>
         <source>&amp;Copy to Clipboard</source>
-        <translation>&amp;Copier dans le presse-papiers</translation>
+        <translation>&amp;Copier dans le presse-papier</translation>
     </message>
     <message>
         <location filename="../messagepage.cpp" line="74"/>
@@ -1169,7 +1169,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="120"/>
         <source>Paste address from clipboard</source>
-        <translation>Coller une adresse depuis le presse-papiers</translation>
+        <translation>Coller une adresse depuis le presse-papier</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="130"/>
@@ -1968,7 +1968,7 @@ Options SSL : (cf. le wiki Nexus pour les réglages SSL)</translation>
     <message>
         <location filename="../core/strings.cpp" line="81"/>
         <source>Warning: Please check that your computer&apos;s date and time are correct.  If your clock is wrong Nexus will not work properly.</source>
-        <translation>Attention : veuillez vérifier que l&apos;heure et la date de votre ordinateur sont corrects.  Si votre horloge n&apos;est pas à l&apos;heure, Nexus ne fonctionnera pas correctement.</translation>
+        <translation>Attention : veuillez vérifier que l&apos;heure et la date de votre ordinateur sont corrects.  Si votre horloge est déréglée, Nexus ne fonctionnera pas correctement.</translation>
     </message>
     <message>
         <location filename="../core/strings.cpp" line="84"/>
