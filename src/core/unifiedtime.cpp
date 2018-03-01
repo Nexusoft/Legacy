@@ -181,7 +181,7 @@ void ThreadUnifiedSamples(void* parg)
 	
 	/* The Entry Client Loop for Core LLP. */
 	string ADDRESS = "";
-	LLP::CoreOutbound SERVER("", strprintf("%u", (fTestNet ? TESTNET_CORE_LLP_PORT : NEXUS_CORE_LLP_PORT)));
+	LLP::CoreOutbound SERVER("", strprintf("%u", fLispNet ? LISPNET_CORE_LLP_PORT : (fTestNet ? TESTNET_CORE_LLP_PORT : NEXUS_CORE_LLP_PORT)));
     
     /* Latency Timer. */
 	loop
