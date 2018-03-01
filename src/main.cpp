@@ -277,7 +277,6 @@ bool AppInit2(int argc, char* argv[])
 
     fTestNet = GetBoolArg("-testnet", false);
     fLispNet = GetBoolArg("-lispnet", false);
-    
     if(fLispNet)
         fTestNet = true;
 

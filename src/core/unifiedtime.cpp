@@ -122,8 +122,8 @@ const char* DNS_SeedNodes_Testnet[] =
 /** Declarations for the DNS Seed Nodes. **/
 const char* DNS_SeedNodes_LISPnet[] =
 {
-	"node1.nexus.lispers.net",
-	"node2.nexus.lispers.net",
+    "node1.nexus.lispers.net",
+    "node2.nexus.lispers.net",
     "node3.nexus.lispers.net",
     "node4.nexus.lispers.net",
     "node5.nexus.lispers.net",
@@ -171,7 +171,7 @@ void ThreadUnifiedSamples(void* parg)
 	SetThreadPriority(THREAD_PRIORITY_ABOVE_NORMAL);
 	
 	/* Compile the Seed Nodes into a set of Vectors. */
-	SEED_NODES    = DNS_Lookup(fLispNet ? DNS_SeedNodes_LISPnet : fTestNet ? DNS_SeedNodes_Testnet : DNS_SeedNodes);
+	SEED_NODES    = DNS_Lookup(fLispNet ? DNS_SeedNodes_LISPnet : (fTestNet ? DNS_SeedNodes_Testnet : DNS_SeedNodes));
 	
 	/* Iterator to be used to ensure every time seed is giving an equal weight towards the Global Seeds. */
 	int nIterator = -1;

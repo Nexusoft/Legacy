@@ -42,7 +42,7 @@ namespace Net
 
 	static inline unsigned short GetDefaultPort()
 	{
-		return fLispNet ? LISPNET_PORT : fTestNet ? TESTNET_PORT : NEXUS_PORT;
+		return fLispNet ? LISPNET_PORT : (fTestNet ? TESTNET_PORT : NEXUS_PORT);
 	}
 
 
