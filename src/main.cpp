@@ -507,7 +507,7 @@ bool AppInit2(int argc, char* argv[])
     // the command-line/nexus.conf settings override GUI setting.
     if (mapArgs.count("-timeout"))
     {
-        int nNewTimeout = GetArg("-timeout", 5000);
+        int nNewTimeout = GetArg("-timeout", 30000);
         if (nNewTimeout > 0 && nNewTimeout < 600000)
             Net::nConnectTimeout = nNewTimeout;
     }
