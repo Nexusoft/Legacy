@@ -48,7 +48,7 @@ namespace Net
 		if (nTime > nNow + 10 * 60) // came in a flying DeLorean
 			return true;
 
-		if (nTime==0 || nNow-nTime > ADDRMAN_HORIZON_DAYS*86400) // not seen in over a month
+		if (nTime==0 || nNow-nTime > ADDRMAN_HORIZON_DAYS * 86400) // not seen in over a month
 			return true;
 
 		if (nLastSuccess==0 && nAttempts>=ADDRMAN_RETRIES) // tried three times and never a success

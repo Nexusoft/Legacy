@@ -317,7 +317,8 @@ vector<Net::CAddress> DNS_Lookup(const char* DNS_Seed[])
 				
 				printf("DNS Seed: %s\n", addr.ToStringIP().c_str());
 				
-				Net::addrman.Add(addr, ip, true);
+                //time penalty for seed nodes
+				Net::addrman.Add(addr, ip, 60 * 60 * 24);
             }
         }
 	printf("DNS Seed Count: %d\n",scount);

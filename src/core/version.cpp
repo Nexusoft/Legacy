@@ -16,7 +16,13 @@ const std::string CLIENT_NAME("Nexus");
 #ifdef USE_LLD
 const std::string CLIENT_BUILD("0.2.3.6 [LLD]");
 #else
+
+#ifdef USE_LEVELDB
+const std::String CLIENT_BUILD("0.2.3.6 [LVD]");
+#else
 const std::string CLIENT_BUILD("0.2.3.6 [BDB]");
+#endif
+
 #endif
 
 const std::string CLIENT_DATE(__DATE__ " " __TIME__);
