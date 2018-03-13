@@ -17,7 +17,7 @@ namespace Core
 {
 	/** Hardened Checkpoints. **/
 	std::map<unsigned int, uint1024> mapCheckpoints;
-	unsigned int CHECKPOINT_TIMESPAN = 60, MAX_CHECKPOINTS_SEARCH= 2;
+	unsigned int CHECKPOINT_TIMESPAN = 60, MAX_CHECKPOINTS_SEARCH = 6;
 	
 	
 	/** Check Checkpoint Timespan. **/

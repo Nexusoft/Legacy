@@ -425,6 +425,7 @@ bool AppInit2(int argc, char* argv[])
             strErrors << _("Error loading wallet.dat") << "\n";
     }
 
+    
     if (GetBoolArg("-upgradewallet", fFirstRun))
     {
         int nMaxVersion = GetArg("-upgradewallet", 0);
