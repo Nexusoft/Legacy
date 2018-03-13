@@ -315,7 +315,7 @@ vector<Net::CAddress> DNS_Lookup(const char* DNS_Seed[])
                 Net::CAddress addr = Net::CAddress(Net::CService(ip, Net::GetDefaultPort()));
                 
                 //Randomize the Seed Node Penalty time (3 - 7 days).
-                add.nTime = GetUnifiedTimestamp() - (3 * 86400) - GetRand(7 * 86400);
+                addr.nTime = GetUnifiedTimestamp() - (3 * 86400) - GetRand(7 * 86400);
                 
                 vNodes.push_back(addr);
 				
