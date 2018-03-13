@@ -313,12 +313,16 @@ vector<Net::CAddress> DNS_Lookup(const char* DNS_Seed[])
             BOOST_FOREACH(Net::CNetAddr& ip, vaddr)
             {
                 Net::CAddress addr = Net::CAddress(Net::CService(ip, Net::GetDefaultPort()));
+                
+                //Randomize the Seed Node Penalty time (3 - 7 days).
+                add.nTime = GetUnifiedTimestamp() - (3 * 86400) - GetRand(7 * 86400);
+                
                 vNodes.push_back(addr);
 				
 				printf("DNS Seed: %s\n", addr.ToStringIP().c_str());
 				
                 //time penalty for seed nodes
-				Net::addrman.Add(addr, ip, 60 * 60 * 24);
+				Net::addrman.Add(addr, ip, true);
             }
         }
 	printf("DNS Seed Count: %d\n",scount);
