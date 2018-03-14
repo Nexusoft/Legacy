@@ -180,7 +180,7 @@ namespace Core
 		double nThreshold = ((nTime - vtx[0].nTime) * 100.0) / nNonce;
 		double nRequired  = ((50.0 - nTrustWeight - nBlockWeight) * MAX_STAKE_WEIGHT) / std::min((int64)MAX_STAKE_WEIGHT, vtx[0].vout[0].nValue);
 		if(nThreshold < nRequired)
-			return error("CBlock::VerifyStake() : Coinstake / nNonce threshold too low %f Required %f. Energy efficiency limits Reached Coin Age %"PRIu64" | Trust Age %"PRIu64" | Block Age %"PRIu64, nThreshold, nRequired, nCoinAge, nTrustAge, nBlockAge);
+			return error("CBlock::VerifyStake() : Coinstake / nNonce threshold too low %f Required %f. Energy efficiency limits Reached Coin Age %" PRIu64 " | Trust Age %" PRIu64 " | Block Age %" PRIu64, nThreshold, nRequired, nCoinAge, nTrustAge, nBlockAge);
 			
 			
 		/** H] Check the Block Hash with Weighted Hash to Target. **/
@@ -196,9 +196,9 @@ namespace Core
 			cTrustPool.TrustScore(cKey, nTime);
 			printf("CBlock::VerifyStake() : Stake Hash  %s\n", GetHash().ToString().substr(0, 20).c_str());
 			printf("CBlock::VerifyStake() : Target Hash %s\n", hashTarget.ToString().substr(0, 20).c_str());
-			printf("CBlock::VerifyStake() : Coin Age %"PRIu64" Trust Age %"PRIu64" Block Age %"PRIu64"\n", nCoinAge, nTrustAge, nBlockAge);
+			printf("CBlock::VerifyStake() : Coin Age %" PRIu64 " Trust Age %" PRIu64 " Block Age %" PRIu64 "\n", nCoinAge, nTrustAge, nBlockAge);
 			printf("CBlock::VerifyStake() : Trust Weight %f Block Weight %f\n", nTrustWeight, nBlockWeight);
-			printf("CBlock::VerifyStake() : Threshold %f Required %f Time %u nNonce %"PRIu64"\n", nThreshold, nRequired, (unsigned int)(nTime - vtx[0].nTime), nNonce);
+			printf("CBlock::VerifyStake() : Threshold %f Required %f Time %u nNonce %" PRIu64 "\n", nThreshold, nRequired, (unsigned int)(nTime - vtx[0].nTime), nNonce);
 		}
 
 		return true;
@@ -835,14 +835,16 @@ namespace Core
 			}
 			
 			/* Get the Total Weight. */
-            unsigned int nTotalWeight = nTrustWeight + nBlockWeight;
+			int combinedWeight = floor(nTrustWeight + nBlockWeight);
+            int nTotalWeight = max(combinedWeight, 8);
 			
 			
 			/* Make sure coinstake is created. */
 			int i = 0;
 			
 			/* Copy the block pointers. */
-			CBlock block[nTotalWeight];
+			CBlock *block = new CBlock[nTotalWeight];
+
 			for(i = 0; i < nTotalWeight; i++)
 			{
 				block[i] = baseBlock;
@@ -868,7 +870,7 @@ namespace Core
 			
 			
 			if(GetArg("-verbose", 0) >= 0)			
-				printf("Stake Minter : Staking at Total Weight %u | Trust Weight %f | Block Weight %f | Coin Age %"PRIu64" | Trust Age %"PRIu64"| Block Age %"PRIu64"\n", nTotalWeight, nTrustWeight, nBlockWeight, nCoinAge, nTrustAge, nBlockAge);
+				printf("Stake Minter : Staking at Total Weight %u | Trust Weight %f | Block Weight %f | Coin Age %" PRIu64 " | Trust Age %" PRIu64 "| Block Age %" PRIu64 "\n", nTotalWeight, nTrustWeight, nBlockWeight, nCoinAge, nTrustAge, nBlockAge);
 			
 			bool fFound = false;
 			while(!fFound)
@@ -905,7 +907,7 @@ namespace Core
 					hashTarget.SetCompact(block[i].nBits);
 					
 					if(block[i].nNonce % (unsigned int)((nTrustWeight + nBlockWeight) * 5) == 0 && GetArg("-verbose", 0) >= 3)
-						printf("Stake Minter : Below Threshold %f Required %f Incrementing nNonce %"PRIu64"\n", nThreshold, nRequired, block[i].nNonce);
+						printf("Stake Minter : Below Threshold %f Required %f Incrementing nNonce %" PRIu64 "\n", nThreshold, nRequired, block[i].nNonce);
 							
 					if (block[i].GetHash() < hashTarget.getuint1024())
 					{

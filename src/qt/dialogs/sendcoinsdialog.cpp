@@ -16,10 +16,16 @@
 #include "../util/guiutil.h"
 #include "askpassphrasedialog.h"
 
-#include <QMessageBox>
+#include <QtGlobal>
+#if QT_VERSION < QT_VERSION_CHECK(5,0,0)
+ #include <QMessageBox>
+ #include <QScrollBar>
+#else
+ #include <QtWidgets/QMessageBox>
+ #include <QtWidgets/QScrollBar>
+#endif
 #include <QLocale>
 #include <QTextDocument>
-#include <QScrollBar>
 
 SendCoinsDialog::SendCoinsDialog(QWidget *parent) :
     QDialog(parent),
@@ -99,7 +105,11 @@ void SendCoinsDialog::on_sendButton_clicked()
     QStringList formatted;
     foreach(const SendCoinsRecipient &rcp, recipients)
     {
-        formatted.append(tr("<b>%1</b> to %2 (%3)").arg(NexusUnits::formatWithUnit(NexusUnits::Nexus, rcp.amount), Qt::escape(rcp.label), rcp.address));
+		#if QT_VERSION < QT_VERSION_CHECK(5,0,0)
+		 formatted.append(tr("<b>%1</b> to %2 (%3)").arg(NexusUnits::formatWithUnit(NexusUnits::Nexus, rcp.amount), Qt::escape(rcp.label), rcp.address));
+		#else
+		 formatted.append(tr("<b>%1</b> to %2 (%3)").arg(NexusUnits::formatWithUnit(NexusUnits::Nexus, rcp.amount), QString(rcp.label).toHtmlEscaped(), rcp.address));
+		#endif
     }
 
     fNewRecipientAllowed = false;

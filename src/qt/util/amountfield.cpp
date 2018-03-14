@@ -12,13 +12,17 @@
 
 #include "../core/guiconstants.h"
 
+#if QT_VERSION < QT_VERSION_CHECK(5,0,0)
+ #include <QComboBox>
+#else
+ #include <QtWidgets/QComboBox>
+#endif
 #include <QLabel>
 #include <QLineEdit>
 #include <QRegExpValidator>
 #include <QHBoxLayout>
 #include <QKeyEvent>
 #include <QDoubleSpinBox>
-#include <QComboBox>
 #include <QApplication>
 #include <qmath.h>
 

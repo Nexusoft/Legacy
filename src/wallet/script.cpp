@@ -46,7 +46,7 @@ namespace Wallet
     bool CastToBool(const std::vector<unsigned char>& vch)
     {
         for (unsigned int i = 0; i < vch.size(); i++)
-        {	
+        {
 
             if (vch[i] != 0)
             {
@@ -1227,8 +1227,7 @@ namespace Wallet
             // Compare
             CScript::const_iterator pc1 = script1.begin();
             CScript::const_iterator pc2 = script2.begin();
-            loop
-            {
+            loop() {
                 if (pc1 == script1.end() && pc2 == script2.end())
                 {
                     // Found a match

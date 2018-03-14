@@ -16,12 +16,18 @@
 #include "../util/ui_interface.h"
 #include "core/qtipcserver.h"
 
-#include <QApplication>
-#include <QMessageBox>
+#if QT_VERSION < QT_VERSION_CHECK(5,0,0)
+ #include <QApplication>
+ #include <QMessageBox>
+ #include <QSplashScreen>
+#else
+ #include <QtWidgets/QApplication>
+ #include <QtWidgets/QMessageBox>
+ #include <QtWidgets/QSplashScreen>
+#endif
 #include <QTextCodec>
 #include <QLocale>
 #include <QTranslator>
-#include <QSplashScreen>
 #include <QLibraryInfo>
 
 #include <boost/interprocess/ipc/message_queue.hpp>
@@ -164,8 +170,8 @@ int main(int argc, char *argv[])
 #endif
     
     // Internal string conversion is all UTF-8
-    QTextCodec::setCodecForTr(QTextCodec::codecForName("UTF-8"));
-    QTextCodec::setCodecForCStrings(QTextCodec::codecForTr());
+//    QTextCodec::setCodecForTr(QTextCodec::codecForName("UTF-8"));
+//    QTextCodec::setCodecForCStrings(QTextCodec::codecForTr());
 
     Q_INIT_RESOURCE(nexus);
     QApplication app(argc, argv);

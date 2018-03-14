@@ -403,8 +403,7 @@ namespace LLD
 
 
 		unsigned int fFlags = DB_SET_RANGE;
-		loop
-		{
+		loop() {
 			// Read next record
 			CDataStream ssKey(SER_DISK, DATABASE_VERSION);
 			if (fFlags == DB_SET_RANGE)
@@ -480,8 +479,7 @@ namespace LLD
 		Core::nBestHeight = Core::pindexBest->nHeight;
 		
 		Core::CBlockIndex* pindex = Core::pindexGenesisBlock;
-		loop
-		{
+		loop() {
 		
 			/** Get the Coinbase Transaction Rewards. **/
 			if(pindex->pprev)

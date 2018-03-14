@@ -41,6 +41,7 @@ const char* DNS_SeedNodes[] =
 	"node1.nxsorbitalscan.com",
 	"node1.nxs.efficienthash.com",
 	"node1.henryskinner.net",
+	"node1.nexplorer.io",
 	"node2.nexusearth.com",
 	"node2.mercuryminer.com",
 	"node2.nexusminingpool.com",
@@ -164,8 +165,7 @@ void ThreadUnifiedSamples(void* parg)
 	LLP::CoreOutbound SERVER("", strprintf("%u", (fTestNet ? TESTNET_CORE_LLP_PORT : NEXUS_CORE_LLP_PORT)));
     
     /* Latency Timer. */
-	loop
-	{
+	loop() {
 		try
 		{
 			Sleep(1000);
@@ -286,7 +286,7 @@ void ThreadUnifiedSamples(void* parg)
                 UNIFIED_AVERAGE_OFFSET = UNIFIED_MAJORITY.Majority();
 				
 				if(GetArg("-verbose", 0) >= 1)
-					printf("***** %i Total Samples | %i Offset (%u) | %i Majority (%u) | %"PRId64"\n", MAP_TIME_DATA.size(), nSamples.Majority(), TOTAL_SAMPLES[nSamples.Majority()], UNIFIED_AVERAGE_OFFSET, TOTAL_SAMPLES[UNIFIED_AVERAGE_OFFSET], GetUnifiedTimestamp());
+					printf("***** %i Total Samples | %i Offset (%u) | %i Majority (%u) | %" PRId64 "\n", MAP_TIME_DATA.size(), nSamples.Majority(), TOTAL_SAMPLES[nSamples.Majority()], UNIFIED_AVERAGE_OFFSET, TOTAL_SAMPLES[UNIFIED_AVERAGE_OFFSET], GetUnifiedTimestamp());
 			}
             
             Sleep(30000);

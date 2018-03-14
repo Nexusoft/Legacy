@@ -438,7 +438,6 @@ namespace Net
 			vstats.push_back(stats);
 		}
 	}
-	
 
 	Value getpeerinfo(const Array& params, bool fHelp)
 	{
@@ -456,7 +455,7 @@ namespace Net
 			Object obj;
 
 			obj.push_back(Pair("addr", stats.addrName));
-			obj.push_back(Pair("services", strprintf("%08"PRI64x, stats.nServices)));
+			obj.push_back(Pair("services", strprintf("%08" PRI64x, stats.nServices)));
 			obj.push_back(Pair("lastsend", (boost::int64_t)stats.nLastSend));
 			obj.push_back(Pair("lastrecv", (boost::int64_t)stats.nLastRecv));
 			obj.push_back(Pair("conntime", (boost::int64_t)stats.nTimeConnected));
@@ -494,7 +493,6 @@ namespace Net
 		return obj;
 	}
 	
-	
 	Value getsupplyrates(const Array& params, bool fHelp)
 	{
 		if (fHelp || params.size() != 0)
@@ -526,7 +524,6 @@ namespace Net
 		return obj;
 	}
 	
-	
 	Value getmoneysupply(const Array& params, bool fHelp)
     {
         if(fHelp || params.size() != 0)
@@ -545,7 +542,6 @@ namespace Net
         
         return obj;
     }
-    
 
 	Value getinfo(const Array& params, bool fHelp)
 	{
@@ -1069,7 +1065,7 @@ namespace Net
 	{
 		if (fHelp || params.size() != 1)
 			throw runtime_error(
-				"gettransaction <txid>\n"
+				"getglobaltransaction <txid>\n"
 				"Get detailed information about <txid>");
 
 		uint512 hash;
@@ -2707,7 +2703,7 @@ namespace Net
 		{ "getconnectioncount",     &getconnectioncount,     true  },
 		{ "getpeerinfo",            &getpeerinfo,            true  },
 		{ "getdifficulty",          &getdifficulty,          true  },
-		{ "getsupplyrates",         &getsupplyrates,          true  },
+		{ "getsupplyrates",         &getsupplyrates,         true  },
 		{ "getinfo",                &getinfo,                true  },
 		{ "getmininginfo",          &getmininginfo,          true  },
 		{ "getnewaddress",          &getnewaddress,          true  },
@@ -2880,8 +2876,7 @@ namespace Net
 	int ReadHTTPHeader(std::basic_istream<char>& stream, map<string, string>& mapHeadersRet)
 	{
 		int nLen = 0;
-		loop
-		{
+		loop() {
 			string str;
 			std::getline(stream, str);
 			if (str.empty() || str == "\r")
@@ -3115,7 +3110,7 @@ namespace Net
 			return;
 		}
 
-		ssl::context context(io_service, ssl::context::sslv23);
+		ssl::context context(ssl::context::sslv23);
 		if (fUseSSL)
 		{
 			context.set_options(ssl::context::no_sslv2);
@@ -3131,11 +3126,10 @@ namespace Net
 			else printf("ThreadRPCServer ERROR: missing server private key file %s\n", pathPKFile.string().c_str());
 
 			string strCiphers = GetArg("-rpcsslciphers", "TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH");
-			SSL_CTX_set_cipher_list(context.impl(), strCiphers.c_str());
+			SSL_CTX_set_cipher_list(context.native_handle(), strCiphers.c_str());
 		}
 
-		loop
-		{
+		loop() {
 			// Accept connection
 			SSLStream sslStream(io_service, context);
 			SSLIOStreamDevice d(sslStream, fUseSSL);
@@ -3278,7 +3272,7 @@ namespace Net
 		// Connect to localhost
 		bool fUseSSL = GetBoolArg("-rpcssl");
 		asio::io_service io_service;
-		ssl::context context(io_service, ssl::context::sslv23);
+		ssl::context context(ssl::context::sslv23);
 		context.set_options(ssl::context::no_sslv2);
 		SSLStream sslStream(io_service, context);
 		SSLIOStreamDevice d(sslStream, fUseSSL);
@@ -3372,8 +3366,8 @@ namespace Net
 		if (strMethod == "listtransactions"       && n > 2) ConvertTo<boost::int64_t>(params[2]);
 		if (strMethod == "listNTransactions"      && n > 0) ConvertTo<boost::int64_t>(params[0]);
 		if (strMethod == "listaccounts"           && n > 0) ConvertTo<boost::int64_t>(params[0]);
-		if (strMethod == "listunspent"           && n > 0) ConvertTo<boost::int64_t>(params[0]);
-		if (strMethod == "listunspent"           && n > 1) ConvertTo<boost::int64_t>(params[1]);
+		if (strMethod == "listunspent"            && n > 0) ConvertTo<boost::int64_t>(params[0]);
+		if (strMethod == "listunspent"            && n > 1) ConvertTo<boost::int64_t>(params[1]);
 		if (strMethod == "walletpassphrase"       && n > 1) ConvertTo<boost::int64_t>(params[1]);
 		if (strMethod == "walletpassphrase"       && n > 2) ConvertTo<bool>(params[2]);
 		if (strMethod == "listsinceblock"         && n > 1) ConvertTo<boost::int64_t>(params[1]);

@@ -1074,8 +1074,7 @@ namespace Wallet
             LLD::CIndexDB indexdb("r");
             {
                 nFeeRet = Core::nTransactionFee;
-                loop
-                {
+                loop() {
                     wtxNew.vin.clear();
                     wtxNew.vout.clear();
                     wtxNew.fFromMe = true;
@@ -1421,7 +1420,7 @@ namespace Wallet
                 walletdb.WritePool(nIndex, CKeyPool(GenerateNewKey()));
                 setKeyPool.insert(nIndex);
             }
-            printf("CWallet::NewKeyPool wrote %"PRI64d" new keys\n", nKeys);
+            printf("CWallet::NewKeyPool wrote %" PRI64d " new keys\n", nKeys);
         }
         return true;
     }
@@ -1446,7 +1445,7 @@ namespace Wallet
                 if (!walletdb.WritePool(nEnd, CKeyPool(GenerateNewKey())))
                     throw runtime_error("TopUpKeyPool() : writing generated key failed");
                 setKeyPool.insert(nEnd);
-                printf("keypool added key %"PRI64d", size=%d\n", nEnd, setKeyPool.size());
+                printf("keypool added key %" PRI64d ", size=%d\n", nEnd, setKeyPool.size());
             }
         }
         return true;
@@ -1478,7 +1477,7 @@ namespace Wallet
                 
             assert(!keypool.vchPubKey.empty());
             if (fDebug && GetBoolArg("-printkeypool"))
-                printf("keypool reserve %"PRI64d"\n", nIndex);
+                printf("keypool reserve %" PRI64d "\n", nIndex);
         }
     }
 
@@ -1505,7 +1504,7 @@ namespace Wallet
             CWalletDB walletdb(strWalletFile);
             walletdb.ErasePool(nIndex);
         }
-        printf("keypool keep %"PRI64d"\n", nIndex);
+        printf("keypool keep %" PRI64d "\n", nIndex);
     }
 
     void CWallet::ReturnKey(int64 nIndex)
@@ -1516,7 +1515,7 @@ namespace Wallet
             setKeyPool.insert(nIndex);
         }
         if (fDebug && GetBoolArg("-printkeypool"))
-            printf("keypool return %"PRI64d"\n", nIndex);
+            printf("keypool return %" PRI64d "\n", nIndex);
     }
 
     bool CWallet::GetKeyFromPool(vector<unsigned char>& result, bool fAllowReuse)

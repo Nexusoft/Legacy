@@ -9,7 +9,12 @@
 #ifndef MESSAGEPAGE_H
 #define MESSAGEPAGE_H
 
-#include <QDialog>
+#include <QtGlobal>
+#if QT_VERSION < QT_VERSION_CHECK(5,0,0)
+ #include <QDialog>
+#else
+ #include <QtWidgets/QDialog>
+#endif
 
 namespace Ui {
     class MessagePage;

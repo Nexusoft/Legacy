@@ -296,7 +296,7 @@ namespace Net
 			int64& nRequestTime = mapAlreadyAskedFor[inv];
             
             if(GetArg("-verbose", 0) >= 3)
-                printf("askfor %s   %"PRI64d"\n", inv.ToString().c_str(), nRequestTime);
+                printf("askfor %s   %" PRI64d "\n", inv.ToString().c_str(), nRequestTime);
 
 			// Make sure not to reuse time indexes to keep things in the same order
 			int64 nNow = (GetUnifiedTimestamp() - 1) * 1000000;

@@ -1,54 +1,43 @@
 ## Install Prerequisites
 
-Using MacPorts (or HomeBrew, but these instructions will assume MacPorts), install the required libraries. +universal option for easy compiling of i386 or x86_64 architectures
+Open Finder, go to Utilities, and open Terminal.
 
-    sudo port install boost db48
-    sudo port install boost +universal -no_static
-    sudo port install openssl +universal
-    sudo port install miniupnpc +universal 
-    sudo port install qrencode +universal
+To install the xcode command line tools, run:
 
-Install QT (Ensure to use +framework for deployment)
+	xcode-select --install
 
-    sudo port install qt4-mac +framework +universal
+Click Install, then Agree. When its done, run:
 
-**Important**: The makefile and QT project file assume a build for a 32-bit target for maximum compatibility. Edit /opt/local/etc/macports/macports.conf and uncomment "build_arch i386". It is possible to have a second 32-bit install just for these builds.
+	ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+
+Press ENTER to continue when prompted, then type your password to install. When it finishes, run:
+	
+    brew install berkeley-db boost git qrencode miniupnpc openssl qt
+	echo 'export PATH="/usr/local/opt/qt/bin:$PATH"' >> ~/.bash_profile
+	source ~/.bash_profile
 
 ## Building Nexus Daemon
 
-Make sure yua are in your home directory, or the directory you would like the source code to be.
+Make sure you are in your home directory, or the directory you would like the source code to be.
 
-    git clone https://github.com/Nexusoft/Nexus.git
+    git clone --depth 1 https://github.com/Nexusoft/Nexus.git
     cd Nexus
-    make -f makefile.osx RELEASE=1 STATIC=1 USE_UPNP=1
-    strip nexus
+	make -f makefile.osx
+(If you wish to build Oracle DB version, use "make -f makefile.osx ORACLE=1" instead)	
 
 ## Building Nexus-Qt
 
 With the prerequisite software installed, do the following:
 
-    git clone https://github.com/Nexusoft/Nexus.git
+    git clone --depth 1 https://github.com/Nexusoft/Nexus.git
     cd Nexus
-    
-If you want to build with Oracle DB support use the following command:
-
-    qmake RELEASE=1 USE_UPNP=1 USE_QRCODE=1 nexus-qt.pro
-    make
-    
-If you want to build with LLD support use the following command:
-
-	qmake RELEASE=1 USE_UPNP=1 USE_QRCODE=1 USE_LLD=1 nexus-qt.pro
+	qmake
 	make
-	
-If you would like to deploy this *.app file, ensure appscript is installed to run the automated python script for easy deployment:
-	
-	sudo port install py27-pip
-	port select --set pip pip27
-	sudo -H pip install appscript
-	
-Then build the *.dmg file with the macdeployplus python script:
+    
+(If you wish to build Oracle DB version, use "qmake ORACLE=1" instead)
 
-	export QTDIR=/opt/local/libexec/qt4/share
-	python2.7 release/macdeploy/macdeployqtplus Nexus-Qt.app -dmg -fancy release/macdeploy/fancy.plist -verbose 2
+To deploy this *.app file (Create a dmg), do the following:
+	
+	./create_dmg.sh
 
 After this step, you should find Nexus-Qt.dmg in your working directory.

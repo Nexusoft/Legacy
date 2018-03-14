@@ -16,7 +16,9 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 #else
+#ifndef _INC_TYPES
 typedef int pid_t; /* define for windows compatiblity */
+#endif
 #endif
 #include <map>
 #include <vector>
@@ -55,7 +57,7 @@ static const int64 CENT = 10000;
 
 
 
-#define loop                for (;;)
+#define loop(...)			for(;;)
 #define BEGIN(a)            ((char*)&(a))
 #define END(a)              ((char*)&((&(a))[1]))
 #define UBEGIN(a)           ((unsigned char*)&(a))
@@ -455,7 +457,7 @@ typedef boost::interprocess::interprocess_semaphore CSemaphore;
 
 inline std::string i64tostr(int64 n)
 {
-    return strprintf("%"PRI64d, n);
+    return strprintf("%" PRI64d, n);
 }
 
 inline std::string itostr(int n)

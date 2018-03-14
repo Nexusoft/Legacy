@@ -13,16 +13,22 @@
 const std::string CLIENT_NAME("Nexus");
 
 /* The database type used (Berklee DB or Lower Level Database) */
-#ifdef USE_LLD
-const std::string CLIENT_BUILD("0.2.3.6 [LLD]");
+#ifdef x64
+	#if defined USE_LLD
+		const std::string CLIENT_BUILD("0.2.3.6 [LLD] 64Bit");
+	#elif defined USE_LEVELDB
+		const std::string CLIENT_BUILD("0.2.3.6 [LVD] 64Bit");
+	#else
+		const std::string CLIENT_BUILD("0.2.3.6 [BDB] 64Bit");
+	#endif
 #else
-
-#ifdef USE_LEVELDB
-const std::String CLIENT_BUILD("0.2.3.6 [LVD]");
-#else
-const std::string CLIENT_BUILD("0.2.3.6 [BDB]");
-#endif
-
+	#if defined USE_LLD
+		const std::string CLIENT_BUILD("0.2.3.6 [LLD] 32Bit");
+	#elif defined USE_LEVELDB
+		const std::string CLIENT_BUILD("0.2.3.6 [LVD] 32Bit");
+	#else
+		const std::string CLIENT_BUILD("0.2.3.6 [BDB] 32Bit");
+	#endif
 #endif
 
 const std::string CLIENT_DATE(__DATE__ " " __TIME__);

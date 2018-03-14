@@ -17,6 +17,10 @@
 #include <QFont>
 #include <QLineEdit>
 #include <QUrl>
+#if QT_VERSION >= QT_VERSION_CHECK(5,0,0)
+ #include <QUrlQuery>
+ #include <QStandardPaths>
+#endif
 #include <QTextDocument> // For Qt::escape
 #include <QAbstractItemView>
 #include <QApplication>
@@ -68,7 +72,12 @@ bool parseNexusURI(const QUrl &uri, SendCoinsRecipient *out)
     SendCoinsRecipient rv;
     rv.address = uri.path();
     rv.amount = 0;
-    QList<QPair<QString, QString> > items = uri.queryItems();
+	#if QT_VERSION < QT_VERSION_CHECK(5,0,0)
+	 QList<QPair<QString, QString> > items = uri.queryItems();
+	#else
+	 QUrlQuery query(uri);
+     QList<QPair<QString, QString> > items = query.queryItems();
+	#endif
     for (QList<QPair<QString, QString> >::iterator i = items.begin(); i != items.end(); i++)
     {
         bool fShouldReturnFalse = false;
@@ -121,7 +130,11 @@ bool parseNexusURI(QString uri, SendCoinsRecipient *out)
 
 QString HtmlEscape(const QString& str, bool fMultiLine)
 {
-    QString escaped = Qt::escape(str);
+	#if QT_VERSION < QT_VERSION_CHECK(5,0,0)
+	 QString escaped = Qt::escape(str);
+	#else
+	 QString escaped = QString(str).toHtmlEscaped();
+	#endif
     if(fMultiLine)
     {
         escaped = escaped.replace("\n", "<br>\n");
@@ -156,7 +169,11 @@ QString getSaveFileName(QWidget *parent, const QString &caption,
     QString myDir;
     if(dir.isEmpty()) // Default to user documents location
     {
-        myDir = QDesktopServices::storageLocation(QDesktopServices::DocumentsLocation);
+        #if QT_VERSION < QT_VERSION_CHECK(5,0,0)
+		 myDir = QDesktopServices::storageLocation(QDesktopServices::DocumentsLocation);
+		#else
+		 myDir = QStandardPaths::standardLocations(QStandardPaths::DocumentsLocation).first();
+		#endif
     }
     else
     {

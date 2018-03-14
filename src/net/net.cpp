@@ -93,8 +93,7 @@ namespace Net
 	bool RecvLine(SOCKET hSocket, string& strLine)
 	{
 		strLine = "";
-		loop
-		{
+		loop() {
 			Sleep(1);
 			
 			char c;
@@ -158,8 +157,7 @@ namespace Net
 		{
 			if (strLine.empty()) // HTTP response is separated from headers by blank line
 			{
-				loop
-				{
+				loop() {
 					if (!RecvLine(hSocket, strLine))
 					{
 						closesocket(hSocket);
@@ -505,8 +503,7 @@ namespace Net
 		list<CNode*> vNodesDisconnected;
 		unsigned int nPrevNodeCount = 0;
 
-		loop
-		{
+		loop() {
 			Sleep(1);
 			
 			//
@@ -924,7 +921,7 @@ namespace Net
 			else
 				printf("UPnP Port Mapping successful.\n");
 			int i = 1;
-			loop {
+			loop() {
 				if (fShutdown || !fUseUPnP)
 				{
 					r = UPNP_DeletePortMapping(urls.controlURL, data.first.servicetype, port, "TCP", 0);
@@ -959,7 +956,7 @@ namespace Net
 			freeUPNPDevlist(devlist); devlist = 0;
 			if (r != 0)
 				FreeUPNPUrls(&urls);
-			loop {
+			loop() {
 				if (fShutdown || !fUseUPnP)
 					return;
 				Sleep(2000);
@@ -1133,8 +1130,7 @@ namespace Net
 
 		// Initiate network connections
 		int64 nStart = GetUnifiedTimestamp();
-		loop
-		{
+		loop() {
 			vnThreadsRunning[THREAD_OPENCONNECTIONS]--;
 			Sleep(500);
 			vnThreadsRunning[THREAD_OPENCONNECTIONS]++;
@@ -1169,8 +1165,7 @@ namespace Net
 			int64 nANow = GetUnifiedTimestamp();
 
 			int nTries = 0;
-			loop
-			{
+			loop() {
 				// use an nUnkBias between 10 (no outgoing connections) and 90 (8 outgoing connections)
 				CAddress addr = addrman.Select(10 + min(nOutbound, 8) * 10);
 
@@ -1239,8 +1234,7 @@ namespace Net
 				}
 			}
 		}
-		loop
-		{
+		loop() {
 			vector<vector<CService> > vservConnectAddresses = vservAddressesToAdd;
 			// Attempt to connect to each IP for each addnode entry until at least one is successful per addnode entry
 			// (keeping in mind that addnode entries can have many IPs if fAllowDNS)

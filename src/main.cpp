@@ -379,7 +379,7 @@ bool AppInit2(int argc, char* argv[])
     nStart = GetTimeMillis();
     if (!Wallet::LoadAddresses())
         strErrors << _("Error loading addr.dat") << "\n";
-    printf(" addresses   %15"PRI64d"ms\n", GetTimeMillis() - nStart);
+    printf(" addresses   %15" PRI64d "ms\n", GetTimeMillis() - nStart);
 
 	
 	
@@ -399,7 +399,7 @@ bool AppInit2(int argc, char* argv[])
         printf("Shutdown requested. Exiting.\n");
         return false;
     }
-    printf(" block index %15"PRI64d"ms\n", GetTimeMillis() - nStart);
+    printf(" block index %15" PRI64d "ms\n", GetTimeMillis() - nStart);
 	
 	/** Load the Wallet Database. **/
     InitMessage(_("Loading wallet..."));
@@ -425,7 +425,6 @@ bool AppInit2(int argc, char* argv[])
             strErrors << _("Error loading wallet.dat") << "\n";
     }
 
-    
     if (GetBoolArg("-upgradewallet", fFirstRun))
     {
         int nMaxVersion = GetArg("-upgradewallet", 0);
@@ -456,7 +455,7 @@ bool AppInit2(int argc, char* argv[])
     }
 
     printf("%s", strErrors.str().c_str());
-    printf(" wallet      %15"PRI64d"ms\n", GetTimeMillis() - nStart);
+    printf(" wallet      %15" PRI64d "ms\n", GetTimeMillis() - nStart);
 
     Core::RegisterWallet(pwalletMain);
     Core::CBlockIndex *pindexRescan = Core::pindexBest;
@@ -480,7 +479,7 @@ bool AppInit2(int argc, char* argv[])
         printf("Rescanning last %i blocks (from block %i)...\n", Core::pindexBest->nHeight - pindexRescan->nHeight, pindexRescan->nHeight);
         nStart = GetTimeMillis();
         pwalletMain->ScanForWalletTransactions(pindexRescan, true);
-        printf(" rescan      %15"PRI64d"ms\n", GetTimeMillis() - nStart);
+        printf(" rescan      %15" PRI64d "ms\n", GetTimeMillis() - nStart);
     }
 	
 

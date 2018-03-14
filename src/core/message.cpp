@@ -194,9 +194,9 @@ namespace Core
 				}
 			}
 
-			// Ask the first 8 connected node for block updates
+			// Ask the first 8 connected nodes for block updates
 			static int nAskedForBlocks = 0;
-			if (!pfrom->fClient && (nAskedForBlocks < 4))
+			if (!pfrom->fClient && (nAskedForBlocks < 8))
 			{
 				nAskedForBlocks++;
 				pfrom->PushGetBlocks(pindexBest, uint1024(0));
@@ -207,7 +207,7 @@ namespace Core
 			if(GetArg("-verbose", 0) >= 1)
 				printf("version message: version %d, blocks=%d\n", pfrom->nVersion, pfrom->nStartingHeight);
 
-			if (!pfrom->fClient && (nAskedForBlocks < 1))
+			if (!pfrom->fClient && (nAskedForBlocks < 8))
 				cPeerBlockCounts.Add(pfrom->nStartingHeight);
 		}
 
@@ -649,12 +649,11 @@ namespace Core
 		{
 			string strMessageStart((const char *)pchMessageStart, sizeof(pchMessageStart));
 			vector<unsigned char> vchMessageStart(strMessageStart.begin(), strMessageStart.end());
-			printf("ProcessMessages : AdjustedTime=%"PRI64d" MessageStart=%s\n", GetUnifiedTimestamp(), HexStr(vchMessageStart).c_str());
+			printf("ProcessMessages : AdjustedTime=%" PRI64d " MessageStart=%s\n", GetUnifiedTimestamp(), HexStr(vchMessageStart).c_str());
 			nTimeLastPrintMessageStart = GetUnifiedTimestamp();
 		}
 
-		loop
-		{
+		loop() {
 			// Scan for message start
 			CDataStream::iterator pstart = search(vRecv.begin(), vRecv.end(), BEGIN(pchMessageStart), END(pchMessageStart));
 			int nHeaderSize = vRecv.GetSerializeSize(Net::CMessageHeader());

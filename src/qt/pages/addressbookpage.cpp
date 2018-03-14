@@ -126,7 +126,11 @@ void AddressBookPage::setModel(AddressTableModel *model)
     // Set column widths
     ui->tableView->horizontalHeader()->resizeSection(
             AddressTableModel::Address, 400);
-    ui->tableView->horizontalHeader()->setResizeMode(
+			#if QT_VERSION < QT_VERSION_CHECK(5,0,0)
+			 ui->tableView->horizontalHeader()->setResizeMode(
+			#else
+			 ui->tableView->horizontalHeader()->setSectionResizeMode(
+			#endif
             AddressTableModel::Label, QHeaderView::Stretch);
 
     connect(ui->tableView->selectionModel(), SIGNAL(selectionChanged(QItemSelection,QItemSelection)),
