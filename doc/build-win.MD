@@ -56,8 +56,7 @@ After it completes successfully you will only need to follow the steps in Part 2
 ###Getting New Copy of Nexus Wallet Source###
 Open MinGW64 by clicking the Windows Start icon and going to "MSYS2 64bit" and selecting "MSYS2 MingGW 64-Bit". When the MinGW64 window appears, enter:
 
-	/c/
-	rm
+	source ~/.bashrc
 
 ### Nexus-Qt (GUI) ###
 In the MinGW64 window, enter:
