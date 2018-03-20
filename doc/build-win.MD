@@ -27,7 +27,7 @@ After it closes, launch MinGW64 by clicking the Windows Start icon and going to 
 	
 When prompted to proceed with installation, press y then enter. After it finishes upgrading, enter:
 
-*	pacman -S base-devel mingw-w64-x86_64-toolchain compression git python
+*	pacman -S base-devel mingw-w64-x86_64-toolchain compression git python pv
 	
 Each time it says Enter a Selection, just press enter. When it says "Proceed with installation?" press y, then enter.
 This will take some time depending upon your computers hardware and your internet speed. Please be patient until it finishes.
@@ -63,6 +63,12 @@ To update your source code, launch MinGW64 by clicking the Windows Start icon an
 *	cd /c/
 *	mv --backup=numbered -T ./Nexus ./Nexus.bak
 *	git clone --depth 1 https://github.com/Nexusoft/Nexus
+
+##### -OR- #####
+
+If you have win_build.sh, you can enter:
+
+*	/c/Nexus/win_build.sh update
 
 ##### Building Nexus-Qt (GUI) #####
 In the MinGW64 window, enter:
