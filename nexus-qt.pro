@@ -50,12 +50,12 @@ isEmpty(BOOST_LIB_SUFFIX) {
 isEmpty(BOOST_LIB_PATH) {
 	win32:BOOST_LIB_PATH=C:/deps/lib
     macx:BOOST_LIB_PATH = /usr/local/opt/boost/lib
-	linux:BOOST_LIB_PATH=/usr/lib/x86_64-linux-gnu/
+	!macx:!win32:BOOST_LIB_PATH=/usr/lib/x86_64-linux-gnu/
 }
 isEmpty(BOOST_INCLUDE_PATH) {
 	win32:BOOST_INCLUDE_PATH=C:/deps/include/boost-1_66
     macx:BOOST_INCLUDE_PATH = /usr/local/opt/boost/include
-	linux:BOOST_INCLUDE_PATH=/usr/include/boost
+	!macx:!win32:BOOST_INCLUDE_PATH=/usr/include/boost
 }
 isEmpty(OPENSSL_LIB_PATH) {
 	win32:OPENSSL_LIB_PATH=C:/deps/lib
@@ -456,8 +456,8 @@ macx:ICON = src/qt/res/icons/nexus.icns
 macx:RC_ICONS = src/qt/res/icons/nexus.icns
 
 #Linux build helper
-linux:DEFINES += LINUX
-linux:LIBS += -lrt
+!macx:!win32:DEFINES += LINUX
+!macx:!win32:LIBS += -lrt
 
 #Build final Includes and Libraries
 INCLUDEPATH += $$BOOST_INCLUDE_PATH \
@@ -487,8 +487,8 @@ contains(ARCH_TEST, ARCH) {
 }
 
 #Fix for linux dynamic linking
-contains(RELEASE, 1) {
-	linux:LIBS+=-Wl,-Bdynamic -ldl
+!macx:!win32:contains(RELEASE, 1) {
+	LIBS+=-Wl,-Bdynamic -ldl
 }
 #Perform Translations
 !build_pass:system($$QMAKE_LRELEASE -silent $$TRANSLATIONS)
