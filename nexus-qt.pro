@@ -487,10 +487,8 @@ contains(ARCH_TEST, ARCH) {
 }
 
 #Fix for linux dynamic linking
-linux {
 contains(RELEASE, 1) {
-LIBS+= -Wl,-Bdynamic -ldl
-}
+	linux:LIBS+=-Wl,-Bdynamic -ldl
 }
 #Perform Translations
 !build_pass:system($$QMAKE_LRELEASE -silent $$TRANSLATIONS)
