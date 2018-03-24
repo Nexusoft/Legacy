@@ -35,7 +35,8 @@ With the prerequisite software installed, do the following:
 (If you wish to build Oracle DB version, use "qmake ORACLE=1" instead)
 
 To deploy this *.app file (Create a dmg), do the following:
-	
+
+*	chmod +x create_dmg.sh
 *	./create_dmg.sh
 
 After this step, you should find Nexus-Qt.dmg in your working directory.
