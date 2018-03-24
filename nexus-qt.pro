@@ -498,7 +498,8 @@ contains(ARCH_TEST, ARCH) {
 !build_pass:message("Finishing up... Type 'make' to start compiling when finished")
 #Ending makefile text
 complete.target= complete
-!macx:complete.commands= echo -e "\nFinished building nexus-qt.exe\n"
-macx:complete.commands= printf "\nFinished building nexus-qt\n\n"
+win32:complete.commands= echo -e "\nFinished building nexus-qt.exe\n"
+macx:complete.commands= echo " " && echo "Finished building nexus-qt.app" && echo " "
+!win32:!macx.complete.commands= echo -e "\nFinished building nexus-qt\n"
 QMAKE_EXTRA_TARGETS+= complete
 POST_TARGETDEPS+= complete
