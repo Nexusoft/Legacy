@@ -43,9 +43,9 @@ This will download the Nexus source code to C:\Nexus
 
 ##### Compiling Dependencies #####
 
-Run w32deps.sh to download and compile dependencies by entering:
+Run win_build.sh to download and compile dependencies by entering:
 
-*	/c/Nexus/win_build.sh
+*	/c/Nexus/win_build.sh install
 	
 Wait for process to complete. This can take a VERY long time (hours) depending on your computer and internet connection.
 Please be patient while it completes the building process. This only needs to be successfully completed once.

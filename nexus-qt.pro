@@ -1,5 +1,5 @@
 TEMPLATE = app
-TARGET = Nexus-Qt
+TARGET = nexus-qt
 VERSION = 0.1.0.0
 INCLUDEPATH += src src/core src/hash src/json src/net src/qt src/util src/wallet src/LLD src/LLP
 DEFINES += QT_GUI BOOST_THREAD_USE_LIB BOOST_SPIRIT_THREADSAFE
@@ -218,7 +218,7 @@ QMAKE_CXXFLAGS_WARN_ON = -Wall -Wextra -Wformat -Wformat-security -Wno-invalid-o
 #DISTCLEAN function helper
 QMAKE_DEL_FILE = rm -rf
 QMAKE_DISTCLEAN += build/moc build/obj build/ui
-macx:QMAKE_DISTCLEAN += Nexus-Qt.dmg dist
+macx:QMAKE_DISTCLEAN += nexus-qt.dmg dist
 build_pass:DebugBuild {
 	QMAKE_DISTCLEAN +=	object_script.nexus-qt.Debug
 	win32:QMAKE_DISTCLEAN += debug/ 
@@ -494,13 +494,11 @@ contains(ARCH_TEST, ARCH) {
 !build_pass:system($$QMAKE_LRELEASE -silent $$TRANSLATIONS)
 !build_pass:message("Translations Generated")
 
+#Extra Console Output
+!build_pass:message("Finishing up... Type 'make' to start compiling when finished")
+
 #Ending makefile text
 complete.target= complete
-win32:complete.commands= echo " " && echo Finished building Nexus-Qt.exe && echo " "
-else:complete.commands= @echo && echo Finished building Nexus-Qt && echo ' '
+complete.commands= echo -e "\nFinished building nexus-qt.exe\n"
 QMAKE_EXTRA_TARGETS+= complete
 POST_TARGETDEPS+= complete
-
-#Extra Console Output
-win32:!build_pass:message("Finishing up... Type 'mingw32-make' to start compiling when finished")
-!win32:!build_pass:message("Finishing up... Type 'make' to start compiling when finished")

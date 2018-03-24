@@ -259,7 +259,7 @@ CXXFLAGS+= -s \
 	$(INCLUDEPATHS)
 
 #OS Specific Targets and instructions
-all: release/Nexus.exe
+all: release/nexus.exe
 
 build/%.o: ./src/%.cpp $(HEADERS)
 	$(CXX) -c $(CXXFLAGS) -o $@ $<
@@ -291,14 +291,14 @@ build/%.o: ./src/util/%.cpp $(HEADERS)
 build/%.o: ./src/wallet/%.cpp $(HEADERS)
 	$(CXX) -c $(CXXFLAGS) -o $@ $<
 
-release/Nexus.exe: $(OBJS:build/%=build/%)
+release/nexus.exe: $(OBJS:build/%=build/%)
 	$(CXX) $(CXXFLAGS) -o $@ $(LIBPATHS) $^ $(LIBS)
 	@echo " "
-	@echo Finished building Nexus.exe
+	@echo Finished building nexus.exe
 	@echo " "
 	
 clean:
-	-rm -f release\Nexus.exe
+	-rm -f release\nexus.exe
 	-rm -f build/*.o
 	-rm -f build/*.P
 	-rm -f src/build.h
@@ -326,7 +326,7 @@ CXXFLAGS+= -mmacosx-version-min=10.10 \
 	$(INCLUDEPATHS)
 
 #OS Specific Targets and instructions
-all: Nexus
+all: nexus
 
 build/%.o: src/%.cpp $(HEADERS)
 	$(CXX) -c $(CXXFLAGS) -MMD -o $@ $<
@@ -398,14 +398,14 @@ build/%.o: src/wallet/%.cpp $(HEADERS)
 	      -e '/^$$/ d' -e 's/$$/ :/' < $(@:%.o=%.d) >> $(@:%.o=%.P); \
 	  rm -f $(@:%.o=%.d)
 
-Nexus: $(OBJS:build/%=build/%)
+nexus: $(OBJS:build/%=build/%)
 	$(CXX) $(CXXFLAGS) -dead_strip -o $@ $(LIBPATHS) $^ $(LIBS)
 	@echo ' '
-	@echo Finished building Nexus.exe
+	@echo Finished building nexus
 	@echo ' '
 
 clean:
-	-rm -f Nexus
+	-rm -f nexus
 	-rm -f build/*.o
 	-rm -f build/*.P
 	-rm -f src/build.h
@@ -447,7 +447,7 @@ CXXFLAGS+= -O3 \
 	$(INCLUDEPATHS)
 
 #OS Specific Targets and instructions
-all: Nexus
+all: nexus
 
 build/%.o: src/%.cpp
 	$(CXX) -c $(CXXFLAGS) -MMD -o $@ $<
@@ -520,14 +520,14 @@ build/%.o: src/wallet/%.cpp
 	  rm -f $(@:%.o=%.d)
 
 
-Nexus: $(OBJS:obj/%=build/%)
+nexus: $(OBJS:obj/%=build/%)
 	$(CXX) $(CXXFLAGS) -rdynamic -o $@ $^ $(LDFLAGS) $(LIBS)
 	@echo ' '
-	@echo Finished building Nexus.exe
+	@echo Finished building nexus
 	@echo ' '
 
 clean:
-	-rm -f Nexus
+	-rm -f nexus
 	-rm -f build/*.o
 	-rm -f build/*.P
 	-rm -f src/build.h
