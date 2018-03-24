@@ -500,6 +500,6 @@ contains(ARCH_TEST, ARCH) {
 complete.target= complete
 win32:complete.commands= echo -e "\nFinished building nexus-qt.exe\n"
 macx:complete.commands= echo " " && echo "Finished building nexus-qt.app" && echo " "
-!win32:!macx.complete.commands= echo -e "\nFinished building nexus-qt\n"
+!win32:!macx:complete.commands= echo -e "\nFinished building nexus-qt\n"
 QMAKE_EXTRA_TARGETS+= complete
 POST_TARGETDEPS+= complete
