@@ -3,7 +3,7 @@ TARGET = nexus-qt
 VERSION = 0.1.0.0
 INCLUDEPATH += src src/core src/hash src/json src/net src/qt src/util src/wallet src/LLD src/LLP
 DEFINES += QT_GUI BOOST_THREAD_USE_LIB BOOST_SPIRIT_THREADSAFE
-CONFIG += no_include_pwd warn_off optimize_full
+CONFIG += no_include_pwd optimize_full
 greaterThan(QT_MAJOR_VERSION, 4) {
 	QT += uitools
 }
@@ -12,10 +12,17 @@ MOC_DIR = build/moc
 UI_DIR = build/ui
 
 #Allow verbose compiling output
-!contains(VERBOSE, 1) {
-	CONFIG+= silent
-} else {
+isEmpty(VERBOSE) {
+	VERBOSE= 0
+	CONFIG+= silent warn_off
+}
+contains(VERBOSE, 1) {
+	CONFIG+= warn_off
 	!build_pass:message("Showing Verbose Output")
+}
+greaterThan(VERBOSE, 1) {
+	CONFIG+= warn_on
+	!build_pass:message("Showing Extra Verbose Output")
 }
 
 #Arch Linux Test
@@ -35,6 +42,7 @@ contains(32BIT, 1) {
 	QMAKE_CXXFLAGS += -m32
 } else {
 	!build_pass:message("Building 64-Bit Version")
+	64BIT= 1
 	BUILD_ARCH = x64
 	QMAKE_LFLAGS += -m64
 	QMAKE_CFLAGS += -m64
@@ -206,7 +214,7 @@ contains(NEXUS_NEED_QT_PLUGINS, 1) {
 
 !macx:QMAKE_LFLAGS += -s
 QMAKE_CFLAGS += -s
-QMAKE_CXXFLAGS += -w -s -D_FORTIFY_SOURCE=2 -fpermissive
+QMAKE_CXXFLAGS += -s -D_FORTIFY_SOURCE=2 -fpermissive
 QMAKE_CXXFLAGS_WARN_ON = -Wall -Wextra -Wformat -Wformat-security -Wno-invalid-offsetof -Wno-sign-compare -Wno-unused-parameter
 !macx {
     QMAKE_CXXFLAGS_WARN_ON += -fdiagnostics-show-option
@@ -221,7 +229,7 @@ QMAKE_DISTCLEAN += build/moc build/obj build/ui
 macx:QMAKE_DISTCLEAN += nexus-qt.dmg dist
 build_pass:DebugBuild {
 	QMAKE_DISTCLEAN +=	object_script.nexus-qt.Debug
-	win32:QMAKE_DISTCLEAN += debug/ 
+	win32:QMAKE_DISTCLEAN += debug
 }
 build_pass:ReleaseBuild {
 	QMAKE_DISTCLEAN += object_script.nexus-qt.Release
@@ -229,23 +237,23 @@ build_pass:ReleaseBuild {
 					
 #Source File List
 DEPENDPATH += src \
-	src/LLP \
-	src/LLD \
-	src/core \
-	src/hash \
-	src/json \
-	src/net \
-	src/util \
-	src/qt \
-	src/wallet \
-	src/qt/core \
-	src/qt/dialogs \
-	src/qt/forms \
-	src/qt/models \
-	src/qt/pages \
-	src/qt/res \
-	src/qt/util \
-	src/qt/wallet
+    src/LLP \
+    src/LLD \
+    src/core \
+    src/hash \
+    src/json \
+    src/net \
+    src/util \
+    src/qt \
+    src/wallet \
+    src/qt/core \
+    src/qt/dialogs \
+    src/qt/forms \
+    src/qt/models \
+    src/qt/pages \
+    src/qt/res \
+    src/qt/util \
+    src/qt/wallet
 HEADERS += src/qt/core/gui.h \
     src/qt/models/transactiontablemodel.h \
     src/qt/models/addresstablemodel.h \
@@ -261,25 +269,25 @@ HEADERS += src/qt/core/gui.h \
     src/util/bignum.h \
     src/util/compat.h \
     src/util/util.h \
-	src/hash/uint1024.h \
-	src/hash/templates.h \
+    src/hash/uint1024.h \
+    src/hash/templates.h \
     src/util/serialize.h \
     src/util/strlcpy.h \
     src/core/core.h \
-	src/core/unifiedtime.h \
+    src/core/unifiedtime.h \
     src/net/net.h \
     src/wallet/key.h \
     src/wallet/db.h \
     src/wallet/walletdb.h \
     src/wallet/script.h \
     src/main.h \
-	src/LLP/coreserver.h \
-	src/LLP/server.h \
-	src/LLP/types.h \
-	src/LLD/index.h \
-	src/LLD/keychain.h \
-	src/LLD/key.h \
-	src/LLD/sector.h \
+    src/LLP/coreserver.h \
+    src/LLP/server.h \
+    src/LLP/types.h \
+    src/LLD/index.h \
+    src/LLD/keychain.h \
+    src/LLD/key.h \
+    src/LLD/sector.h \
     src/util/mruset.h \
     src/hash/brg_endian.h \
     src/hash/brg_types.h \
@@ -324,20 +332,20 @@ HEADERS += src/qt/core/gui.h \
     src/qt/util/qvaluecombobox.h \
     src/qt/dialogs/askpassphrasedialog.h \
     src/net/protocol.h \
-	src/core/version.h \
+    src/core/version.h \
     src/qt/util/notificator.h \
     src/qt/core/qtipcserver.h \
     src/util/allocators.h \
     src/util/ui_interface.h \
     src/qt/core/rpcconsole.h
 SOURCES += src/core/block.cpp \
-	src/core/dispatch.cpp \
-	src/core/message.cpp \
-	src/core/transaction.cpp \
-	src/core/mining.cpp \
-	src/core/checkpoints.cpp \
+    src/core/dispatch.cpp \
+    src/core/message.cpp \
+    src/core/transaction.cpp \
+    src/core/mining.cpp \
+    src/core/checkpoints.cpp \
     src/qt/main-qt.cpp \
-	src/qt/core/gui.cpp \
+    src/qt/core/gui.cpp \
     src/qt/models/transactiontablemodel.cpp \
     src/qt/models/addresstablemodel.cpp \
     src/qt/dialogs/optionsdialog.cpp \
@@ -348,9 +356,9 @@ SOURCES += src/core/block.cpp \
     src/qt/dialogs/editaddressdialog.cpp \
     src/qt/util/addressvalidator.cpp \
     src/core/version.cpp \
-	src/core/difficulty.cpp \
-	src/core/prime.cpp \
-	src/core/debug.cpp \
+    src/core/difficulty.cpp \
+    src/core/prime.cpp \
+    src/core/debug.cpp \
     src/util/util.cpp \
     src/net/netbase.cpp \
     src/wallet/key.cpp \
@@ -363,8 +371,8 @@ SOURCES += src/core/block.cpp \
     src/hash/KeccakHash.c \
     src/net/net.cpp \
     src/net/addrman.cpp \
-	src/core/release.cpp \
-	src/core/unifiedtime.cpp \
+    src/core/release.cpp \
+    src/core/unifiedtime.cpp \
     src/wallet/db.cpp \
     src/wallet/walletdb.cpp \
     src/json/json_spirit_writer.cpp \
@@ -399,10 +407,10 @@ SOURCES += src/core/block.cpp \
     src/qt/core/qtipcserver.cpp \
     src/qt/core/rpcconsole.cpp \
     src/core/kernel.cpp \
-	src/main.cpp \
-	src/core/global.cpp \
-	src/LLD/keychain.cpp \
-	src/LLD/index.cpp
+    src/main.cpp \
+    src/core/global.cpp \
+    src/LLD/keychain.cpp \
+    src/LLD/index.cpp
 RESOURCES += src/qt/nexus.qrc
 FORMS += src/qt/forms/sendcoinsdialog.ui \
     src/qt/forms/addressbookpage.ui \
@@ -415,9 +423,9 @@ FORMS += src/qt/forms/sendcoinsdialog.ui \
     src/qt/forms/askpassphrasedialog.ui \
     src/qt/forms/rpcconsole.ui
 OTHER_FILES += doc/*.rst \
-	doc/*.txt \
-	doc/README \
-	src/qt/res/nexus-qt.rc
+    doc/*.txt \
+    doc/README \
+    src/qt/res/nexus-qt.rc
 
 #Translation Support config
 TRANSLATIONS = $$files(src/qt/locale/nexus_*.ts)
