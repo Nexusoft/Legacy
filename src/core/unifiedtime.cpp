@@ -9,7 +9,8 @@
 #include "unifiedtime.h"
 #include "../LLP/client.h"
 #include <inttypes.h>
-
+#include <string>
+#include <vector>
 
 using namespace std;
 
@@ -107,16 +108,14 @@ static const std::vector<std::string> DNS_SeedNodes =
 	"node18.mercuryminer.com",
 	"node19.mercuryminer.com",
 	"node20.mercuryminer.com",
-	"node21.mercuryminer.com",
-	"\0"
+	"node21.mercuryminer.com"
 };
 
 /** Declarations for the DNS Seed Nodes. **/
 static const std::vector<std::string> DNS_SeedNodes_Testnet =
 {
 	"node1.nexusearth.com",
-	"node4.nexusearth.com",
-	"\0"
+	"node4.nexusearth.com"
 };
 
 /** Seed Nodes for Unified Time. **/
