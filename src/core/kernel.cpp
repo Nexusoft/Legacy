@@ -24,7 +24,6 @@ namespace Wallet
 
 	bool CWallet::AddCoinstakeInputs(Core::CTransaction& txNew)
 	{
-		int64 nBalance = GetBalance();
 		
 		/* Add Each Input to Transaction. */
 		vector<const CWalletTx*> vInputs;
@@ -265,7 +264,7 @@ namespace Core
 		cKey.SetBytes(vKeys[0]);
 			
 		/** Output figure to show the amount of coins being staked at their interest rates. **/
-		int64 nTotalCoins = 0, nAverageAge = 0, nValidInputs = 0;
+		int64 nTotalCoins = 0, nAverageAge = 0;
 		nInterest = 0;
 		
 		/** Calculate the Variable Interest Rate for Given Coin Age Input. [0.5% Minimum - 3% Maximum].
@@ -626,7 +625,7 @@ namespace Core
 
 		
 		/* The Trust Scores. */
-		double nPositiveTrust = 0.0, nNegativeTrust = 0.0, nHistoryIterations = 0;
+		double nPositiveTrust = 0.0, nNegativeTrust = 0.0;
 		for(int nIndex = 1; nIndex < cTrustKey.hashPrevBlocks.size(); nIndex++)
 		{
 			/* Calculate the Trust Time of Blocks. */

@@ -238,7 +238,6 @@ namespace Core
 	
 	/** DIFFICULTY.CPP **/
 	double GetDifficulty(unsigned int nBits, int nChannel);
-	unsigned int ComputeMinWork(const CBlockIndex* pcheckpoint, int64 nTime, int nChannel);
 	unsigned int GetNextTargetRequired(const CBlockIndex* pindex, int nChannel, bool output = false);
 	unsigned int RetargetPOS(const CBlockIndex* pindex, bool output);
 	unsigned int RetargetCPU(const CBlockIndex* pindex, bool output);

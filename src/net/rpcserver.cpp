@@ -270,10 +270,6 @@ namespace Net
 		 * */
 		uint64 nTimeConstant = 276758250000;
 		
-		/* Used for determining the average block times. 
-		 * TODO START: Make this its own RPC command */
-		uint64 nTotalTime = 0;
-		
 		const Core::CBlockIndex* pindex = Core::GetLastChannelIndex(Core::pindexBest, 2);
 		unsigned int nAverageTime = 0, nTotal = 0;
 		double nAverageDifficulty = 0.0;
@@ -319,10 +315,6 @@ namespace Net
 		 * The difficulty changes are exponential or in other words require 50x more work per difficulty increase
 		 */
 		unsigned int nTimeConstant = 2480;
-		
-		/* Used for determining the average block times. 
-		 * TODO START: Make this its own RPC command */
-		uint64 nTotalTime = 0;
 		
 		const Core::CBlockIndex* pindex = Core::GetLastChannelIndex(Core::pindexBest, 1);
 		unsigned int nAverageTime = 0, nTotal = 0;
@@ -1004,15 +996,6 @@ namespace Net
 		}
 
 		return (double)nAmount / (double)COIN;
-	}
-	
-	Value dumptrustkeys(const Array& params, bool fHelp)
-	{
-		if (fHelp)
-			throw runtime_error(
-				"dumptrustkeys\n"
-				"Outputs Nexus Trust Keys");
-				
 	}
 	
 	/** Dump the top balances of the Rich List to RPC console. **/

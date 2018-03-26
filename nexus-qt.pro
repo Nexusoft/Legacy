@@ -156,11 +156,12 @@ contains(RELEASE, 1) {
     }
 }
 
-#Qrencode Support Config
+#QREncode Support Config
 contains(USE_QRCODE, 1) {
     !build_pass:message("Building with QRCode support")
     DEFINES += USE_QRCODE
-    LIBS += -lqrencode
+	INCLUDEPATH+= $$QRENCODE_INCLUDE_PATH
+    LIBS += $$join(QRENCODE_LIB_PATH,,-L,) -lqrencode
 	HEADERS += src/qt/dialogs/qrcodedialog.h
 	SOURCES += src/qt/dialogs/qrcodedialog.cpp
 	FORMS += src/qt/forms/qrcodedialog.ui
@@ -193,9 +194,9 @@ contains(USE_DBUS, 1) {
     QT += dbus
 }
 
-# use: qmake "FIRST_CLASS_MESSAGING=1"
-contains(FIRST_CLASS_MESSAGING, 1) {
-    !build_pass:message(Building with first-class messaging)
+# use: qmake "MESSAGE_TAB=1"
+contains(MESSAGE_TAB, 1) {
+    !build_pass:message(Building with Messaging Tab Enabled)
     DEFINES += FIRST_CLASS_MESSAGING
 }
 
@@ -214,7 +215,7 @@ contains(NEXUS_NEED_QT_PLUGINS, 1) {
 
 !macx:QMAKE_LFLAGS += -s
 QMAKE_CFLAGS += -s
-QMAKE_CXXFLAGS += -s -D_FORTIFY_SOURCE=2 -fpermissive
+QMAKE_CXXFLAGS += -s -std=c++11 -D_FORTIFY_SOURCE=2 -fpermissive
 QMAKE_CXXFLAGS_WARN_ON = -Wall -Wextra -Wformat -Wformat-security -Wno-invalid-offsetof -Wno-sign-compare -Wno-unused-parameter
 !macx {
     QMAKE_CXXFLAGS_WARN_ON += -fdiagnostics-show-option
@@ -470,12 +471,10 @@ macx:RC_ICONS = src/qt/res/icons/nexus.icns
 #Build final Includes and Libraries
 INCLUDEPATH += $$BOOST_INCLUDE_PATH \
 	$$BDB_INCLUDE_PATH \
-	$$OPENSSL_INCLUDE_PATH \
-	$$QRENCODE_INCLUDE_PATH
+	$$OPENSSL_INCLUDE_PATH
 LIBS += $$join(BOOST_LIB_PATH,,-L,) \
 	$$join(BDB_LIB_PATH,,-L,) \
-	$$join(OPENSSL_LIB_PATH,,-L,) \
-	$$join(QRENCODE_LIB_PATH,,-L,) \
+	$$join(OPENSSL_LIB_PATH,,-L,)
 	-lssl \
 	-lcrypto \
 	-ldb_cxx$$BDB_LIB_SUFFIX \
@@ -506,8 +505,8 @@ contains(ARCH_TEST, ARCH) {
 !build_pass:message("Finishing up... Type 'make' to start compiling when finished")
 #Ending makefile text
 complete.target= complete
-win32:complete.commands= @echo && echo Finished building nexus-qt.exe\n"
-macx:complete.commands= echo ' ' && echo 'Finished building nexus-qt.app' && echo ' '
-!win32:!macx:complete.commands= echo -e '\nFinished building nexus-qt\n'
+win32:complete.commands= { echo -e '\nFinished Building nexus-qt.exe\n'; } 2> /dev/null
+macx:complete.commands= { echo ' '; echo 'Finished building nexus-qt.app'; echo ' '; } 2> /dev/null
+!win32:!macx:complete.commands= { echo -e '\nFinished Building nexus-qt\n'; } 2> /dev/null
 QMAKE_EXTRA_TARGETS+= complete
 POST_TARGETDEPS+= complete

@@ -90,14 +90,7 @@ namespace LLD
 				mapOriginalData.erase(vKey);
 			
 			return true;
-		}
-		
-		/* Hash to keep track of the Sector Transactions in the Transaction History Journal. */
-		uint512 GetHash()
-        {
-            
-        }
-		
+		}	
 	};
 }
 

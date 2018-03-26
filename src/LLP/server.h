@@ -13,8 +13,6 @@ namespace LLP
 		Not to be inherited, only for use by the LLP Server Base Class. **/
 	template <class ProtocolType> class DataThread
 	{
-		/** Data Thread. **/
-		Thread_t DATA_THREAD;
 		
 	public:
 	
@@ -22,10 +20,16 @@ namespace LLP
 		Service_t IO_SERVICE;
 		
 		/** Variables to track Connection / Request Count. **/
-		bool fDDOS; unsigned int nConnections, ID, REQUESTS, TIMEOUT, DDOS_rSCORE, DDOS_cSCORE;
+		bool fDDOS;
 		
+		unsigned int ID, DDOS_rSCORE, DDOS_cSCORE, TIMEOUT;
+		unsigned int nConnections = 0;
+		unsigned int REQUESTS = 0;
 		/** Vector to store Connections. **/
 		std::vector< ProtocolType* > CONNECTIONS;
+
+		/** Data Thread. **/
+		Thread_t DATA_THREAD;
 		
 		/** Returns the index of a component of the CONNECTIONS vector that has been flagged Disconnected **/
 		int FindSlot()
@@ -160,7 +164,7 @@ namespace LLP
 		}
 		
 		DataThread<ProtocolType>(unsigned int id, bool isDDOS, unsigned int rScore, unsigned int cScore, unsigned int nTimeout) : 
-			ID(id), fDDOS(isDDOS), DDOS_rSCORE(rScore), DDOS_cSCORE(cScore), TIMEOUT(nTimeout), REQUESTS(0), CONNECTIONS(0), nConnections(0), DATA_THREAD(boost::bind(&DataThread::Thread, this)){ }
+			fDDOS(isDDOS), ID(id), DDOS_rSCORE(rScore), DDOS_cSCORE(cScore), TIMEOUT(nTimeout), DATA_THREAD(boost::bind(&DataThread::Thread, this)) { }
 	};
 
 	
@@ -182,7 +186,7 @@ namespace LLP
 		
 		
 		Server<ProtocolType>(int nPort, int nMaxThreads, bool isDDOS, int cScore, int rScore, int nTimeout) : 
-			fDDOS(isDDOS), LISTENER(SERVICE), PORT(nPort), MAX_THREADS(nMaxThreads), LISTEN_THREAD(boost::bind(&Server::ListeningThread, this)) //,METER_THREAD(boost::bind(&Server::MeterThread, this)), 
+			fDDOS(isDDOS), PORT(nPort), MAX_THREADS(nMaxThreads), LISTENER(SERVICE), LISTEN_THREAD(boost::bind(&Server::ListeningThread, this))
 		{
 			for(int index = 0; index < MAX_THREADS; index++)
 				DATA_THREADS.push_back(new DataThread<ProtocolType>(index, fDDOS, rScore, cScore, nTimeout));
@@ -195,7 +199,6 @@ namespace LLP
 		Listener_t  LISTENER;
 		Error_t     ERROR_HANDLE;
 		Thread_t    LISTEN_THREAD;
-		Thread_t    METER_THREAD;
 		
 	
 		/** Determine the thread with the least amount of active connections. 
@@ -273,7 +276,7 @@ namespace LLP
 					
 					/** Initialize DDOS Protection for Incoming IP Address. **/
 					std::vector<unsigned char> vAddress(4, 0);
-					sscanf(SOCKET->remote_endpoint().address().to_string().c_str(), "%u.%u.%u.%u", &vAddress[0], &vAddress[1], &vAddress[2], &vAddress[3]);
+                    sscanf(SOCKET->remote_endpoint().address().to_string().c_str(), "%hhu.%hhu.%hhu.%hhu", &vAddress[0], &vAddress[1], &vAddress[2], &vAddress[3]);
 					unsigned int ADDRESS = (vAddress[0] << 24) + (vAddress[1] << 16) + (vAddress[2] << 8) + vAddress[3];
 					
 					{ //LOCK(DDOS_MUTEX);
@@ -281,12 +284,12 @@ namespace LLP
 							DDOS_MAP[ADDRESS] = new DDOS_Filter(30);
 							
 						/** DDOS Operations: Only executed when DDOS is enabled. **/
-						if((fDDOS && DDOS_MAP[ADDRESS]->Banned()) || !CheckPermissions(strprintf("%u.%u.%u.%u:%u",vAddress[0], vAddress[1], vAddress[2],vAddress[3]), PORT))
+                        if((fDDOS && DDOS_MAP[ADDRESS]->Banned()) || !CheckPermissions(strprintf("%hhu.%hhu.%hhu.%hhu:%u",vAddress[0], vAddress[1], vAddress[2],vAddress[3]), PORT))
 						{
 							SOCKET -> shutdown(boost::asio::ip::tcp::socket::shutdown_both, ERROR_HANDLE);
 							SOCKET -> close();
 							
-							printf("##### BLOCKED: LLP Connection Request from %u.%u.%u.%u to Port %u\n", vAddress[0], vAddress[1], vAddress[2], vAddress[3], PORT);
+                            printf("##### BLOCKED: LLP Connection Request from %hhu.%hhu.%hhu.%hhu to Port %u\n", vAddress[0], vAddress[1], vAddress[2], vAddress[3], PORT);
 								
 							continue;
 						}

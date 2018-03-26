@@ -12,10 +12,10 @@ ifndef 32BIT
 endif
 ifeq (${32BIT}, 1)
 	BUILD_ARCH=x86
-	CXXFLAGS+= -m32
+	CXXFLAGS+= -m32 -std=c++11
 else
 	BUILD_ARCH=x64
-	CXXFLAGS+= -m64
+	CXXFLAGS+= -m64 -std=c++11
 endif
 
 #Define default LIB and INCLUDE path variables
@@ -136,7 +136,12 @@ endif
 ifneq (${NO_UPNP}, 1)
 	INCLUDEPATHS+= -I$(MINIUPNPC_INCLUDE_PATH)
 	LIBPATHS+= -L$(MINIUPNPC_LIB_PATH)
-	LIBS+= -l miniupnpc
+	ifneq ($(detected_OS),OSX)
+		LIBS+= -lminiupnpc
+	endif
+	ifeq ($(detected_OS),OSX)
+		LIBS+= $(MINIUPNPC_LIB_PATH)/libminiupnpc.a
+	endif
 	ifeq ($(detected_OS),Windows)
 		LIBS+= -l iphlpapi
 	endif
@@ -152,13 +157,22 @@ ifneq (${ORACLE}, 1)
 endif
 
 #Configure Build Environment
+ifneq ($(detected_OS),Windows)
 INCLUDEPATHS+= $(addprefix -I,$(CURDIR) $(CURDIR)/build $(CURDIR)/src $(CURDIR)/src/core $(CURDIR)/src/hash $(CURDIR)/src/json $(CURDIR)/src/json $(CURDIR)/src/LLP $(CURDIR)/src/LLD $(CURDIR)/src/net $(CURDIR)/src/util $(CURDIR)/src/wallet) \
 	-I$(BDB_INCLUDE_PATH) \
 	-I$(BOOST_INCLUDE_PATH) \
 	-I$(OPENSSL_INCLUDE_PATH)
+endif
+ifeq ($(detected_OS),Windows)
+INCLUDEPATHS+= -I"$(CURDIR)" -I"$(CURDIR)/build" -I"$(CURDIR)/src" -I"$(CURDIR)/src/core" -I"$(CURDIR)/src/hash" -I"$(CURDIR)/src/json" -I"$(CURDIR)/src/json" -I"$(CURDIR)/src/LLP" -I"$(CURDIR)/src/LLD" -I"$(CURDIR)/src/net" -I"$(CURDIR)/src/util" -I"$(CURDIR)/src/wallet" \
+	-I$(BDB_INCLUDE_PATH) \
+	-I$(BOOST_INCLUDE_PATH) \
+	-I$(OPENSSL_INCLUDE_PATH)
+endif
 LIBPATHS+= -L$(BOOST_LIB_PATH) \
 	-L$(BDB_LIB_PATH) \
 	-L$(OPENSSL_LIB_PATH)
+ifneq ($(detected_OS),OSX)
 LIBS+=-lboost_system$(BOOST_LIB_SUFFIX) \
 	-lboost_filesystem$(BOOST_LIB_SUFFIX) \
 	-lboost_program_options$(BOOST_LIB_SUFFIX) \
@@ -166,6 +180,7 @@ LIBS+=-lboost_system$(BOOST_LIB_SUFFIX) \
 	-ldb_cxx \
 	-lssl \
 	-lcrypto
+endif
 DEFS+= -DBOOST_SPIRIT_THREADSAFE \
 	-D$(BUILD_ARCH)
 
@@ -318,6 +333,15 @@ endif
 DEFS+= -DMAC_OSX \
 	-DMSG_NOSIGNAL=0 \
 	-DBOOST_SPIRIT_THREADSAFE
+LIBS+= $(BOOST_LIB_PATH)/libboost_system-mt.a \
+        $(BOOST_LIB_PATH)/libboost_filesystem-mt.a \
+        $(BOOST_LIB_PATH)/libboost_program_options-mt.a \
+        $(BOOST_LIB_PATH)/libboost_thread-mt.a \
+        $(BDB_LIB_PATH)/libdb_cxx.a \
+        $(OPENSSL_LIB_PATH)/libssl.a \
+        $(OPENSSL_LIB_PATH)/libcrypto.a
+
+
 
 #OS Specific Compiler Flags
 CXXFLAGS+= -mmacosx-version-min=10.10 \

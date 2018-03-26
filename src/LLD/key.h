@@ -78,11 +78,8 @@ namespace LLD
 		
 		/** Constructors. **/
 		SectorKey() : nState(0), nLength(0), nSectorFile(0), nSectorStart(0), nSectorSize(0) { }
-		SectorKey(unsigned char nStateIn, std::vector<unsigned char> vKeyIn, unsigned short nSectorFileIn, unsigned int nSectorStartIn, unsigned short nSectorSizeIn) : nState(nStateIn), nSectorFile(nSectorFileIn), nSectorStart(nSectorStartIn), nSectorSize(nSectorSizeIn)
-		{ 
-			nLength = vKeyIn.size();
-			vKey    = vKeyIn;
-		}
+		SectorKey(unsigned char nStateIn, std::vector<unsigned char> vKeyIn, unsigned short nSectorFileIn, unsigned int nSectorStartIn, unsigned short nSectorSizeIn) :
+            nState(nStateIn), nLength(vKeyIn.size()), nSectorFile(nSectorFileIn), nSectorSize(nSectorSizeIn), nSectorStart(nSectorStartIn), vKey(vKeyIn) {}
 		
 		/** Return the Size of the Key Sector on Disk. **/
 		unsigned int Size() { return (19 + nLength); }
@@ -132,7 +129,7 @@ namespace LLD
 		mutable typename std::map< std::vector<unsigned char>, SectorKey > mapKeysCache;
 		
 		/** The Database Constructor. To determine file location and the Bytes per Record. **/
-		KeyDatabase(std::string strBaseLocationIn, std::string strDatabaseNameIn) : strDatabaseName(strDatabaseNameIn), strBaseLocation(strBaseLocationIn) { strLocation = strBaseLocation + strDatabaseName + ".keys"; }
+        KeyDatabase(std::string strBaseLocationIn, std::string strDatabaseNameIn) : strBaseLocation(strBaseLocationIn), strDatabaseName(strDatabaseNameIn) { strLocation = strBaseLocation + strDatabaseName + ".keys"; }
 		
 		/** Clean up Memory Usage. **/
 		~KeyDatabase() {

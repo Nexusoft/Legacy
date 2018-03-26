@@ -31,7 +31,7 @@ vector<Net::CAddress> SEED_NODES;
 std::map<std::string, int> MAP_TIME_DATA;
 
 /** Declarations for the DNS Seed Nodes. **/
-const char* DNS_SeedNodes[] = 
+static const std::vector<std::string> DNS_SeedNodes = 
 {
 	"node1.nexusearth.com",
 	"node1.mercuryminer.com",
@@ -112,7 +112,7 @@ const char* DNS_SeedNodes[] =
 };
 
 /** Declarations for the DNS Seed Nodes. **/
-const char* DNS_SeedNodes_Testnet[] =
+static const std::vector<std::string> DNS_SeedNodes_Testnet =
 {
 	"node1.nexusearth.com",
 	"node4.nexusearth.com",
@@ -299,16 +299,16 @@ void ThreadUnifiedSamples(void* parg)
 }
 
 /* DNS Query of Domain Names Associated with Seed Nodes */
-vector<Net::CAddress> DNS_Lookup(const char* DNS_Seed[])
+vector<Net::CAddress> DNS_Lookup(const std::vector<std::string>& DNS_Seed)
 {
 	vector<Net::CAddress> vNodes;
 	int scount = 0;
-	for (int seed = 0; DNS_Seed[seed] != "\0"; seed++)
+	for (std::size_t seed = 0; seed < DNS_Seed.size(); ++seed)
 	{
-		printf("%u Host: %s\n", seed, DNS_Seed[seed]);
+		printf("%zu Host: %s\n", seed, DNS_Seed[seed]);
 		scount++;
         vector<Net::CNetAddr> vaddr;
-        if (Net::LookupHost(DNS_Seed[seed], vaddr))
+        if (Net::LookupHost(DNS_Seed[seed].c_str(), vaddr))
         {
             BOOST_FOREACH(Net::CNetAddr& ip, vaddr)
             {

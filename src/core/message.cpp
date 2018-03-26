@@ -29,7 +29,6 @@ namespace Core
 
 	string GetWarnings(string strFor)
 	{
-		int nPriority = 0;
 		string strStatusBar;
 		string strRPC;
 		if (GetBoolArg("-testsafemode"))
@@ -38,14 +37,12 @@ namespace Core
 		// Nexus: wallet lock warning for minting
 		if (strMintWarning != "")
 		{
-			nPriority = 0;
 			strStatusBar = strMintWarning;
 		}
 
 		// Misc warnings like out of disk space and clock is wrong
 		if (strMiscWarning != "")
 		{
-			nPriority = 1000;
 			strStatusBar = strMiscWarning;
 		}
 
@@ -391,7 +388,7 @@ namespace Core
 						LOCK(Net::cs_mapRelay);
 						map<Net::CInv, CDataStream>::iterator mi = Net::mapRelay.find(inv);
 						if (mi != Net::mapRelay.end())
-							pfrom->PushMessage(inv.GetCommand(), (*mi).second);
+							pfrom->PushMessage(inv.GetCommand().c_str(), (*mi).second);
 					}
 				}
 

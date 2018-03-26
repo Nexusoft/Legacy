@@ -124,7 +124,6 @@ namespace LLD
 #ifdef USE_LLD
 	bool CIndexDB::LoadBlockIndex()
 	{
-		Core::hashBestChain;
 		if(!ReadHashBestChain(Core::hashBestChain))
 			return error("No Hash Best Chain in Index Database.");
 		

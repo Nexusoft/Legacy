@@ -799,7 +799,6 @@ namespace Core
 		if (!IsCoinBase())
 		{
 			int64 nValueIn = 0;
-			int64 nFees = 0;
 			for (unsigned int i = (int) IsCoinStake(); i < vin.size(); i++)
 			{
 				COutPoint prevout = vin[i].prevout;

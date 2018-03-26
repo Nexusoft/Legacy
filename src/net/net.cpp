@@ -1129,7 +1129,6 @@ namespace Net
 		}
 
 		// Initiate network connections
-		int64 nStart = GetUnifiedTimestamp();
 		loop() {
 			vnThreadsRunning[THREAD_OPENCONNECTIONS]--;
 			Sleep(500);
