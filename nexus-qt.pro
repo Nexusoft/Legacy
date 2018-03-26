@@ -474,7 +474,7 @@ INCLUDEPATH += $$BOOST_INCLUDE_PATH \
 	$$OPENSSL_INCLUDE_PATH
 LIBS += $$join(BOOST_LIB_PATH,,-L,) \
 	$$join(BDB_LIB_PATH,,-L,) \
-	$$join(OPENSSL_LIB_PATH,,-L,)
+	$$join(OPENSSL_LIB_PATH,,-L,) \
 	-lssl \
 	-lcrypto \
 	-ldb_cxx$$BDB_LIB_SUFFIX \
