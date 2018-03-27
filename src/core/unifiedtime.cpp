@@ -302,9 +302,9 @@ vector<Net::CAddress> DNS_Lookup(const std::vector<std::string>& DNS_Seed)
 {
 	vector<Net::CAddress> vNodes;
 	int scount = 0;
-	for (std::size_t seed = 0; seed < DNS_Seed.size(); ++seed)
+	for (std::size_t seed = 0; seed < DNS_Seed.size(); seed++)
 	{
-		printf("%zu Host: %s\n", seed, DNS_Seed[seed].c_str());
+		printf("%Iu Host: %s\n", seed, DNS_Seed[seed].c_str());
 		scount++;
         vector<Net::CNetAddr> vaddr;
         if (Net::LookupHost(DNS_Seed[seed].c_str(), vaddr))
