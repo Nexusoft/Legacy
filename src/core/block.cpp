@@ -916,7 +916,7 @@ namespace Core
 			mapOrphanBlocksByPrev.erase(hashPrev);
 		}
 
-		printg("ProcessBlock: ACCEPTED %s\n", pblock->GetHash().ToString().substr(0, 10).c_str());
+		printg("ProcessBlock: ACCEPTED %s\n", pblock->GetHash().ToString().substr(0, 20).c_str());
 
 		return true;
 	}
