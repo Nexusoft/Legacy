@@ -35,31 +35,49 @@
 #include "../util/macdockiconhandler.h"
 #endif
 
-#include <QApplication>
-#include <QMainWindow>
-#include <QMenuBar>
-#include <QMenu>
-#include <QIcon>
-#include <QTabWidget>
-#include <QVBoxLayout>
-#include <QToolBar>
-#include <QStatusBar>
-#include <QLabel>
-#include <QLineEdit>
-#include <QPushButton>
-#include <QLocale>
-#include <QMessageBox>
-#include <QProgressBar>
-#include <QStackedWidget>
+#if QT_VERSION < QT_VERSION_CHECK(5,0,0)
+ #include <QApplication>
+ #include <QMainWindow>
+ #include <QMenuBar>
+ #include <QMenu>
+ #include <QTabWidget>
+ #include <QVBoxLayout>
+ #include <QToolBar>
+ #include <QStatusBar>
+ #include <QLabel>
+ #include <QLineEdit>
+ #include <QPushButton>
+ #include <QMessageBox>
+ #include <QProgressBar>
+ #include <QStackedWidget>
+ #include <QFileDialog>
+#else
+ #include <QtWidgets/QApplication>
+ #include <QtWidgets/QMainWindow>
+ #include <QtWidgets/QMenuBar>
+ #include <QtWidgets/QMenu>
+ #include <QtWidgets/QTabWidget>
+ #include <QtWidgets/QVBoxLayout>
+ #include <QtWidgets/QToolBar>
+ #include <QtWidgets/QStatusBar>
+ #include <QtWidgets/QLabel>
+ #include <QtWidgets/QLineEdit>
+ #include <QtWidgets/QPushButton>
+ #include <QtWidgets/QMessageBox>
+ #include <QtWidgets/QProgressBar>
+ #include <QtWidgets/QStackedWidget>
+ #include <QtWidgets/QFileDialog>
+#endif
+
+#include <QDesktopServices>
 #include <QDateTime>
 #include <QMovie>
-#include <QFileDialog>
-#include <QDesktopServices>
+#include <QLocale>
 #include <QTimer>
-
+#include <QMimeData>
 #include <QDragEnterEvent>
 #include <QUrl>
-
+#include <QIcon>
 #include <iostream>
 
 NexusGUI::NexusGUI(QWidget *parent):
@@ -85,7 +103,7 @@ NexusGUI::NexusGUI(QWidget *parent):
 #endif
 
 	/** Set the Styles of the Qt **/
-	setStyleSheet("selection-background-color: #084B8A; background-color: #F7F7F7 }");
+	setStyleSheet("selection-background-color: #084B8A; background-color: #F7F7F7");
 	setAutoFillBackground(true);
 	
     // Accept D&D of URIs
@@ -171,7 +189,7 @@ NexusGUI::NexusGUI(QWidget *parent):
     statusBar()->addWidget(progressBar);
     statusBar()->addPermanentWidget(frameBlocks);
 
-    syncIconMovie = new QMovie(":/movies/update_spinner", "mng", this);
+    syncIconMovie = new QMovie(":/movies/update_spinner", "gif", this);
 
     // Clicking on a transaction on the overview page simply sends you to transaction history page
     connect(overviewPage, SIGNAL(transactionClicked(QModelIndex)), this, SLOT(gotoHistoryPage()));
@@ -900,7 +918,11 @@ void NexusGUI::encryptWallet(bool status)
 
 void NexusGUI::backupWallet()
 {
-    QString saveDir = QDesktopServices::storageLocation(QDesktopServices::DocumentsLocation);
+    #if QT_VERSION < QT_VERSION_CHECK(5,0,0)
+     QString saveDir = QDesktopServices::storageLocation(QDesktopServices::DocumentsLocation);
+	#else
+     QString saveDir = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
+	#endif
     QString filename = QFileDialog::getSaveFileName(this, tr("Backup Wallet"), saveDir, tr("Wallet Data (*.dat)"));
     if(!filename.isEmpty()) {
         if(!walletModel->backupWallet(filename)) {

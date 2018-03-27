@@ -111,7 +111,7 @@ namespace LLP
 				RESPONSE.DATA   = int2bytes(nOffset);
 				
 				if(GetArg("-verbose", 0) >= 3)
-					printf("***** Core LLP: Sent Offset %i | %u.%u.%u.%u | Unified %"PRId64"\n", nOffset, ADDRESS[0], ADDRESS[1], ADDRESS[2], ADDRESS[3], GetUnifiedTimestamp());
+                    printf("***** Core LLP: Sent Offset %i | %hhu.%hhu.%hhu.%hhu | Unified %" PRId64 "\n", nOffset, ADDRESS[0], ADDRESS[1], ADDRESS[2], ADDRESS[3], GetUnifiedTimestamp());
 				
 				this->WritePacket(RESPONSE);
 				return true;
@@ -125,7 +125,7 @@ namespace LLP
 				RESPONSE.DATA = uint2bytes((unsigned int)GetUnifiedTimestamp());
 				
 				if(GetArg("-verbose", 0) >= 3)
-					printf("***** Core LLP: Sent Time Sample %"PRId64" to %u.%u.%u.%u\n", GetUnifiedTimestamp(), ADDRESS[0], ADDRESS[1], ADDRESS[2], ADDRESS[3]);
+                    printf("***** Core LLP: Sent Time Sample %" PRId64 " to %hhu.%hhu.%hhu.%hhu\n", GetUnifiedTimestamp(), ADDRESS[0], ADDRESS[1], ADDRESS[2], ADDRESS[3]);
 				
 				this->WritePacket(RESPONSE);
 				return true;

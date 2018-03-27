@@ -13,7 +13,7 @@ namespace LLP
 		std::string IP, PORT;
 		
 		/** Outgoing Client Connection Constructor **/
-		Outbound(std::string ip, std::string port) : IP(ip), PORT(port), Connection() { }
+		Outbound(std::string ip, std::string port) : IP(ip), PORT(port) { }
 		
 		bool Connect()
 		{

@@ -238,7 +238,6 @@ namespace Core
 	
 	/** DIFFICULTY.CPP **/
 	double GetDifficulty(unsigned int nBits, int nChannel);
-	unsigned int ComputeMinWork(const CBlockIndex* pcheckpoint, int64 nTime, int nChannel);
 	unsigned int GetNextTargetRequired(const CBlockIndex* pindex, int nChannel, bool output = false);
 	unsigned int RetargetPOS(const CBlockIndex* pindex, bool output);
 	unsigned int RetargetCPU(const CBlockIndex* pindex, bool output);
@@ -673,7 +672,7 @@ namespace Core
 			uint576 cKey;
 			cKey.SetBytes(vchPubKey);
 			
-			return strprintf("Hash = %s, Key = %s, Genesis = %s, Tx = %s, Time = %u, Age = %"PRIu64", BlockAge = %"PRIu64", Expired = %s", GetHash().ToString().c_str(), cKey.ToString().c_str(), hashGenesisBlock.ToString().c_str(), hashGenesisTx.ToString().c_str(), nGenesisTime, Age(GetUnifiedTimestamp()), BlockAge(GetUnifiedTimestamp()), Expired(GetUnifiedTimestamp()) ? "TRUE" : "FALSE");
+			return strprintf("Hash = %s, Key = %s, Genesis = %s, Tx = %s, Time = %u, Age = %" PRIu64 ", BlockAge = %" PRIu64 ", Expired = %s", GetHash().ToString().c_str(), cKey.ToString().c_str(), hashGenesisBlock.ToString().c_str(), hashGenesisTx.ToString().c_str(), nGenesisTime, Age(GetUnifiedTimestamp()), BlockAge(GetUnifiedTimestamp()), Expired(GetUnifiedTimestamp()) ? "TRUE" : "FALSE");
 		}
 		
 		void Print()
@@ -1508,7 +1507,7 @@ namespace Core
 
 		void print() const
 		{
-			printf("CBlock(hash=%s, ver=%d, hashPrevBlock=%s, hashMerkleRoot=%s, nTime=%u, nBits=%08x, nChannel = %u, nHeight = %u, nNonce=%"PRIu64", vtx=%d, vchBlockSig=%s)\n",
+			printf("CBlock(hash=%s, ver=%d, hashPrevBlock=%s, hashMerkleRoot=%s, nTime=%u, nBits=%08x, nChannel = %u, nHeight = %u, nNonce=%" PRIu64 ", vtx=%d, vchBlockSig=%s)\n",
 				GetHash().ToString().substr(0,20).c_str(),
 				nVersion,
 				hashPrevBlock.ToString().substr(0,20).c_str(),

@@ -1,5 +1,5 @@
 <?xml version="1.0" ?><!DOCTYPE TS><TS language="hu" version="2.0">
-<defaultcodec>UTF-8</defaultcodec>
+
 <context>
     <name>AboutDialog</name>
     <message>
@@ -487,10 +487,10 @@ Biztosan kódolni akarod a tárcát?</translation>
         <source>Nexus-qt</source>
         <translation>Nexus-qt</translation>
     </message>
-    <message numerus="yes">
+    <message>
         <location filename="../core/gui.cpp" line="449"/>
         <source>%n active connection(s) to Nexus network</source>
-        <translation><numerusform>%n aktív kapcsolat a Nexus-hálózattal</numerusform><numerusform>%n aktív kapcsolat a Nexus-hálózattal</numerusform></translation>
+        <translation>%n aktív kapcsolat a Nexus-hálózattal</translation>
     </message>
     <message>
         <location filename="../core/gui.cpp" line="475"/>
@@ -502,25 +502,25 @@ Biztosan kódolni akarod a tárcát?</translation>
         <source>Downloaded %1 blocks of transaction history.</source>
         <translation>%1 blokk letöltve a tranzakciótörténetből.</translation>
     </message>
-    <message numerus="yes">
+    <message>
         <location filename="../core/gui.cpp" line="502"/>
         <source>%n second(s) ago</source>
-        <translation><numerusform>%n másodperccel ezelőtt</numerusform><numerusform>%n másodperccel ezelőtt</numerusform></translation>
+        <translation>%n másodperccel ezelőtt</translation>
     </message>
-    <message numerus="yes">
+    <message>
         <location filename="../core/gui.cpp" line="506"/>
         <source>%n minute(s) ago</source>
-        <translation><numerusform>%n perccel ezelőtt</numerusform><numerusform>%n perccel ezelőtt</numerusform></translation>
+        <translation>%n perccel ezelőtt</translation>
     </message>
-    <message numerus="yes">
+    <message>
         <location filename="../core/gui.cpp" line="510"/>
         <source>%n hour(s) ago</source>
-        <translation><numerusform>%n órával ezelőtt</numerusform><numerusform>%n órával ezelőtt</numerusform></translation>
+        <translation>%n órával ezelőtt</translation>
     </message>
-    <message numerus="yes">
+    <message>
         <location filename="../core/gui.cpp" line="514"/>
         <source>%n day(s) ago</source>
-        <translation><numerusform>%n nappal ezelőtt</numerusform><numerusform>%n nappal ezelőtt</numerusform></translation>
+        <translation>%n nappal ezelőtt</translation>
     </message>
     <message>
         <location filename="../core/gui.cpp" line="520"/>
@@ -1358,10 +1358,10 @@ p, li { white-space: pre-wrap; }
         <source>Amount</source>
         <translation>Összeg</translation>
     </message>
-    <message numerus="yes">
+    <message>
         <location filename="../transactiontablemodel.cpp" line="274"/>
         <source>Open for %n block(s)</source>
-        <translation><numerusform>%n blokkra megnyitva</numerusform><numerusform>%n blokkra megnyitva</numerusform></translation>
+        <translation>%n blokkra megnyitva</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="277"/>
@@ -1383,10 +1383,10 @@ p, li { white-space: pre-wrap; }
         <source>Confirmed (%1 confirmations)</source>
         <translation>Megerősítve (%1 megerősítés)</translation>
     </message>
-    <message numerus="yes">
+    <message>
         <location filename="../transactiontablemodel.cpp" line="295"/>
         <source>Mined balance will be available in %n more blocks</source>
-        <translation><numerusform>%n blokk múlva lesz elérhető a bányászott egyenleg.</numerusform><numerusform>%n blokk múlva lesz elérhető a bányászott egyenleg.</numerusform></translation>
+        <translation>%n blokk múlva lesz elérhető a bányászott egyenleg.</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="301"/>

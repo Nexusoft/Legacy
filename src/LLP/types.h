@@ -176,14 +176,16 @@ namespace LLP
 	/** Filter to Contain DDOS Scores and Handle DDOS Bans. **/
 	class DDOS_Filter
 	{
-		Timer TIMER;
-		unsigned int BANTIME, TOTALBANS;
 		
 	public:
+		unsigned int BANTIME = 0;
+		unsigned int TOTALBANS = 0;
+		
 		DDOS_Score rSCORE, cSCORE;
-		DDOS_Filter(unsigned int nTimespan) : rSCORE(nTimespan), cSCORE(nTimespan), BANTIME(0), TOTALBANS(0) { }
+		Timer TIMER;
 		Mutex_t MUTEX;
 		
+		DDOS_Filter(unsigned int nTimespan) : rSCORE(nTimespan), cSCORE(nTimespan) { }
 		/** Ban a Connection, and Flush its Scores. **/
 		void Ban()
 		{
@@ -301,7 +303,7 @@ namespace LLP
 		virtual void Event(unsigned char EVENT, unsigned int LENGTH = 0){ }
 		
 		/** Virtual Process Function. To be overridden with your own custom packet processing. **/
-		virtual bool ProcessPacket(){ }
+		virtual bool ProcessPacket(){ return false; }
 	public:
 	
 	
@@ -322,8 +324,8 @@ namespace LLP
 		
 		
 		/** Connection Constructors **/
-		Connection() : SOCKET(), DDOS(NULL), INCOMING(), CONNECTED(false), fDDOS(false) { INCOMING.SetNull(); }
-		Connection( Socket_t SOCKET_IN, DDOS_Filter* DDOS_IN, bool isDDOS = false) : SOCKET(SOCKET_IN), fDDOS(isDDOS), DDOS(DDOS_IN), INCOMING(), CONNECTED(false) { TIMER.Start(); }
+		Connection() : SOCKET(), INCOMING(), DDOS(NULL), CONNECTED(false), fDDOS(false) { INCOMING.SetNull(); }
+		Connection( Socket_t SOCKET_IN, DDOS_Filter* DDOS_IN, bool isDDOS = false) : SOCKET(SOCKET_IN), INCOMING(), DDOS(DDOS_IN), CONNECTED(false), fDDOS(isDDOS) { TIMER.Start(); }
 		
 		
 		/** Checks for any flags in the Error Handle. **/

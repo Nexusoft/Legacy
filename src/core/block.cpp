@@ -211,7 +211,7 @@ namespace Core
 		// Nexus: fees are not collected by miners as in bitcoin
 		// Nexus: fees are destroyed to compensate the entire network
 		if(GetArg("-verbose", 0) >= 1)
-			printf("ConnectBlock() : destroy=%s nFees=%"PRI64d"\n", FormatMoney(nFees).c_str(), nFees);
+			printf("ConnectBlock() : destroy=%s nFees=%" PRI64d "\n", FormatMoney(nFees).c_str(), nFees);
 
 		// Update block index on disk without changing it in memory.
 		// The memory index structure will be changed after the db commits.
@@ -381,7 +381,7 @@ namespace Core
 		nTimeBestReceived = GetUnifiedTimestamp();
 		
 		if(GetArg("-verbose", 0) >= 0)
-			printf("SetBestChain: new best=%s  height=%d  trust=%"PRIu64"  moneysupply=%s\n", hashBestChain.ToString().substr(0,20).c_str(), nBestHeight, nBestChainTrust, FormatMoney(pindexBest->nMoneySupply).c_str());
+			printf("SetBestChain: new best=%s  height=%d  trust=%" PRIu64 "  moneysupply=%s\n", hashBestChain.ToString().substr(0,20).c_str(), nBestHeight, nBestChainTrust, FormatMoney(pindexBest->nMoneySupply).c_str());
 		
 		/** Grab the transactions for the block and set the address balances. **/
         if(GetBoolArg("-richlist", false))
@@ -657,17 +657,17 @@ namespace Core
 			
 		/** Check the Current Channel Time-Lock. **/
 		if (nHeight > 0 && GetBlockTime() < (fTestNet ? CHANNEL_TESTNET_TIMELOCK[GetChannel()] : CHANNEL_NETWORK_TIMELOCK[GetChannel()]))
-			return error("CheckBlock() : Block Created before Channel Time-Lock. Channel Opens in %"PRId64" Seconds", (fTestNet ? CHANNEL_TESTNET_TIMELOCK[GetChannel()] : CHANNEL_NETWORK_TIMELOCK[GetChannel()]) - GetUnifiedTimestamp());
+			return error("CheckBlock() : Block Created before Channel Time-Lock. Channel Opens in %" PRId64 " Seconds", (fTestNet ? CHANNEL_TESTNET_TIMELOCK[GetChannel()] : CHANNEL_NETWORK_TIMELOCK[GetChannel()]) - GetUnifiedTimestamp());
 			
 			
 		/** Check the Current Version Block Time-Lock. Allow Version (Current -1) Blocks for 1 Hour after Time Lock. **/
 		if (nVersion > 1 && nVersion == (fTestNet ? TESTNET_BLOCK_CURRENT_VERSION - 1 : NETWORK_BLOCK_CURRENT_VERSION - 1) && (GetBlockTime() - 3600) > (fTestNet ? TESTNET_VERSION_TIMELOCK[TESTNET_BLOCK_CURRENT_VERSION - 2] : NETWORK_VERSION_TIMELOCK[NETWORK_BLOCK_CURRENT_VERSION - 2]))
-			return error("CheckBlock() : Version %u Blocks have been Obsolete for %"PRId64" Seconds\n", nVersion, (GetUnifiedTimestamp() - (fTestNet ? TESTNET_VERSION_TIMELOCK[TESTNET_BLOCK_CURRENT_VERSION - 2] : NETWORK_VERSION_TIMELOCK[TESTNET_BLOCK_CURRENT_VERSION - 2])));	
+			return error("CheckBlock() : Version %u Blocks have been Obsolete for %" PRId64 " Seconds\n", nVersion, (GetUnifiedTimestamp() - (fTestNet ? TESTNET_VERSION_TIMELOCK[TESTNET_BLOCK_CURRENT_VERSION - 2] : NETWORK_VERSION_TIMELOCK[TESTNET_BLOCK_CURRENT_VERSION - 2])));	
 			
 			
 		/** Check the Current Version Block Time-Lock. **/
 		if (nVersion >= (fTestNet ? TESTNET_BLOCK_CURRENT_VERSION : NETWORK_BLOCK_CURRENT_VERSION) && GetBlockTime() <= (fTestNet ? TESTNET_VERSION_TIMELOCK[TESTNET_BLOCK_CURRENT_VERSION - 2] : NETWORK_VERSION_TIMELOCK[NETWORK_BLOCK_CURRENT_VERSION - 2]))
-			return error("CheckBlock() : Version %u Blocks are not Accepted for %"PRId64" Seconds\n", nVersion, (GetUnifiedTimestamp() - (fTestNet ? TESTNET_VERSION_TIMELOCK[TESTNET_BLOCK_CURRENT_VERSION - 2] : NETWORK_VERSION_TIMELOCK[NETWORK_BLOCK_CURRENT_VERSION - 2])));	
+			return error("CheckBlock() : Version %u Blocks are not Accepted for %" PRId64 " Seconds\n", nVersion, (GetUnifiedTimestamp() - (fTestNet ? TESTNET_VERSION_TIMELOCK[TESTNET_BLOCK_CURRENT_VERSION - 2] : NETWORK_VERSION_TIMELOCK[NETWORK_BLOCK_CURRENT_VERSION - 2])));	
 			
 			
 		/** Check the Required Mining Outputs. **/
@@ -791,7 +791,7 @@ namespace Core
 			
 		/** Check That Block Timestamp is not before previous block. **/
 		if (GetBlockTime() <= pindexPrev->GetBlockTime())
-			return error("AcceptBlock() : block's timestamp too early Block: %"PRId64" Prev: %"PRId64"", GetBlockTime(), pindexPrev->GetBlockTime());
+			return error("AcceptBlock() : block's timestamp too early Block: %" PRId64 " Prev: %" PRId64 "", GetBlockTime(), pindexPrev->GetBlockTime());
 			
 			
 		/** Check the Coinbase Transactions in Block Version 3. **/
@@ -806,15 +806,15 @@ namespace Core
 					
 			/** Check that the Mining Reward Matches the Coinbase Calculations. **/
 			if (nMiningReward != GetCoinbaseReward(pindexPrev, GetChannel(), 0))
-				return error("AcceptBlock() : miner reward mismatch %"PRId64" : %"PRId64"", nMiningReward, GetCoinbaseReward(pindexPrev, GetChannel(), 0));
+				return error("AcceptBlock() : miner reward mismatch %" PRId64 " : %" PRId64 "", nMiningReward, GetCoinbaseReward(pindexPrev, GetChannel(), 0));
 					
 			/** Check that the Exchange Reward Matches the Coinbase Calculations. **/
 			if (vtx[0].vout[nSize - 2].nValue != GetCoinbaseReward(pindexPrev, GetChannel(), 1))
-				return error("AcceptBlock() : exchange reward mismatch %"PRId64" : %"PRId64"\n", vtx[0].vout[1].nValue, GetCoinbaseReward(pindexPrev, GetChannel(), 1));
+				return error("AcceptBlock() : exchange reward mismatch %" PRId64 " : %" PRId64 "\n", vtx[0].vout[1].nValue, GetCoinbaseReward(pindexPrev, GetChannel(), 1));
 						
 			/** Check that the Developer Reward Matches the Coinbase Calculations. **/
 			if (vtx[0].vout[nSize - 1].nValue != GetCoinbaseReward(pindexPrev, GetChannel(), 2))
-				return error("AcceptBlock() : developer reward mismatch %"PRId64" : %"PRId64"\n", vtx[0].vout[2].nValue, GetCoinbaseReward(pindexPrev, GetChannel(), 2));
+				return error("AcceptBlock() : developer reward mismatch %" PRId64 " : %" PRId64 "\n", vtx[0].vout[2].nValue, GetCoinbaseReward(pindexPrev, GetChannel(), 2));
 					
 		}
 		
@@ -916,7 +916,7 @@ namespace Core
 			mapOrphanBlocksByPrev.erase(hashPrev);
 		}
 
-		printg("ProcessBlock: ACCEPTED %s\n", pblock->GetHash().ToString().substr(0, 10).c_str());
+		printg("ProcessBlock: ACCEPTED %s\n", pblock->GetHash().ToString().substr(0, 20).c_str());
 
 		return true;
 	}
@@ -1014,8 +1014,7 @@ namespace Core
 	FILE* AppendBlockFile(unsigned int& nFileRet)
 	{
 		nFileRet = 0;
-		loop
-		{
+		loop() {
 			FILE* file = OpenBlockFile(nCurrentBlockFile, 0, "ab");
 			if (!file)
 				return NULL;

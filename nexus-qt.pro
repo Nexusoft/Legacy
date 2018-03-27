@@ -1,123 +1,221 @@
 TEMPLATE = app
 TARGET = nexus-qt
 VERSION = 0.1.0.0
-INCLUDEPATH += src src/core src/hash src/json src/keys src/net src/qt src/util src/wallet src/LLD src/LLP
+INCLUDEPATH += src src/core src/hash src/json src/net src/qt src/util src/wallet src/LLD src/LLP
 DEFINES += QT_GUI BOOST_THREAD_USE_LIB BOOST_SPIRIT_THREADSAFE
-CONFIG += no_include_pwd
-CONFIG += warn_off
-
-#Manually Link to Windoze Library Locations
-windows:BOOST_LIB_SUFFIX=-mgw49-mt-s-1_57
-windows:BOOST_INCLUDE_PATH=C:/Deps/boost_1_57_0
-windows:BOOST_LIB_PATH=C:/Deps/boost_1_57_0/stage/lib
-windows:BDB_INCLUDE_PATH=C:/Deps/db-4.8.30.NC/build_unix
-windows:BDB_LIB_PATH=C:/Deps/db-4.8.30.NC/build_unix
-windows:OPENSSL_INCLUDE_PATH=C:/Deps/openssl-1.0.1l/include
-windows:OPENSSL_LIB_PATH=C:/Deps/openssl-1.0.1l
-windows:MINIUPNPC_INCLUDE_PATH=C:/Deps/
-windows:MINIUPNPC_LIB_PATH=C:/Deps/miniupnpc
-windows:QRENCODE_INCLUDE_PATH=C:/Deps/qrencode-3.4.4
-windows:QRENCODE_LIB_PATH=C:/Deps/qrencode-3.4.4/.libs
-
-
-# for boost 1.37, add -mt to the boost libraries 
-# use: qmake BOOST_LIB_SUFFIX=-mt
-# for boost thread win32 with _win32 sufix
-# use: BOOST_THREAD_LIB_SUFFIX=_win32-...
-# or when linking against a specific BerkelyDB version: BDB_LIB_SUFFIX=-4.8
-
-# Dependency library locations can be customized with BOOST_INCLUDE_PATH, 
-#    BOOST_LIB_PATH, BDB_INCLUDE_PATH, BDB_LIB_PATH
-#    OPENSSL_INCLUDE_PATH and OPENSSL_LIB_PATH respectively
-
+CONFIG += no_include_pwd optimize_full
+greaterThan(QT_MAJOR_VERSION, 4) {
+	QT += uitools
+}
 OBJECTS_DIR = build/obj
 MOC_DIR = build/moc
 UI_DIR = build/ui
 
-#debug symbols for QT
-contains(DEBUG, 1) {
-    message("Building with Debug Symbols")
-    QMAKE_CXXFLAGS += -g
-	CONFIG += DEBUG
+#Allow verbose compiling output
+isEmpty(VERBOSE) {
+	VERBOSE= 0
+	CONFIG+= silent warn_off
+}
+contains(VERBOSE, 1) {
+	CONFIG+= warn_off
+	!build_pass:message("Showing Verbose Output")
+}
+greaterThan(VERBOSE, 1) {
+	CONFIG+= warn_on
+	!build_pass:message("Showing Extra Verbose Output")
 }
 
-# use: qmake "RELEASE=1"
-contains(RELEASE, 1) {
-    message("Building with Static Linking")
-    # Mac: compile for Yosemite and Above (10.10, 32-bit)
-    #macx:QMAKE_CXXFLAGS += -O3 -mmacosx-version-min=10.10 -arch x86_64
-    macx:QMAKE_CXXFLAGS += -O3 -mmacosx-version-min=10.10 -arch i386 
+#Arch Linux Test
+ARCH_TEST = $$system(uname -r | grep -o '....$')
+contains(ARCH_TEST, ARCH) {
+	OPENSSL_LIB_PATH = /usr/lib/openssl-1.0
+	OPENSSL_INCLUDE_PATH = /usr/include/openssl-1.0
+	LD_LIBRARY_PATH = /usr/lib
+}
 
-#-isysroot /Developer/SDKs/MacOSX10.10.sdk
+#Configure for 32/64 Bit
+contains(32BIT, 1) {
+	!build_pass:message("Building 32-Bit Version")
+	BUILD_ARCH = x86
+	QMAKE_LFLAGS += -m32
+	QMAKE_CFLAGS += -m32
+	QMAKE_CXXFLAGS += -m32
+} else {
+	!build_pass:message("Building 64-Bit Version")
+	64BIT= 1
+	BUILD_ARCH = x64
+	QMAKE_LFLAGS += -m64
+	QMAKE_CFLAGS += -m64
+	QMAKE_CXXFLAGS += -m64
+}
+DEFINES += $$BUILD_ARCH
+
+#Define default LIB and INCLUDE path variables
+isEmpty(BOOST_LIB_SUFFIX) {
+	win32:BOOST_LIB_SUFFIX=-mgw73-mt-s-$$BUILD_ARCH-1_66
+    macx:BOOST_LIB_SUFFIX = -mt
+}
+isEmpty(BOOST_LIB_PATH) {
+	win32:BOOST_LIB_PATH=C:/deps/lib
+    macx:BOOST_LIB_PATH = /usr/local/opt/boost/lib
+	!macx:!win32:BOOST_LIB_PATH=/usr/lib/x86_64-linux-gnu/
+}
+isEmpty(BOOST_INCLUDE_PATH) {
+	win32:BOOST_INCLUDE_PATH=C:/deps/include/boost-1_66
+    macx:BOOST_INCLUDE_PATH = /usr/local/opt/boost/include
+	!macx:!win32:BOOST_INCLUDE_PATH=/usr/include/boost
+}
+isEmpty(OPENSSL_LIB_PATH) {
+	win32:OPENSSL_LIB_PATH=C:/deps/lib
+    macx:OPENSSL_LIB_PATH = /usr/local/opt/openssl/lib
+}
+isEmpty(OPENSSL_INCLUDE_PATH) {
+	win32:OPENSSL_INCLUDE_PATH=C:/deps/include
+    macx:OPENSSL_INCLUDE_PATH = /usr/local/opt/openssl/include
+}
+isEmpty(BDB_LIB_PATH) {
+	win32:BDB_LIB_PATH=C:/deps/lib
+    macx:BDB_LIB_PATH = /usr/local/opt/db/lib
+}
+isEmpty(BDB_LIB_SUFFIX) {
+    macx:BDB_LIB_SUFFIX = -6.2
+}
+isEmpty(BDB_INCLUDE_PATH) {
+	win32:BDB_INCLUDE_PATH=C:/deps/include
+    macx:BDB_INCLUDE_PATH = /usr/local/opt/db/include
+}
+isEmpty(MINIUPNPC_LIB_PATH) {
+	win32:MINIUPNPC_LIB_PATH=C:/deps/lib
+    macx:MINIUPNPC_LIB_PATH = /usr/local/opt/miniupnpc/lib
+}
+isEmpty(MINIUPNPC_INCLUDE_PATH) {
+	win32:MINIUPNPC_INCLUDE_PATH=C:/deps/include
+    macx:MINIUPNPC_INCLUDE_PATH = /usr/local/opt/miniupnpc/include
+}
+isEmpty(QRENCODE_LIB_PATH) {
+	win32:QRENCODE_LIB_PATH=C:/deps/lib
+	macx:QRENCODE_LIB_PATH = /usr/local/opt/qrencode/lib
+}
+isEmpty(QRENCODE_INCLUDE_PATH) {
+	win32:QRENCODE_INCLUDE_PATH=C:/deps/include
+	macx:QRENCODE_INCLUDE_PATH = /usr/local/opt/qrencode/include
+}
+isEmpty(QMAKE_LRELEASE) {
+    win32:QMAKE_LRELEASE = $$[QT_INSTALL_BINS]\\lrelease.exe
+    else:QMAKE_LRELEASE = $$[QT_INSTALL_BINS]/lrelease
+}
+
+#Build Type
+isEmpty(DEBUG) {
+	isEmpty(RELEASE) {
+		RELEASE = 1
+	}
+}
+
+contains(DEBUG, 1) {
+	contains (RELEASE, 1) {
+		DEBUG_AND_RELEASE = 1
+	}
+}
+contains(DEBUG_AND_RELEASE, 1) {
+	!build_pass:message("Building Debug and Release Version")
+	DEBUG = 1
+	RELEASE = 1
+	CONFIG += debug_and_release
+}
+
+#Debug Version Config
+contains(DEBUG, 1) {
+	isEmpty(RELEASE) {
+		!build_pass:message("Building Debug Version")
+		CONFIG += debug
+	}
+	QMAKE_CXXFLAGS += -g
+}
+
+#Release Version Config
+contains(RELEASE, 1) {
+	isEmpty(DEBUG) {
+		!build_pass:message("Building Release Version")
+		CONFIG += release
+		DEFINES += NDEBUG
+	}
+    !build_pass:message("Building with Static Linking")
+    # Mac: compile for Yosemite and Above (10.10, 32/64-bit)
+    macx:QMAKE_CXXFLAGS += -mmacosx-version-min=10.10 -arch x86_64
+
+    #-sysroot /Developer/SDKs/MacOSX.sdk
 
     #Static Configuration
-    windows:CONFIG += STATIC
+    win32:CONFIG += STATIC
 	
-    windows:QMAKE_LFLAGS += -Wl,--dynamicbase -Wl,--nxcompat
-    windows:QMAKE_LFLAGS += -Wl,--large-address-aware -static
-    windows:QMAKE_LFLAGS += -static-libgcc -static-libstdc++
-}
-
-# use: qmake "USE_QRCODE=1"
-# libqrencode (http://fukuchi.org/works/qrencode/index.en.html) must be installed for support
-contains(USE_QRCODE, 1) {
-    message("Building with QRCode support")
-    DEFINES += USE_QRCODE
-    LIBS += -lqrencode
-}
-
-# use: qmake "USE_UPNP=1" ( enabled by default; default)
-#  or: qmake "USE_UPNP=0" (disabled by default)
-#  or: qmake "USE_UPNP=-" (not supported)
-# miniupnpc (http://miniupnp.free.fr/files/) must be installed for support
-contains(USE_UPNP, 1) {
-    message("Building with UPNP support")
-    count(USE_UPNP, 0) {
-        USE_UPNP=1
+    win32:QMAKE_LFLAGS += -Wl,--dynamicbase -Wl,--nxcompat -static -m64 -std=c++11 -static-libgcc -static-libstdc++
+    !win32:!macx {
+        # Linux: static link
+        LIBS += -Wl,-Bstatic
     }
-    DEFINES += USE_UPNP=$$USE_UPNP STATICLIB
+}
+
+#QREncode Support Config
+contains(USE_QRCODE, 1) {
+    !build_pass:message("Building with QRCode support")
+    DEFINES += USE_QRCODE
+	INCLUDEPATH+= $$QRENCODE_INCLUDE_PATH
+    LIBS += $$join(QRENCODE_LIB_PATH,,-L,) -lqrencode
+	HEADERS += src/qt/dialogs/qrcodedialog.h
+	SOURCES += src/qt/dialogs/qrcodedialog.cpp
+	FORMS += src/qt/forms/qrcodedialog.ui
+}
+
+#UPNP Support Config
+contains(NO_UPNP, 1) {
+    !build_pass:message("Building without UPNP support")
+	DEFINES += USE_UPNP=0
+} else {
+	!build_pass:message("Building with UPNP support")
+    DEFINES += USE_UPNP=1 MINIUPNP_STATICLIB
     INCLUDEPATH += $$MINIUPNPC_INCLUDE_PATH
     LIBS += $$join(MINIUPNPC_LIB_PATH,,-L,) -lminiupnpc
     win32:LIBS += -liphlpapi
-} else {
-    message("Building without UPNP support")
 }
 
-#handle the LLD build option
-contains(USE_LLD, 0)
-{
-	message("Building with Lower Level Database Support")
-	
+#Oracle DB Support Config
+contains(ORACLE, 1) {
+	!build_pass:message("Building with Berkeley Database Support (Oracle)")
+} else {
+	!build_pass:message("Building with Lower Level Database Support")
 	DEFINES += USE_LLD
 }
 
-# use: qmake "USE_DBUS=1"
+#DBUS Support Config
 contains(USE_DBUS, 1) {
-    message(Building with DBUS (Freedesktop notifications) support)
+    !build_pass:message(Building with DBUS (Freedesktop notifications) support)
     DEFINES += USE_DBUS
     QT += dbus
 }
 
-# use: qmake "FIRST_CLASS_MESSAGING=1"
-contains(FIRST_CLASS_MESSAGING, 1) {
-    message(Building with first-class messaging)
+# use: qmake "MESSAGE_TAB=1"
+contains(MESSAGE_TAB, 1) {
+    !build_pass:message(Building with Messaging Tab Enabled)
     DEFINES += FIRST_CLASS_MESSAGING
 }
 
+#QTPLUGIN helper
 contains(NEXUS_NEED_QT_PLUGINS, 1) {
     DEFINES += NEXUS_NEED_QT_PLUGINS
     QTPLUGIN += qcncodecs qjpcodecs qtwcodecs qkrcodecs qtaccessiblewidgets
 }
 
-!windows {
+!win32 {
     # for extra security against potential buffer overflows
     QMAKE_CXXFLAGS += -fstack-protector
     QMAKE_LFLAGS += -fstack-protector
     # do not enable this on windows, as it will result in a non-working executable!
 }
 
-QMAKE_CXXFLAGS += -D_FORTIFY_SOURCE=2 -fpermissive
-
+!macx:QMAKE_LFLAGS += -s
+QMAKE_CFLAGS += -s
+QMAKE_CXXFLAGS += -s -std=c++11 -D_FORTIFY_SOURCE=2 -fpermissive
 QMAKE_CXXFLAGS_WARN_ON = -Wall -Wextra -Wformat -Wformat-security -Wno-invalid-offsetof -Wno-sign-compare -Wno-unused-parameter
 !macx {
     QMAKE_CXXFLAGS_WARN_ON += -fdiagnostics-show-option
@@ -126,8 +224,37 @@ QMAKE_CXXFLAGS_WARN_ON = -Wall -Wextra -Wformat -Wformat-security -Wno-invalid-o
     MAKE_EXT_CPP  += .c
 }
 
-# Input
-DEPENDPATH += src src/LLP sr/LLD src/core src/hash src/json src/net src/util src/qt src/wallet src/qt/core src/qt/dialogs src/qt/forms src/qt/models src/qt/pages src/qt/res src/qt/util src/qt/wallet
+#DISTCLEAN function helper
+QMAKE_DEL_FILE = rm -rf
+QMAKE_DISTCLEAN += build/moc build/obj build/ui
+macx:QMAKE_DISTCLEAN += nexus-qt.dmg dist
+build_pass:DebugBuild {
+	QMAKE_DISTCLEAN +=	object_script.nexus-qt.Debug
+	win32:QMAKE_DISTCLEAN += debug
+}
+build_pass:ReleaseBuild {
+	QMAKE_DISTCLEAN += object_script.nexus-qt.Release
+}
+					
+#Source File List
+DEPENDPATH += src \
+    src/LLP \
+    src/LLD \
+    src/core \
+    src/hash \
+    src/json \
+    src/net \
+    src/util \
+    src/qt \
+    src/wallet \
+    src/qt/core \
+    src/qt/dialogs \
+    src/qt/forms \
+    src/qt/models \
+    src/qt/pages \
+    src/qt/res \
+    src/qt/util \
+    src/qt/wallet
 HEADERS += src/qt/core/gui.h \
     src/qt/models/transactiontablemodel.h \
     src/qt/models/addresstablemodel.h \
@@ -143,25 +270,25 @@ HEADERS += src/qt/core/gui.h \
     src/util/bignum.h \
     src/util/compat.h \
     src/util/util.h \
-	src/hash/uint1024.h \
-	src/hash/templates.h \
+    src/hash/uint1024.h \
+    src/hash/templates.h \
     src/util/serialize.h \
     src/util/strlcpy.h \
     src/core/core.h \
-	src/core/unifiedtime.h \
+    src/core/unifiedtime.h \
     src/net/net.h \
     src/wallet/key.h \
     src/wallet/db.h \
     src/wallet/walletdb.h \
     src/wallet/script.h \
     src/main.h \
-	src/LLP/coreserver.h \
-	src/LLP/server.h \
-	src/LLP/types.h \
-	src/LLD/index.h \
-	src/LLD/keychain.h \
-	src/LLD/key.h \
-	src/LLD/sector.h \
+    src/LLP/coreserver.h \
+    src/LLP/server.h \
+    src/LLP/types.h \
+    src/LLD/index.h \
+    src/LLD/keychain.h \
+    src/LLD/key.h \
+    src/LLD/sector.h \
     src/util/mruset.h \
     src/hash/brg_endian.h \
     src/hash/brg_types.h \
@@ -206,21 +333,20 @@ HEADERS += src/qt/core/gui.h \
     src/qt/util/qvaluecombobox.h \
     src/qt/dialogs/askpassphrasedialog.h \
     src/net/protocol.h \
-	src/core/version.h \
+    src/core/version.h \
     src/qt/util/notificator.h \
-    #src/qt/core/qtipcserver.h \
+    src/qt/core/qtipcserver.h \
     src/util/allocators.h \
     src/util/ui_interface.h \
     src/qt/core/rpcconsole.h
-
 SOURCES += src/core/block.cpp \
-	src/core/dispatch.cpp \
-	src/core/message.cpp \
-	src/core/transaction.cpp \
-	src/core/mining.cpp \
-	src/core/checkpoints.cpp \
+    src/core/dispatch.cpp \
+    src/core/message.cpp \
+    src/core/transaction.cpp \
+    src/core/mining.cpp \
+    src/core/checkpoints.cpp \
     src/qt/main-qt.cpp \
-	src/qt/core/gui.cpp \
+    src/qt/core/gui.cpp \
     src/qt/models/transactiontablemodel.cpp \
     src/qt/models/addresstablemodel.cpp \
     src/qt/dialogs/optionsdialog.cpp \
@@ -231,9 +357,9 @@ SOURCES += src/core/block.cpp \
     src/qt/dialogs/editaddressdialog.cpp \
     src/qt/util/addressvalidator.cpp \
     src/core/version.cpp \
-	src/core/difficulty.cpp \
-	src/core/prime.cpp \
-	src/core/debug.cpp \
+    src/core/difficulty.cpp \
+    src/core/prime.cpp \
+    src/core/debug.cpp \
     src/util/util.cpp \
     src/net/netbase.cpp \
     src/wallet/key.cpp \
@@ -246,8 +372,8 @@ SOURCES += src/core/block.cpp \
     src/hash/KeccakHash.c \
     src/net/net.cpp \
     src/net/addrman.cpp \
-	src/core/release.cpp \
-	src/core/unifiedtime.cpp \
+    src/core/release.cpp \
+    src/core/unifiedtime.cpp \
     src/wallet/db.cpp \
     src/wallet/walletdb.cpp \
     src/json/json_spirit_writer.cpp \
@@ -282,16 +408,12 @@ SOURCES += src/core/block.cpp \
     src/qt/core/qtipcserver.cpp \
     src/qt/core/rpcconsole.cpp \
     src/core/kernel.cpp \
-	src/main.cpp \
-	src/core/global.cpp \
-	src/LLD/keychain.cpp \
-	src/LLD/index.cpp
-
-RESOURCES += \
-    src/qt/nexus.qrc
-
-FORMS += \
-    src/qt/forms/sendcoinsdialog.ui \
+    src/main.cpp \
+    src/core/global.cpp \
+    src/LLD/keychain.cpp \
+    src/LLD/index.cpp
+RESOURCES += src/qt/nexus.qrc
+FORMS += src/qt/forms/sendcoinsdialog.ui \
     src/qt/forms/addressbookpage.ui \
     src/qt/forms/messagepage.ui \
     src/qt/forms/aboutdialog.ui \
@@ -301,26 +423,17 @@ FORMS += \
     src/qt/forms/sendcoinsentry.ui \
     src/qt/forms/askpassphrasedialog.ui \
     src/qt/forms/rpcconsole.ui
+OTHER_FILES += doc/*.rst \
+    doc/*.txt \
+    doc/README \
+    src/qt/res/nexus-qt.rc
 
-contains(USE_QRCODE, 1) {
-HEADERS += src/qt/dialogs/qrcodedialog.h
-SOURCES += src/qt/dialogs/qrcodedialog.cpp
-FORMS += src/qt/forms/qrcodedialog.ui
-}
-
-CODECFORTR = UTF-8
-
-# for lrelease/lupdate
-# also add new translations to src/qt/nexus.qrc under translations/
+#Translation Support config
 TRANSLATIONS = $$files(src/qt/locale/nexus_*.ts)
+TS_DIR = src/qt/locale
 
-isEmpty(QMAKE_LRELEASE) {
-    win32:QMAKE_LRELEASE = $$[QT_INSTALL_BINS]\\lrelease.exe
-    else:QMAKE_LRELEASE = $$[QT_INSTALL_BINS]/lrelease
-}
-isEmpty(TS_DIR):TS_DIR = src/qt/locale
-# automatically build translations, so they can be included in resource file
-TSQM.name = lrelease ${QMAKE_FILE_IN}
+#Translation Support Custom Compiler
+TSQM.name = translator
 TSQM.input = TRANSLATIONS
 TSQM.output = $$TS_DIR/${QMAKE_FILE_BASE}.qm
 TSQM.commands = $$QMAKE_LRELEASE ${QMAKE_FILE_IN}
@@ -328,47 +441,11 @@ TSQM.CONFIG = no_link
 QMAKE_EXTRA_COMPILERS += TSQM
 PRE_TARGETDEPS += compiler_TSQM_make_all
 
-# "Other files" to show in Qt Creator
-OTHER_FILES += \
-    #doc/*.rst doc/*.txt doc/README src/qt/res/nexus-qt.rc
-
-# platform specific defaults, if not overridden on command line
-isEmpty(BOOST_LIB_SUFFIX) {
-    macx:BOOST_LIB_SUFFIX = -mt
-    windows:BOOST_LIB_SUFFIX = -mgw49-mt-1_55
-}
-
-isEmpty(BOOST_THREAD_LIB_SUFFIX) {
-    BOOST_THREAD_LIB_SUFFIX = $$BOOST_LIB_SUFFIX
-}
-
-isEmpty(BDB_LIB_PATH) {
-    macx:BDB_LIB_PATH = /opt/local/lib/db48
-}
-
-isEmpty(BDB_LIB_SUFFIX) {
-    macx:BDB_LIB_SUFFIX = -4.8
-}
-
-isEmpty(BDB_INCLUDE_PATH) {
-    macx:BDB_INCLUDE_PATH = /opt/local/include/db48
-}
-
-isEmpty(BOOST_LIB_PATH) {
-    BOOST_LIB_PATH=/usr/local/lib
-    macx:BOOST_LIB_PATH = /opt/local/lib
-}
-
-isEmpty(BOOST_INCLUDE_PATH) {
-    BOOST_INCLUDE_PATH=/usr/include/boost
-    macx:BOOST_INCLUDE_PATH = /opt/local/include
-}
-
-windows:LIBS += -lws2_32 -lshlwapi
-windows:DEFINES += WIN32
-windows:RC_FILE = src/qt/res/nexus-qt.rc
-
-windows:!contains(MINGW_THREAD_BUGFIX, 0) {
+#Windows build helper
+win32:LIBS += -lws2_32 -lshlwapi
+win32:DEFINES += WIN32
+win32:RC_FILE = src/qt/res/nexus-qt.rc
+win32:!contains(MINGW_THREAD_BUGFIX, 0) {
     # At least qmake's win32-g++-cross profile is missing the -lmingwthrd
     # thread-safety flag. GCC has -mthreads to enable this, but it doesn't
     # work with static linking. -lmingwthrd must come BEFORE -lmingw, so
@@ -379,32 +456,57 @@ windows:!contains(MINGW_THREAD_BUGFIX, 0) {
     QMAKE_LIBS_QT_ENTRY = -lmingwthrd $$QMAKE_LIBS_QT_ENTRY
 }
 
-!windows:!macx {
-    DEFINES += LINUX
-    LIBS += -lrt
-}
-
+#OSX build helper
 macx:HEADERS += src/qt/util/macdockiconhandler.h
 macx:OBJECTIVE_SOURCES += src/qt/util/macdockiconhandler.mm
 macx:LIBS += -framework Foundation -framework ApplicationServices -framework AppKit
 macx:DEFINES += MAC_OSX MSG_NOSIGNAL=0 Q_WS_MAC
 macx:ICON = src/qt/res/icons/nexus.icns
 macx:RC_ICONS = src/qt/res/icons/nexus.icns
-macx:TARGET = "Nexus-Qt"
 
-# Set libraries and includes at end, to use platform-defined defaults if not overridden
-INCLUDEPATH += $$BOOST_INCLUDE_PATH $$BDB_INCLUDE_PATH $$OPENSSL_INCLUDE_PATH $$QRENCODE_INCLUDE_PATH
-LIBS += $$join(BOOST_LIB_PATH,,-L,) $$join(BDB_LIB_PATH,,-L,) $$join(OPENSSL_LIB_PATH,,-L,) $$join(QRENCODE_LIB_PATH,,-L,)
-LIBS += -lssl -lcrypto -ldb_cxx$$BDB_LIB_SUFFIX
-# -lgdi32 has to happen after -lcrypto (see  #681)
-windows:LIBS += -lole32 -luuid -lgdi32
-LIBS += -lboost_system$$BOOST_LIB_SUFFIX -lboost_filesystem$$BOOST_LIB_SUFFIX -lboost_program_options$$BOOST_LIB_SUFFIX -lboost_thread$$BOOST_THREAD_LIB_SUFFIX
+#Linux build helper
+!macx:!win32:DEFINES += LINUX
+!macx:!win32:LIBS += -lrt
 
-contains(RELEASE, 1) {
-    !windows:!macx {
-        # Linux: turn dynamic linking back on for c/c++ runtime libraries
-        LIBS += -Wl,-Bdynamic -ldl
-    }
+#Build final Includes and Libraries
+INCLUDEPATH += $$BOOST_INCLUDE_PATH \
+	$$BDB_INCLUDE_PATH \
+	$$OPENSSL_INCLUDE_PATH
+LIBS += $$join(BOOST_LIB_PATH,,-L,) \
+	$$join(BDB_LIB_PATH,,-L,) \
+	$$join(OPENSSL_LIB_PATH,,-L,) \
+	-lssl \
+	-lcrypto \
+	-ldb_cxx$$BDB_LIB_SUFFIX \
+	-lboost_system$$BOOST_LIB_SUFFIX \
+	-lboost_filesystem$$BOOST_LIB_SUFFIX \
+	-lboost_program_options$$BOOST_LIB_SUFFIX \
+	-lboost_thread$$BOOST_LIB_SUFFIX
+win32:LIBS += -lole32 -luuid -lgdi32
+
+#Fix for Arch Linux OpenSSL Version
+contains(ARCH_TEST, ARCH) {
+	LIBS -= -Wl,-Bstatic \
+		-lssl \
+		-lcrypto
+	LIBS += /usr/lib/openssl-1.0/libssl.so \
+		/usr/lib/openssl-1.0/libcrypto.so
 }
 
-system($$QMAKE_LRELEASE -silent $$_PRO_FILE_)
+#Fix for linux dynamic linking
+!macx:!win32:contains(RELEASE, 1) {
+	LIBS+=-Wl,-Bdynamic -ldl
+}
+#Perform Translations
+!build_pass:system($$QMAKE_LRELEASE -silent $$TRANSLATIONS)
+!build_pass:message("Translations Generated")
+
+#Extra Console Output
+!build_pass:message("Finishing up... Type 'make' to start compiling when finished")
+#Ending makefile text
+complete.target= complete
+win32:complete.commands= { echo -e '\nFinished Building nexus-qt.exe\n'; } 2> /dev/null
+macx:complete.commands= { echo ' '; echo 'Finished building nexus-qt.app'; echo ' '; } 2> /dev/null
+!win32:!macx:complete.commands= { echo -e '\nFinished Building nexus-qt\n'; } 2> /dev/null
+QMAKE_EXTRA_TARGETS+= complete
+POST_TARGETDEPS+= complete

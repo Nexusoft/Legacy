@@ -208,7 +208,7 @@ namespace Wallet
         {
             int64 nDebit = 0;
             BOOST_FOREACH(const Core::CTxIn& txin, tx.vin)
-            {		
+            {
                 nDebit += GetDebit(txin);
                 if (!Core::MoneyRange(nDebit))
                     throw std::runtime_error("CWallet::GetDebit() : value out of range");
@@ -530,7 +530,7 @@ namespace Wallet
                 return 0;
 
             //if (fUseCache && fAvailableCreditCached)
-            //	return nAvailableCreditCached;
+            //return nAvailableCreditCached;
 
             int64 nCredit = 0;
             for (unsigned int i = 0; i < vout.size(); i++)

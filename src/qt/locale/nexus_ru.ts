@@ -1,5 +1,5 @@
 <?xml version="1.0" ?><!DOCTYPE TS><TS language="ru" version="2.0">
-<defaultcodec>UTF-8</defaultcodec>
+
 <context>
     <name>AboutDialog</name>
     <message>
@@ -228,7 +228,7 @@ This product includes software developed by the OpenSSL Project for use in the O
         <location filename="../askpassphrasedialog.cpp" line="102"/>
         <source>WARNING: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR NXS&lt;/b&gt;!
 Are you sure you wish to encrypt your wallet?</source>
-        <translation>ВНИМАНИЕ: Если вы зашифруете бумажник и потеряете свой ​​пароль, вы &lt;b&gt;ПОТЕРЯЕТЕ ВСЕ ВАШИ БИТКОИНЫ!&lt;/b&gt;
+        <translation>ВНИМАНИЕ: Если вы зашифруете бумажник и потеряете свой ​​пароль, вы &lt;b&gt;ПОТЕРЯЕТЕ ВСЕ ВАШИ NEXUS!&lt;/b&gt;
 Вы действительно хотите зашифровать ваш бумажник?</translation>
     </message>
     <message>
@@ -240,7 +240,7 @@ Are you sure you wish to encrypt your wallet?</source>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="112"/>
         <source>Nexus will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your NXS from being stolen by malware infecting your computer.</source>
-        <translation>Сейчас программа закроется для завершения процесса шифрования. Помните, что шифрование вашего бумажника не может полностью защитить ваши биткоины от кражи с помощью инфицирования вашего компьютера вредоносным ПО.</translation>
+        <translation>Сейчас программа закроется для завершения процесса шифрования. Помните, что шифрование вашего бумажника не может полностью защитить ваши Nexus от кражи с помощью инфицирования вашего компьютера вредоносным ПО.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="208"/>

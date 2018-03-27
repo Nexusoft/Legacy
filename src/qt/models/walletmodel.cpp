@@ -19,10 +19,7 @@
 #include <QSet>
 
 WalletModel::WalletModel(Wallet::CWallet *wallet, OptionsModel *optionsModel, QObject *parent) :
-    QObject(parent), wallet(wallet), optionsModel(optionsModel), addressTableModel(0),
-    transactionTableModel(0),
-    cachedBalance(0), cachedUnconfirmedBalance(0), cachedNumTransactions(0), cachedStake(0), cachedImmatureBalance(0),
-    cachedEncryptionStatus(Unencrypted)
+    QObject(parent), wallet(wallet), optionsModel(optionsModel)
 {
     addressTableModel = new AddressTableModel(wallet, this);
     transactionTableModel = new TransactionTableModel(wallet, this);

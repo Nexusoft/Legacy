@@ -14,19 +14,31 @@
 #include "../core/units.h"
 #include "../util/qvaluecombobox.h"
 
-#include <QHBoxLayout>
-#include <QVBoxLayout>
-#include <QPushButton>
-#include <QListWidget>
-#include <QStackedWidget>
-
-#include <QCheckBox>
-#include <QLabel>
-#include <QLineEdit>
+#if QT_VERSION < QT_VERSION_CHECK(5,0,0)
+ #include <QHBoxLayout>
+ #include <QVBoxLayout>
+ #include <QPushButton>
+ #include <QListWidget>
+ #include <QStackedWidget>
+ #include <QCheckBox>
+ #include <QLabel>
+ #include <QLineEdit>
+ #include <QDialogButtonBox>
+#else
+ #include <QtWidgets/QHBoxLayout>
+ #include <QtWidgets/QVBoxLayout>
+ #include <QtWidgets/QPushButton>
+ #include <QtWidgets/QListWidget>
+ #include <QtWidgets/QStackedWidget>
+ #include <QtWidgets/QCheckBox>
+ #include <QtWidgets/QLabel>
+ #include <QtWidgets/QLineEdit>
+ #include <QtWidgets/QDialogButtonBox>
+#endif
 #include <QIntValidator>
 #include <QDoubleValidator>
 #include <QRegExpValidator>
-#include <QDialogButtonBox>
+
 
 /* First page of options */
 class MainOptionsPage : public QWidget

@@ -123,11 +123,12 @@ namespace Net
 	Value importkeys(const Array& params, bool fHelp)
 	{
 		if (fHelp || params.size() < 1)
+		{
 			throw runtime_error(
 				"importkeys\n"
 				"The account and keypair need to \n"
 				"You need to list the imported keys in a JSON array of {[account],[privatekey]}\n");
-			
+		}
 			/** Make sure the Wallet is Unlocked fully before proceeding. **/
 			if (pwalletMain->IsLocked())
 				throw JSONRPCError(-13, "Error: Please enter the wallet passphrase with walletpassphrase first.");

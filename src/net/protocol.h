@@ -121,7 +121,6 @@ namespace Net
 		public:
 			CInv();
 			CInv(int typeIn, const uint1024& hashIn);
-			CInv(const std::string& strType, const uint1024& hashIn);
 
 			IMPLEMENT_SERIALIZE
 			(
@@ -132,7 +131,7 @@ namespace Net
 			friend bool operator<(const CInv& a, const CInv& b);
 
 			bool IsKnownType() const;
-			const char* GetCommand() const;
+			const std::string& GetCommand() const;
 			std::string ToString() const;
 			void print() const;
 
