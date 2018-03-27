@@ -11,8 +11,12 @@
 #include "../models/addresstablemodel.h"
 #include "../util/guiutil.h"
 
+#if QT_VERSION < QT_VERSION_CHECK(5,0,0)
+ #include <QMessageBox>
+#else
+ #include <QtWidgets/QMessageBox>
+#endif
 #include <QDataWidgetMapper>
-#include <QMessageBox>
 
 EditAddressDialog::EditAddressDialog(Mode mode, QWidget *parent) :
     QDialog(parent),

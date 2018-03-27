@@ -29,7 +29,6 @@ namespace Core
 
 	string GetWarnings(string strFor)
 	{
-		int nPriority = 0;
 		string strStatusBar;
 		string strRPC;
 		if (GetBoolArg("-testsafemode"))
@@ -38,14 +37,12 @@ namespace Core
 		// Nexus: wallet lock warning for minting
 		if (strMintWarning != "")
 		{
-			nPriority = 0;
 			strStatusBar = strMintWarning;
 		}
 
 		// Misc warnings like out of disk space and clock is wrong
 		if (strMiscWarning != "")
 		{
-			nPriority = 1000;
 			strStatusBar = strMiscWarning;
 		}
 
@@ -194,9 +191,9 @@ namespace Core
 				}
 			}
 
-			// Ask the first 8 connected node for block updates
+			// Ask the first 8 connected nodes for block updates
 			static int nAskedForBlocks = 0;
-			if (!pfrom->fClient && (nAskedForBlocks < 4))
+			if (!pfrom->fClient && (nAskedForBlocks < 8))
 			{
 				nAskedForBlocks++;
 				pfrom->PushGetBlocks(pindexBest, uint1024(0));
@@ -207,7 +204,7 @@ namespace Core
 			if(GetArg("-verbose", 0) >= 1)
 				printf("version message: version %d, blocks=%d\n", pfrom->nVersion, pfrom->nStartingHeight);
 
-			if (!pfrom->fClient && (nAskedForBlocks < 1))
+			if (!pfrom->fClient && (nAskedForBlocks < 8))
 				cPeerBlockCounts.Add(pfrom->nStartingHeight);
 		}
 
@@ -391,7 +388,7 @@ namespace Core
 						LOCK(Net::cs_mapRelay);
 						map<Net::CInv, CDataStream>::iterator mi = Net::mapRelay.find(inv);
 						if (mi != Net::mapRelay.end())
-							pfrom->PushMessage(inv.GetCommand(), (*mi).second);
+							pfrom->PushMessage(inv.GetCommand().c_str(), (*mi).second);
 					}
 				}
 
@@ -649,12 +646,11 @@ namespace Core
 		{
 			string strMessageStart((const char *)pchMessageStart, sizeof(pchMessageStart));
 			vector<unsigned char> vchMessageStart(strMessageStart.begin(), strMessageStart.end());
-			printf("ProcessMessages : AdjustedTime=%"PRI64d" MessageStart=%s\n", GetUnifiedTimestamp(), HexStr(vchMessageStart).c_str());
+			printf("ProcessMessages : AdjustedTime=%" PRI64d " MessageStart=%s\n", GetUnifiedTimestamp(), HexStr(vchMessageStart).c_str());
 			nTimeLastPrintMessageStart = GetUnifiedTimestamp();
 		}
 
-		loop
-		{
+		loop() {
 			// Scan for message start
 			CDataStream::iterator pstart = search(vRecv.begin(), vRecv.end(), BEGIN(pchMessageStart), END(pchMessageStart));
 			int nHeaderSize = vRecv.GetSerializeSize(Net::CMessageHeader());

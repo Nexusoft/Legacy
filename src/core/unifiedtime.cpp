@@ -9,7 +9,8 @@
 #include "unifiedtime.h"
 #include "../LLP/client.h"
 #include <inttypes.h>
-
+#include <string>
+#include <vector>
 
 using namespace std;
 
@@ -31,7 +32,7 @@ vector<Net::CAddress> SEED_NODES;
 std::map<std::string, int> MAP_TIME_DATA;
 
 /** Declarations for the DNS Seed Nodes. **/
-const char* DNS_SeedNodes[] = 
+static const std::vector<std::string> DNS_SeedNodes = 
 {
 	"node1.nexusearth.com",
 	"node1.mercuryminer.com",
@@ -41,6 +42,7 @@ const char* DNS_SeedNodes[] =
 	"node1.nxsorbitalscan.com",
 	"node1.nxs.efficienthash.com",
 	"node1.henryskinner.net",
+	"node1.nexplorer.io",
 	"node2.nexusearth.com",
 	"node2.mercuryminer.com",
 	"node2.nexusminingpool.com",
@@ -106,16 +108,14 @@ const char* DNS_SeedNodes[] =
 	"node18.mercuryminer.com",
 	"node19.mercuryminer.com",
 	"node20.mercuryminer.com",
-	"node21.mercuryminer.com",
-	"\0"
+	"node21.mercuryminer.com"
 };
 
 /** Declarations for the DNS Seed Nodes. **/
-const char* DNS_SeedNodes_Testnet[] =
+static const std::vector<std::string> DNS_SeedNodes_Testnet =
 {
 	"node1.nexusearth.com",
-	"node4.nexusearth.com",
-	"\0"
+	"node4.nexusearth.com"
 };
 
 /** Seed Nodes for Unified Time. **/
@@ -164,8 +164,7 @@ void ThreadUnifiedSamples(void* parg)
 	LLP::CoreOutbound SERVER("", strprintf("%u", (fTestNet ? TESTNET_CORE_LLP_PORT : NEXUS_CORE_LLP_PORT)));
     
     /* Latency Timer. */
-	loop
-	{
+	loop() {
 		try
 		{
 			Sleep(1000);
@@ -286,7 +285,7 @@ void ThreadUnifiedSamples(void* parg)
                 UNIFIED_AVERAGE_OFFSET = UNIFIED_MAJORITY.Majority();
 				
 				if(GetArg("-verbose", 0) >= 1)
-					printf("***** %i Total Samples | %i Offset (%u) | %i Majority (%u) | %"PRId64"\n", MAP_TIME_DATA.size(), nSamples.Majority(), TOTAL_SAMPLES[nSamples.Majority()], UNIFIED_AVERAGE_OFFSET, TOTAL_SAMPLES[UNIFIED_AVERAGE_OFFSET], GetUnifiedTimestamp());
+					printf("***** %i Total Samples | %i Offset (%u) | %i Majority (%u) | %" PRId64 "\n", MAP_TIME_DATA.size(), nSamples.Majority(), TOTAL_SAMPLES[nSamples.Majority()], UNIFIED_AVERAGE_OFFSET, TOTAL_SAMPLES[UNIFIED_AVERAGE_OFFSET], GetUnifiedTimestamp());
 			}
             
             Sleep(30000);
@@ -299,16 +298,16 @@ void ThreadUnifiedSamples(void* parg)
 }
 
 /* DNS Query of Domain Names Associated with Seed Nodes */
-vector<Net::CAddress> DNS_Lookup(const char* DNS_Seed[])
+vector<Net::CAddress> DNS_Lookup(const std::vector<std::string>& DNS_Seed)
 {
 	vector<Net::CAddress> vNodes;
 	int scount = 0;
-	for (int seed = 0; DNS_Seed[seed] != "\0"; seed++)
+	for (std::size_t seed = 0; seed < DNS_Seed.size(); seed++)
 	{
-		printf("%u Host: %s\n", seed, DNS_Seed[seed]);
+		printf("%Iu Host: %s\n", seed, DNS_Seed[seed].c_str());
 		scount++;
         vector<Net::CNetAddr> vaddr;
-        if (Net::LookupHost(DNS_Seed[seed], vaddr))
+        if (Net::LookupHost(DNS_Seed[seed].c_str(), vaddr))
         {
             BOOST_FOREACH(Net::CNetAddr& ip, vaddr)
             {

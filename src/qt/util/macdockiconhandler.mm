@@ -4,10 +4,14 @@
 
 #include "macdockiconhandler.h"
 
+#if QT_VERSION < QT_VERSION_CHECK(5,0,0)
+ #include <QWidget>
+#else
+ #include <QtWidgets/QWidget>
+#endif
 #include <QImageWriter>
 #include <QMenu>
 #include <QBuffer>
-#include <QWidget>
 
 #undef slots
 #include <Cocoa/Cocoa.h>

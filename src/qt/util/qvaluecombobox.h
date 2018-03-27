@@ -9,7 +9,12 @@
 #ifndef QVALUECOMBOBOX_H
 #define QVALUECOMBOBOX_H
 
-#include <QComboBox>
+#include <QtGlobal>
+#if QT_VERSION < QT_VERSION_CHECK(5,0,0)
+ #include <QComboBox>
+#else
+ #include <QtWidgets/QComboBox>
+#endif
 
 /* QComboBox that can be used with QDataWidgetMapper to select ordinal values from a model. */
 class QValueComboBox : public QComboBox

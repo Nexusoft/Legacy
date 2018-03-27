@@ -37,7 +37,7 @@ namespace Core
 		
 		///largest prime gap in cluster can be + 12
 		///this was determined by previously found clusters up to 17 primes
-		for( next ; next <= lastPrime + 12; next += 2)
+		for( ; next <= lastPrime + 12; next += 2)
 		{
 			if(PrimeCheck(next, checks))
 			{
@@ -46,7 +46,7 @@ namespace Core
 			}
 		}
 		
-		///calulate the rarety of cluster from proportion of fermat remainder of last prime + 2
+		///calculate the rarity of cluster from proportion of fermat remainder of last prime + 2
 		///keep fractional remainder in bounds of [0, 1]
 		double fractionalRemainder = 1000000.0 / GetFractionalDifficulty(next);
 		if(fractionalRemainder > 1.0 || fractionalRemainder < 0.0)

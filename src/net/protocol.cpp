@@ -29,7 +29,7 @@ namespace Net
 			memcpy(pchMessageStart, pchMessageStartNexus, sizeof(pchMessageStartNexus));
 	}
 
-	static const char* ppszTypeName[] =
+	static const std::vector<std::string> TypeNames =
 	{
 		"ERROR",
 		"tx",
@@ -125,22 +125,6 @@ namespace Net
 		hash = hashIn;
 	}
 
-	CInv::CInv(const std::string& strType, const uint1024& hashIn)
-	{
-		unsigned int i;
-		for (i = 1; i < ARRAYLEN(ppszTypeName); i++)
-		{
-			if (strType == ppszTypeName[i])
-			{
-				type = i;
-				break;
-			}
-		}
-		if (i == ARRAYLEN(ppszTypeName))
-			throw std::out_of_range(strprintf("CInv::CInv(string, uint1024) : unknown type '%s'", strType.c_str()));
-		hash = hashIn;
-	}
-
 	bool operator<(const CInv& a, const CInv& b)
 	{
 		return (a.type < b.type || (a.type == b.type && a.hash < b.hash));
@@ -148,14 +132,14 @@ namespace Net
 
 	bool CInv::IsKnownType() const
 	{
-		return (type >= 1 && type < (int)ARRAYLEN(ppszTypeName));
+		return (type >= 1 && type < static_cast<int>(TypeNames.size()));
 	}
 
-	const char* CInv::GetCommand() const
+	const std::string& CInv::GetCommand() const
 	{
 		if (!IsKnownType())
 			throw std::out_of_range(strprintf("CInv::GetCommand() : type=%d unknown type", type));
-		return ppszTypeName[type];
+		return TypeNames[type];
 	}
 
 	std::string CInv::ToString() const

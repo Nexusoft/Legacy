@@ -323,8 +323,7 @@ string real_strprintf(const std::string &format, int dummy, ...)
     char* p = buffer;
     int limit = sizeof(buffer);
     int ret;
-    loop
-    {
+    loop() {
         va_list arg_ptr;
         va_start(arg_ptr, dummy);
         ret = _vsnprintf(p, limit, format.c_str(), arg_ptr);
@@ -387,8 +386,7 @@ void ParseString(const string& str, char c, vector<string>& v)
         return;
     string::size_type i1 = 0;
     string::size_type i2;
-    loop
-    {
+    loop() {
         i2 = str.find(c, i1);
         if (i2 == str.npos)
         {
@@ -408,7 +406,7 @@ string FormatMoney(int64 n, bool fPlus)
     int64 n_abs = (n > 0 ? n : -n);
     int64 quotient = n_abs/COIN;
     int64 remainder = n_abs%COIN;
-    string str = strprintf("%"PRI64d".%06"PRI64d, quotient, remainder);
+    string str = strprintf("%" PRI64d ".%06" PRI64d, quotient, remainder);
 
     // Right-trim excess 0's before the decimal point:
     int nTrim = 0;
@@ -503,8 +501,7 @@ vector<unsigned char> ParseHex(const char* psz)
 {
     // convert hex dump to vector
     vector<unsigned char> vch;
-    loop
-    {
+    loop() {
         while (isspace(*psz))
             psz++;
         signed char c = phexdigit[(unsigned char)*psz++];
@@ -836,8 +833,7 @@ string DecodeBase64(const string& str)
 
 bool WildcardMatch(const char* psz, const char* mask)
 {
-    loop
-    {
+    loop() {
         switch (*mask)
         {
         case '\0':

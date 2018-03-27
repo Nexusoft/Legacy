@@ -467,7 +467,7 @@ namespace LLP
 				this->WritePacket(RESPONSE);
 				
 				if(GetArg("-verbose", 0) >= 2)
-					printf("%%%%%%%%%% Mining LLP: Sent Coinbase Reward of %"PRIu64"\n", nCoinbaseReward);
+					printf("%%%%%%%%%% Mining LLP: Sent Coinbase Reward of %" PRIu64 "\n", nCoinbaseReward);
 				
 				return true;
 			}
@@ -721,7 +721,7 @@ namespace Core
 			txNew.vin[0].scriptSig[5] = 13;
 			txNew.vin[0].scriptSig[6] = 21;
 			txNew.vin[0].scriptSig[7] = 34;
-				
+			
             /** Update the Coinstake Timestamp. **/
 			txNew.nTime = pindexPrev->GetBlockTime() + 1;
 		}
@@ -859,7 +859,7 @@ namespace Core
 					dPriority += (double) nValueIn * nConf;
 
 					if(GetArg("-verbose", 0) >= 3)
-						printf("priority     nValueIn=%-12"PRI64d" nConf=%-5d dPriority=%-20.1f\n", nValueIn, nConf, dPriority);
+						printf("priority     nValueIn=%-12" PRI64d " nConf=%-5d dPriority=%-20.1f\n", nValueIn, nConf, dPriority);
 				}
 
 				// Priority is sum(valuein * age) / txsize
@@ -1014,7 +1014,6 @@ namespace Core
 	{
 		uint1024 hash = pblock->GetHash();
 		uint1024 hashTarget = CBigNum().SetCompact(pblock->nBits).getuint1024();
-		unsigned int nBits;
 		
 		if(pblock->GetChannel() > 0 && !pblock->VerifyWork())
 			return error("Nexus Miner : proof of work not meeting target.");
@@ -1025,7 +1024,7 @@ namespace Core
 		}
 		
 		if(pblock->GetChannel() == 1)
-			printf("  prime cluster verified of size %f\n", GetDifficulty(nBits, 1));
+			printf("  prime cluster verified of size %f\n", GetDifficulty(pblock->nBits, 1));
 		else
 			printf("  target: %s\n", hashTarget.ToString().substr(0, 30).c_str());
 			

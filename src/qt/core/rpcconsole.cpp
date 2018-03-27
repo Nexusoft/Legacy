@@ -393,7 +393,15 @@ void RPCConsole::setNumBlocks(int count)
 		SetCoinSupply(clientModel->GetCoinSupply(), 0);
 	
         // If there is no current number available display N/A instead of 0, which can't ever be true
-        ui->totalBlocks->setText(clientModel->getNumBlocksOfPeers() <= 0 ? tr("N/A") : QString::number(clientModel->getNumBlocksOfPeers()));
+		int estNumOfBlocks;
+		if(clientModel->getNumBlocksOfPeers() <= 0) {
+			estNumOfBlocks = 0;
+		} else if(clientModel->getNumBlocksOfPeers() > 0 && clientModel->getNumBlocksOfPeers() < count) {
+			estNumOfBlocks = count;
+		} else {
+			estNumOfBlocks = (clientModel->getNumBlocksOfPeers());
+		}
+        ui->totalBlocks->setText(estNumOfBlocks == 0 ? tr("N/A") : QString::number(estNumOfBlocks));
         ui->lastBlockTime->setText(clientModel->getLastBlockDate().toString());
     }
 }

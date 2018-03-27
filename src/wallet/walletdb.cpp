@@ -77,8 +77,7 @@ namespace Wallet
         if (!pcursor)
             throw runtime_error("CWalletDB::ListAccountCreditDebit() : cannot create DB cursor");
         unsigned int fFlags = DB_SET_RANGE;
-        loop
-        {
+        loop() {
             // Read next record
             CDataStream ssKey(SER_DISK, DATABASE_VERSION);
             if (fFlags == DB_SET_RANGE)
@@ -140,8 +139,7 @@ namespace Wallet
                 return DB_CORRUPT;
             }
 
-            loop
-            {
+            loop() {
                 // Read next record
                 CDataStream ssKey(SER_DISK, DATABASE_VERSION);
                 CDataStream ssValue(SER_DISK, DATABASE_VERSION);
@@ -403,7 +401,7 @@ namespace Wallet
                             dbenv.lsn_reset(strFile.c_str(), 0);
 
                             mapFileUseCount.erase(mi++);
-                            printf("Flushed wallet.dat %"PRI64d"ms\n", GetTimeMillis() - nStart);
+                            printf("Flushed wallet.dat %" PRI64d "ms\n", GetTimeMillis() - nStart);
                         }
                     }
                 }

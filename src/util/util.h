@@ -16,13 +16,15 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 #else
+#ifndef _INC_TYPES
 typedef int pid_t; /* define for windows compatiblity */
+#endif
 #endif
 #include <map>
 #include <vector>
 #include <string>
 #include <stdint.h>
-
+#include <cstddef>
 #include <boost/thread.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/bind.hpp>
@@ -55,14 +57,13 @@ static const int64 CENT = 10000;
 
 
 
-#define loop                for (;;)
+#define loop(...)			for(;;)
 #define BEGIN(a)            ((char*)&(a))
 #define END(a)              ((char*)&((&(a))[1]))
 #define UBEGIN(a)           ((unsigned char*)&(a))
 #define UEND(a)             ((unsigned char*)&((&(a))[1]))
 #define ARRAYLEN(array)     (sizeof(array)/sizeof((array)[0]))
 #define printf              OutputDebugStringF
-#define NULL                0
 
 #ifdef snprintf
 #undef snprintf
@@ -102,7 +103,7 @@ T* alignup(T* p)
 inline std::vector<unsigned char> parse_ip(std::string ip)
 {
 	std::vector<unsigned char> bytes(4, 0);
-	sscanf(ip.c_str(), "%hu.%hu.%hu.%hu", &bytes[0], &bytes[1], &bytes[2], &bytes[3]);
+    sscanf(ip.c_str(), "%hhu.%hhu.%hhu.%hhu", &bytes[0], &bytes[1], &bytes[2], &bytes[3]);
 	
 	return bytes;
 }
@@ -455,7 +456,7 @@ typedef boost::interprocess::interprocess_semaphore CSemaphore;
 
 inline std::string i64tostr(int64 n)
 {
-    return strprintf("%"PRI64d, n);
+    return strprintf("%" PRI64d, n);
 }
 
 inline std::string itostr(int n)

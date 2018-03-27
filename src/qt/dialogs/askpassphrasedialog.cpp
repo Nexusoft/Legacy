@@ -13,10 +13,17 @@
 #include "../models/walletmodel.h"
 #include "../../wallet/wallet.h"
 
-#include <QMessageBox>
-#include <QPushButton>
+#if QT_VERSION < QT_VERSION_CHECK(5,0,0)
+ #include <QCheckBox>
+ #include <QMessageBox>
+ #include <QPushButton>
+#else
+ #include <QtWidgets/QCheckBox>
+ #include <QtWidgets/QMessageBox>
+ #include <QtWidgets/QPushButton>
+#endif
 #include <QKeyEvent>
-#include <QCheckBox>
+
 
 AskPassphraseDialog::AskPassphraseDialog(Mode mode, QWidget *parent) :
     QDialog(parent),

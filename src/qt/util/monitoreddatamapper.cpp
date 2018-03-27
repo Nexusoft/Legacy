@@ -7,8 +7,13 @@
 *******************************************************************************************/
 
 #include "monitoreddatamapper.h"
+#if QT_VERSION < QT_VERSION_CHECK(5,0,0)
+ #include <QWidget>
+#else
+ #include <QtWidgets/QWidget>
+#endif
 
-#include <QWidget>
+
 #include <QMetaObject>
 #include <QMetaProperty>
 
