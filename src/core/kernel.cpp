@@ -493,8 +493,12 @@ namespace Core
 		if(cBlock.vtx[0].IsGenesis())
 		{
 			/** Only Remove Trust Key from Map if Key Exists. **/
-			if(!mapTrustKeys.count(cKey) && GetArg("-verbose", 0) >= 0)
-				return error("CTrustPool::Remove() : Key %s Doesn't Exist in Trust Pool\n", cKey.ToString().substr(0, 20).c_str());
+			if(!mapTrustKeys.count(cKey))
+            {
+				printf("CTrustPool::Remove() : Key %s Doesn't Exist in Trust Pool\n", cKey.ToString().substr(0, 20).c_str());
+                
+                return true;
+            }
 				
 			/** Remove the Trust Key from the Trust Pool. **/
 			mapTrustKeys.erase(cKey);
@@ -510,14 +514,23 @@ namespace Core
 		{
 			/** Only Remove Trust Key from Map if Key Exists. **/
 			if(!mapTrustKeys.count(cKey))
-				return error("CTrustPool::Remove() : Key %s Doesn't Exist in Trust Pool\n", cKey.ToString().substr(0, 20).c_str());
+            {
+				printf("CTrustPool::Remove() : Key %s Doesn't Exist in Trust Pool\n", cKey.ToString().substr(0, 20).c_str());
+                
+                return true;
+            }
 				
 			/** Get the Index of the Block in the Trust Key. **/
-			if(mapTrustKeys[cKey].hashPrevBlocks.back() != cBlock.GetHash())
-				return error("CTrustPool::Remove() : Block %s Isn't in Top. Trust Block Misconfigure...\n", cBlock.GetHash().ToString().substr(0, 20).c_str());
+            std::vector<uint1024>::iterator it = std::find(mapTrustKeys[cKey].hashPrevBlocks.begin(), mapTrustKeys[cKey].hashPrevBlocks.end(), cBlock.GetHash());
+			if(it == mapTrustKeys[cKey].hashPrevBlocks.end())
+            {
+				printf("CTrustPool::Remove() : Block Doesn't Exist %s\n", cBlock.GetHash().ToString().substr(0, 20).c_str());
+                
+                return true;
+            }
+            else
+                mapTrustKeys[cKey].hashPrevBlocks.erase(it);
 					
-			/** Remove the Trust Key from the Container. **/
-			mapTrustKeys[cKey].hashPrevBlocks.pop_back();
 			printf("CTrustPool::Remove() : Removed Block %s From Trust Key\n", cBlock.GetHash().ToString().substr(0, 20).c_str());
 				
 			return true;

@@ -1944,6 +1944,8 @@ namespace Net
 				ListTransactions(tx, "*", 0, true, transactions);
 		}
 
+		
+		//NOTE: Do we need this code for anything?
 		uint1024 lastblock;
 
 		if (target_confirms == 1)
