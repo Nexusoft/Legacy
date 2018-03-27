@@ -1,4 +1,4 @@
-### Installing Dependents ###
+### Installing Dependencies ###
 
 ##### Install Xcode Tools and Brew #####
 
