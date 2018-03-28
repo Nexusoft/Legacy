@@ -12,10 +12,10 @@ ifndef 32BIT
 endif
 ifeq (${32BIT}, 1)
 	BUILD_ARCH=x86
-	CXXFLAGS+= -m32 -std=c++11
+	CXXFLAGS+= -m32
 else
 	BUILD_ARCH=x64
-	CXXFLAGS+= -m64 -std=c++11
+	CXXFLAGS+= -m64
 endif
 
 #Define default LIB and INCLUDE path variables
@@ -273,6 +273,10 @@ CXXFLAGS+= -s \
 	$(DEFS) \
 	$(INCLUDEPATHS)
 
+#set -std=c++ for all but c compiling
+CFLAGS:= $(CXXFLGS)
+CXXFLAGS+= -std=c++11
+
 #OS Specific Targets and instructions
 all: release/nexus.exe
 
@@ -286,7 +290,7 @@ build/%.o: ./src/hash/%.cpp $(HEADERS)
 	$(CXX) -c $(CXXFLAGS) -o $@ $<
 	
 build/%.o: ./src/hash/%.c $(HEADERS)
-	$(CXX) -c $(CXXFLAGS) -x c -o $@ $<
+	$(CXX) -c $(CFLAGS) -x c -o $@ $<
 	
 build/%.o: ./src/keys/%.cpp $(HEADERS)
 	$(CXX) -c $(CXXFLAGS) -o $@ $<
@@ -349,6 +353,10 @@ CXXFLAGS+= -mmacosx-version-min=10.10 \
 	$(DEFS) \
 	$(INCLUDEPATHS)
 
+#set -std=c++ for all but c compiling
+CFLAGS:= $(CXXFLGS)
+CXXFLAGS+= -std=c++11
+
 #OS Specific Targets and instructions
 all: nexus
 
@@ -367,7 +375,7 @@ build/%.o: src/core/%.cpp $(HEADERS)
 	  rm -f $(@:%.o=%.d)
 
 build/%.o: src/hash/%.c $(HEADERS)
-	$(CXX) -c $(CXXFLAGS) -x c -MMD -o $@ $<
+	$(CXX) -c $(CFLAGS) -x c -MMD -o $@ $<
 	@cp $(@:%.o=%.d) $(@:%.o=%.P); \
 	  sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
 	      -e '/^$$/ d' -e 's/$$/ :/' < $(@:%.o=%.d) >> $(@:%.o=%.P); \
@@ -470,6 +478,10 @@ CXXFLAGS+= -O3 \
 	$(DEFS) \
 	$(INCLUDEPATHS)
 
+#set -std=c++ for all but c compiling
+CFLAGS:= $(CXXFLGS)
+CXXFLAGS+= -std=c++11
+
 #OS Specific Targets and instructions
 all: nexus
 
@@ -488,7 +500,7 @@ build/%.o: src/core/%.cpp
 	  rm -f $(@:%.o=%.d)
 
 build/%.o: src/hash/%.c $(HEADERS)
-	$(CXX) -c $(CXXFLAGS) -MMD -x c -fpermissive -o $@ $<
+	$(CXX) -c $(CFLAGS) -MMD -x c -fpermissive -o $@ $<
 	@cp $(@:%.o=%.d) $(@:%.o=%.P); \
 	  sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
 	      -e '/^$$/ d' -e 's/$$/ :/' < $(@:%.o=%.d) >> $(@:%.o=%.P); \
