@@ -500,7 +500,7 @@ build/%.o: src/core/%.cpp
 	  rm -f $(@:%.o=%.d)
 
 build/%.o: src/hash/%.c $(HEADERS)
-	$(CXX) -c $(CFLAGS) -MMD -x c -fpermissive -o $@ $<
+	$(CXX) -c $(CFLAGS) -MMD -x c -o $@ $<
 	@cp $(@:%.o=%.d) $(@:%.o=%.P); \
 	  sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
 	      -e '/^$$/ d' -e 's/$$/ :/' < $(@:%.o=%.d) >> $(@:%.o=%.P); \
