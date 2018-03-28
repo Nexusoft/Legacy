@@ -26,8 +26,8 @@ int UNIFIED_MOVING_ITERATOR = 0;
 
 
 /** Unified Time Declarations **/
-vector<int> UNIFIED_TIME_DATA;
-vector<Net::CAddress> SEED_NODES;
+std::vector<int> UNIFIED_TIME_DATA;
+std::vector<Net::CAddress> SEED_NODES;
 
 std::map<std::string, int> MAP_TIME_DATA;
 
@@ -119,7 +119,7 @@ static const std::vector<std::string> DNS_SeedNodes_Testnet =
 };
 
 /** Seed Nodes for Unified Time. **/
-vector<string> SEEDS;
+std::vector<string> SEEDS;
 
 /** Baseline Maximum Values for Unified Time. **/
 int MAX_UNIFIED_DRIFT   = 10;
@@ -298,15 +298,15 @@ void ThreadUnifiedSamples(void* parg)
 }
 
 /* DNS Query of Domain Names Associated with Seed Nodes */
-vector<Net::CAddress> DNS_Lookup(const std::vector<std::string>& DNS_Seed)
+std::vector<Net::CAddress> DNS_Lookup(const std::vector<std::string>& DNS_Seed)
 {
-	vector<Net::CAddress> vNodes;
+	std::vector<Net::CAddress> vNodes;
 	int scount = 0;
 	for (std::size_t seed = 0; seed < DNS_Seed.size(); seed++)
 	{
-		printf("%Iu Host: %s\n", seed, DNS_Seed[seed].c_str());
+		printf("%u Host: %s\n", seed, DNS_Seed[seed].c_str());
 		scount++;
-        vector<Net::CNetAddr> vaddr;
+        std::vector<Net::CNetAddr> vaddr;
         if (Net::LookupHost(DNS_Seed[seed].c_str(), vaddr))
         {
             BOOST_FOREACH(Net::CNetAddr& ip, vaddr)
