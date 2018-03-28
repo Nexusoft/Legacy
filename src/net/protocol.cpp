@@ -150,7 +150,7 @@ namespace Net
 			return strprintf("tx %s", invHash.substr(invHash.length() - 20, invHash.length()).c_str());
 		}
 			
-		return strprintf("%s %s", GetCommand(), hash.ToString().substr(0,20).c_str());
+		return strprintf("%s %s", GetCommand().c_str(), hash.ToString().substr(0,20).c_str());
 	}
 
 	void CInv::print() const
