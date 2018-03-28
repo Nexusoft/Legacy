@@ -181,7 +181,8 @@ LIBS+=-lboost_system$(BOOST_LIB_SUFFIX) \
 	-lssl \
 	-lcrypto
 endif
-DEFS+= -DBOOST_SPIRIT_THREADSAFE \
+DEFS+=  -DBOOST_SPIRIT_THREADSAFE \
+	-DBOOST_NO_CXX11_SCOPED_ENUMS \
 	-D$(BUILD_ARCH)
 
 #Display Warnings while compiling
@@ -194,26 +195,26 @@ endif
 #Source File List
 HEADERS= $(wildcard *.h)
 OBJS= build/version.o \
-build/netbase.o \
-build/addrman.o \
-build/crypter.o \
-build/key.o \
-build/db.o \
-build/main.o \
-build/keystore.o \
+	build/netbase.o \
+	build/addrman.o \
+	build/crypter.o \
+	build/key.o \
+	build/db.o \
+	build/main.o \
+	build/keystore.o \
 	build/difficulty.o \
 	build/checkpoints.o \
-build/net.o \
-build/protocol.o \
+	build/net.o \
+	build/protocol.o \
 	build/unifiedtime.o \
-build/rpcserver.o \
-build/rpcdump.o \
-build/script.o \
-build/util.o \
-build/wallet.o \
-build/walletdb.o \
-build/noui.o \
-build/kernel.o \
+	build/rpcserver.o \
+	build/rpcdump.o \
+	build/script.o \
+	build/util.o \
+	build/wallet.o \
+	build/walletdb.o \
+	build/noui.o \
+	build/kernel.o \
 	build/debug.o \
 	build/prime.o \
 	build/skein.o \
@@ -473,7 +474,6 @@ CXXFLAGS+= -O3 \
 	-s \
 	-fstack-protector \
 	-D_FORTIFY_SOURCE=2 \
-	-DBOOST_NO_CXX11_SCOPED_ENUMS \
 	-Wl,-z,relro \
 	-Wl,-z,now \
 	$(DEFS) \
