@@ -29,15 +29,20 @@
 #define TESTNET_CORE_LLP_PORT 8329
 #define TESTNET_MINING_LLP_PORT 8325
 
+#define LISPNET_PORT 7313
+#define LISPNET_CORE_LLP_PORT 7329
+#define LISPNET_MINING_LLP_PORT 7325
+
 extern bool fTestNet;
+extern bool fLispNet;
 
 namespace Net
 {
 	void GetMessageStart(unsigned char pchMessageStart[]);
 
-	static inline unsigned short GetDefaultPort(const bool testnet = fTestNet)
+	static inline unsigned short GetDefaultPort()
 	{
-		return testnet ? TESTNET_PORT : NEXUS_PORT;
+		return fLispNet ? LISPNET_PORT : (fTestNet ? TESTNET_PORT : NEXUS_PORT);
 	}
 
 

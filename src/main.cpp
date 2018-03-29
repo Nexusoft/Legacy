@@ -276,6 +276,9 @@ bool AppInit2(int argc, char* argv[])
     }
 
     fTestNet = GetBoolArg("-testnet", false);
+    fLispNet = GetBoolArg("-lispnet", false);
+    if(fLispNet)
+        fTestNet = true;
 
     fIsTimeSeed = GetBoolArg("-istimeseed", false);
 
@@ -624,7 +627,7 @@ bool AppInit2(int argc, char* argv[])
 	if(GetBoolArg("-unified", false)) {
 		InitMessage(_("Initializing Core LLP..."));
 		printf("Initializing Core LLP...\n");
-		LLP_SERVER = new LLP::Server<LLP::CoreLLP>(fTestNet ? TESTNET_CORE_LLP_PORT : NEXUS_CORE_LLP_PORT, 5, true, 2, 5, 5);
+		LLP_SERVER = new LLP::Server<LLP::CoreLLP>(fLispNet ? LISPNET_CORE_LLP_PORT : fTestNet ? TESTNET_CORE_LLP_PORT : NEXUS_CORE_LLP_PORT, 5, true, 2, 5, 5);
 	}
 	
     if (!Core::CheckDiskSpace())

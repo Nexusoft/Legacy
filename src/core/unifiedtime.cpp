@@ -118,8 +118,28 @@ static const std::vector<std::string> DNS_SeedNodes_Testnet =
 	"node4.nexusearth.com"
 };
 
+
+/** Declarations for the DNS Seed Nodes. **/
+static const std::vector<std::string> DNS_SeedNodes_LISPnet =
+{
+    "node1.nexus.lispers.net",
+    "node2.nexus.lispers.net",
+    "node3.nexus.lispers.net",
+    "node4.nexus.lispers.net",
+    "node5.nexus.lispers.net",
+    "node6.nexus.lispers.net",
+    "node7.nexus.lispers.net",
+    "node8.nexus.lispers.net",
+    "node9.nexus.lispers.net",
+    "node10.nexus.lispers.net",
+    "node11.nexus.lispers.net",
+    "node12.nexus.lispers.net",
+    "node13.nexus.lispers.net"
+};
+
 /** Seed Nodes for Unified Time. **/
 std::vector<string> SEEDS;
+
 
 /** Baseline Maximum Values for Unified Time. **/
 int MAX_UNIFIED_DRIFT   = 10;
@@ -151,7 +171,7 @@ void ThreadUnifiedSamples(void* parg)
 	SetThreadPriority(THREAD_PRIORITY_ABOVE_NORMAL);
 	
 	/* Compile the Seed Nodes into a set of Vectors. */
-	SEED_NODES    = DNS_Lookup(fTestNet ? DNS_SeedNodes_Testnet : DNS_SeedNodes);
+	SEED_NODES    = DNS_Lookup(fLispNet ? DNS_SeedNodes_LISPnet : (fTestNet ? DNS_SeedNodes_Testnet : DNS_SeedNodes));
 	
 	/* Iterator to be used to ensure every time seed is giving an equal weight towards the Global Seeds. */
 	int nIterator = -1;
@@ -161,7 +181,9 @@ void ThreadUnifiedSamples(void* parg)
 	
 	/* The Entry Client Loop for Core LLP. */
 	string ADDRESS = "";
-	LLP::CoreOutbound SERVER("", strprintf("%u", (fTestNet ? TESTNET_CORE_LLP_PORT : NEXUS_CORE_LLP_PORT)));
+	LLP::CoreOutbound SERVER("", strprintf("%u", fLispNet ? LISPNET_CORE_LLP_PORT : (fTestNet ? TESTNET_CORE_LLP_PORT : NEXUS_CORE_LLP_PORT)));
+    
+    //
     
     /* Latency Timer. */
 	loop() {
