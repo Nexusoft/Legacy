@@ -847,15 +847,15 @@ namespace Core
 			}
 			
 			/* Get the Total Weight. */
-			int combinedWeight = floor(nTrustWeight + nBlockWeight);
-            int nTotalWeight = max(combinedWeight, 8);
+                        int combinedWeight = floor(nTrustWeight + nBlockWeight);
+                        int nTotalWeight = max(combinedWeight, 8);
 			
 			
 			/* Make sure coinstake is created. */
 			int i = 0;
 			
 			/* Copy the block pointers. */
-			CBlock *block = new CBlock[nTotalWeight];
+			CBlock block[nTotalWeight];
 
 			for(i = 0; i < nTotalWeight; i++)
 			{
