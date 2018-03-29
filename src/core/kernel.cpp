@@ -855,7 +855,8 @@ namespace Core
 			int i = 0;
 			
 			/* Copy the block pointers. */
-			std::vector<Core::CBlock> block;
+			std::vector<CBlock> block;
+			block.resize(nTotalWeight);
 
 			for(i = 0; i < nTotalWeight; i++)
 			{
