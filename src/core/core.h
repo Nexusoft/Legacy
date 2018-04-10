@@ -143,6 +143,7 @@ namespace Core
 	
 	/** Map to keep track of the addresses and their corresponding Transactions. **/
 	extern std::map<uint256, uint64> mapAddressTransactions;
+    extern std::map<uint256, std::vector<std::pair<bool, uint512> > > mapRichList;
 	
 	/** The "Block Chain" or index of the chain linking each block to its previous block. **/
 	extern std::map<uint1024, CBlockIndex*> mapBlockIndex;

@@ -1024,12 +1024,68 @@ namespace Net
 		return entry;
 	}
 	
+	
+    /** Dump the top balances of the Rich List to RPC console. **/
+	Value gettransactions(const Array& params, bool fHelp)
+	{
+        if(!GetBoolArg("-richlist", false))
+            throw runtime_error("please enable -richlist to use this command");
+            
+		if (fHelp || params.size() == 0)
+			throw runtime_error(
+				"gettransactions [address] [block=0] [credit=true]\n"
+				"Get transaction data of given address");
+	
+        /* Extract the address from input arguments. */
+        string strAddress = params[0].get_str();
+		Wallet::NexusAddress cAddress(strAddress);
+        
+        int nBlock = 0;
+        if(params.size() > 1)
+            nBlock = params[1].get_int();
+        
+        bool fCredit = true;
+        if(params.size() > 2)
+            fCredit = params[2].get_bool();
+            
+        /* List the transactions stored in the memory map. */
+		std::vector<std::pair<bool, uint512> > vTransactions = Core::mapRichList[cAddress.GetHash256()];
+        
+        Array entry;
+        for(auto tx : vTransactions)
+        {
+            if(fCredit && tx.first)
+                continue;
+            
+            uint1024 hashBlock = 0;
+            Core::CTransaction TX;
+            if (!Core::GetTransaction(tx.second, TX, hashBlock))
+                throw JSONRPCError(-5, "No information available about transaction");
+            
+            if(nBlock > 0 && Core::mapBlockIndex[hashBlock]->nHeight < nBlock)
+                continue;
+            
+            Object obj;
+            obj.push_back(Pair("type", tx.first ? "debit" : "credit"));
+            obj.push_back(Pair("txid", tx.second.ToString()));
+            obj.push_back(Pair("time", (int)TX.nTime));
+            obj.push_back(Pair("amount", ValueFromAmount(TX.GetValueOut())));
+            
+            entry.push_back(obj);
+        }
+		
+		return entry;
+	}
+	
 	/** Dump the top balances of the Rich List to RPC console. **/
 	Value getaddressbalance(const Array& params, bool fHelp)
 	{
+        if(!GetBoolArg("-richlist", false))
+            throw runtime_error("please enable -richlist to use this command");
+        
 		if (fHelp || params.size() != 1)
 			throw runtime_error(
-				"getaddressbalance <address>\n"
+				"getaddressbalance [address[\n"
 				"Get balances of top addresses in the Network.");
 	
 		string strAddress = params[0].get_str();
@@ -1043,13 +1099,14 @@ namespace Net
 		return entry;
 	}
 	
+	
 	/** RPC Method to bridge limitation of Transaction Lookup from Wallet. Allows lookup from any wallet. **/
 	Value getglobaltransaction(const Array& params, bool fHelp)
 	{
 		if (fHelp || params.size() != 1)
 			throw runtime_error(
-				"getglobaltransaction <txid>\n"
-				"Get detailed information about <txid>");
+				"getglobaltransaction [txid]\n"
+				"Get detailed information about [txid]");
 
 		uint512 hash;
 		hash.SetHex(params[0].get_str());
@@ -2728,6 +2785,7 @@ namespace Net
         { "getglobaltransaction",   &getglobaltransaction,   false },
         { "getaddressbalance",      &getaddressbalance,      false },
         { "dumprichlist",           &dumprichlist,           false },
+        { "gettransactions",        &gettransactions,        false },
         { "listNTransactions",      &listNTransactions,      false },
         { "listtransactions",       &listtransactions,       false },
         { "signmessage",            &signmessage,            false },
@@ -3350,6 +3408,8 @@ namespace Net
 		if (strMethod == "sendfrom"               && n > 3) ConvertTo<boost::int64_t>(params[3]);
 		if (strMethod == "listtransactions"       && n > 1) ConvertTo<boost::int64_t>(params[1]);
 		if (strMethod == "listtransactions"       && n > 2) ConvertTo<boost::int64_t>(params[2]);
+        if (strMethod == "gettransactions"        && n > 1) ConvertTo<int>(params[1]);
+        if (strMethod == "gettransactions"        && n > 2) ConvertTo<bool>(params[2]);
 		if (strMethod == "listNTransactions"      && n > 0) ConvertTo<boost::int64_t>(params[0]);
 		if (strMethod == "listaccounts"           && n > 0) ConvertTo<boost::int64_t>(params[0]);
 		if (strMethod == "listunspent"            && n > 0) ConvertTo<boost::int64_t>(params[0]);

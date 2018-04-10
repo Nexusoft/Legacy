@@ -320,7 +320,7 @@ namespace Net
 			nHeaderStart = vSend.size();
 			vSend << CMessageHeader(pszCommand, 0);
 			nMessageStart = vSend.size();
-			if (fDebug) {
+			if (GetArg("-verbose", 0) >= 3) {
 				printf("%s ", DateTimeStrFormat(GetUnifiedTimestamp()).c_str());
 				printf("sending: %s ", pszCommand);
 			}
@@ -335,18 +335,15 @@ namespace Net
 			nMessageStart = -1;
 			LEAVE_CRITICAL_SECTION(cs_vSend);
 
-			if (fDebug)
+			if (GetArg("-verbose", 0) >= 3)
 				printf("(aborted)\n");
 		}
+		
+		
+		
 
 		void EndMessage()
 		{
-			if (mapArgs.count("-dropmessagestest") && GetRand(atoi(mapArgs["-dropmessagestest"])) == 0)
-			{
-				printf("dropmessages DROPPING SEND MESSAGE\n");
-				AbortMessage();
-				return;
-			}
 
 			if (nHeaderStart < 0)
 				return;
@@ -362,7 +359,7 @@ namespace Net
 			assert(nMessageStart - nHeaderStart >= offsetof(CMessageHeader, nChecksum) + sizeof(nChecksum));
 			memcpy((char*)&vSend[nHeaderStart] + offsetof(CMessageHeader, nChecksum), &nChecksum, sizeof(nChecksum));
 
-			if (fDebug) {
+			if (GetArg("-verbose", 0) >= 3) {
 				printf("(%d bytes)\n", nSize);
 			}
 

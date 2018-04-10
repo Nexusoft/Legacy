@@ -187,6 +187,11 @@ namespace LLD
                                 continue;
                                 
                             Core::mapAddressTransactions[cAddress.GetHash256()] += block.vtx[nTx].vout[nOut].nValue;
+                            
+                            if(!Core::mapRichList.count(cAddress.GetHash256()))
+                                Core::mapRichList[cAddress.GetHash256()] = { std::make_pair(false, block.vtx[nTx].GetHash()) };
+                            else
+                                Core::mapRichList[cAddress.GetHash256()].push_back(std::make_pair(false, block.vtx[nTx].GetHash()));
                         }
                         
                         if(!block.vtx[nTx].IsCoinBase())
@@ -210,6 +215,11 @@ namespace LLD
                                     continue;
                                 
                                 Core::mapAddressTransactions[cAddress.GetHash256()] -= tx.vout[txin.prevout.n].nValue;
+                                
+                                if(!Core::mapRichList.count(cAddress.GetHash256()))
+                                    Core::mapRichList[cAddress.GetHash256()] = { std::make_pair(true, tx.GetHash()) };
+                                else
+                                    Core::mapRichList[cAddress.GetHash256()].push_back(std::make_pair(true, tx.GetHash()));
                             }
                         }
                     }
@@ -514,8 +524,11 @@ namespace LLD
                                 continue;
                                 
                             Core::mapAddressTransactions[cAddress.GetHash256()] += block.vtx[nTx].vout[nOut].nValue;
-                                
-                            //printf("%s Credited %f Nexus | Balance : %f Nexus\n", cAddress.ToString().c_str(), (double)block.vtx[nTx].vout[nOut].nValue / COIN, (double)Core::mapAddressTransactions[cAddress.GetHash256()] / COIN);
+                            
+                            if(!Core::mapRichList.count(cAddress.GetHash256()))
+                                Core::mapRichList[cAddress.GetHash256()] = { std::make_pair(false, block.vtx[nTx].GetHash()) };
+                            else
+                                Core::mapRichList[cAddress.GetHash256()].push_back(std::make_pair(false, block.vtx[nTx].GetHash()));
                         }
                         
                         if(!block.vtx[nTx].IsCoinBase())
@@ -540,7 +553,10 @@ namespace LLD
                                 
                                 Core::mapAddressTransactions[cAddress.GetHash256()] -= tx.vout[txin.prevout.n].nValue;
                                 
-                                //printf("%s Debited %f Nexus | Balance : %f Nexus\n", cAddress.ToString().c_str(), (double)tx.vout[txin.prevout.n].nValue / COIN, (double)Core::mapAddressTransactions[cAddress.GetHash256()] / COIN);
+                                if(!Core::mapRichList.count(cAddress.GetHash256()))
+                                    Core::mapRichList[cAddress.GetHash256()] = { std::make_pair(true, tx.GetHash()) };
+                                else
+                                    Core::mapRichList[cAddress.GetHash256()].push_back(std::make_pair(true, tx.GetHash()));
                             }
                         }
                     }

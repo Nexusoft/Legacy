@@ -208,7 +208,8 @@ namespace Core
 	map<uint1024, CBlockIndex*> mapBlockIndex;
 	
 	/** In Memory Holdings of each Address Balance. **/
-	map<uint256, uint64>   mapAddressTransactions;
+	map<uint256, std::vector<std::pair<bool, uint512> > > mapRichList;
+    map<uint256, uint64> mapAddressTransactions;
 	
 	/** Anchored Genesis Block to start the Chain. **/
 	uint1024 hashGenesisBlock = hashGenesisBlockOfficial;

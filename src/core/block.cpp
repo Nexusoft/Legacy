@@ -394,9 +394,11 @@ namespace Core
                     if(!Wallet::ExtractAddress(vtx[nTx].vout[nOut].scriptPubKey, cAddress))
                         continue;
                     
-                    if(!mapAddressTransactions.count(cAddress.GetHash256()))
-                        mapAddressTransactions[cAddress.GetHash256()] = 0;
-                                
+                    if(!Core::mapRichList.count(cAddress.GetHash256()))
+                        mapRichList[cAddress.GetHash256()] = { std::make_pair(false, vtx[nTx].GetHash()) };
+                    else
+                        mapRichList[cAddress.GetHash256()].push_back(std::make_pair(false, vtx[nTx].GetHash()));
+                    
                     mapAddressTransactions[cAddress.GetHash256()] += (uint64) vtx[nTx].vout[nOut].nValue;
                             
                     if(GetArg("-verbose", 0) >= 2)
@@ -425,13 +427,13 @@ namespace Core
                         Wallet::NexusAddress cAddress;
                         if(!Wallet::ExtractAddress(tx.vout[txin.prevout.n].scriptPubKey, cAddress))
                             continue;
-                                
-                        if(!mapAddressTransactions.count(cAddress.GetHash256()))
-                            mapAddressTransactions[cAddress.GetHash256()] = 0;
-                        else if(tx.vout[txin.prevout.n].nValue > mapAddressTransactions[cAddress.GetHash256()])
-                            mapAddressTransactions[cAddress.GetHash256()] = 0;
+                        
+                        if(!Core::mapRichList.count(cAddress.GetHash256()))
+                            mapRichList[cAddress.GetHash256()] = { std::make_pair(true, tx.GetHash()) };
                         else
-                            mapAddressTransactions[cAddress.GetHash256()] -= (uint64) tx.vout[txin.prevout.n].nValue;
+                            mapRichList[cAddress.GetHash256()].push_back(std::make_pair(true, tx.GetHash()));
+                        
+                        mapAddressTransactions[cAddress.GetHash256()] -= (uint64) tx.vout[txin.prevout.n].nValue;
                         
                         if(GetArg("-verbose", 0) >= 2)
                             printf("%s Debited %f Nexus | Balance : %f Nexus\n", cAddress.ToString().c_str(), (double)tx.vout[txin.prevout.n].nValue / COIN, (double)mapAddressTransactions[cAddress.GetHash256()] / COIN);
