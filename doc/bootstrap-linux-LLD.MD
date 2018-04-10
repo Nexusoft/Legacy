@@ -18,7 +18,7 @@ Go back to your home folder
 
 Nexus download a bootstrap from this URL
 
-    wget http://nexusminingpool.com/downloads/nxslld041016.zip
-    unzip nxslld041016.zip
+    wget https://nexusearth.com/bootstrap/LLD-Database/recent.zip
+    unzip recent.zip
 
 Now proceed to boot up the LLD node as normal.
