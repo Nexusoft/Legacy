@@ -1077,6 +1077,42 @@ namespace Net
 		return entry;
 	}
 	
+	
+    /** Dump the top balances of the Rich List to RPC console. **/
+	Value totaltransactions(const Array& params, bool fHelp)
+	{
+        if(!GetBoolArg("-richlist", false))
+            throw runtime_error("please enable -richlist to use this command");
+            
+		if (fHelp)
+			throw runtime_error(
+				"totaltransactions [address]\n"
+				"Get the total global transactions since the genesis block. Optional to do by address");
+	
+        /* Extract the address from input arguments. */
+        unsigned int nTotalTransactions = 0;
+        if(params.size() > 0)
+        {
+            string strAddress = params[0].get_str();
+            Wallet::NexusAddress cAddress(strAddress);
+            
+            if(Core::mapRichList.count(cAddress.GetHash256()))
+                nTotalTransactions = Core::mapRichList[cAddress.GetHash256()].size();
+        }
+        else
+        {
+            /* List the transactions stored in the memory map. */
+            for (std::map<uint256, std::vector<std::pair<bool, uint512>> >::iterator it = Core::mapRichList.begin(); it != Core::mapRichList.end(); ++it)
+                nTotalTransactions += it->second.size();
+        }
+        
+        Object entry;
+        entry.push_back(Pair("transactions", (int)nTotalTransactions));
+        entry.push_back(Pair("addresses", (int)Core::mapRichList.size()));
+		
+		return entry;
+	}
+	
 	/** Dump the top balances of the Rich List to RPC console. **/
 	Value getaddressbalance(const Array& params, bool fHelp)
 	{
@@ -1822,74 +1858,6 @@ namespace Net
 		return ret;
 	}
 
-	Value listNTransactions(const Array& params, bool fHelp)
-	{
-		if (fHelp || params.size() > 1)
-			throw runtime_error(
-				"listNTransactions [N]\n"
-				"Returns up to [N] most recent transactions. Default [N] is 10");
-
-		string strAccount = "*"; //just to get things working, this is not going to be in the final version of this method.
-		int nCount = 10; // list this many recent transactions.
-		if (params.size() > 0)
-			nCount = params[0].get_int();
-		int nFrom = 0; //skip this many recent transactions.	
-		if (nCount < 0)
-			throw JSONRPCError(-8, "Negative count");
-
-
-		Array ret;
-			Wallet::CWalletDB walletdb(pwalletMain->strWalletFile);
-
-			// First: get all Wallet::CWalletTx and Wallet::CAccountingEntry into a sorted-by-time multimap.
-			typedef pair<Wallet::CWalletTx*, Wallet::CAccountingEntry*> TxPair;
-			typedef multimap<int64, TxPair > TxItems;
-			TxItems txByTime;
-
-			for (map<uint512, Wallet::CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
-			{
-				Wallet::CWalletTx* wtx = &((*it).second);
-				txByTime.insert(make_pair(wtx->GetTxTime(), TxPair(wtx, (Wallet::CAccountingEntry*)0)));
-			}
-
-			list<Wallet::CAccountingEntry> acEntries;
-			walletdb.ListAccountCreditDebit(strAccount, acEntries);
-
-			BOOST_FOREACH(Wallet::CAccountingEntry& entry, acEntries)
-			{
-				txByTime.insert(make_pair(entry.nTime, TxPair((Wallet::CWalletTx*)0, &entry)));
-			}
-
-			// iterate backwards until we have nCount items to return:
-			for (TxItems::reverse_iterator it = txByTime.rbegin(); it != txByTime.rend(); ++it)
-			{
-				Wallet::CWalletTx *const pwtx = (*it).second.first;
-				if (pwtx != 0)
-					ListTransactions(*pwtx, strAccount, 0, true, ret); //for now i am reusing this function, will right one that doesn't take account etc.
-				Wallet::CAccountingEntry *const pacentry = (*it).second.second;
-				if (pacentry != 0)
-					AcentryToJSON(*pacentry, strAccount, ret);
-
-				if (ret.size() >= (nCount+nFrom)) break;
-			}
-			// ret is newest to oldest
-			
-			// if (nFrom > (int)ret.size())
-			// 	nFrom = ret.size();
-			// if ((nFrom + nCount) > (int)ret.size())
-			// 	nCount = ret.size() - nFrom;
-			// Array::iterator first = ret.begin();
-			// std::advance(first, nFrom);
-			// Array::iterator last = ret.begin();
-			// std::advance(last, nFrom+nCount);
-
-			// if (last != ret.end()) ret.erase(last, ret.end());
-			// if (first != ret.begin()) ret.erase(ret.begin(), first);
-
-			std::reverse(ret.begin(), ret.end()); // Return oldest to newest
-
-		return ret;
-	}
 
 	Value listaccounts(const Array& params, bool fHelp)
 	{
@@ -2786,7 +2754,7 @@ namespace Net
         { "getaddressbalance",      &getaddressbalance,      false },
         { "dumprichlist",           &dumprichlist,           false },
         { "gettransactions",        &gettransactions,        false },
-        { "listNTransactions",      &listNTransactions,      false },
+        { "totaltransactions",      &totaltransactions,      false },
         { "listtransactions",       &listtransactions,       false },
         { "signmessage",            &signmessage,            false },
         { "verifymessage",          &verifymessage,          false },
