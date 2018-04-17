@@ -1,4 +1,4 @@
-Nexus Core - 0.2.4.1
+Nexus Core - 0.2.4.2
 =====================================
 
 nex·usˈneksəs' : a connection or series of connections linking two or more things.
