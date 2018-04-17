@@ -1033,7 +1033,7 @@ namespace Net
             
 		if (fHelp || params.size() == 0)
 			throw runtime_error(
-				"gettransactions [address] [block=0] [credit=true]\n"
+				"gettransactions [address] [block=0] [coinbase=true]\n"
 				"Get transaction data of given address");
 	
         /* Extract the address from input arguments. */
@@ -1044,9 +1044,9 @@ namespace Net
         if(params.size() > 1)
             nBlock = params[1].get_int();
         
-        bool fCredit = true;
+        bool fCoinbase = true;
         if(params.size() > 2)
-            fCredit = params[2].get_bool();
+            fCoinbase = params[2].get_bool();
             
         /* List the transactions stored in the memory map. */
 		std::vector<std::pair<bool, uint512> > vTransactions = Core::mapRichList[cAddress.GetHash256()];
@@ -1054,7 +1054,7 @@ namespace Net
         Array entry;
         for(auto tx : vTransactions)
         {
-            if(fCredit && tx.first)
+            if(fCoinbase && tx.first)
                 continue;
             
             uint1024 hashBlock = 0;
@@ -1086,29 +1086,56 @@ namespace Net
             
 		if (fHelp)
 			throw runtime_error(
-				"totaltransactions [address]\n"
+				"totaltransactions [coinbase=true] [address]\n"
 				"Get the total global transactions since the genesis block. Optional to do by address");
+            
+        bool fCoinbase = true;
+        if(params.size() > 0)
+            fCoinbase = params[0].get_bool();
 	
         /* Extract the address from input arguments. */
-        unsigned int nTotalTransactions = 0;
-        if(params.size() > 0)
+        unsigned int nTotalTransactions = 0, nTotalAddresses = 0;
+        if(params.size() > 1)
         {
-            string strAddress = params[0].get_str();
+            string strAddress = params[1].get_str();
             Wallet::NexusAddress cAddress(strAddress);
             
             if(Core::mapRichList.count(cAddress.GetHash256()))
-                nTotalTransactions = Core::mapRichList[cAddress.GetHash256()].size();
+            {
+                for(auto tx : Core::mapRichList[cAddress.GetHash256()])
+                {
+                    if(!fCoinbase && tx.first)
+                        continue;
+                    
+                    nTotalTransactions ++;
+                }
+            }
         }
         else
         {
             /* List the transactions stored in the memory map. */
-            for (std::map<uint256, std::vector<std::pair<bool, uint512>> >::iterator it = Core::mapRichList.begin(); it != Core::mapRichList.end(); ++it)
-                nTotalTransactions += it->second.size();
+            for (auto it : Core::mapRichList)
+            {
+                bool fHasCoinbase = false;
+                for(auto tx : it.second)
+                {
+                    if(!fCoinbase && tx.first)
+                    {
+                        fHasCoinbase = true;
+                        continue;
+                    }
+                    
+                    nTotalTransactions ++;
+                }
+                
+                if(!fHasCoinbase)
+                    nTotalAddresses++;
+            }
         }
         
         Object entry;
         entry.push_back(Pair("transactions", (int)nTotalTransactions));
-        entry.push_back(Pair("addresses", (int)Core::mapRichList.size()));
+        entry.push_back(Pair("addresses", (int)nTotalAddresses));
 		
 		return entry;
 	}
@@ -1121,7 +1148,7 @@ namespace Net
         
 		if (fHelp || params.size() != 1)
 			throw runtime_error(
-				"getaddressbalance [address[\n"
+				"getaddressbalance [address]\n"
 				"Get balances of top addresses in the Network.");
 	
 		string strAddress = params[0].get_str();
@@ -3376,6 +3403,7 @@ namespace Net
 		if (strMethod == "sendfrom"               && n > 3) ConvertTo<boost::int64_t>(params[3]);
 		if (strMethod == "listtransactions"       && n > 1) ConvertTo<boost::int64_t>(params[1]);
 		if (strMethod == "listtransactions"       && n > 2) ConvertTo<boost::int64_t>(params[2]);
+        if (strMethod == "totaltransactions"      && n > 0) ConvertTo<bool>(params[0]);
         if (strMethod == "gettransactions"        && n > 1) ConvertTo<int>(params[1]);
         if (strMethod == "gettransactions"        && n > 2) ConvertTo<bool>(params[2]);
 		if (strMethod == "listNTransactions"      && n > 0) ConvertTo<boost::int64_t>(params[0]);

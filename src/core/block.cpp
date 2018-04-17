@@ -395,9 +395,9 @@ namespace Core
                         continue;
                     
                     if(!Core::mapRichList.count(cAddress.GetHash256()))
-                        mapRichList[cAddress.GetHash256()] = { std::make_pair(false, vtx[nTx].GetHash()) };
+                        mapRichList[cAddress.GetHash256()] = { std::make_pair(vtx[nTx].IsCoinBase(), vtx[nTx].GetHash()) };
                     else
-                        mapRichList[cAddress.GetHash256()].push_back(std::make_pair(false, vtx[nTx].GetHash()));
+                        mapRichList[cAddress.GetHash256()].push_back(std::make_pair(vtx[nTx].IsCoinBase(), vtx[nTx].GetHash()));
                     
                     mapAddressTransactions[cAddress.GetHash256()] += (uint64) vtx[nTx].vout[nOut].nValue;
                             
@@ -429,9 +429,9 @@ namespace Core
                             continue;
                         
                         if(!Core::mapRichList.count(cAddress.GetHash256()))
-                            mapRichList[cAddress.GetHash256()] = { std::make_pair(true, tx.GetHash()) };
+                            mapRichList[cAddress.GetHash256()] = { std::make_pair(vtx[nTx].IsCoinBase(), tx.GetHash()) };
                         else
-                            mapRichList[cAddress.GetHash256()].push_back(std::make_pair(true, tx.GetHash()));
+                            mapRichList[cAddress.GetHash256()].push_back(std::make_pair(vtx[nTx].IsCoinBase(), tx.GetHash()));
                         
                         mapAddressTransactions[cAddress.GetHash256()] -= (uint64) tx.vout[txin.prevout.n].nValue;
                         
