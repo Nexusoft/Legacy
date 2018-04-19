@@ -254,9 +254,9 @@ namespace LLD
 
 		/** Verify the Blocks in the Best Chain To Last Checkpoint. **/
 		int nCheckLevel = GetArg("-checklevel", 6);
-		int nCheckDepth = GetArg( "-checkblocks", 0);
-		//if (nCheckDepth == 0)
-		//	nCheckDepth = 1000000000;
+		int nCheckDepth = GetArg( "-checkblocks", 10);
+		if (nCheckDepth == 0)
+			nCheckDepth = 1000000000;
 			
 		if (nCheckDepth > Core::nBestHeight)
 			nCheckDepth = Core::nBestHeight;
@@ -614,7 +614,7 @@ namespace LLD
 
 		/** Verify the Blocks in the Best Chain To Last Checkpoint. **/
 		int nCheckLevel = GetArg("-checklevel", 1);
-		int nCheckDepth = GetArg( "-checkblocks", 1);
+		int nCheckDepth = GetArg( "-checkblocks", 10);
 		if (nCheckDepth == 0)
 			nCheckDepth = 1000000000;
 			
