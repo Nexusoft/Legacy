@@ -864,7 +864,8 @@ namespace Core
 				if (!pwalletMain->AddCoinstakeInputs(block[i].vtx[0]))
 					break;
 				
-				AddTransactions(block[i].vtx, pindexBest);
+				if (!block[i].vtx[0].isGenesis())
+					AddTransactions(block[i].vtx, pindexBest);
 				
 				block[i].hashMerkleRoot   = block[i].BuildMerkleTree();
 			}
