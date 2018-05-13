@@ -108,7 +108,7 @@ namespace Core
 	/** Miller-Rabin Primality Test from the OpenSSL BN Library. **/
 	bool Miller_Rabin(const CBigNum& n, int checks)
 	{
-		return (BN_is_prime(n.getBN(), checks, NULL, NULL, NULL) == 1);
+		return (BN_is_prime_ex(n.getBN(), checks, nullptr, nullptr) == 1);
 	}
 
 }
