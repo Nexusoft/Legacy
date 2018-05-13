@@ -31,8 +31,7 @@ namespace Wallet
         reverse_copy(pbegin, pend, vchTmp.begin());
 
         // Convert little endian data to bignum
-        CBigNum bn;
-        bn.setvch(vchTmp);
+        CBigNum bn(vchTmp);
 
         // Convert bignum to std::string
         std::string str;
