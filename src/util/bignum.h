@@ -60,20 +60,20 @@ public:
         allocate();
     }
 
-    CBigNum(const CBigNum& b)
+    CBigNum(const CBigNum& b) : m_BN(BN_dup(b.getBN()))
     {
-        allocate();
-        if (!BN_copy(m_BN, b.getBN()))
+        if (nullptr == m_BN)
         {
-            BN_clear_free(m_BN);
-            throw bignum_error("CBigNum::CBigNum(const CBigNum&) : BN_copy failed");
+            throw bignum_error("CBigNum::CBigNum(const CBigNum&): BN_dup failed");
         }
     }
 
     CBigNum& operator=(const CBigNum& b)
     {
-        if (!BN_copy(m_BN, b.getBN()))
-            throw bignum_error("CBigNum::operator= : BN_copy failed");
+        if (nullptr == BN_copy(m_BN, b.getBN()))
+        {
+            throw bignum_error("CBigNum::operator=(const CBigNum&): BN_copy failed");
+        }
         return (*this);
     }
 
@@ -83,20 +83,20 @@ public:
     }
 
     //CBigNum(char n) is not portable.  Use 'signed char' or 'unsigned char'.
-    CBigNum(signed char n)      { allocate(); if (n >= 0) setulong(n); else setint64(n); }
-    CBigNum(short n)            { allocate(); if (n >= 0) setulong(n); else setint64(n); }
-    CBigNum(int n)              { allocate(); if (n >= 0) setulong(n); else setint64(n); }
-    CBigNum(long n)             { allocate(); if (n >= 0) setulong(n); else setint64(n); }
-    CBigNum(int64 n)            { allocate(); setint64(n); }
-    CBigNum(unsigned char n)    { allocate(); setulong(n); }
-    CBigNum(unsigned short n)   { allocate(); setulong(n); }
-    CBigNum(unsigned int n)     { allocate(); setulong(n); }
-    CBigNum(unsigned long n)    { allocate(); setulong(n); }
-    CBigNum(uint64 n)           { allocate(); setuint64(n); }
-    explicit CBigNum(uint256 n) { allocate(); setuint256(n); }
-	explicit CBigNum(uint512 n) { allocate(); setuint512(n); }
-	explicit CBigNum(uint576 n) { allocate(); setuint576(n); }
-	explicit CBigNum(uint1024 n) { allocate(); setuint1024(n); }
+    CBigNum(signed char n)       { allocate(); if (n >= 0) setulong(n); else setint64(n); }
+    CBigNum(short n)             { allocate(); if (n >= 0) setulong(n); else setint64(n); }
+    CBigNum(int n)               { allocate(); if (n >= 0) setulong(n); else setint64(n); }
+    CBigNum(long n)              { allocate(); if (n >= 0) setulong(n); else setint64(n); }
+    CBigNum(int64 n)             { allocate(); setint64(n); }
+    CBigNum(unsigned char n)     { allocate(); setulong(n); }
+    CBigNum(unsigned short n)    { allocate(); setulong(n); }
+    CBigNum(unsigned int n)      { allocate(); setulong(n); }
+    CBigNum(unsigned long n)     { allocate(); setulong(n); }
+    CBigNum(uint64 n)            { allocate(); setuint64(n); }
+    explicit CBigNum(uint256 n)  { allocate(); setuint256(n); }
+    explicit CBigNum(uint512 n)  { allocate(); setuint512(n); }
+    explicit CBigNum(uint576 n)  { allocate(); setuint576(n); }
+    explicit CBigNum(uint1024 n) { allocate(); setuint1024(n); }
 
     explicit CBigNum(const std::vector<unsigned char>& vch)
     {
