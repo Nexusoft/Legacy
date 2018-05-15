@@ -698,6 +698,7 @@ namespace Core
 		/* Helper Function to Find Trust Key. */
 		bool HasTrustKey(unsigned int nTime);
 		
+        bool IsValid(CBlock cBlock);
 		bool Check(CBlock cBlock);
 		bool Accept(CBlock cBlock, bool fInit = false);
 		bool Remove(CBlock cBlock);

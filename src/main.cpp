@@ -241,6 +241,7 @@ bool AppInit2(int argc, char* argv[])
                     "  -printtodebugger \t  "   + _("Send trace/debug info to debugger") + "\n" +
         #endif
                     "  -llpallowip=<ip> \t  "   + _("Allow mining from specified IP address or range (192.168.6.* for example") + "\n" +
+                    "  -banned=<ip>     \t  "   + _("Manually Ban Addresses from Config File") + "\n" +
                     "  -mining 			\t  "   + _("Allow mining (default: 0)") + "\n" +
                     "  -rpcuser=<user>  \t  "   + _("Username for JSON-RPC connections") + "\n" +
                     "  -rpcpassword=<pw>\t  "   + _("Password for JSON-RPC connections") + "\n" +
@@ -341,7 +342,10 @@ bool AppInit2(int argc, char* argv[])
 	printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
 	printf("Nexus version %s (%s)\n", FormatFullVersion().c_str(), CLIENT_DATE.c_str());
 	printf("Default data directory %s\n", GetDefaultDataDir().string().c_str());
-
+    
+    for(auto node : mapMultiArgs["-banned"])
+        printf("PERMANENT BAN %s\n", node.c_str());
+    
     #ifdef USE_LLD
         InitMessage(_("Initializing LLD Keychains..."));
         LLD::RegisterKeychain("blkindex", "blkindex");

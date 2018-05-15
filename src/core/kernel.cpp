@@ -375,6 +375,88 @@ namespace Core
 		return !(vchTrustKey.empty());
 	}
 	
+    bool CTrustPool::IsValid(CBlock cBlock)
+	{
+		/** Lock Accepting Trust Keys to Mutex. **/
+		LOCK(cs);
+		
+		/** Extract the Key from the Script Signature. **/
+		vector< std::vector<unsigned char> > vKeys;
+		Wallet::TransactionType keyType;
+		if (!Wallet::Solver(cBlock.vtx[0].vout[0].scriptPubKey, keyType, vKeys))
+			return error("CTrustPool::check() : Failed To Solve Trust Key Script.");
+
+		/** Ensure the Key is Public Key. No Pay Hash or Script Hash for Trust Keys. **/
+		if (keyType != Wallet::TX_PUBKEY)
+			return error("CTrustPool::check() : Trust Key must be of Public Key Type Created from Keypool.");
+			
+		/** Set the Public Key Integer Key from Bytes. **/
+		uint576 cKey;
+		cKey.SetBytes(vKeys[0]);
+			
+		/** Handle Genesis Transaction Rules. Genesis is checked after Trust Key Established. **/
+		if(cBlock.vtx[0].IsGenesis())
+		{
+			if(cBlock.vtx[0].GetValueOut() < 1000 * COIN)
+                return false;
+            
+            const CBlockIndex* pindexFirst = GetLastChannelIndex(mapBlockIndex[cBlock.hashPrevBlock], 0);
+            const CBlockIndex* pindexLast = GetLastChannelIndex(pindexFirst->pprev, 0);
+            
+            CBlock cBlockFirst;	
+            if(!cBlockFirst.ReadFromDisk(pindexFirst->nFile, pindexFirst->nBlockPos, true))
+                return error("CTrustPool::IsValid() : Failed to Read First Block");
+            
+            CBlock cBlockLast;
+            if(!cBlockLast.ReadFromDisk(pindexLast->nFile, pindexLast->nBlockPos, true))
+                return error("CTrustPool::IsValid() : Failed to Read Second Block");
+            
+            if(cBlockFirst.vtx[0].IsGenesis() && cBlockFirst.vtx[0].GetValueOut() < 1000 * COIN)
+                return error("CTrustPool::IsValid() : First Previous is small Genesis");
+            
+            if(cBlockLast.vtx[0].IsGenesis() && cBlockLast.vtx[0].GetValueOut() < 1000 * COIN)
+                return error("CTrustPool::IsValid() : Second Previous is Small Genesis");
+            
+			return true;
+		}
+		
+		/** Handle Adding Trust Transactions. **/
+		else if(cBlock.vtx[0].IsTrust())
+		{
+            if(cBlock.vtx[0].GetValueOut() < 1000 * COIN)
+                return false;
+                
+            uint64 nAge   = mapTrustKeys[cKey].Age(GetUnifiedTimestamp());
+            uint64 nBlock = mapTrustKeys[cKey].BlockAge(GetUnifiedTimestamp());
+            
+            /* Special Rules for Newer Key. */
+            if(nAge < 86400 * 7)
+            {
+                const CBlockIndex* pindexFirst = GetLastChannelIndex(mapBlockIndex[cBlock.hashPrevBlock], 0);
+                const CBlockIndex* pindexLast = GetLastChannelIndex(pindexFirst->pprev, 0);
+            
+                CBlock cBlockFirst;	
+                if(!cBlockFirst.ReadFromDisk(pindexFirst->nFile, pindexFirst->nBlockPos, true))
+                    return error("CTrustPool::IsValid() : Failed to Read First Block");
+            
+                CBlock cBlockLast;
+                if(!cBlockLast.ReadFromDisk(pindexLast->nFile, pindexLast->nBlockPos, true))
+                    return error("CTrustPool::IsValid() : Failed to Read Second Block");
+            
+                if(cBlockFirst.vtx[0].IsTrust() && cBlockFirst.vtx[0].GetValueOut() < 1000 * COIN)
+                    return error("CTrustPool::IsValid() : First Previous is small Trust");
+            
+                if(cBlockLast.vtx[0].IsTrust() && cBlockFirst.vtx[0].GetValueOut() < 1000 * COIN)
+                    return error("CTrustPool::IsValid() : Second Previous is Small Trust");
+            }
+			
+			return true;
+		}
+		
+		return false;
+	}
+	
+	
 	
 	/** Check a Block's Coinstake Transaction to see if it fits Trust Key Protocol. 
 	

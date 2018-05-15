@@ -414,6 +414,14 @@ namespace Net
 
 	bool CNode::IsBanned(CNetAddr ip)
 	{
+        
+        /* Check the Banned List. */
+        const std::vector<std::string>& vBanned = mapMultiArgs["-banned"];
+        for(auto node : vBanned)
+            if(ip.ToStringIP() == node)
+                return true;
+        
+            
 		bool fResult = false;
 		{
 			LOCK(cs_setBanned);
@@ -439,7 +447,7 @@ namespace Net
 		nMisbehavior += howmuch;
 		if (nMisbehavior >= GetArg("-banscore", 100))
 		{
-			int64 banTime = GetUnifiedTimestamp() + GetArg("-bantime", 60*60*24);  // Default 24-hour ban
+			int64 banTime = GetUnifiedTimestamp() + GetArg("-bantime", 60 * 60 * 24);  // Default 24-hour ban
 			{
 				LOCK(cs_setBanned);
 				if (setBanned[addr] < banTime)

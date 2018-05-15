@@ -18,6 +18,7 @@ else
 	CXXFLAGS+= -m64
 endif
 
+
 #Define default LIB and INCLUDE path variables
 ifndef BOOST_LIB_SUFFIX
 	ifeq ($(detected_OS),Windows)
@@ -265,7 +266,7 @@ DEFS+= -DWIN32 \
 	-DBOOST_ASIO_ENABLE_OLD_SERVICES
 
 #OS Specific Compiler Flags
-CXXFLAGS+= -s \
+CXXFLAGS+= -g \
 	-mthreads \
 	-static \
 	-static-libgcc \
@@ -276,7 +277,7 @@ CXXFLAGS+= -s \
 
 #set -std=c++ for all but c compiling
 CFLAGS:= $(CXXFLGS)
-CXXFLAGS+= -std=c++11
+CXXFLAGS+=-std=c++11
 
 #OS Specific Targets and instructions
 all: release/nexus.exe
@@ -356,7 +357,7 @@ CXXFLAGS+= -mmacosx-version-min=10.10 \
 
 #set -std=c++ for all but c compiling
 CFLAGS:= $(CXXFLGS)
-CXXFLAGS+= -std=c++11
+CXXFLAGS+=-std=c++11
 
 #OS Specific Targets and instructions
 all: nexus
@@ -471,7 +472,7 @@ endif
 #OS Specific Compiler Flags
 CXXFLAGS+= -O3 \
 	-pthread \
-	-s \
+	-g \
 	-fstack-protector \
 	-D_FORTIFY_SOURCE=2 \
 	-Wl,-z,relro \
@@ -481,7 +482,7 @@ CXXFLAGS+= -O3 \
 
 #set -std=c++ for all but c compiling
 CFLAGS:= $(CXXFLGS)
-CXXFLAGS+= -std=c++11
+CXXFLAGS+=-std=c++11
 
 #OS Specific Targets and instructions
 all: nexus
