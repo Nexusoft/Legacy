@@ -1276,6 +1276,8 @@ namespace Core
 		// Denial-of-service detection:
 		mutable int nDoS;
 		bool DoS(int nDoSIn, bool fIn) const { nDoS += nDoSIn; return fIn; }
+		
+		mutable bool fValid;
 
 		CBlock()
 		{
@@ -1319,6 +1321,8 @@ namespace Core
 
 		void SetNull()
 		{
+            fValid = true;
+            
 			nVersion = 3;
 			hashPrevBlock = 0;
 			hashMerkleRoot = 0;

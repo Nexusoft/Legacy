@@ -377,83 +377,138 @@ namespace Core
 	
     bool CTrustPool::IsValid(CBlock cBlock)
 	{
-		/** Lock Accepting Trust Keys to Mutex. **/
+		/* Lock Accepting Trust Keys to Mutex. */
 		LOCK(cs);
 		
-		/** Extract the Key from the Script Signature. **/
+		/* Extract the Key from the Script Signature. */
 		vector< std::vector<unsigned char> > vKeys;
 		Wallet::TransactionType keyType;
 		if (!Wallet::Solver(cBlock.vtx[0].vout[0].scriptPubKey, keyType, vKeys))
-			return error("CTrustPool::check() : Failed To Solve Trust Key Script.");
+			return error("CTrustPool::IsValid() : Failed To Solve Trust Key Script.");
 
-		/** Ensure the Key is Public Key. No Pay Hash or Script Hash for Trust Keys. **/
+		/* Ensure the Key is Public Key. No Pay Hash or Script Hash for Trust Keys. */
 		if (keyType != Wallet::TX_PUBKEY)
-			return error("CTrustPool::check() : Trust Key must be of Public Key Type Created from Keypool.");
+			return error("CTrustPool::IsValid() : Trust Key must be of Public Key Type Created from Keypool.");
 			
-		/** Set the Public Key Integer Key from Bytes. **/
+		/* Set the Public Key Integer Key from Bytes. */
 		uint576 cKey;
 		cKey.SetBytes(vKeys[0]);
+            
+        /* Find the last 6 nPoS blocks. */
+        CBlock pblock[6];
+        const CBlockIndex* pindex[6];
+            
+        unsigned int nAverageTime = 0, nTotalGenesis = 0;
+        for(int i = 0; i < 6; i++)
+        {
+            pindex[i] = GetLastChannelIndex(i == 0 ? mapBlockIndex[cBlock.hashPrevBlock] : pindex[i - 1]->pprev, 0);
+            pblock[i].ReadFromDisk(pindex[i]->nFile, pindex[i]->nBlockPos, true);
+                
+            if(i > 0)
+                nAverageTime += (pblock[i - 1].nTime - pblock[i].nTime);
+                    
+            if(pblock[i].vtx[0].IsGenesis())
+                nTotalGenesis++;
+        }
+        nAverageTime /= 5;
+		
+		/* Create an LLD instance for Tx Lookups. */
+		LLD::CIndexDB indexdb("cr");
 			
-		/** Handle Genesis Transaction Rules. Genesis is checked after Trust Key Established. **/
+		/* Handle Genesis Transaction Rules. Genesis is checked after Trust Key Established. */
 		if(cBlock.vtx[0].IsGenesis())
 		{
-			if(cBlock.vtx[0].GetValueOut() < 1000 * COIN)
-                return false;
+            /* RULE: Average Block time of last six blocks not to go below 30 seconds */
+            if(nTotalGenesis > 3 && nAverageTime < 30)
+                return error("\x1b[31m SOFTBAN: \u001b[37;1m 5 Genesis Average block time < 20 seconds %u", nAverageTime );
+		
+            /* Check the coin age of each Input. */
+            for(int nIndex = 1; nIndex < cBlock.vtx[0].vin.size(); nIndex++)
+            {
+                CTransaction txPrev;
+                CTxIndex txindex;
+                
+                /* Ignore Outputs that are not in the Main Chain. */
+                if (!txPrev.ReadFromDisk(indexdb, cBlock.vtx[0].vin[nIndex].prevout, txindex))
+                    return error("GetCoinstakeAge() : Invalid Previous Transaction");
+
+                /* Read the Previous Transaction's Block from Disk. */
+                CBlock block;
+                if (!block.ReadFromDisk(txindex.pos.nFile, txindex.pos.nBlockPos, false))
+                    return error("GetCoinstakeAge() : Failed To Read Block from Disk");
+                
+                /* RULE: No Genesis if coin age is less than 1 days old. */
+                if((cBlock.nTime - block.GetBlockTime()) < 24 * 60 * 60)
+                    return error("\x1b[31m SOFTBAN: \u001b[37;1m Genesis Input less than 24 hours Age");
+            }
+
+            /* Genesis Rules: Less than 1000 NXS in block. */
+            if(cBlock.vtx[0].GetValueOut() < 1000 * COIN)
+            {
+                /* RULE: More than 2 conesuctive Genesis with < 1000 NXS */
+                if (pblock[0].vtx[0].GetValueOut() < 1000 * COIN &&
+                    pblock[1].vtx[0].GetValueOut() < 1000 * COIN)
+                    return error("\x1b[31m SOFTBAN: \u001b[37;1m More than 2 Consecutive blocks < 1000 NXS");
+            }
             
-            const CBlockIndex* pindexFirst = GetLastChannelIndex(mapBlockIndex[cBlock.hashPrevBlock], 0);
-            const CBlockIndex* pindexLast = GetLastChannelIndex(pindexFirst->pprev, 0);
+            bool fGenesis = true;
+            for(int i = 0; i < 3; i++)
+                if(!pblock[i].vtx[0].IsGenesis())
+                    fGenesis = false;
             
-            CBlock cBlockFirst;	
-            if(!cBlockFirst.ReadFromDisk(pindexFirst->nFile, pindexFirst->nBlockPos, true))
-                return error("CTrustPool::IsValid() : Failed to Read First Block");
-            
-            CBlock cBlockLast;
-            if(!cBlockLast.ReadFromDisk(pindexLast->nFile, pindexLast->nBlockPos, true))
-                return error("CTrustPool::IsValid() : Failed to Read Second Block");
-            
-            if(cBlockFirst.vtx[0].IsGenesis() && cBlockFirst.vtx[0].GetValueOut() < 1000 * COIN)
-                return error("CTrustPool::IsValid() : First Previous is small Genesis");
-            
-            if(cBlockLast.vtx[0].IsGenesis() && cBlockLast.vtx[0].GetValueOut() < 1000 * COIN)
-                return error("CTrustPool::IsValid() : Second Previous is Small Genesis");
-            
-			return true;
+            /* RULE: If there are 6 consecutive genesis blocks. */
+            if(fGenesis)
+                return error("\x1b[31m SOFTBAN: \u001b[37;1m At least 3 consecutive Genesis");
 		}
 		
 		/** Handle Adding Trust Transactions. **/
 		else if(cBlock.vtx[0].IsTrust())
 		{
-            if(cBlock.vtx[0].GetValueOut() < 1000 * COIN)
-                return false;
+            
+            /* RULE: Average Block time of last six blocks not to go below 30 seconds */
+            if(nAverageTime < 20 && (cBlock.nTime - pblock[0].nTime) < 30)
+                return error("\x1b[31m SOFTBAN: \u001b[37;1m Trust Average block time < 30 seconds %u", nAverageTime);
                 
-            uint64 nAge   = mapTrustKeys[cKey].Age(GetUnifiedTimestamp());
-            uint64 nBlock = mapTrustKeys[cKey].BlockAge(GetUnifiedTimestamp());
-            
-            /* Special Rules for Newer Key. */
-            if(nAge < 86400 * 7)
+                
+            /* Check the coin age of each Input. */
+            for(int nIndex = 1; nIndex < cBlock.vtx[0].vin.size(); nIndex++)
             {
-                const CBlockIndex* pindexFirst = GetLastChannelIndex(mapBlockIndex[cBlock.hashPrevBlock], 0);
-                const CBlockIndex* pindexLast = GetLastChannelIndex(pindexFirst->pprev, 0);
-            
-                CBlock cBlockFirst;	
-                if(!cBlockFirst.ReadFromDisk(pindexFirst->nFile, pindexFirst->nBlockPos, true))
-                    return error("CTrustPool::IsValid() : Failed to Read First Block");
-            
-                CBlock cBlockLast;
-                if(!cBlockLast.ReadFromDisk(pindexLast->nFile, pindexLast->nBlockPos, true))
-                    return error("CTrustPool::IsValid() : Failed to Read Second Block");
-            
-                if(cBlockFirst.vtx[0].IsTrust() && cBlockFirst.vtx[0].GetValueOut() < 1000 * COIN)
-                    return error("CTrustPool::IsValid() : First Previous is small Trust");
-            
-                if(cBlockLast.vtx[0].IsTrust() && cBlockFirst.vtx[0].GetValueOut() < 1000 * COIN)
-                    return error("CTrustPool::IsValid() : Second Previous is Small Trust");
+                CTransaction txPrev;
+                CTxIndex txindex;
+                
+                /* Ignore Outputs that are not in the Main Chain. */
+                if (!txPrev.ReadFromDisk(indexdb, cBlock.vtx[0].vin[nIndex].prevout, txindex))
+                    return error("GetCoinstakeAge() : Invalid Previous Transaction");
+
+                /* Read the Previous Transaction's Block from Disk. */
+                CBlock block;
+                if (!block.ReadFromDisk(txindex.pos.nFile, txindex.pos.nBlockPos, false))
+                    return error("GetCoinstakeAge() : Failed To Read Block from Disk");
+                
+                /* RULE: Inputs need to have at least 100 confirmations */
+                if(cBlock.nHeight - block.nHeight < 100)
+                    return error("\x1b[31m SOFTBAN: \u001b[37;1m Genesis Input less than 100 confirmations");
             }
-			
-			return true;
+            
+            /* Get the time since last block. */
+            uint64 nTrustAge = mapTrustKeys[cKey].Age(GetUnifiedTimestamp());
+            uint64 nBlockAge = mapTrustKeys[cKey].BlockAge(GetUnifiedTimestamp());
+            
+            /* Genesis Rules: Less than 1000 NXS in block. */
+            if(cBlock.vtx[0].GetValueOut() < 1000 * COIN)
+            {
+                /* RULE: More than 2 conesuctive Genesis with < 1000 NXS */
+                if (pblock[0].vtx[0].GetValueOut() < 1000 * COIN &&
+                    pblock[1].vtx[0].GetValueOut() < 1000 * COIN)
+                    return error("\x1b[31m SOFTBAN: \u001b[37;1m More than 2 Consecutive Trust < 1000 NXS");
+                    
+                /* RULE: Trust with < 1000 made within 12 hours of last */
+                if(nBlockAge < 8 * 60 * 60)
+                    return error("\x1b[31m SOFTBAN: \u001b[37;1m Less than 8 hours since last Trust made with < 1000 NXS");
+            }
 		}
 		
-		return false;
+		return true;
 	}
 	
 	
