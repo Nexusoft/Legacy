@@ -855,7 +855,7 @@ namespace Core
         /* Relay the Block to Nexus Network. */
         if (hashBestChain == hash && !IsInitialBlockDownload())
         {
-            if(GetBoolArg("-softban", true) && !fValid)
+            if(GetBoolArg("-softban", true) && IsProofOfStake() && !cTrustPool.IsValid(*this))
             {
                 printf("\x1b[31m SOFTBAN: Not Relaying %s\x1b[0m \n", hash.ToString().substr(0, 20).c_str()); 
                 return true;
@@ -903,9 +903,6 @@ namespace Core
         if(GetBoolArg("-softban", true) && pblock->IsProofOfStake() && !cTrustPool.IsValid(*pblock))
         {
             printf("\x1b[31m WARNING: \u001b[37;1m %s misbehavior (score=%d) \x1b[0m \n", pfrom ? pfrom->addr.ToString().c_str() : "unknown", 100);
-            
-            /* Mark the block as invalid. */
-            pblock->fValid = false;
                 
             if(GetBoolArg("-hardban", false))
                 return pblock->DoS(100, error("Banning Node..."));
@@ -930,9 +927,6 @@ namespace Core
                 if(GetBoolArg("-softban", true) && pblockOrphan->IsProofOfStake() && !cTrustPool.IsValid(*pblockOrphan))
                 {
                     printf("\x1b[31m WARNING: \u001b[37;1m %s misbehavior (score=%d) \x1b[0m \n", pfrom ? pfrom->addr.ToString().c_str() : "unknown", 100);
-                    
-                    /* Mark the block as invalid. */
-                    pblockOrphan->fValid = false;
                         
                     if(GetBoolArg("-hardban", false))
                         return pblock->DoS(100, error("Banning Node..."));
