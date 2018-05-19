@@ -377,7 +377,7 @@ bool error(const char *format, ...)
         buffer[limit-1] = 0;
     }
 	
-    printf("ERROR: %s\n", buffer);
+    printf("\x1b[31m ERROR: \x1b[0m %s\n", buffer);
     return false;
 }
 

@@ -540,11 +540,19 @@ namespace Core
         LLD::CIndexDB indexdb("r+");
         indexdb.TxnBegin();
         indexdb.WriteBlockIndex(CDiskBlockIndex(pindexNew));
+        
+        bool fValid = true;
+        if(GetBoolArg("-softban", true) && IsProofOfStake() && !cTrustPool.IsValid(*this))
+            fValid = false;
 
         /** Set the Best chain if Highest Trust. **/
-        if (pindexNew->nChainTrust > nBestChainTrust)
-            if (!SetBestChain(indexdb, pindexNew))
-                return false;
+        if(fValid || IsInitialBlockDownload()) {
+            if (pindexNew->nChainTrust > nBestChainTrust)
+                if (!SetBestChain(indexdb, pindexNew))
+                    return false;
+        }
+        else
+            printf("\x1b[31m SOFTBAN: Not Connecting %s\x1b[0m \n", hash.ToString().substr(0, 20).c_str());
             
         /** Commit the Transaction to the Database. **/
         if(!indexdb.TxnCommit())
@@ -552,6 +560,20 @@ namespace Core
         
         if (pindexNew == pindexBest)
         {
+            /* Relay the Block to Nexus Network. */
+            if (!IsInitialBlockDownload())
+            {
+                if(!fValid)
+                {
+                    printf("\x1b[31m SOFTBAN: Not Relaying %s\x1b[0m \n", hash.ToString().substr(0, 20).c_str()); 
+                    return true;
+                }
+                
+                LOCK(Net::cs_vNodes);
+                for(auto pnode : Net::vNodes)
+                    pnode->PushInventory(Net::CInv(Net::MSG_BLOCK, hash));
+            }
+        
             // Notify UI to display prev block's coinbase if it was ours
             static uint512 hashPrevBestCoinBase;
             UpdatedTransaction(hashPrevBestCoinBase);
@@ -851,20 +873,6 @@ namespace Core
             return error("AcceptBlock() : WriteToDisk failed");
         if (!AddToBlockIndex(nFile, nBlockPos))
             return error("AcceptBlock() : AddToBlockIndex failed");
-            
-        /* Relay the Block to Nexus Network. */
-        if (hashBestChain == hash && !IsInitialBlockDownload())
-        {
-            if(GetBoolArg("-softban", true) && IsProofOfStake() && !cTrustPool.IsValid(*this))
-            {
-                printf("\x1b[31m SOFTBAN: Not Relaying %s\x1b[0m \n", hash.ToString().substr(0, 20).c_str()); 
-                return true;
-            }
-            
-            LOCK(Net::cs_vNodes);
-            BOOST_FOREACH(Net::CNode* pnode, Net::vNodes)
-                pnode->PushInventory(Net::CInv(Net::MSG_BLOCK, hash));
-        }
 
         return true;
     }

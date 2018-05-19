@@ -487,7 +487,7 @@ namespace Core
                 
                 /* RULE: Inputs need to have at least 100 confirmations */
                 if(cBlock.nHeight - block.nHeight < 100)
-                    return error("\x1b[31m SOFTBAN: \u001b[37;1m Genesis Input less than 100 confirmations");
+                    return error("\x1b[31m SOFTBAN: \u001b[37;1m Trust Input less than 100 confirmations");
             }
             
             /* Get the time since last block. */
