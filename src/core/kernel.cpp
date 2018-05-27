@@ -107,11 +107,11 @@ namespace Core
 			return error("CBlock::VerifyStake() : First transaction non-coinstake %s", vtx[0].GetHash().ToString().c_str());
 
 		/** B] Make Sure Coinstake Transaction Time is Before Block. **/
-		if (vtx[0].nTime >= nTime)
+		if (vtx[0].nTime > nTime)
 			return error("CBlock::VerifyStake()() : Coinstake Timestamp to far into Future.");
 			
 		/** C] Check that the Coinbase / CoinstakeTimstamp is after Previous Block. **/
-		if (mapBlockIndex[hashPrevBlock]->GetBlockTime() >= vtx[0].nTime)
+		if (mapBlockIndex[hashPrevBlock]->GetBlockTime() > vtx[0].nTime)
 			return error("CBlock::VerifyStake() : Coinstake Timestamp too Early.");
 			
 		/** D] Check Average age is above Limit if No Trust Key Seen. **/
