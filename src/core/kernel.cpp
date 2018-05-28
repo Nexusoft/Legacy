@@ -106,99 +106,99 @@ namespace Core
         if (!vtx[0].IsCoinStake())
             return error("CBlock::VerifyStake() : First transaction non-coinstake %s", vtx[0].GetHash().ToString().c_str());
 
-		/** B] Make Sure Coinstake Transaction Time is Before Block. **/
-		if (vtx[0].nTime > nTime)
-			return error("CBlock::VerifyStake()() : Coinstake Timestamp to far into Future.");
-			
-		/** C] Check that the Coinbase / CoinstakeTimstamp is after Previous Block. **/
-		if (mapBlockIndex[hashPrevBlock]->GetBlockTime() > vtx[0].nTime)
-			return error("CBlock::VerifyStake() : Coinstake Timestamp too Early.");
-			
-		/** D] Check Average age is above Limit if No Trust Key Seen. **/
-		vector< std::vector<unsigned char> > vKeys;
-		Wallet::TransactionType keyType;
-		if (!Wallet::Solver(vtx[0].vout[0].scriptPubKey, keyType, vKeys))
-			return error("CBlock::VerifyStake() : Failed To Solve Trust Key Script.");
-			
-		/** E] Ensure the Key is Public Key. No Pay Hash or Script Hash for Trust Keys. **/
-		if (keyType != Wallet::TX_PUBKEY)
-			return error("CBlock::VerifyStake() : Trust Key must be of Public Key Type Created from Keypool.");
-			
-		/** F] Check the Coinstake Time is before Unified Timestamp. **/
-		if(vtx[0].nTime > (GetUnifiedTimestamp() + MAX_UNIFIED_DRIFT))
-			return error("CBlock::VerifyStake() : Coinstake Transaction too far in Future.");
-		
-		/** Set the Public Key Integer Key from Bytes. **/
-		uint576 cKey;
-		cKey.SetBytes(vKeys[0]);
-		
-		/** Determine Trust Age if the Trust Key Exists. **/
-		uint64 nCoinAge = 0, nTrustAge = 0, nBlockAge = 0;
-		double nTrustWeight = 0.0, nBlockWeight = 0.0;
-		if(cTrustPool.Exists(cKey))
-		{
-			/** Check that Transaction is not Genesis when Trust Key is Established. **/
-			if(vtx[0].IsGenesis())
-				return error("CBlock::VerifyStake() : Cannot Produce Genesis Transaction when Trust Key Exists.");
-			
-			/* Check the genesis and trust timestamps. */
-			if(cTrustPool.Find(cKey).nGenesisTime > mapBlockIndex[hashPrevBlock]->GetBlockTime())
-				return error("CBlock::VerifyStake() : Genesis Time cannot be after Trust Time.");
-				
-			nTrustAge = cTrustPool.Find(cKey).Age(mapBlockIndex[hashPrevBlock]->GetBlockTime());
-			nBlockAge = cTrustPool.Find(cKey).BlockAge(mapBlockIndex[hashPrevBlock]->GetBlockTime());
-			
-			/** Trust Weight Reaches Maximum at 30 day Limit. **/
-			nTrustWeight = min(17.5, (((16.5 * log(((2.0 * nTrustAge) / (60 * 60 * 24 * 28)) + 1.0)) / log(3))) + 1.0);
-			
-			/** Block Weight Reaches Maximum At Trust Key Expiration. **/
-			nBlockWeight = min(20.0, (((19.0 * log(((2.0 * nBlockAge) / (TRUST_KEY_EXPIRE)) + 1.0)) / log(3))) + 1.0);
-		}
-		else
-		{
-			/** Check that Transaction is not Trust when no Genesis. **/
-			if(vtx[0].IsTrust())
-				return error("CBlock::VerifyStake() : Cannot Produce Trust Transaction without Genesis.");
-				
-			/** Check that Genesis has no Transactions. **/
-			if(vtx.size() != 1)
-				return error("CBlock::VerifyStake() : Cannot Include Transactions with Genesis Transaction");
-				
-			/** Calculate the Average Coinstake Age. **/
-			LLD::CIndexDB indexdb("r");
-			if(!vtx[0].GetCoinstakeAge(indexdb, nCoinAge))
-			{
-				return error("CBlock::VerifyStake() : Failed to Get Coinstake Age.");
-			}
-			
-			/** Trust Weight For Genesis Transaction Reaches Maximum at 90 day Limit. **/
-			nTrustWeight = min(17.5, (((16.5 * log(((2.0 * nCoinAge) / (60 * 60 * 24 * 28 * 3)) + 1.0)) / log(3))) + 1.0);
-		}
-		
-		/** G] Check the nNonce Efficiency Proportion Requirements. **/
-		double nThreshold = ((nTime - vtx[0].nTime) * 100.0) / nNonce;
-		double nRequired  = ((50.0 - nTrustWeight - nBlockWeight) * MAX_STAKE_WEIGHT) / std::min((int64)MAX_STAKE_WEIGHT, vtx[0].vout[0].nValue);
-		if(nThreshold < nRequired)
-			return error("CBlock::VerifyStake() : Coinstake / nNonce threshold too low %f Required %f. Energy efficiency limits Reached Coin Age %" PRIu64 " | Trust Age %" PRIu64 " | Block Age %" PRIu64, nThreshold, nRequired, nCoinAge, nTrustAge, nBlockAge);
-			
-			
-		/** H] Check the Block Hash with Weighted Hash to Target. **/
-		CBigNum bnTarget;
-		bnTarget.SetCompact(nBits);
-		uint1024 hashTarget = bnTarget.getuint1024();
-		
-		if(GetHash() > hashTarget)
-			return error("CBlock::VerifyStake() : Proof of Stake Hash not meeting Target.");
-			
-		if(GetArg("-verbose", 0) >= 2)
-		{
-			cTrustPool.TrustScore(cKey, nTime);
-			printf("CBlock::VerifyStake() : Stake Hash  %s\n", GetHash().ToString().substr(0, 20).c_str());
-			printf("CBlock::VerifyStake() : Target Hash %s\n", hashTarget.ToString().substr(0, 20).c_str());
-			printf("CBlock::VerifyStake() : Coin Age %" PRIu64 " Trust Age %" PRIu64 " Block Age %" PRIu64 "\n", nCoinAge, nTrustAge, nBlockAge);
-			printf("CBlock::VerifyStake() : Trust Weight %f Block Weight %f\n", nTrustWeight, nBlockWeight);
-			printf("CBlock::VerifyStake() : Threshold %f Required %f Time %u nNonce %" PRIu64 "\n", nThreshold, nRequired, (unsigned int)(nTime - vtx[0].nTime), nNonce);
-		}
+        /** B] Make Sure Coinstake Transaction Time is Before Block. **/
+        if (vtx[0].nTime > nTime)
+            return error("CBlock::VerifyStake()() : Coinstake Timestamp to far into Future.");
+            
+        /** C] Check that the Coinbase / CoinstakeTimstamp is after Previous Block. **/
+        if (mapBlockIndex[hashPrevBlock]->GetBlockTime() > vtx[0].nTime)
+            return error("CBlock::VerifyStake() : Coinstake Timestamp too Early.");
+            
+        /** D] Check Average age is above Limit if No Trust Key Seen. **/
+        vector< std::vector<unsigned char> > vKeys;
+        Wallet::TransactionType keyType;
+        if (!Wallet::Solver(vtx[0].vout[0].scriptPubKey, keyType, vKeys))
+            return error("CBlock::VerifyStake() : Failed To Solve Trust Key Script.");
+            
+        /** E] Ensure the Key is Public Key. No Pay Hash or Script Hash for Trust Keys. **/
+        if (keyType != Wallet::TX_PUBKEY)
+            return error("CBlock::VerifyStake() : Trust Key must be of Public Key Type Created from Keypool.");
+            
+        /** F] Check the Coinstake Time is before Unified Timestamp. **/
+        if(vtx[0].nTime > (GetUnifiedTimestamp() + MAX_UNIFIED_DRIFT))
+            return error("CBlock::VerifyStake() : Coinstake Transaction too far in Future.");
+        
+        /** Set the Public Key Integer Key from Bytes. **/
+        uint576 cKey;
+        cKey.SetBytes(vKeys[0]);
+        
+        /** Determine Trust Age if the Trust Key Exists. **/
+        uint64 nCoinAge = 0, nTrustAge = 0, nBlockAge = 0;
+        double nTrustWeight = 0.0, nBlockWeight = 0.0;
+        if(cTrustPool.Exists(cKey))
+        {
+            /** Check that Transaction is not Genesis when Trust Key is Established. **/
+            if(vtx[0].IsGenesis())
+                return error("CBlock::VerifyStake() : Cannot Produce Genesis Transaction when Trust Key Exists.");
+            
+            /* Check the genesis and trust timestamps. */
+            if(cTrustPool.Find(cKey).nGenesisTime > mapBlockIndex[hashPrevBlock]->GetBlockTime())
+                return error("CBlock::VerifyStake() : Genesis Time cannot be after Trust Time.");
+                
+            nTrustAge = cTrustPool.Find(cKey).Age(mapBlockIndex[hashPrevBlock]->GetBlockTime());
+            nBlockAge = cTrustPool.Find(cKey).BlockAge(mapBlockIndex[hashPrevBlock]->GetBlockTime());
+            
+            /** Trust Weight Reaches Maximum at 30 day Limit. **/
+            nTrustWeight = min(17.5, (((16.5 * log(((2.0 * nTrustAge) / (60 * 60 * 24 * 28)) + 1.0)) / log(3))) + 1.0);
+            
+            /** Block Weight Reaches Maximum At Trust Key Expiration. **/
+            nBlockWeight = min(20.0, (((19.0 * log(((2.0 * nBlockAge) / (TRUST_KEY_EXPIRE)) + 1.0)) / log(3))) + 1.0);
+        }
+        else
+        {
+            /** Check that Transaction is not Trust when no Genesis. **/
+            if(vtx[0].IsTrust())
+                return error("CBlock::VerifyStake() : Cannot Produce Trust Transaction without Genesis.");
+                
+            /** Check that Genesis has no Transactions. **/
+            if(vtx.size() != 1)
+                return error("CBlock::VerifyStake() : Cannot Include Transactions with Genesis Transaction");
+                
+            /** Calculate the Average Coinstake Age. **/
+            LLD::CIndexDB indexdb("r");
+            if(!vtx[0].GetCoinstakeAge(indexdb, nCoinAge))
+            {
+                return error("CBlock::VerifyStake() : Failed to Get Coinstake Age.");
+            }
+            
+            /** Trust Weight For Genesis Transaction Reaches Maximum at 90 day Limit. **/
+            nTrustWeight = min(17.5, (((16.5 * log(((2.0 * nCoinAge) / (60 * 60 * 24 * 28 * 3)) + 1.0)) / log(3))) + 1.0);
+        }
+        
+        /** G] Check the nNonce Efficiency Proportion Requirements. **/
+        double nThreshold = ((nTime - vtx[0].nTime) * 100.0) / nNonce;
+        double nRequired  = ((50.0 - nTrustWeight - nBlockWeight) * MAX_STAKE_WEIGHT) / std::min((int64)MAX_STAKE_WEIGHT, vtx[0].vout[0].nValue);
+        if(nThreshold < nRequired)
+            return error("CBlock::VerifyStake() : Coinstake / nNonce threshold too low %f Required %f. Energy efficiency limits Reached Coin Age %" PRIu64 " | Trust Age %" PRIu64 " | Block Age %" PRIu64, nThreshold, nRequired, nCoinAge, nTrustAge, nBlockAge);
+            
+            
+        /** H] Check the Block Hash with Weighted Hash to Target. **/
+        CBigNum bnTarget;
+        bnTarget.SetCompact(nBits);
+        uint1024 hashTarget = bnTarget.getuint1024();
+        
+        if(GetHash() > hashTarget)
+            return error("CBlock::VerifyStake() : Proof of Stake Hash not meeting Target.");
+            
+        if(GetArg("-verbose", 0) >= 2)
+        {
+            cTrustPool.TrustScore(cKey, nTime);
+            printf("CBlock::VerifyStake() : Stake Hash  %s\n", GetHash().ToString().substr(0, 20).c_str());
+            printf("CBlock::VerifyStake() : Target Hash %s\n", hashTarget.ToString().substr(0, 20).c_str());
+            printf("CBlock::VerifyStake() : Coin Age %" PRIu64 " Trust Age %" PRIu64 " Block Age %" PRIu64 "\n", nCoinAge, nTrustAge, nBlockAge);
+            printf("CBlock::VerifyStake() : Trust Weight %f Block Weight %f\n", nTrustWeight, nBlockWeight);
+            printf("CBlock::VerifyStake() : Threshold %f Required %f Time %u nNonce %" PRIu64 "\n", nThreshold, nRequired, (unsigned int)(nTime - vtx[0].nTime), nNonce);
+        }
 
         return true;
     }
@@ -876,14 +876,14 @@ namespace Core
     {
         /* Catch overflow attacks. Should be caught in verify stake but double check here. */
         if(nGenesisTime > nTime)
-            return 1;
+            return error("CTrustKey::BlockAge() : %u Time is < Genesis %u\n", nTime, nGenesisTime);
         
         /** Genesis Transaction Block Age is Time to Genesis Time. **/
         if(hashPrevBlocks.empty())
             return (uint64)(nTime - nGenesisTime);
         
         if(mapBlockIndex[hashPrevBlocks.back()]->GetBlockTime() > nTime)
-            return 1;
+            return error("CTrustKey::BlockAge() : %u Time is < Previous Blocks Time %u\n", nTime, (unsigned int) mapBlockIndex[hashPrevBlocks.back()]->GetBlockTime());
             
         /** Block Age is Time to Previous Block's Time. **/
         return (uint64)(nTime - mapBlockIndex[hashPrevBlocks.back()]->GetBlockTime());
@@ -984,8 +984,8 @@ namespace Core
             }
             
             /* Get the Total Weight. */
-                        int combinedWeight = floor(nTrustWeight + nBlockWeight);
-                        int nTotalWeight = max(combinedWeight, 8);
+            int combinedWeight = floor(nTrustWeight + nBlockWeight);
+            int nTotalWeight = max(combinedWeight, 8);
             
             
             /* Make sure coinstake is created. */
