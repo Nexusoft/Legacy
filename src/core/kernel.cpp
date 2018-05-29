@@ -876,24 +876,21 @@ namespace Core
     {
         /* Catch overflow attacks. Should be caught in verify stake but double check here. */
         if(nGenesisTime > pindexNew->GetBlockTime())
-            return error("CTrustKey::BlockAge() : %u Time is < Genesis %u\n", (unsigned int) pindexNew->GetBlockTime(), nGenesisTime);
+            return error("CTrustKey::BlockAge() : %u Time is < Genesis %u", (unsigned int) pindexNew->GetBlockTime(), nGenesisTime);
         
         /** Genesis Transaction Block Age is Time to Genesis Time. **/
         if(hashPrevBlocks.empty())
             return (uint64)(pindexNew->GetBlockTime() - nGenesisTime);
         
         /* Find the block previous to pindexNew. */
-        uint1024 hashBlockLast = 0;
+        uint1024 hashBlockLast = hashPrevBlocks.back();
         for(auto hash : hashPrevBlocks)
             if(mapBlockIndex[hash]->nHeight < pindexNew->nHeight)
                 hashBlockLast = hash;
-
-        if(hashBlockLast == 0)
-            return error("CTrustKey::BlockAge() : No Block found below height %u\n", pindexNew->nHeight);
         
         /* Make sure there aren't timestamp overflows. */
         if(mapBlockIndex[hashBlockLast]->GetBlockTime() > pindexNew->nTime)
-            return error("CTrustKey::BlockAge() : %u Time is < Previous Blocks Time %u\n", (unsigned int) pindexNew->GetBlockTime(), (unsigned int) mapBlockIndex[hashBlockLast]->GetBlockTime());
+            return error("CTrustKey::BlockAge() : %u Time is < Previous Blocks Time %u", (unsigned int) pindexNew->GetBlockTime(), (unsigned int) mapBlockIndex[hashBlockLast]->GetBlockTime());
             
         /* Block Age is Time to Previous Block's Time. */
         return (uint64)(pindexNew->GetBlockTime() - mapBlockIndex[hashBlockLast]->GetBlockTime());
