@@ -884,13 +884,10 @@ namespace Core
         
         /* Find the block previous to pindexNew. */
         uint1024 hashBlockLast = 0;
-        for(auto hash : hashPrevBlocks) {
-            if(mapBlockIndex[hash]->nHeight < pindexNew->nHeight) {
+        for(auto hash : hashPrevBlocks)
+            if(mapBlockIndex[hash]->nHeight < pindexNew->nHeight)
                 hashBlockLast = hash;
-                
-                break;
-            }
-        }
+
         if(hashBlockLast == 0)
             return error("CTrustKey::BlockAge() : No Block found below height %u\n", pindexNew->nHeight);
         
