@@ -146,7 +146,7 @@ namespace Core
                 return error("CBlock::VerifyStake() : Genesis Time cannot be after Trust Time.");
                 
             nTrustAge = cTrustPool.Find(cKey).Age(mapBlockIndex[hashPrevBlock]->GetBlockTime());
-            nBlockAge = cTrustPool.Find(cKey).BlockAge(mapBlockIndex[hashPrevBlock]->GetBlockTime());
+            nBlockAge = cTrustPool.Find(cKey).BlockAge(mapBlockIndex[hashPrevBlock]);
             
             /** Trust Weight Reaches Maximum at 30 day Limit. **/
             nTrustWeight = min(17.5, (((16.5 * log(((2.0 * nTrustAge) / (60 * 60 * 24 * 28)) + 1.0)) / log(3))) + 1.0);
@@ -328,7 +328,7 @@ namespace Core
             }
             
             /** Handle Expired Trust Key already declared. **/
-            if(mapTrustKeys[cKey].Expired(nTime))
+            if(mapTrustKeys[cKey].Expired(pindexBest))
             {
                 vchTrustKey.clear();
                 return error("CTrustPool::HasTrustKey() : Current Trust Key is Expired.");
@@ -349,7 +349,7 @@ namespace Core
             address.SetPubKey(i->second.vchPubKey);
             if(pwalletMain->HaveKey(address))
             {
-                if(i->second.Expired(nTime))
+                if(i->second.Expired(pindexBest))
                     continue;
                 
                 /** Extract the Key from the Script Signature. **/
@@ -492,7 +492,7 @@ namespace Core
             
             /* Get the time since last block. */
             uint64 nTrustAge = mapTrustKeys[cKey].Age(GetUnifiedTimestamp());
-            uint64 nBlockAge = mapTrustKeys[cKey].BlockAge(GetUnifiedTimestamp());
+            uint64 nBlockAge = mapTrustKeys[cKey].BlockAge(pindexBest);
             
             /* Genesis Rules: Less than 1000 NXS in block. */
             if(cBlock.vtx[0].GetValueOut() < 1000 * COIN)
@@ -574,7 +574,7 @@ namespace Core
                 return error("CTrustKey::check() : Block Not Found.");
                 
             /** Don't allow Expired Trust Keys. Check Expiration from Previous Block Timestamp. **/
-            if(mapTrustKeys[cKey].Expired(mapBlockIndex[cBlock.hashPrevBlock]->GetBlockTime()))
+            if(mapTrustKeys[cKey].Expired(mapBlockIndex[cBlock.hashPrevBlock]))
                 return error("CTrustPool::check() : Cannot Create Block for Expired Trust Key.");
                 
             /** Don't allow Blocks Created Before Minimum Interval. **/
@@ -851,9 +851,9 @@ namespace Core
     
 
     /** Key is Expired if Time between Network Previous Best Block and Trust Best Previous is Greater than Expiration Time. **/
-    bool CTrustKey::Expired(unsigned int nTime) const
+    bool CTrustKey::Expired(CBlockIndex* pindexNew) const
     {
-        if(BlockAge(nTime) > TRUST_KEY_EXPIRE)
+        if(BlockAge(pindexNew) > TRUST_KEY_EXPIRE)
             return true;
             
         return false;
@@ -872,22 +872,36 @@ namespace Core
     
     
     /** The Age of a Key in Block age as in the Time it has been since Trust Key has produced block. **/
-    uint64 CTrustKey::BlockAge(unsigned int nTime) const
+    uint64 CTrustKey::BlockAge(CBlockIndex* pindexNew) const
     {
         /* Catch overflow attacks. Should be caught in verify stake but double check here. */
-        if(nGenesisTime > nTime)
-            return error("CTrustKey::BlockAge() : %u Time is < Genesis %u\n", nTime, nGenesisTime);
+        if(nGenesisTime > pindexNew->GetBlockTime())
+            return error("CTrustKey::BlockAge() : %u Time is < Genesis %u\n", (unsigned int) pindexNew->GetBlockTime(), nGenesisTime);
         
         /** Genesis Transaction Block Age is Time to Genesis Time. **/
         if(hashPrevBlocks.empty())
-            return (uint64)(nTime - nGenesisTime);
+            return (uint64)(pindexNew->GetBlockTime() - nGenesisTime);
         
-        if(mapBlockIndex[hashPrevBlocks.back()]->GetBlockTime() > nTime)
-            return error("CTrustKey::BlockAge() : %u Time is < Previous Blocks Time %u\n", nTime, (unsigned int) mapBlockIndex[hashPrevBlocks.back()]->GetBlockTime());
+        /* Find the block previous to pindexNew. */
+        uint1024 hashBlockLast = 0;
+        for(auto hash : hashPrevBlocks) {
+            if(mapBlockIndex[hash]->nHeight < pindexNew->nHeight) {
+                hashBlockLast = hash;
+                
+                break;
+            }
+        }
+        if(hashBlockLast == 0)
+            return error("CTrustKey::BlockAge() : No Block found below height %u\n", pindexNew->nHeight);
+        
+        /* Make sure there aren't timestamp overflows. */
+        if(mapBlockIndex[hashBlockLast]->GetBlockTime() > pindexNew->nTime)
+            return error("CTrustKey::BlockAge() : %u Time is < Previous Blocks Time %u\n", (unsigned int) pindexNew->GetBlockTime(), (unsigned int) mapBlockIndex[hashBlockLast]->GetBlockTime());
             
-        /** Block Age is Time to Previous Block's Time. **/
-        return (uint64)(nTime - mapBlockIndex[hashPrevBlocks.back()]->GetBlockTime());
+        /* Block Age is Time to Previous Block's Time. */
+        return (uint64)(pindexNew->GetBlockTime() - mapBlockIndex[hashBlockLast]->GetBlockTime());
     }
+    
     
     
     /** Proof of Stake local CPU miner. Uses minimal resources. **/
@@ -946,7 +960,7 @@ namespace Core
             if(cTrustPool.Exists(cKey))
             {
                 nTrustAge = cTrustPool.Find(cKey).Age(pindexBest->GetBlockTime());
-                nBlockAge = cTrustPool.Find(cKey).BlockAge(pindexBest->GetBlockTime());
+                nBlockAge = cTrustPool.Find(cKey).BlockAge(pindexBest);
                     
                 /* Trust Weight Reaches Maximum at 30 day Limit. */
                 nTrustWeight = min(17.5, (((16.5 * log(((2.0 * nTrustAge) / (60 * 60 * 24 * 28)) + 1.0)) / log(3))) + 1.0);

@@ -360,7 +360,7 @@ namespace Net
 		{
 			Object obj;
 			
-			if(it->second.Expired(GetUnifiedTimestamp()))
+			if(it->second.Expired(Core::pindexBest))
 				continue;
 				
 			/** Check the Wallet and Trust Keys in Trust Pool to see if we own any keys. **/
@@ -373,7 +373,7 @@ namespace Net
 			
 			nTotalActive ++;
 
-			trustkeys.push_back( obj);
+			trustkeys.push_back(obj);
 		}
 		
 		ret.push_back(Pair("keys", trustkeys));
@@ -2505,7 +2505,7 @@ namespace Net
 			Wallet::NexusAddress address;
 			address.SetPubKey(i->second.vchPubKey);
 			if(pwalletMain->HaveKey(address))
-				result.push_back(Pair(address.ToString(), i->second.Expired(Core::pindexBest->GetBlockTime()) ? "TRUE" : "FALSE"));
+				result.push_back(Pair(address.ToString(), i->second.Expired(Core::pindexBest) ? "TRUE" : "FALSE"));
 			
 		}
 

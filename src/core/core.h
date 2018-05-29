@@ -661,11 +661,11 @@ namespace Core
 		uint64 Age(unsigned int nTime) const;
 		
 		/** Time Since last Trust Block. **/
-		uint64 BlockAge(unsigned int nTime) const;
+        uint64 BlockAge(CBlockIndex* pindexNew) const;
 		
 		/** Flag to Determine if Class is Empty and Null. **/
 		bool IsNull()  const { return (hashGenesisBlock == 0 || hashGenesisTx == 0 || nGenesisTime == 0 || vchPubKey.empty()); }
-		bool Expired(unsigned int nTime) const;
+		bool Expired(CBlockIndex* pindexNew) const;
 		bool CheckGenesis(CBlock cBlock) const;
 		
 		std::string ToString()
@@ -673,7 +673,7 @@ namespace Core
 			uint576 cKey;
 			cKey.SetBytes(vchPubKey);
 			
-			return strprintf("Hash = %s, Key = %s, Genesis = %s, Tx = %s, Time = %u, Age = %" PRIu64 ", BlockAge = %" PRIu64 ", Expired = %s", GetHash().ToString().c_str(), cKey.ToString().c_str(), hashGenesisBlock.ToString().c_str(), hashGenesisTx.ToString().c_str(), nGenesisTime, Age(GetUnifiedTimestamp()), BlockAge(GetUnifiedTimestamp()), Expired(GetUnifiedTimestamp()) ? "TRUE" : "FALSE");
+			return strprintf("Hash = %s, Key = %s, Genesis = %s, Tx = %s, Time = %u, Age = %" PRIu64 ", BlockAge = %" PRIu64 ", Expired = %s", GetHash().ToString().c_str(), cKey.ToString().c_str(), hashGenesisBlock.ToString().c_str(), hashGenesisTx.ToString().c_str(), nGenesisTime, Age(GetUnifiedTimestamp()), BlockAge(pindexBest), Expired(pindexBest) ? "TRUE" : "FALSE");
 		}
 		
 		void Print()
