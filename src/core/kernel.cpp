@@ -402,7 +402,11 @@ namespace Core
         for(int i = 0; i < 6; i++)
         {
             pindex[i] = GetLastChannelIndex(i == 0 ? mapBlockIndex[cBlock.hashPrevBlock] : pindex[i - 1]->pprev, 0);
-            pblock[i].ReadFromDisk(pindex[i]->nFile, pindex[i]->nBlockPos, true);
+            if(!pindex[i])
+                return error("CTrustPool::IsValid() : Can't Find last Channel Index");
+            
+            if(!pblock[i].ReadFromDisk(pindex[i]->nFile, pindex[i]->nBlockPos, true))
+                return error("CTrustPool::IsValid() : Can't Read Block from Disk");
                 
             if(i > 0)
                 nAverageTime += (pblock[i - 1].nTime - pblock[i].nTime);
