@@ -16,7 +16,6 @@
 
 #include "../LLD/index.h"
 
-using namespace std;
 
 /** Locate the Add Coinstake Inputs Method Here for access. **/
 namespace Wallet
@@ -26,8 +25,8 @@ namespace Wallet
     {
         
         /* Add Each Input to Transaction. */
-        vector<const CWalletTx*> vInputs;
-        vector<const CWalletTx*> vCoins;
+        std::vector<const CWalletTx*> vInputs;
+        std::vector<const CWalletTx*> vCoins;
         
         txNew.vout[0].nValue = 0;
         
@@ -35,7 +34,7 @@ namespace Wallet
         LOCK(cs_wallet);
         
         vCoins.reserve(mapWallet.size());
-        for (map<uint512, CWalletTx>::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
+        for (std::map<uint512, CWalletTx>::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
             vCoins.push_back(&(*it).second);
         }
         
@@ -115,7 +114,7 @@ namespace Core
 			return error("CBlock::VerifyStake() : Coinstake Timestamp too Early.");
 			
 		/** D] Check Average age is above Limit if No Trust Key Seen. **/
-		vector< std::vector<unsigned char> > vKeys;
+		std::vector< std::vector<unsigned char> > vKeys;
 		Wallet::TransactionType keyType;
 		if (!Wallet::Solver(vtx[0].vout[0].scriptPubKey, keyType, vKeys))
 			return error("CBlock::VerifyStake() : Failed To Solve Trust Key Script.");
@@ -149,10 +148,10 @@ namespace Core
 			nBlockAge = cTrustPool.Find(cKey).BlockAge(mapBlockIndex[hashPrevBlock]->GetBlockTime());
 			
 			/** Trust Weight Reaches Maximum at 30 day Limit. **/
-			nTrustWeight = min(17.5, (((16.5 * log(((2.0 * nTrustAge) / (60 * 60 * 24 * 28)) + 1.0)) / log(3))) + 1.0);
+			nTrustWeight = std::min(17.5, (((16.5 * log(((2.0 * nTrustAge) / (60 * 60 * 24 * 28)) + 1.0)) / log(3))) + 1.0);
 			
 			/** Block Weight Reaches Maximum At Trust Key Expiration. **/
-			nBlockWeight = min(20.0, (((19.0 * log(((2.0 * nBlockAge) / (TRUST_KEY_EXPIRE)) + 1.0)) / log(3))) + 1.0);
+			nBlockWeight = std::min(20.0, (((19.0 * log(((2.0 * nBlockAge) / (TRUST_KEY_EXPIRE)) + 1.0)) / log(3))) + 1.0);
 		}
 		else
 		{
@@ -172,7 +171,7 @@ namespace Core
 			}
 			
 			/** Trust Weight For Genesis Transaction Reaches Maximum at 90 day Limit. **/
-			nTrustWeight = min(17.5, (((16.5 * log(((2.0 * nCoinAge) / (60 * 60 * 24 * 28 * 3)) + 1.0)) / log(3))) + 1.0);
+			nTrustWeight = std::min(17.5, (((16.5 * log(((2.0 * nCoinAge) / (60 * 60 * 24 * 28 * 3)) + 1.0)) / log(3))) + 1.0);
 		}
 		
 		/** G] Check the nNonce Efficiency Proportion Requirements. **/
@@ -250,7 +249,7 @@ namespace Core
             return error("CTransaction::GetCoinstakeInterest() : Not Coinstake Transaction");
             
         /** Extract the Key from the Script Signature. **/
-        vector< std::vector<unsigned char> > vKeys;
+        std::vector< std::vector<unsigned char> > vKeys;
         Wallet::TransactionType keyType;
         if (!Wallet::Solver(vout[0].scriptPubKey, keyType, vKeys))
             return error("CTransaction::GetCoinstakeInterest() : Failed To Solve Trust Key Script.");
@@ -381,7 +380,7 @@ namespace Core
         LOCK(cs);
         
         /* Extract the Key from the Script Signature. */
-        vector< std::vector<unsigned char> > vKeys;
+        std::vector< std::vector<unsigned char> > vKeys;
         Wallet::TransactionType keyType;
         if (!Wallet::Solver(cBlock.vtx[0].vout[0].scriptPubKey, keyType, vKeys))
             return error("CTrustPool::IsValid() : Failed To Solve Trust Key Script.");
@@ -529,7 +528,7 @@ namespace Core
             return error("CTrustPool::check() : Cannot Accept non Coinstake Transactions.");
             
         /** Extract the Key from the Script Signature. **/
-        vector< std::vector<unsigned char> > vKeys;
+        std::vector< std::vector<unsigned char> > vKeys;
         Wallet::TransactionType keyType;
         if (!Wallet::Solver(cBlock.vtx[0].vout[0].scriptPubKey, keyType, vKeys))
             return error("CTrustPool::check() : Failed To Solve Trust Key Script.");
@@ -612,7 +611,7 @@ namespace Core
         LOCK(cs);
         
         /** Extract the Key from the Script Signature. **/
-        vector< std::vector<unsigned char> > vKeys;
+        std::vector< std::vector<unsigned char> > vKeys;
         Wallet::TransactionType keyType;
         if (!Wallet::Solver(cBlock.vtx[0].vout[0].scriptPubKey, keyType, vKeys))
             return error("CTrustPool::Remove() : Failed To Solve Trust Key Script.");
@@ -684,7 +683,7 @@ namespace Core
         LOCK(cs);
             
         /** Extract the Key from the Script Signature. **/
-        vector< std::vector<unsigned char> > vKeys;
+        std::vector< std::vector<unsigned char> > vKeys;
         Wallet::TransactionType keyType;
         if (!Wallet::Solver(cBlock.vtx[0].vout[0].scriptPubKey, keyType, vKeys))
             return error("CTrustPool::accept() : Failed To Solve Trust Key Script.");
@@ -747,7 +746,7 @@ namespace Core
         if(!Exists(cKey) || IsGenesis(cKey))
             return 0.005;
             
-        return min(0.03, (((0.025 * log(((9.0 * (nTime - Find(cKey).nGenesisTime)) / (60 * 60 * 24 * 28 * 13)) + 1.0)) / log(10))) + 0.005);
+        return std::min(0.03, (((0.025 * log(((9.0 * (nTime - Find(cKey).nGenesisTime)) / (60 * 60 * 24 * 28 * 13)) + 1.0)) / log(10))) + 0.005);
     }
     
     /** Break the Chain Age in Minutes into Days, Hours, and Minutes. **/
@@ -833,7 +832,7 @@ namespace Core
             return error("CTrustKey::CheckGenesis() : Genesis Key Hash Mismatch to Genesis Transaction Hash");
             
         /** Extract the Key from the Script Signature. **/
-        vector< std::vector<unsigned char> > vKeys;
+        std::vector< std::vector<unsigned char> > vKeys;
         Wallet::TransactionType keyType;
         if (!Wallet::Solver(cBlock.vtx[0].vout[0].scriptPubKey, keyType, vKeys))
             return error("CTrustKey::IsInvalid() : Failed To Solve Trust Key Script.");
@@ -949,10 +948,10 @@ namespace Core
                 nBlockAge = cTrustPool.Find(cKey).BlockAge(pindexBest->GetBlockTime());
                     
                 /* Trust Weight Reaches Maximum at 30 day Limit. */
-                nTrustWeight = min(17.5, (((16.5 * log(((2.0 * nTrustAge) / (60 * 60 * 24 * 28)) + 1.0)) / log(3))) + 1.0);
+                nTrustWeight = std::min(17.5, (((16.5 * log(((2.0 * nTrustAge) / (60 * 60 * 24 * 28)) + 1.0)) / log(3))) + 1.0);
                     
                 /* Block Weight Reaches Maximum At Trust Key Expiration. */
-                nBlockWeight = min(20.0, (((19.0 * log(((2.0 * nBlockAge) / (TRUST_KEY_EXPIRE)) + 1.0)) / log(3))) + 1.0);
+                nBlockWeight = std::min(20.0, (((19.0 * log(((2.0 * nBlockAge) / (TRUST_KEY_EXPIRE)) + 1.0)) / log(3))) + 1.0);
             }
             else
             {
@@ -980,12 +979,12 @@ namespace Core
                     
                     
                 /** Trust Weight For Genesis Transaction Reaches Maximum at 90 day Limit. **/
-                nTrustWeight = min(17.5, (((16.5 * log(((2.0 * nCoinAge) / (60 * 60 * 24 * 28 * 3)) + 1.0)) / log(3))) + 1.0);
+                nTrustWeight = std::min(17.5, (((16.5 * log(((2.0 * nCoinAge) / (60 * 60 * 24 * 28 * 3)) + 1.0)) / log(3))) + 1.0);
             }
             
             /* Get the Total Weight. */
                         int combinedWeight = floor(nTrustWeight + nBlockWeight);
-                        int nTotalWeight = max(combinedWeight, 8);
+                        int nTotalWeight = std::max(combinedWeight, 8);
             
             
             /* Make sure coinstake is created. */
