@@ -8,8 +8,6 @@
 
 #include "core.h"
 
-using namespace std;
-
 namespace Core
 {
 	/** Target Timespan of 300 Seconds. **/
@@ -77,7 +75,7 @@ namespace Core
 			if(!pindexLast->pprev)
 				break;
 				
-			int64 nTime = max(pindexFirst->GetBlockTime() - pindexLast->GetBlockTime(), (int64) 1) * nIndex * 3;
+			int64 nTime = std::max(pindexFirst->GetBlockTime() - pindexLast->GetBlockTime(), (int64) 1) * nIndex * 3;
 			pindexFirst = pindexLast;
 			
 			nIterator += (nIndex * 3);
@@ -143,7 +141,7 @@ namespace Core
 		if(nBlockTime >= nBlockTarget)
 		{
 			/** Take the Minimum overlap of Target Timespan to make that maximum interval. **/
-			uint64 nOverlap = (uint64)min((nBlockTime - nBlockTarget), (nBlockTarget * 2));
+			uint64 nOverlap = (uint64)std::min((nBlockTime - nBlockTarget), (nBlockTarget * 2));
 				
 			/** Get the Mod from the Proportion of Overlap in one Interval. **/
 			double nProportions = (double)nOverlap / (nBlockTarget * 2);
@@ -195,7 +193,7 @@ namespace Core
 			GetChainTimes(GetChainAge(pindexFirst->GetBlockTime()), nDays, nHours, nMinutes);
 			
 			printf("CHECK[POS] weighted time=%" PRId64 " actual time =%" PRId64 "[%f %%]\n\tchain time: [%" PRId64 " / %" PRId64 "]\n\tdifficulty: [%f to %f]\n\tPOS height: %" PRId64 " [AGE %" PRId64 " days, %" PRId64 " hours, %" PRId64 " minutes]\n\n", 
-			nBlockTime, max(pindexFirst->GetBlockTime() - pindexLast->GetBlockTime(), (int64) 1), ((100.0 * nLowerBound) / nUpperBound), nBlockTarget, nBlockTime, GetDifficulty(pindexFirst->nBits, 0), GetDifficulty(bnNew.GetCompact(), 0), pindexFirst->nChannelHeight, nDays, nHours, nMinutes);
+			nBlockTime, std::max(pindexFirst->GetBlockTime() - pindexLast->GetBlockTime(), (int64) 1), ((100.0 * nLowerBound) / nUpperBound), nBlockTarget, nBlockTime, GetDifficulty(pindexFirst->nBits, 0), GetDifficulty(bnNew.GetCompact(), 0), pindexFirst->nChannelHeight, nDays, nHours, nMinutes);
 		}
 		
 		return bnNew.GetCompact();
@@ -226,7 +224,7 @@ namespace Core
 		
 		
 		/** Standard Time Proportions **/
-		int64 nBlockTime = ((pindex->nVersion >= 4) ? GetWeightedTimes(pindexFirst, 5) : max(pindexFirst->GetBlockTime() - pindexLast->GetBlockTime(), (int64) 1));
+		int64 nBlockTime = ((pindex->nVersion >= 4) ? GetWeightedTimes(pindexFirst, 5) : std::max(pindexFirst->GetBlockTime() - pindexLast->GetBlockTime(), (int64) 1));
 		int64 nBlockTarget = nTargetTimespan;
 		
 		
@@ -234,8 +232,8 @@ namespace Core
 			to allow more blocks through when blockchain has been slow, Version 2 Deflates Target Timespan to lower the minimum difficulty. 
 			This helps stimulate transaction processing while helping get the Nexus production back on track **/
 		double nChainMod = GetFractionalSubsidy(GetChainAge(pindexFirst->GetBlockTime()), 0, ((pindex->nVersion >= 3) ? 40.0 : 20.0)) / (pindexFirst->nReleasedReserve[0] + 1);
-		nChainMod = min(nChainMod, 1.0);
-		nChainMod = max(nChainMod, (pindex->nVersion == 1) ? 0.75 : 0.5);
+		nChainMod = std::min(nChainMod, 1.0);
+		nChainMod = std::max(nChainMod, (pindex->nVersion == 1) ? 0.75 : 0.5);
 		
 		
 		/** Enforce Block Version 2 Rule. Chain mod changes block time requirements, not actual mod after block times. **/
@@ -258,7 +256,7 @@ namespace Core
 			if(nBlockTime >= nBlockTarget)
 			{
 				/** Take the Minimum overlap of Target Timespan to make that maximum interval. **/
-				uint64 nOverlap = (uint64)min((nBlockTime - nBlockTarget), (nBlockTarget * 2));
+				uint64 nOverlap = (uint64)std::min((nBlockTime - nBlockTarget), (nBlockTarget * 2));
 				
 				/** Get the Mod from the Proportion of Overlap in one Interval. **/
 				double nProportions = (double)nOverlap / (nBlockTarget * 2);
@@ -292,8 +290,8 @@ namespace Core
 		
 			/** Block Modular Determined from Time Proportions. **/
 			double nBlockMod = (double) nBlockTarget / nBlockTime; 
-			nBlockMod = min(nBlockMod, 1.125);
-			nBlockMod = max(nBlockMod, 0.50);
+			nBlockMod = std::min(nBlockMod, 1.125);
+			nBlockMod = std::max(nBlockMod, 0.50);
 			
 			/** Version 1 Block, Chain Modular Modifies Block Modular. **/
 			nMod = nBlockMod;
@@ -301,8 +299,8 @@ namespace Core
 				nMod *= nChainMod;
 				
 			/** Set Modular to Max / Min values. **/
-			nMod = min(nMod, nMaxUp);
-			nMod = max(nMod, nMaxDown);
+			nMod = std::min(nMod, nMaxUp);
+			nMod = std::max(nMod, nMaxDown);
 		}
 		
 		
@@ -322,7 +320,7 @@ namespace Core
 			GetChainTimes(GetChainAge(pindexFirst->GetBlockTime()), nDays, nHours, nMinutes);
 			
 			printf("RETARGET[CPU] weighted time=%" PRId64 " actual time %" PRId64 ", [%f %%]\n\tchain time: [%" PRId64 " / %" PRId64 "]\n\treleased reward: %" PRId64 " [%f %%]\n\tdifficulty: [%f to %f]\n\tCPU height: %" PRId64 " [AGE %" PRId64 " days, %" PRId64 " hours, %" PRId64 " minutes]\n\n", 
-			nBlockTime, max(pindexFirst->GetBlockTime() - pindexLast->GetBlockTime(), (int64) 1), nMod * 100.0, nBlockTarget, nBlockTime, pindexFirst->nReleasedReserve[0] / COIN, 100.0 * nChainMod, GetDifficulty(pindexFirst->nBits, 1), GetDifficulty(nBits, 1), pindexFirst->nChannelHeight, nDays, nHours, nMinutes);
+			nBlockTime, std::max(pindexFirst->GetBlockTime() - pindexLast->GetBlockTime(), (int64) 1), nMod * 100.0, nBlockTarget, nBlockTime, pindexFirst->nReleasedReserve[0] / COIN, 100.0 * nChainMod, GetDifficulty(pindexFirst->nBits, 1), GetDifficulty(nBits, 1), pindexFirst->nChannelHeight, nDays, nHours, nMinutes);
 		}
 		
 		return nBits;
@@ -346,14 +344,14 @@ namespace Core
 
 			
 		/** Get the Block Times with Minimum of 1 to Prevent Time Warps. **/
-		int64 nBlockTime = ((pindex->nVersion >= 4) ? GetWeightedTimes(pindexFirst, 5) : max(pindexFirst->GetBlockTime() - pindexLast->GetBlockTime(), (int64) 1));
+		int64 nBlockTime = ((pindex->nVersion >= 4) ? GetWeightedTimes(pindexFirst, 5) : std::max(pindexFirst->GetBlockTime() - pindexLast->GetBlockTime(), (int64) 1));
 		int64 nBlockTarget = nTargetTimespan;
 		
 		
 		/** Get the Chain Modular from Reserves. **/
 		double nChainMod = GetFractionalSubsidy(GetChainAge(pindexFirst->GetBlockTime()), 0, ((pindex->nVersion >= 3) ? 40.0 : 20.0)) / (pindexFirst->nReleasedReserve[0] + 1);
-		nChainMod = min(nChainMod, 1.0);
-		nChainMod = max(nChainMod, (pindex->nVersion == 1) ? 0.75 : 0.5);
+		nChainMod = std::min(nChainMod, 1.0);
+		nChainMod = std::max(nChainMod, (pindex->nVersion == 1) ? 0.75 : 0.5);
 		
 		
 		/** Enforce Block Version 2 Rule. Chain mod changes block time requirements, not actual mod after block times. **/
@@ -375,7 +373,7 @@ namespace Core
 			if(nBlockTime >= nBlockTarget)
 			{
 				/** Take the Minimum overlap of Target Timespan to make that maximum interval. **/
-				uint64 nOverlap = (uint64)min((nBlockTime - nBlockTarget), (nBlockTarget * 2));
+				uint64 nOverlap = (uint64)std::min((nBlockTime - nBlockTarget), (nBlockTarget * 2));
 				
 				/** Get the Mod from the Proportion of Overlap in one Interval. **/
 				double nProportions = (double)nOverlap / (nBlockTarget * 2);
@@ -406,8 +404,8 @@ namespace Core
 		else
 		{
 			double nBlockMod = (double) nBlockTarget / nBlockTime; 
-			nBlockMod = min(nBlockMod, 1.125);
-			nBlockMod = max(nBlockMod, 0.75);
+			nBlockMod = std::min(nBlockMod, 1.125);
+			nBlockMod = std::max(nBlockMod, 0.75);
 			
 			/** Calculate the Lower Bounds. **/
 			nLowerBound = nBlockTarget * nBlockMod;
@@ -417,8 +415,8 @@ namespace Core
 				nLowerBound *= nChainMod;
 			
 			/** Set Maximum [difficulty] up to 8%, and Minimum [difficulty] down to 50% **/
-			nLowerBound = min(nLowerBound, (int64)(nUpperBound + (nUpperBound / 8)));
-			nLowerBound = max(nLowerBound, (3 * nUpperBound ) / 4);
+			nLowerBound = std::min(nLowerBound, (int64)(nUpperBound + (nUpperBound / 8)));
+			nLowerBound = std::max(nLowerBound, (3 * nUpperBound ) / 4);
 		}
 			
 			
@@ -444,7 +442,7 @@ namespace Core
 			GetChainTimes(GetChainAge(pindexFirst->GetBlockTime()), nDays, nHours, nMinutes);
 			
 			printf("RETARGET[GPU] weighted time=%" PRId64 " actual time %" PRId64 " [%f %%]\n\tchain time: [%" PRId64 " / %" PRId64 "]\n\treleased reward: %" PRId64 " [%f %%]\n\tdifficulty: [%f to %f]\n\tGPU height: %" PRId64 " [AGE %" PRId64 " days, %" PRId64 " hours, %" PRId64 " minutes]\n\n", 
-			nBlockTime, max(pindexFirst->GetBlockTime() - pindexLast->GetBlockTime(), (int64) 1), (100.0 * nLowerBound) / nUpperBound, nBlockTarget, nBlockTime, pindexFirst->nReleasedReserve[0] / COIN, 100.0 * nChainMod, GetDifficulty(pindexFirst->nBits, 2), GetDifficulty(bnNew.GetCompact(), 2), pindexFirst->nChannelHeight, nDays, nHours, nMinutes);
+			nBlockTime, std::max(pindexFirst->GetBlockTime() - pindexLast->GetBlockTime(), (int64) 1), (100.0 * nLowerBound) / nUpperBound, nBlockTarget, nBlockTime, pindexFirst->nReleasedReserve[0] / COIN, 100.0 * nChainMod, GetDifficulty(pindexFirst->nBits, 2), GetDifficulty(bnNew.GetCompact(), 2), pindexFirst->nChannelHeight, nDays, nHours, nMinutes);
 		}
 		
 		return bnNew.GetCompact();

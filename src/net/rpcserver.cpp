@@ -34,7 +34,6 @@
 // a certain size around 145MB.  If we need access to json_spirit outside this
 // file, we could use the compiled json_spirit option.
 
-using namespace std;
 using namespace boost;
 using namespace boost::asio;
 using namespace json_spirit;
@@ -62,7 +61,7 @@ namespace Net
 	extern Value rescan(const Array& params, bool fHelp);
 	
 
-	Object JSONRPCError(int code, const string& message)
+	Object JSONRPCError(int code, const std::string& message)
 	{
 		Object error;
 		error.push_back(Pair("code", code));
@@ -109,13 +108,13 @@ namespace Net
 		}
 		entry.push_back(Pair("txid", wtx.GetHash().GetHex()));
 		entry.push_back(Pair("time", (boost::int64_t)wtx.GetTxTime()));
-		BOOST_FOREACH(const PAIRTYPE(string,string)& item, wtx.mapValue)
+		BOOST_FOREACH(const PAIRTYPE(std::string,std::string)& item, wtx.mapValue)
 			entry.push_back(Pair(item.first, item.second));
 	}
 
-	string AccountFromValue(const Value& value)
+	std::string AccountFromValue(const Value& value)
 	{
-		string strAccount = value.get_str();
+		std::string strAccount = value.get_str();
 		if (strAccount == "*")
 			throw JSONRPCError(-11, "Invalid account name");
 		return strAccount;
@@ -165,19 +164,19 @@ namespace Net
 	/// Note: This interface may still be subject to change.
 	///
 
-	string CRPCTable::help(string strCommand) const
+	std::string CRPCTable::help(std::string strCommand) const
 	{
-		string strRet;
-		set<rpcfn_type> setDone;
-		for (map<string, const CRPCCommand*>::const_iterator mi = mapCommands.begin(); mi != mapCommands.end(); ++mi)
+		std::string strRet;
+		std::set<rpcfn_type> setDone;
+		for (std::map<std::string, const CRPCCommand*>::const_iterator mi = mapCommands.begin(); mi != mapCommands.end(); ++mi)
 		{
 			const CRPCCommand *pcmd = mi->second;
-			string strMethod = mi->first;
+			std::string strMethod = mi->first;
 			// We already filter duplicates, but these deprecated screw up the sort order
 			if (strMethod == "getamountreceived" ||
 				strMethod == "getallreceived" ||
 				strMethod == "getblocknumber" || // deprecated
-				(strMethod.find("label") != string::npos))
+				(strMethod.find("label") != std::string::npos))
 				continue;
 			if (strCommand != "" && strMethod != strCommand)
 				continue;
@@ -191,9 +190,9 @@ namespace Net
 			catch (std::exception& e)
 			{
 				// Help text is returned in an exception
-				string strHelp = string(e.what());
+				std::string strHelp = std::string(e.what());
 				if (strCommand == "")
-					if (strHelp.find('\n') != string::npos)
+					if (strHelp.find('\n') != std::string::npos)
 						strHelp = strHelp.substr(0, strHelp.find('\n'));
 				strRet += strHelp + "\n";
 			}
@@ -207,11 +206,11 @@ namespace Net
 	Value help(const Array& params, bool fHelp)
 	{
 		if (fHelp || params.size() > 1)
-			throw runtime_error(
+			throw std::runtime_error(
 				"help [command]\n"
 				"List commands, or get help for a command.");
 
-		string strCommand;
+		std::string strCommand;
 		if (params.size() > 0)
 			strCommand = params[0].get_str();
 
@@ -223,7 +222,7 @@ namespace Net
 	std::vector<std::string> CRPCTable::getMapCommandsKeyVector() const
 	{
 		std::vector<std::string> rpcTableKeys; // a standard vector of strings...
-		for(map<string, const CRPCCommand*>::const_iterator it = this->mapCommands.begin(); it!= this->mapCommands.end(); ++it) {
+		for(std::map<std::string, const CRPCCommand*>::const_iterator it = this->mapCommands.begin(); it!= this->mapCommands.end(); ++it) {
 			rpcTableKeys.push_back(it->first);
 		}
 		return rpcTableKeys;
@@ -249,7 +248,7 @@ namespace Net
 	Value stop(const Array& params, bool fHelp)
 	{
 		if (fHelp || params.size() != 0)
-			throw runtime_error(
+			throw std::runtime_error(
 				"stop\n"
 				"Stop Nexus server.");
 		// Shutdown will take long enough that the response should get back
@@ -260,7 +259,7 @@ namespace Net
 	Value getnetworkhashps(const Array& params, bool fHelp)
 	{
 		if (fHelp || params.size() != 0)
-			throw runtime_error(
+			throw std::runtime_error(
 				"getnetworkhashps\n"
 				"Get network hashrate for the hashing channel.");
 		
@@ -283,7 +282,7 @@ namespace Net
 		}
 		
 		if(nTotal == 0)
-		throw runtime_error("getnetworkhashps\n"
+		throw std::runtime_error("getnetworkhashps\n"
 							"No Blocks produced on Hashing Channel.");
 
 		nAverageTime       /= nTotal;
@@ -306,7 +305,7 @@ namespace Net
 	Value getnetworkpps(const Array& params, bool fHelp)
 	{
 		if (fHelp || params.size() != 0)
-			throw runtime_error(
+			throw std::runtime_error(
 				"getnetworkpps\n"
 				"Get network prime searched per second.");
 		
@@ -348,7 +347,7 @@ namespace Net
 	Value getnetworktrustkeys(const Array& params, bool fHelp)
 	{
 		if (fHelp || params.size() != 0)
-			throw runtime_error(
+			throw std::runtime_error(
 				"getnetworktrustkeys\n"
 				"List all the Trust Keys on the Network");
 			
@@ -387,7 +386,7 @@ namespace Net
 	Value getblockcount(const Array& params, bool fHelp)
 	{
 		if (fHelp || params.size() != 0)
-			throw runtime_error(
+			throw std::runtime_error(
 				"getblockcount\n"
 				"Returns the number of blocks in the longest block chain.");
 
@@ -399,7 +398,7 @@ namespace Net
 	Value getblocknumber(const Array& params, bool fHelp)
 	{
 		if (fHelp || params.size() != 0)
-			throw runtime_error(
+			throw std::runtime_error(
 				"getblocknumber\n"
 				"Deprecated.  Use getblockcount.");
 
@@ -410,7 +409,7 @@ namespace Net
 	Value getconnectioncount(const Array& params, bool fHelp)
 	{
 		if (fHelp || params.size() != 0)
-			throw runtime_error(
+			throw std::runtime_error(
 				"getconnectioncount\n"
 				"Returns the number of connections to other nodes.");
 
@@ -434,11 +433,11 @@ namespace Net
 	Value getpeerinfo(const Array& params, bool fHelp)
 	{
 		if (fHelp || params.size() != 0)
-			throw runtime_error(
+			throw std::runtime_error(
 				"getpeerinfo\n"
 				"Returns data about each connected network node.");
 
-		vector<CNodeStats> vstats;
+		std::vector<CNodeStats> vstats;
 		CopyNodeStats(vstats);
 
 		Array ret;
@@ -468,7 +467,7 @@ namespace Net
 	Value getdifficulty(const Array& params, bool fHelp)
 	{
 		if (fHelp || params.size() != 0)
-			throw runtime_error(
+			throw std::runtime_error(
 				"getdifficulty\n"
 				"Returns difficulty as a multiple of the minimum difficulty.");
 
@@ -488,7 +487,7 @@ namespace Net
 	Value getsupplyrates(const Array& params, bool fHelp)
 	{
 		if (fHelp || params.size() != 0)
-			throw runtime_error(
+			throw std::runtime_error(
 				"getsupplyrates\n"
 				"Returns an object containing current Nexus production rates in set time intervals.\n"
 				"Time Frequency is in base 13 month, 28 day totalling 364 days.\n"
@@ -519,7 +518,7 @@ namespace Net
 	Value getmoneysupply(const Array& params, bool fHelp)
     {
         if(fHelp || params.size() != 0)
-            throw runtime_error(
+            throw std::runtime_error(
                 "getmoneysupply <timestamp>\n\n"
                 "Returns the total supply of Nexus produced by miners, holdings, developers, and ambassadors.\n"
                 "Default timestamp is the current Unified Timestamp. The timestamp is recorded as a UNIX timestamp");
@@ -538,7 +537,7 @@ namespace Net
 	Value getinfo(const Array& params, bool fHelp)
 	{
 		if (fHelp || params.size() != 0)
-			throw runtime_error(
+			throw std::runtime_error(
 				"getinfo\n"
 				"Returns an object containing various state info.");
 
@@ -561,7 +560,7 @@ namespace Net
 		obj.push_back(Pair("timestamp", (int)GetUnifiedTimestamp()));
 		
 		obj.push_back(Pair("connections",   (int)vNodes.size()));
-		obj.push_back(Pair("proxy",         (fUseProxy ? addrProxy.ToStringIPPort() : string())));
+		obj.push_back(Pair("proxy",         (fUseProxy ? addrProxy.ToStringIPPort() : std::string())));
 		obj.push_back(Pair("ip",            addrSeenByPeer.ToStringIP()));
 		
 		obj.push_back(Pair("testnet",       fTestNet));
@@ -578,7 +577,7 @@ namespace Net
 	Value getmininginfo(const Array& params, bool fHelp)
 	{
 		if (fHelp || params.size() != 0)
-			throw runtime_error(
+			throw std::runtime_error(
 				"getmininginfo\n"
 				"Returns an object containing mining-related information.");
 
@@ -641,14 +640,14 @@ namespace Net
 	Value getnewaddress(const Array& params, bool fHelp)
 	{
 		if (fHelp || params.size() > 1)
-			throw runtime_error(
+			throw std::runtime_error(
 				"getnewaddress [account]\n"
 				"Returns a new Nexus address for receiving payments.  "
 				"If [account] is specified (recommended), it is added to the address book "
 				"so payments received with the address will be credited to [account].");
 
 		// Parse the account first so we don't generate a key if there's an error
-		string strAccount;
+		std::string strAccount;
 		if (params.size() > 0)
 			strAccount = AccountFromValue(params[0]);
 
@@ -667,7 +666,7 @@ namespace Net
 	}
 
 
-	Wallet::NexusAddress GetAccountAddress(string strAccount, bool bForceNew=false)
+	Wallet::NexusAddress GetAccountAddress(std::string strAccount, bool bForceNew=false)
 	{
 		Wallet::CWalletDB walletdb(pwalletMain->strWalletFile);
 
@@ -681,7 +680,7 @@ namespace Net
 		{
 			Wallet::CScript scriptPubKey;
 			scriptPubKey.SetNexusAddress(account.vchPubKey);
-			for (map<uint512, Wallet::CWalletTx>::iterator it = pwalletMain->mapWallet.begin();
+			for (std::map<uint512, Wallet::CWalletTx>::iterator it = pwalletMain->mapWallet.begin();
 				 it != pwalletMain->mapWallet.end() && !account.vchPubKey.empty();
 				 ++it)
 			{
@@ -708,12 +707,12 @@ namespace Net
 	Value getaccountaddress(const Array& params, bool fHelp)
 	{
 		if (fHelp || params.size() != 1)
-			throw runtime_error(
+			throw std::runtime_error(
 				"getaccountaddress <account>\n"
 				"Returns the current Nexus address for receiving payments to this account.");
 
 		// Parse the account first so we don't generate a key if there's an error
-		string strAccount = AccountFromValue(params[0]);
+		std::string strAccount = AccountFromValue(params[0]);
 
 		Value ret;
 
@@ -727,7 +726,7 @@ namespace Net
 	Value setaccount(const Array& params, bool fHelp)
 	{
 		if (fHelp || params.size() < 1 || params.size() > 2)
-			throw runtime_error(
+			throw std::runtime_error(
 				"setaccount <Nexusaddress> <account>\n"
 				"Sets the account associated with the given address.");
 
@@ -736,14 +735,14 @@ namespace Net
 			throw JSONRPCError(-5, "Invalid Nexus address");
 
 
-		string strAccount;
+		std::string strAccount;
 		if (params.size() > 1)
 			strAccount = AccountFromValue(params[1]);
 
 		// Detect when changing the account of an address that is the 'unused current key' of another account:
 		if (pwalletMain->mapAddressBook.count(address))
 		{
-			string strOldAccount = pwalletMain->mapAddressBook[address];
+			std::string strOldAccount = pwalletMain->mapAddressBook[address];
 			if (address == GetAccountAddress(strOldAccount))
 				GetAccountAddress(strOldAccount, true);
 		}
@@ -757,7 +756,7 @@ namespace Net
 	Value getaccount(const Array& params, bool fHelp)
 	{
 		if (fHelp || params.size() != 1)
-			throw runtime_error(
+			throw std::runtime_error(
 				"getaccount <Nexusaddress>\n"
 				"Returns the account associated with the given address.");
 
@@ -765,8 +764,8 @@ namespace Net
 		if (!address.IsValid())
 			throw JSONRPCError(-5, "Invalid Nexus address");
 
-		string strAccount;
-		map<Wallet::NexusAddress, string>::iterator mi = pwalletMain->mapAddressBook.find(address);
+		std::string strAccount;
+		std::map<Wallet::NexusAddress, std::string>::iterator mi = pwalletMain->mapAddressBook.find(address);
 		if (mi != pwalletMain->mapAddressBook.end() && !(*mi).second.empty())
 			strAccount = (*mi).second;
 		return strAccount;
@@ -776,18 +775,18 @@ namespace Net
 	Value getaddressesbyaccount(const Array& params, bool fHelp)
 	{
 		if (fHelp || params.size() != 1)
-			throw runtime_error(
+			throw std::runtime_error(
 				"getaddressesbyaccount <account>\n"
 				"Returns the list of addresses for the given account.");
 
-		string strAccount = AccountFromValue(params[0]);
+		std::string strAccount = AccountFromValue(params[0]);
 
 		// Find all addresses that have the given account
 		Array ret;
-		BOOST_FOREACH(const PAIRTYPE(Wallet::NexusAddress, string)& item, pwalletMain->mapAddressBook)
+		BOOST_FOREACH(const PAIRTYPE(Wallet::NexusAddress, std::string)& item, pwalletMain->mapAddressBook)
 		{
 			const Wallet::NexusAddress& address = item.first;
-			const string& strName = item.second;
+			const std::string& strName = item.second;
 			if (strName == strAccount)
 				ret.push_back(address.ToString());
 		}
@@ -797,7 +796,7 @@ namespace Net
 	Value settxfee(const Array& params, bool fHelp)
 	{
 		if (fHelp || params.size() < 1 || params.size() > 1 || AmountFromValue(params[0]) < Core::MIN_TX_FEE)
-			throw runtime_error(
+			throw std::runtime_error(
 				"settxfee <amount>\n"
 				"<amount> is a real and is rounded to 0.01 (cent)\n"
 				"Minimum and default transaction fee per KB is 1 cent");
@@ -810,12 +809,12 @@ namespace Net
 	Value sendtoaddress(const Array& params, bool fHelp)
 	{
 		if (pwalletMain->IsCrypted() && (fHelp || params.size() < 2 || params.size() > 4))
-			throw runtime_error(
+			throw std::runtime_error(
 				"sendtoaddress <Nexusaddress> <amount> [comment] [comment-to]\n"
 				"<amount> is a real and is rounded to the nearest 0.000001\n"
 				"requires wallet passphrase to be set with walletpassphrase first");
 		if (!pwalletMain->IsCrypted() && (fHelp || params.size() < 2 || params.size() > 4))
-			throw runtime_error(
+			throw std::runtime_error(
 				"sendtoaddress <Nexusaddress> <amount> [comment] [comment-to]\n"
 				"<amount> is a real and is rounded to the nearest 0.000001");
 
@@ -838,7 +837,7 @@ namespace Net
 		if (pwalletMain->IsLocked())
 			throw JSONRPCError(-13, "Error: Please enter the wallet passphrase with walletpassphrase first.");
 
-		string strError = pwalletMain->SendToNexusAddress(address, nAmount, wtx);
+		std::string strError = pwalletMain->SendToNexusAddress(address, nAmount, wtx);
 		if (strError != "")
 			throw JSONRPCError(-4, strError);
 
@@ -848,15 +847,15 @@ namespace Net
 	Value signmessage(const Array& params, bool fHelp)
 	{
 		if (fHelp || params.size() != 2)
-			throw runtime_error(
+			throw std::runtime_error(
 				"signmessage <Nexusaddress> <message>\n"
 				"Sign a message with the private key of an address");
 
 		if (pwalletMain->IsLocked())
 			throw JSONRPCError(-13, "Error: Please enter the wallet passphrase with walletpassphrase first.");
 
-		string strAddress = params[0].get_str();
-		string strMessage = params[1].get_str();
+		std::string strAddress = params[0].get_str();
+		std::string strMessage = params[1].get_str();
 
 		Wallet::NexusAddress addr(strAddress);
 		if (!addr.IsValid())
@@ -870,7 +869,7 @@ namespace Net
 		ss << Core::strMessageMagic;
 		ss << strMessage;
 
-		vector<unsigned char> vchSig;
+		std::vector<unsigned char> vchSig;
 		if (!key.SignCompact(SK256(ss.begin(), ss.end()), vchSig))
 			throw JSONRPCError(-5, "Sign failed");
 
@@ -880,20 +879,20 @@ namespace Net
 	Value verifymessage(const Array& params, bool fHelp)
 	{
 		if (fHelp || params.size() != 3)
-			throw runtime_error(
+			throw std::runtime_error(
 				"verifymessage <Nexusaddress> <signature> <message>\n"
 				"Verify a signed message");
 
-		string strAddress  = params[0].get_str();
-		string strSign     = params[1].get_str();
-		string strMessage  = params[2].get_str();
+		std::string strAddress  = params[0].get_str();
+		std::string strSign     = params[1].get_str();
+		std::string strMessage  = params[2].get_str();
 
 		Wallet::NexusAddress addr(strAddress);
 		if (!addr.IsValid())
 			throw JSONRPCError(-3, "Invalid address");
 
 		bool fInvalid = false;
-		vector<unsigned char> vchSig = DecodeBase64(strSign.c_str(), &fInvalid);
+		std::vector<unsigned char> vchSig = DecodeBase64(strSign.c_str(), &fInvalid);
 
 		if (fInvalid)
 			throw JSONRPCError(-5, "Malformed base64 encoding");
@@ -913,7 +912,7 @@ namespace Net
 	Value getreceivedbyaddress(const Array& params, bool fHelp)
 	{
 		if (fHelp || params.size() < 1 || params.size() > 2)
-			throw runtime_error(
+			throw std::runtime_error(
 				"getreceivedbyaddress <Nexusaddress> [minconf=1]\n"
 				"Returns the total amount received by <Nexusaddress> in transactions with at least [minconf] confirmations.");
 
@@ -933,7 +932,7 @@ namespace Net
 
 		// Tally
 		int64 nAmount = 0;
-		for (map<uint512, Wallet::CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
+		for (std::map<uint512, Wallet::CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
 		{
 			const Wallet::CWalletTx& wtx = (*it).second;
 			if (wtx.IsCoinBase() || wtx.IsCoinStake() || !wtx.IsFinal())
@@ -949,12 +948,12 @@ namespace Net
 	}
 
 
-	void GetAccountAddresses(string strAccount, set<Wallet::NexusAddress>& setAddress)
+	void GetAccountAddresses(std::string strAccount, std::set<Wallet::NexusAddress>& setAddress)
 	{
-		BOOST_FOREACH(const PAIRTYPE(Wallet::NexusAddress, string)& item, pwalletMain->mapAddressBook)
+		BOOST_FOREACH(const PAIRTYPE(Wallet::NexusAddress, std::string)& item, pwalletMain->mapAddressBook)
 		{
 			const Wallet::NexusAddress& address = item.first;
-			const string& strName = item.second;
+			const std::string& strName = item.second;
 			if (strName == strAccount)
 				setAddress.insert(address);
 		}
@@ -964,7 +963,7 @@ namespace Net
 	Value getreceivedbyaccount(const Array& params, bool fHelp)
 	{
 		if (fHelp || params.size() < 1 || params.size() > 2)
-			throw runtime_error(
+			throw std::runtime_error(
 				"getreceivedbyaccount <account> [minconf=1]\n"
 				"Returns the total amount received by addresses with <account> in transactions with at least [minconf] confirmations.");
 
@@ -974,13 +973,13 @@ namespace Net
 			nMinDepth = params[1].get_int();
 
 		// Get the set of pub keys assigned to account
-		string strAccount = AccountFromValue(params[0]);
-		set<Wallet::NexusAddress> setAddress;
+		std::string strAccount = AccountFromValue(params[0]);
+		std::set<Wallet::NexusAddress> setAddress;
 		GetAccountAddresses(strAccount, setAddress);
 
 		// Tally
 		int64 nAmount = 0;
-		for (map<uint512, Wallet::CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
+		for (std::map<uint512, Wallet::CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
 		{
 			const Wallet::CWalletTx& wtx = (*it).second;
 			if (wtx.IsCoinBase() || wtx.IsCoinStake() || !wtx.IsFinal())
@@ -1002,19 +1001,19 @@ namespace Net
 	Value dumprichlist(const Array& params, bool fHelp)
 	{
         if(!GetBoolArg("-richlist", false))
-            throw runtime_error("please enable -richlist to use this command");
+            throw std::runtime_error("please enable -richlist to use this command");
             
 		if (fHelp || params.size() != 1)
-			throw runtime_error(
+			throw std::runtime_error(
 				"dumprichlist <count>\n"
 				"Get balances of top addresses in the Network.");
 	
 		int nCount = params[0].get_int();
-		multimap<uint64, uint256> richList = flip_map(Core::mapAddressTransactions);
+		std::multimap<uint64, uint256> richList = flip_map(Core::mapAddressTransactions);
 		
 		/** Dump the Address and Values. **/
 		Object entry;
-		for(multimap<uint64, uint256>::const_reverse_iterator it = richList.rbegin(); it != richList.rend() && nCount > 0; ++it)
+		for(std::multimap<uint64, uint256>::const_reverse_iterator it = richList.rbegin(); it != richList.rend() && nCount > 0; ++it)
 		{
 			Wallet::NexusAddress cAddress(it->second);
 			entry.push_back(Pair(cAddress.ToString(), (double)it->first / COIN));
@@ -1029,15 +1028,15 @@ namespace Net
 	Value gettransactions(const Array& params, bool fHelp)
 	{
         if(!GetBoolArg("-richlist", false))
-            throw runtime_error("please enable -richlist to use this command");
+            throw std::runtime_error("please enable -richlist to use this command");
             
 		if (fHelp || params.size() == 0)
-			throw runtime_error(
+			throw std::runtime_error(
 				"gettransactions [address] [block=0] [coinbase=true]\n"
 				"Get transaction data of given address");
 	
         /* Extract the address from input arguments. */
-        string strAddress = params[0].get_str();
+        std::string strAddress = params[0].get_str();
 		Wallet::NexusAddress cAddress(strAddress);
         
         int nBlock = 0;
@@ -1082,10 +1081,10 @@ namespace Net
 	Value totaltransactions(const Array& params, bool fHelp)
 	{
         if(!GetBoolArg("-richlist", false))
-            throw runtime_error("please enable -richlist to use this command");
+            throw std::runtime_error("please enable -richlist to use this command");
             
 		if (fHelp)
-			throw runtime_error(
+			throw std::runtime_error(
 				"totaltransactions [coinbase=true] [address]\n"
 				"Get the total global transactions since the genesis block. Optional to do by address");
             
@@ -1097,7 +1096,7 @@ namespace Net
         unsigned int nTotalTransactions = 0, nTotalAddresses = 0;
         if(params.size() > 1)
         {
-            string strAddress = params[1].get_str();
+            std::string strAddress = params[1].get_str();
             Wallet::NexusAddress cAddress(strAddress);
             
             if(Core::mapRichList.count(cAddress.GetHash256()))
@@ -1144,14 +1143,14 @@ namespace Net
 	Value getaddressbalance(const Array& params, bool fHelp)
 	{
         if(!GetBoolArg("-richlist", false))
-            throw runtime_error("please enable -richlist to use this command");
+            throw std::runtime_error("please enable -richlist to use this command");
         
 		if (fHelp || params.size() != 1)
-			throw runtime_error(
+			throw std::runtime_error(
 				"getaddressbalance [address]\n"
 				"Get balances of top addresses in the Network.");
 	
-		string strAddress = params[0].get_str();
+		std::string strAddress = params[0].get_str();
 		Wallet::NexusAddress cAddress(strAddress);
 		
 		/** Dump the Address and Values. **/
@@ -1167,7 +1166,7 @@ namespace Net
 	Value getglobaltransaction(const Array& params, bool fHelp)
 	{
 		if (fHelp || params.size() != 1)
-			throw runtime_error(
+			throw std::runtime_error(
 				"getglobaltransaction [txid]\n"
 				"Get detailed information about [txid]");
 
@@ -1257,12 +1256,12 @@ namespace Net
 	}
 
 	
-	int64 GetAccountBalance(Wallet::CWalletDB& walletdb, const string& strAccount, int nMinDepth)
+	int64 GetAccountBalance(Wallet::CWalletDB& walletdb, const std::string& strAccount, int nMinDepth)
 	{
 		int64 nBalance = 0;
 
 		// Tally wallet transactions
-		for (map<uint512, Wallet::CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
+		for (std::map<uint512, Wallet::CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
 		{
 			const Wallet::CWalletTx& wtx = (*it).second;
 			if (!wtx.IsFinal())
@@ -1283,7 +1282,7 @@ namespace Net
 	}
 
 	
-	int64 GetAccountBalance(const string& strAccount, int nMinDepth)
+	int64 GetAccountBalance(const std::string& strAccount, int nMinDepth)
 	{
 		Wallet::CWalletDB walletdb(pwalletMain->strWalletFile);
 		return GetAccountBalance(walletdb, strAccount, nMinDepth);
@@ -1293,7 +1292,7 @@ namespace Net
 	Value getbalance(const Array& params, bool fHelp)
 	{
 		if (fHelp || params.size() > 2)
-			throw runtime_error(
+			throw std::runtime_error(
 				"getbalance [account] [minconf=1]\n"
 				"If [account] is not specified, returns the server's total available balance.\n"
 				"If [account] is specified, returns the balance in the account.");
@@ -1310,7 +1309,7 @@ namespace Net
 			// (GetBalance() sums up all unspent TxOuts)
 			// getbalance and getbalance '*' should always return the same number.
 			int64 nBalance = 0;
-			for (map<uint512, Wallet::CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
+			for (std::map<uint512, Wallet::CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
 			{
 				const Wallet::CWalletTx& wtx = (*it).second;
 				if (!wtx.IsFinal())
@@ -1318,9 +1317,9 @@ namespace Net
 
 				int64 allGeneratedImmature, allGeneratedMature, allFee;
 				allGeneratedImmature = allGeneratedMature = allFee = 0;
-				string strSentAccount;
-				list<pair<Wallet::NexusAddress, int64> > listReceived;
-				list<pair<Wallet::NexusAddress, int64> > listSent;
+				std::string strSentAccount;
+				std::list<std::pair<Wallet::NexusAddress, int64> > listReceived;
+				std::list<std::pair<Wallet::NexusAddress, int64> > listSent;
 				wtx.GetAmounts(allGeneratedImmature, allGeneratedMature, listReceived, listSent, allFee, strSentAccount);
 				if (wtx.GetDepthInMainChain() >= nMinDepth)
 				{
@@ -1335,7 +1334,7 @@ namespace Net
 			return  ValueFromAmount(nBalance);
 		}
 
-		string strAccount = AccountFromValue(params[0]);
+		std::string strAccount = AccountFromValue(params[0]);
 
 		int64 nBalance = GetAccountBalance(strAccount, nMinDepth);
 
@@ -1346,17 +1345,17 @@ namespace Net
 	Value movecmd(const Array& params, bool fHelp)
 	{
 		if (fHelp || params.size() < 3 || params.size() > 5)
-			throw runtime_error(
+			throw std::runtime_error(
 				"move <fromaccount> <toaccount> <amount> [minconf=1] [comment]\n"
 				"Move from one account in your wallet to another.");
 
-		string strFrom = AccountFromValue(params[0]);
-		string strTo = AccountFromValue(params[1]);
+		std::string strFrom = AccountFromValue(params[0]);
+		std::string strTo = AccountFromValue(params[1]);
 		int64 nAmount = AmountFromValue(params[2]);
 		if (params.size() > 3)
 			// unused parameter, used to be nMinDepth, keep type-checking it though
 			(void)params[3].get_int();
-		string strComment;
+		std::string strComment;
 		if (params.size() > 4)
 			strComment = params[4].get_str();
 
@@ -1394,16 +1393,16 @@ namespace Net
 	Value sendfrom(const Array& params, bool fHelp)
 	{
 		if (pwalletMain->IsCrypted() && (fHelp || params.size() < 3 || params.size() > 6))
-			throw runtime_error(
+			throw std::runtime_error(
 				"sendfrom <fromaccount> <toNexusaddress> <amount> [minconf=1] [comment] [comment-to]\n"
 				"<amount> is a real and is rounded to the nearest 0.000001\n"
 				"requires wallet passphrase to be set with walletpassphrase first");
 		if (!pwalletMain->IsCrypted() && (fHelp || params.size() < 3 || params.size() > 6))
-			throw runtime_error(
+			throw std::runtime_error(
 				"sendfrom <fromaccount> <toNexusaddress> <amount> [minconf=1] [comment] [comment-to]\n"
 				"<amount> is a real and is rounded to the nearest 0.000001");
 
-		string strAccount = AccountFromValue(params[0]);
+		std::string strAccount = AccountFromValue(params[0]);
 		Wallet::NexusAddress address(params[1].get_str());
 		if (!address.IsValid())
 			throw JSONRPCError(-5, "Invalid Nexus address");
@@ -1430,7 +1429,7 @@ namespace Net
 			throw JSONRPCError(-6, "Account has insufficient funds");
 
 		// Send
-		string strError = pwalletMain->SendToNexusAddress(address, nAmount, wtx);
+		std::string strError = pwalletMain->SendToNexusAddress(address, nAmount, wtx);
 		if (strError != "")
 			throw JSONRPCError(-4, strError);
 
@@ -1441,16 +1440,16 @@ namespace Net
 	Value sendmany(const Array& params, bool fHelp)
 	{
 		if (pwalletMain->IsCrypted() && (fHelp || params.size() < 2 || params.size() > 4))
-			throw runtime_error(
+			throw std::runtime_error(
 				"sendmany <fromaccount> {address:amount,...} [minconf=1] [comment]\n"
 				"amounts are double-precision floating point numbers\n"
 				"requires wallet passphrase to be set with walletpassphrase first");
 		if (!pwalletMain->IsCrypted() && (fHelp || params.size() < 2 || params.size() > 4))
-			throw runtime_error(
+			throw std::runtime_error(
 				"sendmany <fromaccount> {address:amount,...} [minconf=1] [comment]\n"
 				"amounts are double-precision floating point numbers");
 
-		string strAccount = AccountFromValue(params[0]);
+		std::string strAccount = AccountFromValue(params[0]);
 		Object sendTo = params[1].get_obj();
 		int nMinDepth = 1;
 		if (params.size() > 2)
@@ -1461,18 +1460,18 @@ namespace Net
 		if (params.size() > 3 && params[3].type() != null_type && !params[3].get_str().empty())
 			wtx.mapValue["comment"] = params[3].get_str();
 
-		set<Wallet::NexusAddress> setAddress;
-		vector<pair<Wallet::CScript, int64> > vecSend;
+		std::set<Wallet::NexusAddress> setAddress;
+		std::vector<std::pair<Wallet::CScript, int64> > vecSend;
 
 		int64 totalAmount = 0;
 		BOOST_FOREACH(const Pair& s, sendTo)
 		{
 			Wallet::NexusAddress address(s.name_);
 			if (!address.IsValid())
-				throw JSONRPCError(-5, string("Invalid Nexus address:")+s.name_);
+				throw JSONRPCError(-5, std::string("Invalid Nexus address:")+s.name_);
 
 			if (setAddress.count(address))
-				throw JSONRPCError(-8, string("Invalid parameter, duplicated address: ")+s.name_);
+				throw JSONRPCError(-8, std::string("Invalid parameter, duplicated address: ")+s.name_);
 			setAddress.insert(address);
 
 			Wallet::CScript scriptPubKey;
@@ -1482,7 +1481,7 @@ namespace Net
 				throw JSONRPCError(-101, "Send amount too small");
 			totalAmount += nAmount;
 
-			vecSend.push_back(make_pair(scriptPubKey, nAmount));
+			vecSend.push_back(std::make_pair(scriptPubKey, nAmount));
 		}
 
 		if (pwalletMain->IsLocked())
@@ -1515,24 +1514,24 @@ namespace Net
 	{
 		if (fHelp || params.size() < 2 || params.size() > 3)
 		{
-			string msg = "addmultisigaddress <nrequired> <'[\"key\",\"key\"]'> [account]\n"
+			std::string msg = "addmultisigaddress <nrequired> <'[\"key\",\"key\"]'> [account]\n"
 				"Add a nrequired-to-sign multisignature address to the wallet\"\n"
 				"each key is a nexus address or hex-encoded public key\n"
 				"If [account] is specified, assign address to [account].";
-			throw runtime_error(msg);
+			throw std::runtime_error(msg);
 		}
 
 		int nRequired = params[0].get_int();
 		const Array& keys = params[1].get_array();
-		string strAccount;
+		std::string strAccount;
 		if (params.size() > 2)
 			strAccount = AccountFromValue(params[2]);
 
 		// Gather public keys
 		if (nRequired < 1)
-			throw runtime_error("a multisignature address must require at least one key to redeem");
+			throw std::runtime_error("a multisignature address must require at least one key to redeem");
 		if ((int)keys.size() < nRequired)
-			throw runtime_error(
+			throw std::runtime_error(
 				strprintf("not enough keys supplied "
 						  "(got %d keys, but need at least %d to redeem)", keys.size(), nRequired));
 		std::vector<Wallet::CKey> pubkeys;
@@ -1546,26 +1545,26 @@ namespace Net
 			if (address.IsValid())
 			{
 				if (address.IsScript())
-					throw runtime_error(
+					throw std::runtime_error(
 						strprintf("%s is a pay-to-script address",ks.c_str()));
 				std::vector<unsigned char> vchPubKey;
 				if (!pwalletMain->GetPubKey(address, vchPubKey))
-					throw runtime_error(
+					throw std::runtime_error(
 						strprintf("no full public key for address %s",ks.c_str()));
 				if (vchPubKey.empty() || !pubkeys[i].SetPubKey(vchPubKey))
-					throw runtime_error(" Invalid public key: "+ks);
+					throw std::runtime_error(" Invalid public key: "+ks);
 			}
 
 			// Case 2: hex public key
 			else if (IsHex(ks))
 			{
-				vector<unsigned char> vchPubKey = ParseHex(ks);
+				std::vector<unsigned char> vchPubKey = ParseHex(ks);
 				if (vchPubKey.empty() || !pubkeys[i].SetPubKey(vchPubKey))
-					throw runtime_error(" Invalid public key: "+ks);
+					throw std::runtime_error(" Invalid public key: "+ks);
 			}
 			else
 			{
-				throw runtime_error(" Invalid public key: "+ks);
+				throw std::runtime_error(" Invalid public key: "+ks);
 			}
 		}
 
@@ -1609,8 +1608,8 @@ namespace Net
 			fIncludeEmpty = params[1].get_bool();
 
 		// Tally
-		map<Wallet::NexusAddress, tallyitem> mapTally;
-		for (map<uint512, Wallet::CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
+		std::map<Wallet::NexusAddress, tallyitem> mapTally;
+		for (std::map<uint512, Wallet::CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
 		{
 			const Wallet::CWalletTx& wtx = (*it).second;
 
@@ -1629,18 +1628,18 @@ namespace Net
 
 				tallyitem& item = mapTally[address];
 				item.nAmount += txout.nValue;
-				item.nConf = min(item.nConf, nDepth);
+				item.nConf = std::min(item.nConf, nDepth);
 			}
 		}
 
 		// Reply
 		Array ret;
-		map<string, tallyitem> mapAccountTally;
-		BOOST_FOREACH(const PAIRTYPE(Wallet::NexusAddress, string)& item, pwalletMain->mapAddressBook)
+		std::map<std::string, tallyitem> mapAccountTally;
+		BOOST_FOREACH(const PAIRTYPE(Wallet::NexusAddress, std::string)& item, pwalletMain->mapAddressBook)
 		{
 			const Wallet::NexusAddress& address = item.first;
-			const string& strAccount = item.second;
-			map<Wallet::NexusAddress, tallyitem>::iterator it = mapTally.find(address);
+			const std::string& strAccount = item.second;
+			std::map<Wallet::NexusAddress, tallyitem>::iterator it = mapTally.find(address);
 			if (it == mapTally.end() && !fIncludeEmpty)
 				continue;
 
@@ -1656,7 +1655,7 @@ namespace Net
 			{
 				tallyitem& item = mapAccountTally[strAccount];
 				item.nAmount += nAmount;
-				item.nConf = min(item.nConf, nConf);
+				item.nConf = std::min(item.nConf, nConf);
 			}
 			else
 			{
@@ -1671,7 +1670,7 @@ namespace Net
 
 		if (fByAccounts)
 		{
-			for (map<string, tallyitem>::iterator it = mapAccountTally.begin(); it != mapAccountTally.end(); ++it)
+			for (std::map<std::string, tallyitem>::iterator it = mapAccountTally.begin(); it != mapAccountTally.end(); ++it)
 			{
 				int64 nAmount = (*it).second.nAmount;
 				int nConf = (*it).second.nConf;
@@ -1689,7 +1688,7 @@ namespace Net
 	Value listreceivedbyaddress(const Array& params, bool fHelp)
 	{
 		if (fHelp || params.size() > 2)
-			throw runtime_error(
+			throw std::runtime_error(
 				"listreceivedbyaddress [minconf=1] [includeempty=false]\n"
 				"[minconf] is the minimum number of confirmations before payments are included.\n"
 				"[includeempty] whether to include addresses that haven't received any payments.\n"
@@ -1705,7 +1704,7 @@ namespace Net
 	Value listreceivedbyaccount(const Array& params, bool fHelp)
 	{
 		if (fHelp || params.size() > 2)
-			throw runtime_error(
+			throw std::runtime_error(
 				"listreceivedbyaccount [minconf=1] [includeempty=false]\n"
 				"[minconf] is the minimum number of confirmations before payments are included.\n"
 				"[includeempty] whether to include accounts that haven't received any payments.\n"
@@ -1717,22 +1716,22 @@ namespace Net
 		return ListReceived(params, true);
 	}
 
-	void ListTransactions(const Wallet::CWalletTx& wtx, const string& strAccount, int nMinDepth, bool fLong, Array& ret)
+	void ListTransactions(const Wallet::CWalletTx& wtx, const std::string& strAccount, int nMinDepth, bool fLong, Array& ret)
 	{
 		int64 nGeneratedImmature, nGeneratedMature, nFee;
-		string strSentAccount;
-		list<pair<Wallet::NexusAddress, int64> > listReceived;
-		list<pair<Wallet::NexusAddress, int64> > listSent;
+		std::string strSentAccount;
+		std::list<std::pair<Wallet::NexusAddress, int64> > listReceived;
+		std::list<std::pair<Wallet::NexusAddress, int64> > listSent;
 
 		wtx.GetAmounts(nGeneratedImmature, nGeneratedMature, listReceived, listSent, nFee, strSentAccount);
 
-		bool fAllAccounts = (strAccount == string("*"));
+		bool fAllAccounts = (strAccount == std::string("*"));
 
 		// Generated blocks assigned to account ""
 		if ((nGeneratedMature+nGeneratedImmature) != 0 && (fAllAccounts || strAccount == ""))
 		{
 			Object entry;
-			entry.push_back(Pair("account", string("")));
+			entry.push_back(Pair("account", std::string("")));
 			if (nGeneratedImmature)
 			{
 				entry.push_back(Pair("category", wtx.GetDepthInMainChain() ? "immature" : "orphan"));
@@ -1775,7 +1774,7 @@ namespace Net
 		{
 			BOOST_FOREACH(const PAIRTYPE(Wallet::NexusAddress, int64)& r, listReceived)
 			{
-				string account;
+				std::string account;
 				if (pwalletMain->mapAddressBook.count(r.first))
 					account = pwalletMain->mapAddressBook[r.first];
 				if (fAllAccounts || (account == strAccount))
@@ -1793,9 +1792,9 @@ namespace Net
 		}
 	}
 
-	void AcentryToJSON(const Wallet::CAccountingEntry& acentry, const string& strAccount, Array& ret)
+	void AcentryToJSON(const Wallet::CAccountingEntry& acentry, const std::string& strAccount, Array& ret)
 	{
-		bool fAllAccounts = (strAccount == string("*"));
+		bool fAllAccounts = (strAccount == std::string("*"));
 
 		if (fAllAccounts || acentry.strAccount == strAccount)
 		{
@@ -1813,11 +1812,11 @@ namespace Net
 	Value listtransactions(const Array& params, bool fHelp)
 	{
 		if (fHelp || params.size() > 3)
-			throw runtime_error(
+			throw std::runtime_error(
 				"listtransactions [account] [count=10] [from=0]\n"
 				"Returns up to [count] most recent transactions skipping the first [from] transactions for account [account].");
 
-		string strAccount = "*";
+		std::string strAccount = "*";
 		if (params.size() > 0)
 			strAccount = params[0].get_str();
 		int nCount = 10;
@@ -1836,22 +1835,22 @@ namespace Net
 		Wallet::CWalletDB walletdb(pwalletMain->strWalletFile);
 
 		// First: get all Wallet::CWalletTx and Wallet::CAccountingEntry into a sorted-by-time multimap.
-		typedef pair<Wallet::CWalletTx*, Wallet::CAccountingEntry*> TxPair;
-		typedef multimap<int64, TxPair > TxItems;
+		typedef std::pair<Wallet::CWalletTx*, Wallet::CAccountingEntry*> TxPair;
+		typedef std::multimap<int64, TxPair > TxItems;
 		TxItems txByTime;
 
 		// Note: maintaining indices in the database of (account,time) --> txid and (account, time) --> acentry
 		// would make this much faster for applications that do this a lot.
-		for (map<uint512, Wallet::CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
+		for (std::map<uint512, Wallet::CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
 		{
 			Wallet::CWalletTx* wtx = &((*it).second);
-			txByTime.insert(make_pair(wtx->GetTxTime(), TxPair(wtx, (Wallet::CAccountingEntry*)0)));
+			txByTime.insert(std::make_pair(wtx->GetTxTime(), TxPair(wtx, (Wallet::CAccountingEntry*)0)));
 		}
-		list<Wallet::CAccountingEntry> acentries;
+		std::list<Wallet::CAccountingEntry> acentries;
 		walletdb.ListAccountCreditDebit(strAccount, acentries);
 		BOOST_FOREACH(Wallet::CAccountingEntry& entry, acentries)
 		{
-			txByTime.insert(make_pair(entry.nTime, TxPair((Wallet::CWalletTx*)0, &entry)));
+			txByTime.insert(std::make_pair(entry.nTime, TxPair((Wallet::CWalletTx*)0, &entry)));
 		}
 
 		// iterate backwards until we have nCount items to return:
@@ -1889,7 +1888,7 @@ namespace Net
 	Value listaccounts(const Array& params, bool fHelp)
 	{
 		if (fHelp || params.size() > 1)
-			throw runtime_error(
+			throw std::runtime_error(
 				"listaccounts [minconf=1]\n"
 				"Returns Object that has account names as keys, account balances as values.");
 
@@ -1897,19 +1896,19 @@ namespace Net
 		if (params.size() > 0)
 			nMinDepth = params[0].get_int();
 
-		map<string, int64> mapAccountBalances;
-		BOOST_FOREACH(const PAIRTYPE(Wallet::NexusAddress, string)& entry, pwalletMain->mapAddressBook) {
+		std::map<std::string, int64> mapAccountBalances;
+		BOOST_FOREACH(const PAIRTYPE(Wallet::NexusAddress, std::string)& entry, pwalletMain->mapAddressBook) {
 			if (pwalletMain->HaveKey(entry.first)) // This address belongs to me
 				mapAccountBalances[entry.second] = 0;
 		}
 
-		for (map<uint512, Wallet::CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
+		for (std::map<uint512, Wallet::CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
 		{
 			const Wallet::CWalletTx& wtx = (*it).second;
 			int64 nGeneratedImmature, nGeneratedMature, nFee;
-			string strSentAccount;
-			list<pair<Wallet::NexusAddress, int64> > listReceived;
-			list<pair<Wallet::NexusAddress, int64> > listSent;
+			std::string strSentAccount;
+			std::list<std::pair<Wallet::NexusAddress, int64> > listReceived;
+			std::list<std::pair<Wallet::NexusAddress, int64> > listSent;
 			wtx.GetAmounts(nGeneratedImmature, nGeneratedMature, listReceived, listSent, nFee, strSentAccount);
 			mapAccountBalances[strSentAccount] -= nFee;
 			BOOST_FOREACH(const PAIRTYPE(Wallet::NexusAddress, int64)& s, listSent)
@@ -1925,13 +1924,13 @@ namespace Net
 			}
 		}
 
-		list<Wallet::CAccountingEntry> acentries;
+		std::list<Wallet::CAccountingEntry> acentries;
 		Wallet::CWalletDB(pwalletMain->strWalletFile).ListAccountCreditDebit("*", acentries);
 		BOOST_FOREACH(const Wallet::CAccountingEntry& entry, acentries)
 			mapAccountBalances[entry.strAccount] += entry.nCreditDebit;
 
 		Object ret;
-		BOOST_FOREACH(const PAIRTYPE(string, int64)& accountBalance, mapAccountBalances) {
+		BOOST_FOREACH(const PAIRTYPE(std::string, int64)& accountBalance, mapAccountBalances) {
 			ret.push_back(Pair(accountBalance.first, ValueFromAmount(accountBalance.second)));
 		}
 		return ret;
@@ -1940,7 +1939,7 @@ namespace Net
 	Value listsinceblock(const Array& params, bool fHelp)
 	{
 		if (fHelp)
-			throw runtime_error(
+			throw std::runtime_error(
 				"listsinceblock [blockhash] [target-confirmations]\n"
 				"Get all transactions in blocks since block [blockhash], or all transactions if omitted");
 
@@ -1967,7 +1966,7 @@ namespace Net
 
 		Array transactions;
 
-		for (map<uint512, Wallet::CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); it++)
+		for (std::map<uint512, Wallet::CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); it++)
 		{
 			Wallet::CWalletTx tx = (*it).second;
 
@@ -2005,7 +2004,7 @@ namespace Net
 	Value gettransaction(const Array& params, bool fHelp)
 	{
 		if (fHelp || params.size() != 1)
-			throw runtime_error(
+			throw std::runtime_error(
 				"gettransaction <txid>\n"
 				"Get detailed information about <txid>");
 
@@ -2042,7 +2041,7 @@ namespace Net
 	Value getrawtransaction(const Array& params, bool fHelp)
 	{
 		if (fHelp || params.size() != 1)
-			throw runtime_error(
+			throw std::runtime_error(
 				"getrawtransaction <txid>\n"
 				"Returns a string that is serialized,\n"
 				"hex-encoded data for <txid>.");
@@ -2063,13 +2062,13 @@ namespace Net
 	Value sendrawtransaction(const Array& params, bool fHelp)
 	{
 		if (fHelp || params.size() < 1 || params.size() > 2)
-			throw runtime_error(
+			throw std::runtime_error(
 				"sendrawtransaction <hex string> [checkinputs=0]\n"
 				"Submits raw transaction (serialized, hex-encoded) to local node and network.\n"
 				"If checkinputs is non-zero, checks the validity of the inputs of the transaction before sending it.");
 
 		// parse hex string from parameter
-		vector<unsigned char> txData(ParseHex(params[0].get_str()));
+		std::vector<unsigned char> txData(ParseHex(params[0].get_str()));
 		CDataStream ssData(txData, SER_NETWORK, PROTOCOL_VERSION);
 		bool fCheckInputs = false;
 		if (params.size() > 1)
@@ -2092,7 +2091,7 @@ namespace Net
 		if (Core::GetTransaction(hashTx, existingTx, hashBlock))
 		{
 			if (hashBlock != 0)
-				throw JSONRPCError(-5, string("transaction already in block ")+hashBlock.GetHex());
+				throw JSONRPCError(-5, std::string("transaction already in block ")+hashBlock.GetHex());
 			// Not in block, but already in the memory pool; will drop
 			// through to re-relay it.
 		}
@@ -2114,11 +2113,11 @@ namespace Net
 	Value backupwallet(const Array& params, bool fHelp)
 	{
 		if (fHelp || params.size() != 1)
-			throw runtime_error(
+			throw std::runtime_error(
 				"backupwallet <destination>\n"
 				"Safely copies wallet.dat to destination, which can be a directory or a path with filename.");
 
-		string strDest = params[0].get_str();
+		std::string strDest = params[0].get_str();
 		BackupWallet(*pwalletMain, strDest);
 
 		return Value::null;
@@ -2128,11 +2127,11 @@ namespace Net
 	Value keypoolrefill(const Array& params, bool fHelp)
 	{
 		if (pwalletMain->IsCrypted() && (fHelp || params.size() > 0))
-			throw runtime_error(
+			throw std::runtime_error(
 				"keypoolrefill\n"
 				"Fills the keypool, requires wallet passphrase to be set.");
 		if (!pwalletMain->IsCrypted() && (fHelp || params.size() > 0))
-			throw runtime_error(
+			throw std::runtime_error(
 				"keypoolrefill\n"
 				"Fills the keypool.");
 
@@ -2197,7 +2196,7 @@ namespace Net
 	Value walletpassphrase(const Array& params, bool fHelp)
 	{
 		if (pwalletMain->IsCrypted() && (fHelp || params.size() < 2 || params.size() > 3))
-			throw runtime_error(
+			throw std::runtime_error(
 				"walletpassphrase <passphrase> <timeout> [mintonly]\n"
 				"Stores the wallet decryption key in memory for <timeout> seconds.\n"
 				"mintonly is optional true/false allowing only block minting.");
@@ -2222,7 +2221,7 @@ namespace Net
 				throw JSONRPCError(-14, "Error: The wallet passphrase entered was incorrect.");
 		}
 		else
-			throw runtime_error(
+			throw std::runtime_error(
 				"walletpassphrase <passphrase> <timeout>\n"
 				"Stores the wallet decryption key in memory for <timeout> seconds.");
 
@@ -2243,7 +2242,7 @@ namespace Net
 	Value walletpassphrasechange(const Array& params, bool fHelp)
 	{
 		if (pwalletMain->IsCrypted() && (fHelp || params.size() != 2))
-			throw runtime_error(
+			throw std::runtime_error(
 				"walletpassphrasechange <oldpassphrase> <newpassphrase>\n"
 				"Changes the wallet passphrase from <oldpassphrase> to <newpassphrase>.");
 		if (fHelp)
@@ -2262,7 +2261,7 @@ namespace Net
 		strNewWalletPass = params[1].get_str().c_str();
 
 		if (strOldWalletPass.length() < 1 || strNewWalletPass.length() < 1)
-			throw runtime_error(
+			throw std::runtime_error(
 				"walletpassphrasechange <oldpassphrase> <newpassphrase>\n"
 				"Changes the wallet passphrase from <oldpassphrase> to <newpassphrase>.");
 
@@ -2276,7 +2275,7 @@ namespace Net
 	Value walletlock(const Array& params, bool fHelp)
 	{
 		if (pwalletMain->IsCrypted() && (fHelp || params.size() != 0))
-			throw runtime_error(
+			throw std::runtime_error(
 				"walletlock\n"
 				"Removes the wallet encryption key from memory, locking the wallet.\n"
 				"After calling this method, you will need to call walletpassphrase again\n"
@@ -2299,7 +2298,7 @@ namespace Net
 	Value encryptwallet(const Array& params, bool fHelp)
 	{
 		if (!pwalletMain->IsCrypted() && (fHelp || params.size() != 1))
-			throw runtime_error(
+			throw std::runtime_error(
 				"encryptwallet <passphrase>\n"
 				"Encrypts the wallet with <passphrase>.");
 		if (fHelp)
@@ -2314,7 +2313,7 @@ namespace Net
 		strWalletPass = params[0].get_str().c_str();
 
 		if (strWalletPass.length() < 1)
-			throw runtime_error(
+			throw std::runtime_error(
 				"encryptwallet <passphrase>\n"
 				"Encrypts the wallet with <passphrase>.");
 
@@ -2332,7 +2331,7 @@ namespace Net
 	Value validateaddress(const Array& params, bool fHelp)
 	{
 		if (fHelp || params.size() != 1)
-			throw runtime_error(
+			throw std::runtime_error(
 				"validateaddress <Nexusaddress>\n"
 				"Return information about <Nexusaddress>.");
 
@@ -2343,7 +2342,7 @@ namespace Net
 		ret.push_back(Pair("isvalid", isValid));
 		if (isValid)
 		{
-			string currentAddress = address.ToString();
+			std::string currentAddress = address.ToString();
 			ret.push_back(Pair("address", currentAddress));
 			if (pwalletMain->HaveKey(address))
 			{
@@ -2386,13 +2385,13 @@ namespace Net
 	{
 		
 		if (fHelp || params.size() != 1)
-			throw runtime_error(
+			throw std::runtime_error(
 				"getblockhash <index>\n"
 				"Returns hash of block in best-block-chain at <index>.");
 
 		int nHeight = params[0].get_int();
 		if (nHeight < 0 || nHeight > Core::nBestHeight)
-			throw runtime_error("Block number out of range.");
+			throw std::runtime_error("Block number out of range.");
 
 		Core::CBlock block;
 		Core::CBlockIndex* pblockindex = Core::mapBlockIndex[Core::hashBestChain];
@@ -2404,7 +2403,7 @@ namespace Net
 	Value getblock(const Array& params, bool fHelp)
 	{
 		if (fHelp || params.size() < 1 || params.size() > 2)
-			throw runtime_error(
+			throw std::runtime_error(
 				"getblock <hash> [txinfo]\n"
 				"txinfo optional to print more detailed tx info\n"
 				"Returns details of a block with given block-hash.");
@@ -2427,7 +2426,7 @@ namespace Net
 	Value reservebalance(const Array& params, bool fHelp)
 	{
 		if (fHelp || params.size() > 2)
-			throw runtime_error(
+			throw std::runtime_error(
 				"reservebalance [<reserve> [amount]]\n"
 				"<reserve> is true or false to turn balance reserve on or off.\n"
 				"<amount> is a real and rounded to cent.\n"
@@ -2440,17 +2439,17 @@ namespace Net
 			if (fReserve)
 			{
 				if (params.size() == 1)
-					throw runtime_error("must provide amount to reserve balance.\n");
+					throw std::runtime_error("must provide amount to reserve balance.\n");
 				int64 nAmount = AmountFromValue(params[1]);
 				nAmount = (nAmount / CENT) * CENT;  // round to cent
 				if (nAmount < 0)
-					throw runtime_error("amount cannot be negative.\n");
+					throw std::runtime_error("amount cannot be negative.\n");
 				mapArgs["-reservebalance"] = FormatMoney(nAmount).c_str();
 			}
 			else
 			{
 				if (params.size() > 1)
-					throw runtime_error("cannot specify amount to turn off reserve.\n");
+					throw std::runtime_error("cannot specify amount to turn off reserve.\n");
 				mapArgs["-reservebalance"] = "0";
 			}
 		}
@@ -2458,7 +2457,7 @@ namespace Net
 		Object result;
 		int64 nReserveBalance = 0;
 		if (mapArgs.count("-reservebalance") && !ParseMoney(mapArgs["-reservebalance"], nReserveBalance))
-			throw runtime_error("invalid reserve balance amount\n");
+			throw std::runtime_error("invalid reserve balance amount\n");
 		result.push_back(Pair("reserve", (nReserveBalance > 0)));
 		result.push_back(Pair("amount", ValueFromAmount(nReserveBalance)));
 		return result;
@@ -2469,7 +2468,7 @@ namespace Net
 	Value checkwallet(const Array& params, bool fHelp)
 	{
 		if (fHelp || params.size() > 0)
-			throw runtime_error(
+			throw std::runtime_error(
 				"checkwallet\n"
 				"Check wallet for integrity.\n");
 
@@ -2491,7 +2490,7 @@ namespace Net
 	Value listtrustkeys(const Array& params, bool fHelp)
 	{
 		if (fHelp || params.size() > 0)
-			throw runtime_error(
+			throw std::runtime_error(
 				"listtrustkeys\n"
 				"List all the Trust Keys this Node owns.\n");
 
@@ -2516,7 +2515,7 @@ namespace Net
 	Value repairwallet(const Array& params, bool fHelp)
 	{
 		if (fHelp || params.size() > 0)
-			throw runtime_error(
+			throw std::runtime_error(
 				"repairwallet\n"
 				"Repair wallet if checkwallet reports any problem.\n");
 
@@ -2539,12 +2538,12 @@ namespace Net
 	Value makekeypair(const Array& params, bool fHelp)
 	{
 		if (fHelp || params.size() > 1)
-			throw runtime_error(
+			throw std::runtime_error(
 				"makekeypair [prefix]\n"
 				"Make a public/private key pair.\n"
 				"[prefix] is optional preferred prefix for the public key.\n");
 
-		string strPrefix = "";
+		std::string strPrefix = "";
 		if (params.size() > 0)
 			strPrefix = params[0].get_str();
 	 
@@ -2576,28 +2575,28 @@ namespace Net
 	Value unspentbalance(const Array& params, bool fHelp)
 	{
 		if (fHelp || params.size() > 1)
-			throw runtime_error(
+			throw std::runtime_error(
 				"unspentbalance [\"address\",...]\n"
 				"Returns the total amount of unspent Nexus for given address\n"
 				"This is a more accurate command than Get Balance.\n");
 
-		set<Wallet::NexusAddress> setAddresses;
+		std::set<Wallet::NexusAddress> setAddresses;
 		if (params.size() > 0)
 		{
 			for(int i = 0; i < params.size(); i++)
 			{
 				Wallet::NexusAddress address(params[i].get_str());
 				if (!address.IsValid()) {
-					throw JSONRPCError(-5, string("Invalid Nexus address: ")+params[i].get_str());
+					throw JSONRPCError(-5, std::string("Invalid Nexus address: ")+params[i].get_str());
 				}
 				if (setAddresses.count(address)){
-					throw JSONRPCError(-8, string("Invalid parameter, duplicated address: ")+params[i].get_str()); 
+					throw JSONRPCError(-8, std::string("Invalid parameter, duplicated address: ")+params[i].get_str()); 
 				}
 			   setAddresses.insert(address);
 			}
 		}
 
-		vector<Wallet::COutput> vecOutputs;
+		std::vector<Wallet::COutput> vecOutputs;
 		pwalletMain->AvailableCoins((unsigned int)GetUnifiedTimestamp(), vecOutputs, false);
 		
 		int64 nCredit = 0;
@@ -2636,7 +2635,7 @@ namespace Net
 	Value listunspent(const Array& params, bool fHelp)
 	{
 		if (fHelp || params.size() > 3)
-			throw runtime_error(
+			throw std::runtime_error(
 				"listunspent [minconf=1] [maxconf=9999999]  [\"address\",...]\n"
 				"Returns array of unspent transaction outputs\n"
 				"with between minconf and maxconf (inclusive) confirmations.\n"
@@ -2652,7 +2651,7 @@ namespace Net
 		if (params.size() > 1)
 			nMaxDepth = params[1].get_int();
 
-		set<Wallet::NexusAddress> setAddress;
+		std::set<Wallet::NexusAddress> setAddress;
 		if (params.size() > 2)
 		{
 			Array inputs = params[2].get_array();
@@ -2660,15 +2659,15 @@ namespace Net
 			{
 				Wallet::NexusAddress address(input.get_str());
 				if (!address.IsValid())
-					throw JSONRPCError(-5, string("Invalid Nexus address: ")+input.get_str());
+					throw JSONRPCError(-5, std::string("Invalid Nexus address: ")+input.get_str());
 				if (setAddress.count(address))
-					throw JSONRPCError(-8, string("Invalid parameter, duplicated address: ")+input.get_str());
+					throw JSONRPCError(-8, std::string("Invalid parameter, duplicated address: ")+input.get_str());
 			   setAddress.insert(address);
 			}
 		}
 
 		Array results;
-		vector<Wallet::COutput> vecOutputs;
+		std::vector<Wallet::COutput> vecOutputs;
 		pwalletMain->AvailableCoins((unsigned int)GetUnifiedTimestamp(), vecOutputs, false);
 		BOOST_FOREACH(const Wallet::COutput& out, vecOutputs)
 		{
@@ -2711,11 +2710,11 @@ namespace Net
 	Value getrawmempool(const Array& params, bool fHelp)
 	{
 		if (fHelp || params.size() != 0)
-			throw runtime_error(
+			throw std::runtime_error(
 				"getrawmempool\n"
 				"Returns all transaction ids in memory pool.");
 
-		vector<uint512> vtxid;
+		std::vector<uint512> vtxid;
 		Core::mempool.queryHashes(vtxid);
 
 		Array a;
@@ -2813,9 +2812,9 @@ namespace Net
 		}
 	}
 
-	const CRPCCommand *CRPCTable::operator[](string name) const
+	const CRPCCommand *CRPCTable::operator[](std::string name) const
 	{
-		map<string, const CRPCCommand*>::const_iterator it = mapCommands.find(name);
+		std::map<std::string, const CRPCCommand*>::const_iterator it = mapCommands.find(name);
 		if (it == mapCommands.end())
 			return NULL;
 		return (*it).second;
@@ -2828,9 +2827,9 @@ namespace Net
 	// and to be compatible with other JSON-RPC implementations.
 	//
 
-	string HTTPPost(const string& strMsg, const map<string,string>& mapRequestHeaders)
+	std::string HTTPPost(const std::string& strMsg, const std::map<std::string,std::string>& mapRequestHeaders)
 	{
-		ostringstream s;
+		std::ostringstream s;
 		s << "POST / HTTP/1.1\r\n"
 		  << "User-Agent: Nexus-json-rpc/" << FormatFullVersion() << "\r\n"
 		  << "Host: 127.0.0.1\r\n"
@@ -2838,27 +2837,27 @@ namespace Net
 		  << "Content-Length: " << strMsg.size() << "\r\n"
 		  << "Connection: close\r\n"
 		  << "Accept: application/json\r\n";
-		BOOST_FOREACH(const PAIRTYPE(string, string)& item, mapRequestHeaders)
+		BOOST_FOREACH(const PAIRTYPE(std::string, std::string)& item, mapRequestHeaders)
 			s << item.first << ": " << item.second << "\r\n";
 		s << "\r\n" << strMsg;
 
 		return s.str();
 	}
 
-	string rfc1123Time()
+	std::string rfc1123Time()
 	{
 		char buffer[64];
 		time_t now;
 		time(&now);
 		struct tm* now_gmt = gmtime(&now);
-		string locale(setlocale(LC_TIME, NULL));
+		std::string locale(setlocale(LC_TIME, NULL));
 		setlocale(LC_TIME, "C"); // we want posix (aka "C") weekday/month strings
 		strftime(buffer, sizeof(buffer), "%a, %d %b %Y %H:%M:%S +0000", now_gmt);
 		setlocale(LC_TIME, locale.c_str());
-		return string(buffer);
+		return std::string(buffer);
 	}
 
-	static string HTTPReply(int nStatus, const string& strMsg)
+	static std::string HTTPReply(int nStatus, const std::string& strMsg)
 	{
 		if (nStatus == 401)
 			return strprintf("HTTP/1.0 401 Authorization Required\r\n"
@@ -2903,30 +2902,30 @@ namespace Net
 
 	int ReadHTTPStatus(std::basic_istream<char>& stream)
 	{
-		string str;
+		std::string str;
 		getline(stream, str);
-		vector<string> vWords;
+		std::vector<std::string> vWords;
 		boost::split(vWords, str, boost::is_any_of(" "));
 		if (vWords.size() < 2)
 			return 500;
 		return atoi(vWords[1].c_str());
 	}
 
-	int ReadHTTPHeader(std::basic_istream<char>& stream, map<string, string>& mapHeadersRet)
+	int ReadHTTPHeader(std::basic_istream<char>& stream, std::map<std::string, std::string>& mapHeadersRet)
 	{
 		int nLen = 0;
 		loop() {
-			string str;
+			std::string str;
 			std::getline(stream, str);
 			if (str.empty() || str == "\r")
 				break;
-			string::size_type nColon = str.find(":");
-			if (nColon != string::npos)
+			std::string::size_type nColon = str.find(":");
+			if (nColon != std::string::npos)
 			{
-				string strHeader = str.substr(0, nColon);
+				std::string strHeader = str.substr(0, nColon);
 				boost::trim(strHeader);
 				boost::to_lower(strHeader);
-				string strValue = str.substr(nColon+1);
+				std::string strValue = str.substr(nColon+1);
 				boost::trim(strValue);
 				mapHeadersRet[strHeader] = strValue;
 				if (strHeader == "content-length")
@@ -2936,7 +2935,7 @@ namespace Net
 		return nLen;
 	}
 
-	int ReadHTTP(std::basic_istream<char>& stream, map<string, string>& mapHeadersRet, string& strMessageRet)
+	int ReadHTTP(std::basic_istream<char>& stream, std::map<std::string, std::string>& mapHeadersRet, std::string& strMessageRet)
 	{
 		mapHeadersRet.clear();
 		strMessageRet = "";
@@ -2952,21 +2951,21 @@ namespace Net
 		// Read message
 		if (nLen > 0)
 		{
-			vector<char> vch(nLen);
+			std::vector<char> vch(nLen);
 			stream.read(&vch[0], nLen);
-			strMessageRet = string(vch.begin(), vch.end());
+			strMessageRet = std::string(vch.begin(), vch.end());
 		}
 
 		return nStatus;
 	}
 
-	bool HTTPAuthorized(map<string, string>& mapHeaders)
+	bool HTTPAuthorized(std::map<std::string, std::string>& mapHeaders)
 	{
-		string strAuth = mapHeaders["authorization"];
+		std::string strAuth = mapHeaders["authorization"];
 		if (strAuth.substr(0,6) != "Basic ")
 			return false;
-		string strUserPass64 = strAuth.substr(6); boost::trim(strUserPass64);
-		string strUserPass = DecodeBase64(strUserPass64);
+		std::string strUserPass64 = strAuth.substr(6); boost::trim(strUserPass64);
+		std::string strUserPass = DecodeBase64(strUserPass64);
 		return strUserPass == strRPCUserColonPass;
 	}
 
@@ -2980,7 +2979,7 @@ namespace Net
 	// http://www.codeproject.com/KB/recipes/JSON_Spirit.aspx
 	//
 
-	string JSONRPCRequest(const string& strMethod, const Array& params, const Value& id)
+	std::string JSONRPCRequest(const std::string& strMethod, const Array& params, const Value& id)
 	{
 		Object request;
 		request.push_back(Pair("method", strMethod));
@@ -2989,7 +2988,7 @@ namespace Net
 		return write_string(Value(request), false) + "\n";
 	}
 
-	string JSONRPCReply(const Value& result, const Value& error, const Value& id)
+	std::string JSONRPCReply(const Value& result, const Value& error, const Value& id)
 	{
 		Object reply;
 		if (error.type() != null_type)
@@ -3008,16 +3007,16 @@ namespace Net
 		int code = find_value(objError, "code").get_int();
 		if (code == -32600) nStatus = 400;
 		else if (code == -32601) nStatus = 404;
-		string strReply = JSONRPCReply(Value::null, objError, id);
+		std::string strReply = JSONRPCReply(Value::null, objError, id);
 		stream << HTTPReply(nStatus, strReply) << std::flush;
 	}
 
-	bool ClientAllowed(const string& strAddress)
+	bool ClientAllowed(const std::string& strAddress)
 	{
 		if (strAddress == asio::ip::address_v4::loopback().to_string())
 			return true;
-		const vector<string>& vAllow = mapMultiArgs["-rpcallowip"];
-		BOOST_FOREACH(string strAllow, vAllow)
+		const std::vector<std::string>& vAllow = mapMultiArgs["-rpcallowip"];
+		BOOST_FOREACH(std::string strAllow, vAllow)
 			if (WildcardMatch(strAddress, strAllow))
 				return true;
 		return false;
@@ -3108,7 +3107,7 @@ namespace Net
 		{
 			unsigned char rand_pwd[32];
 			RAND_bytes(rand_pwd, 32);
-			string strWhatAmI = "To use Nexus";
+			std::string strWhatAmI = "To use Nexus";
 			if (mapArgs.count("-server"))
 				strWhatAmI = strprintf(_("To use the %s option"), "\"-server\"");
 			else if (mapArgs.count("-daemon"))
@@ -3164,7 +3163,7 @@ namespace Net
 			if (filesystem::exists(pathPKFile)) context.use_private_key_file(pathPKFile.string(), ssl::context::pem);
 			else printf("ThreadRPCServer ERROR: missing server private key file %s\n", pathPKFile.string().c_str());
 
-			string strCiphers = GetArg("-rpcsslciphers", "TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH");
+			std::string strCiphers = GetArg("-rpcsslciphers", "TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH");
 			SSL_CTX_set_cipher_list(context.native_handle(), strCiphers.c_str());
 		}
 
@@ -3192,8 +3191,8 @@ namespace Net
 				continue;
 			}
 
-			map<string, string> mapHeaders;
-			string strRequest;
+			std::map<std::string, std::string> mapHeaders;
+			std::string strRequest;
 
 			boost::thread api_caller(ReadHTTP, boost::ref(stream), boost::ref(mapHeaders), boost::ref(strRequest));
 			if (!api_caller.timed_join(boost::posix_time::seconds(GetArg("-rpctimeout", 30))))
@@ -3240,7 +3239,7 @@ namespace Net
 					throw JSONRPCError(-32600, "Missing method");
 				if (valMethod.type() != str_type)
 					throw JSONRPCError(-32600, "Method must be a string");
-				string strMethod = valMethod.get_str();
+				std::string strMethod = valMethod.get_str();
 				printf("ThreadRPCServer method=%s\n", strMethod.c_str());
 
 				// Parse params
@@ -3256,7 +3255,7 @@ namespace Net
 				Value result = tableRPC.execute(strMethod, params);
 
 				// Send reply
-				string strReply = JSONRPCReply(result, Value::null, id);
+				std::string strReply = JSONRPCReply(result, Value::null, id);
 				stream << HTTPReply(200, strReply) << std::flush;
 			}
 			catch (Object& objError)
@@ -3278,10 +3277,10 @@ namespace Net
 			throw JSONRPCError(-32601, "Method not found");
 
 		// Observe safe mode
-		string strWarning = Core::GetWarnings("rpc");
+		std::string strWarning = Core::GetWarnings("rpc");
 		if (strWarning != "" && !GetBoolArg("-disablesafemode") &&
 			!pcmd->okSafeMode)
-			throw JSONRPCError(-2, string("Safe mode: ") + strWarning);
+			throw JSONRPCError(-2, std::string("Safe mode: ") + strWarning);
 
 		try
 		{
@@ -3300,10 +3299,10 @@ namespace Net
 	}
 
 
-	Object CallRPC(const string& strMethod, const Array& params)
+	Object CallRPC(const std::string& strMethod, const Array& params)
 	{
 		if (mapArgs["-rpcuser"] == "" && mapArgs["-rpcpassword"] == "")
-			throw runtime_error(strprintf(
+			throw std::runtime_error(strprintf(
 				_("You must set rpcpassword=<password> in the configuration file:\n%s\n"
 				  "If the file does not exist, create it with owner-readable-only file permissions."),
 					GetConfigFile().string().c_str()));
@@ -3317,36 +3316,36 @@ namespace Net
 		SSLIOStreamDevice d(sslStream, fUseSSL);
 		iostreams::stream<SSLIOStreamDevice> stream(d);
 		if (!d.connect(GetArg("-rpcconnect", "127.0.0.1"), GetArg("-rpcport", CBigNum(fTestNet? TESTNET_RPC_PORT : RPC_PORT).ToString().c_str())))
-			throw runtime_error("couldn't connect to server");
+			throw std::runtime_error("couldn't connect to server");
 
 		// HTTP basic authentication
-		string strUserPass64 = EncodeBase64(mapArgs["-rpcuser"] + ":" + mapArgs["-rpcpassword"]);
-		map<string, string> mapRequestHeaders;
-		mapRequestHeaders["Authorization"] = string("Basic ") + strUserPass64;
+		std::string strUserPass64 = EncodeBase64(mapArgs["-rpcuser"] + ":" + mapArgs["-rpcpassword"]);
+		std::map<std::string, std::string> mapRequestHeaders;
+		mapRequestHeaders["Authorization"] = std::string("Basic ") + strUserPass64;
 
 		// Send request
-		string strRequest = JSONRPCRequest(strMethod, params, 1);
-		string strPost = HTTPPost(strRequest, mapRequestHeaders);
+		std::string strRequest = JSONRPCRequest(strMethod, params, 1);
+		std::string strPost = HTTPPost(strRequest, mapRequestHeaders);
 		stream << strPost << std::flush;
 
 		// Receive reply
-		map<string, string> mapHeaders;
-		string strReply;
+		std::map<std::string, std::string> mapHeaders;
+		std::string strReply;
 		int nStatus = ReadHTTP(stream, mapHeaders, strReply);
 		if (nStatus == 401)
-			throw runtime_error("incorrect rpcuser or rpcpassword (authorization failed)");
+			throw std::runtime_error("incorrect rpcuser or rpcpassword (authorization failed)");
 		else if (nStatus >= 400 && nStatus != 400 && nStatus != 404 && nStatus != 500)
-			throw runtime_error(strprintf("server returned HTTP error %d", nStatus));
+			throw std::runtime_error(strprintf("server returned HTTP error %d", nStatus));
 		else if (strReply.empty())
-			throw runtime_error("no response from server");
+			throw std::runtime_error("no response from server");
 
 		// Parse reply
 		Value valReply;
 		if (!read_string(strReply, valReply))
-			throw runtime_error("couldn't parse reply from server");
+			throw std::runtime_error("couldn't parse reply from server");
 		const Object& reply = valReply.get_obj();
 		if (reply.empty())
-			throw runtime_error("expected reply to have result, error and id properties");
+			throw std::runtime_error("expected reply to have result, error and id properties");
 
 		return reply;
 	}
@@ -3362,7 +3361,7 @@ namespace Net
 			// reinterpret string as unquoted json value
 			Value value2;
 			if (!read_string(value.get_str(), value2))
-				throw runtime_error("type mismatch");
+				throw std::runtime_error("type mismatch");
 			value = value2.get_value<T>();
 		}
 		else
@@ -3415,27 +3414,27 @@ namespace Net
 		if (strMethod == "listsinceblock"         && n > 1) ConvertTo<boost::int64_t>(params[1]);
 		if (strMethod == "sendmany"               && n > 1)
 		{
-			string s = params[1].get_str();
+			std::string s = params[1].get_str();
 			Value v;
 			if (!read_string(s, v) || v.type() != obj_type)
-				throw runtime_error("type mismatch");
+				throw std::runtime_error("type mismatch");
 			params[1] = v.get_obj();
 		}
 		if (strMethod == "listunspent"           && n > 2)		
 		{
-			string s = params[2].get_str();
+			std::string s = params[2].get_str();
 			Value v;
 			if (!read_string(s, v) || v.type() != array_type)
-				throw runtime_error("type mismatch "+s);
+				throw std::runtime_error("type mismatch "+s);
 			params[2] = v.get_array();
 		}
 		
 		if (strMethod == "importkeys"             && n > 0)
 		{
-			string s = params[0].get_str();
+			std::string s = params[0].get_str();
 			Value v;
 			if (!read_string(s, v) || v.type() != obj_type)
-				throw runtime_error("type mismatch");
+				throw std::runtime_error("type mismatch");
 			params[0] = v.get_obj();
 		}
 		
@@ -3445,10 +3444,10 @@ namespace Net
 		if (strMethod == "addmultisigaddress"      && n > 0) ConvertTo<boost::int64_t>(params[0]);
 		if (strMethod == "addmultisigaddress"      && n > 1)
 		{
-			string s = params[1].get_str();
+			std::string s = params[1].get_str();
 			Value v;
 			if (!read_string(s, v) || v.type() != array_type)
-				throw runtime_error("type mismatch "+s);
+				throw std::runtime_error("type mismatch "+s);
 			params[1] = v.get_array();
 		}
 		return params;
@@ -3456,7 +3455,7 @@ namespace Net
 
 	int CommandLineRPC(int argc, char *argv[])
 	{
-		string strPrint;
+		std::string strPrint;
 		int nRet = 0;
 		try
 		{
@@ -3469,8 +3468,8 @@ namespace Net
 
 			// Method
 			if (argc < 2)
-				throw runtime_error("too few parameters");
-			string strMethod = argv[1];
+				throw std::runtime_error("too few parameters");
+			std::string strMethod = argv[1];
 
 			// Parameters default to strings
 			std::vector<std::string> strParams(&argv[2], &argv[argc]);
@@ -3503,7 +3502,7 @@ namespace Net
 		}
 		catch (std::exception& e)
 		{
-			strPrint = string("error: ") + e.what();
+			strPrint = std::string("error: ") + e.what();
 			nRet = 87;
 		}
 		catch (...)

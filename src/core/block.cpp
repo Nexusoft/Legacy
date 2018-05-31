@@ -18,9 +18,6 @@
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 
-using namespace std;
-using namespace boost;
-
 namespace Core
 {
 
@@ -145,7 +142,7 @@ namespace Core
         //// issue here: it doesn't know the version
         unsigned int nTxPos = pindex->nBlockPos + ::GetSerializeSize(CBlock(), SER_DISK, DATABASE_VERSION) - (2 * GetSizeOfCompactSize(0)) + GetSizeOfCompactSize(vtx.size());
 
-        map<uint512, CTxIndex> mapQueuedChanges;
+        std::map<uint512, CTxIndex> mapQueuedChanges;
         int64 nFees = 0;
         int64 nValueIn = 0;
         int64 nValueOut = 0;
@@ -202,7 +199,7 @@ namespace Core
             return error("Connect() : WriteBlockIndex for pindex failed");
 
         // Write queued txindex changes
-        for (map<uint512, CTxIndex>::iterator mi = mapQueuedChanges.begin(); mi != mapQueuedChanges.end(); ++mi)
+        for (std::map<uint512, CTxIndex>::iterator mi = mapQueuedChanges.begin(); mi != mapQueuedChanges.end(); ++mi)
         {
             if (!indexdb.UpdateTxIndex((*mi).first, (*mi).second))
                 return error("ConnectBlock() : UpdateTxIndex failed");
@@ -266,13 +263,13 @@ namespace Core
 
             
             /** List of what to Disconnect. **/
-            vector<CBlockIndex*> vDisconnect;
+            std::vector<CBlockIndex*> vDisconnect;
             for (CBlockIndex* pindex = pindexBest; pindex != pfork; pindex = pindex->pprev)
                 vDisconnect.push_back(pindex);
 
             
             /** List of what to Connect. **/
-            vector<CBlockIndex*> vConnect;
+            std::vector<CBlockIndex*> vConnect;
             for (CBlockIndex* pindex = pindexNew; pindex != pfork; pindex = pindex->pprev)
                 vConnect.push_back(pindex);
             reverse(vConnect.begin(), vConnect.end());
@@ -286,7 +283,7 @@ namespace Core
             }
             
             /** Disconnect the Shorter Branch. **/
-            vector<CTransaction> vResurrect;
+            std::vector<CTransaction> vResurrect;
             BOOST_FOREACH(CBlockIndex* pindex, vDisconnect)
             {
                 CBlock block;
@@ -308,7 +305,7 @@ namespace Core
 
             
             /* Connect the Longer Branch. */
-            vector<CTransaction> vDelete;
+            std::vector<CTransaction> vDelete;
             for (unsigned int i = 0; i < vConnect.size(); i++)
             {
                 CBlockIndex* pindex = vConnect[i];
@@ -472,7 +469,7 @@ namespace Core
             
         /* Find Previous Block. */
         pindexNew->phashBlock = &hash;
-        map<uint1024, CBlockIndex*>::iterator miPrev = mapBlockIndex.find(hashPrevBlock);
+        std::map<uint1024, CBlockIndex*>::iterator miPrev = mapBlockIndex.find(hashPrevBlock);
         if (miPrev != mapBlockIndex.end())
             pindexNew->pprev = (*miPrev).second;
         
@@ -516,7 +513,7 @@ namespace Core
         /** Add the Pending Checkpoint into the Blockchain. **/
         if(!pindexNew->pprev || HardenCheckpoint(pindexNew))
         {
-            pindexNew->PendingCheckpoint = make_pair(pindexNew->nHeight, pindexNew->GetBlockHash());
+            pindexNew->PendingCheckpoint = std::make_pair(pindexNew->nHeight, pindexNew->GetBlockHash());
             
             if(GetArg("-verbose", 0) >= 2)
                 printf("===== New Pending Checkpoint Hash = %s Height = %u\n", pindexNew->PendingCheckpoint.second.ToString().substr(0, 15).c_str(), pindexNew->nHeight);
@@ -532,7 +529,7 @@ namespace Core
         }								 
 
         /** Add to the MapBlockIndex **/
-        map<uint1024, CBlockIndex*>::iterator mi = mapBlockIndex.insert(make_pair(hash, pindexNew)).first;
+        std::map<uint1024, CBlockIndex*>::iterator mi = mapBlockIndex.insert(std::make_pair(hash, pindexNew)).first;
         pindexNew->phashBlock = &((*mi).first);
 
 
@@ -758,7 +755,7 @@ namespace Core
         
         // Check for duplicate txids. This is caught by ConnectInputs(),
         // but catching it earlier avoids a potential DoS attack:
-        set<uint512> uniqueTx;
+        std::set<uint512> uniqueTx;
         BOOST_FOREACH(const CTransaction& tx, vtx)
         {
             uniqueTx.insert(tx.GetHash());
@@ -792,7 +789,7 @@ namespace Core
 
             
         /** Find the Previous block from hashPrevBlock. **/
-        map<uint1024, CBlockIndex*>::iterator mi = mapBlockIndex.find(hashPrevBlock);
+        std::map<uint1024, CBlockIndex*>::iterator mi = mapBlockIndex.find(hashPrevBlock);
         if (mi == mapBlockIndex.end())
             return DoS(10, error("AcceptBlock() : prev block not found"));
         CBlockIndex* pindexPrev = (*mi).second;
@@ -898,8 +895,8 @@ namespace Core
                 printf("ProcessBlock: ORPHAN BLOCK, prev=%s\n", pblock->hashPrevBlock.ToString().substr(0,20).c_str());
             
             CBlock* pblock2 = new CBlock(*pblock);
-            mapOrphanBlocks.insert(make_pair(hash, pblock2));
-            mapOrphanBlocksByPrev.insert(make_pair(pblock2->hashPrevBlock, pblock2));
+            mapOrphanBlocks.insert(std::make_pair(hash, pblock2));
+            mapOrphanBlocksByPrev.insert(std::make_pair(pblock2->hashPrevBlock, pblock2));
             
             /** Simple Catch until I finish Checkpoint Syncing. **/
             if(pfrom)
@@ -921,12 +918,12 @@ namespace Core
 
 
         // Recursively process any orphan blocks that depended on this one
-        vector<uint1024> vWorkQueue;
+        std::vector<uint1024> vWorkQueue;
         vWorkQueue.push_back(hash);
         for (unsigned int i = 0; i < vWorkQueue.size(); i++)
         {
             uint1024 hashPrev = vWorkQueue[i];
-            for (multimap<uint1024, CBlock*>::iterator mi = mapOrphanBlocksByPrev.lower_bound(hashPrev);
+            for (std::multimap<uint1024, CBlock*>::iterator mi = mapOrphanBlocksByPrev.lower_bound(hashPrev);
                 mi != mapOrphanBlocksByPrev.upper_bound(hashPrev);
                 ++mi)
             {
@@ -958,7 +955,7 @@ namespace Core
     // Nexus: sign block
     bool CBlock::SignBlock(const Wallet::CKeyStore& keystore)
     {
-        vector<std::vector<unsigned char> > vSolutions;
+        std::vector<std::vector<unsigned char> > vSolutions;
         Wallet::TransactionType whichType;
         const CTxOut& txout = vtx[0].vout[0];
 
@@ -985,7 +982,7 @@ namespace Core
         if (GetHash() == hashGenesisBlock)
             return vchBlockSig.empty();
 
-        vector<std::vector<unsigned char> > vSolutions;
+        std::vector<std::vector<unsigned char> > vSolutions;
         Wallet::TransactionType whichType;
         const CTxOut& txout = vtx[0].vout[0];
 
@@ -1007,13 +1004,13 @@ namespace Core
 
     bool CheckDiskSpace(uint64 nAdditionalBytes)
     {
-        uint64 nFreeBytesAvailable = filesystem::space(GetDataDir()).available;
+        uint64 nFreeBytesAvailable = boost::filesystem::space(GetDataDir()).available;
 
         // Check for 15MB because database could create another 10MB log file at any time
         if (nFreeBytesAvailable < (uint64)15000000 + nAdditionalBytes)
         {
             fShutdown = true;
-            string strMessage = _("Warning: Disk space is low");
+            std::string strMessage = _("Warning: Disk space is low");
             strMiscWarning = strMessage;
             printf("*** %s\n", strMessage.c_str());
             ThreadSafeMessageBox(strMessage, "Nexus", wxOK | wxICON_EXCLAMATION | wxMODAL);
@@ -1093,7 +1090,7 @@ namespace Core
             txNew.nTime = 1409456199;
             txNew.vin.resize(1);
             txNew.vout.resize(1);
-            txNew.vin[0].scriptSig = Wallet::CScript() << vector<unsigned char>((const unsigned char*)pszTimestamp, (const unsigned char*)pszTimestamp + strlen(pszTimestamp));
+            txNew.vin[0].scriptSig = Wallet::CScript() << std::vector<unsigned char>((const unsigned char*)pszTimestamp, (const unsigned char*)pszTimestamp + strlen(pszTimestamp));
             txNew.vout[0].SetEmpty();
             
             CBlock block;

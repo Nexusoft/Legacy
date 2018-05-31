@@ -8,7 +8,6 @@
 
 #include "core.h"
 
-using namespace std;
 
 namespace Core
 {

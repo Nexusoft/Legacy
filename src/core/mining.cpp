@@ -20,8 +20,6 @@
 #include <boost/filesystem/fstream.hpp>
 #include <boost/thread.hpp>
 
-using namespace std;
-using namespace boost;
 
 
 namespace LLP
@@ -110,7 +108,7 @@ namespace LLP
 		Core::CBlockIndex* pindexBest = NULL;
 		
 		Wallet::CReserveKey* pMiningKey = NULL;
-		map<uint512, Core::CBlock> MAP_BLOCKS;
+		std::map<uint512, Core::CBlock> MAP_BLOCKS;
         
         Core::CBlock BASE_BLOCK;
 		unsigned int nChannel, nBestHeight;
@@ -663,7 +661,7 @@ namespace Core
 	{
 	public:
 		CTransaction* ptx;
-		set<uint512> setDependsOn;
+		std::set<uint512> setDependsOn;
 		double dPriority;
 
 		COrphan(CTransaction* ptxIn)
@@ -815,10 +813,10 @@ namespace Core
 			LLD::CIndexDB indexdb("r");
 
 			// Priority order to process transactions
-			list<COrphan> vOrphan; // list memory doesn't move
-			map<uint512, vector<COrphan*> > mapDependers;
-			multimap<double, CTransaction*> mapPriority;
-			for (map<uint512, CTransaction>::iterator mi = mempool.mapTx.begin(); mi != mempool.mapTx.end(); ++mi)
+			std::list<COrphan> vOrphan; // list memory doesn't move
+			std::map<uint512, std::vector<COrphan*> > mapDependers;
+			std::multimap<double, CTransaction*> mapPriority;
+			for (std::map<uint512, CTransaction>::iterator mi = mempool.mapTx.begin(); mi != mempool.mapTx.end(); ++mi)
 			{
 				CTransaction& tx = (*mi).second;
 				if (tx.IsCoinBase() || tx.IsCoinStake() || !tx.IsFinal())
@@ -868,7 +866,7 @@ namespace Core
 				if (porphan)
 					porphan->dPriority = dPriority;
 				else
-					mapPriority.insert(make_pair(-dPriority, &(*mi).second));
+					mapPriority.insert(std::make_pair(-dPriority, &(*mi).second));
 
 				if(GetArg("-verbose", 0) >= 3)
 				{
@@ -879,7 +877,7 @@ namespace Core
 			}
 
 			// Collect transactions into block
-			map<uint512, CTxIndex> mapTestPool;
+			std::map<uint512, CTxIndex> mapTestPool;
 			uint64 nBlockSize = 1000;
 			uint64 nBlockTx = 0;
 			int nBlockSigOps = 100;
@@ -926,7 +924,7 @@ namespace Core
 				
 				// Connecting shouldn't fail due to dependency on other memory pool transactions
 				// because we're already processing them in order of dependency
-				map<uint512, CTxIndex> mapTestPoolTmp(mapTestPool);
+				std::map<uint512, CTxIndex> mapTestPoolTmp(mapTestPool);
 				MapPrevTx mapInputs;
 				bool fInvalid;
 				if (!tx.FetchInputs(indexdb, mapTestPoolTmp, false, true, mapInputs, fInvalid))
@@ -989,7 +987,7 @@ namespace Core
 						{
 							porphan->setDependsOn.erase(hash);
 							if (porphan->setDependsOn.empty())
-								mapPriority.insert(make_pair(-porphan->dPriority, porphan->ptx));
+								mapPriority.insert(std::make_pair(-porphan->dPriority, porphan->ptx));
 						}
 					}
 				}
@@ -1056,7 +1054,7 @@ namespace Core
 
 	
 	
-	string GetChannelName(int nChannel)
+	std::string GetChannelName(int nChannel)
 	{
 		if(nChannel == 2)
 			return "SK-1024";

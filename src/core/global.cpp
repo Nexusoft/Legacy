@@ -8,8 +8,6 @@
 
 #include "../main.h"
 
-using namespace std;
-
 namespace Core
 {
 
@@ -120,7 +118,7 @@ namespace Core
 													
 
 	/** Dummy address for running on the Testnet. **/
-	const string TESTNET_DUMMY_ADDRESS   = "4jzgcyvCM6Yv8uoAPwCwe5eSikccs7ofJBnxsRWtmePGuJYnV8E";
+	const std::string TESTNET_DUMMY_ADDRESS   = "4jzgcyvCM6Yv8uoAPwCwe5eSikccs7ofJBnxsRWtmePGuJYnV8E";
 	
 	
 	/** Signature to Check Testnet Blocks are Produced Correctly. **/
@@ -128,7 +126,7 @@ namespace Core
 	
 	
 	/** Addresses of the Exchange Channels. **/
-	const string CHANNEL_ADDRESSES[] =  {  "2Qn8MsUCkv9S8X8sMvUPkr9Ekqqg5VKzeKJk2ftcFMUiJ5QnWRc",
+	const std::string CHANNEL_ADDRESSES[] =  {  "2Qn8MsUCkv9S8X8sMvUPkr9Ekqqg5VKzeKJk2ftcFMUiJ5QnWRc",
 										"2S4WLATVCdJXTpcfdkDNDVKK5czDi4rjR5HrCRjayktJZ4rN8oA",
 										"2RE29WahXWawQ9huhyaGhfvEMmUWHH9Hfo1anbNk8eW3nTU7H2g",
 										"2QpSfg6MBZYCjQKXjTgo9eHoKMCJsYjLQsNT3xeeAYhrQmNBEUd",
@@ -144,7 +142,7 @@ namespace Core
 										
 							
 	/** Addresses for the Developer Accounts. **/
-	const string DEVELOPER_ADDRESSES[] = {  "2Qp1rHzLCCsL4RcmLRcNhhAjnFShDXQaAjyBB9YpDSomCJsfGfS",
+	const std::string DEVELOPER_ADDRESSES[] = {  "2Qp1rHzLCCsL4RcmLRcNhhAjnFShDXQaAjyBB9YpDSomCJsfGfS",
 											"2SFx2tc8tLHBtkLkfK7nNjkU9DwvZZMNKKLaeX4xcG8ev4HQqVP",
 											"2SawW67sUcVtLNarcAkVaFR2L1R8AWujkoryJHi8L47bdDP8hwC",
 											"2QvzSNP3jy4MjqmB7jRy6jRGrDz6s6ALzTwu8htdohraU6Fdgrc",
@@ -193,7 +191,7 @@ namespace Core
 	CCriticalSection cs_setpwalletRegistered;
 	
 	/** List of Registered Transactions to Queue adding to Wallet. **/
-	set<Wallet::CWallet*> setpwalletRegistered;
+	std::set<Wallet::CWallet*> setpwalletRegistered;
 
 	/** Main Mutex to enable thread Synchronization and Queueing while working on main Data Objects. **/
 	CCriticalSection cs_main;
@@ -205,11 +203,11 @@ namespace Core
 	CTrustPool cTrustPool;
 
 	/** In memory Indexing of Blocks into Blockchain. **/
-	map<uint1024, CBlockIndex*> mapBlockIndex;
+	std::map<uint1024, CBlockIndex*> mapBlockIndex;
 	
 	/** In Memory Holdings of each Address Balance. **/
-	map<uint256, std::vector<std::pair<bool, uint512> > > mapRichList;
-    map<uint256, uint64> mapAddressTransactions;
+	std::map<uint256, std::vector<std::pair<bool, uint512> > > mapRichList;
+    std::map<uint256, uint64> mapAddressTransactions;
 	
 	/** Anchored Genesis Block to start the Chain. **/
 	uint1024 hashGenesisBlock = hashGenesisBlockOfficial;
@@ -243,14 +241,14 @@ namespace Core
 
 	CMajority<int> cPeerBlockCounts; // Amount of blocks that other nodes claim to have
 
-	map<uint1024, CBlock*> mapOrphanBlocks;
-	multimap<uint1024, CBlock*> mapOrphanBlocksByPrev;
-	map<uint1024, uint1024> mapProofOfStake;
+	std::map<uint1024, CBlock*> mapOrphanBlocks;
+	std::multimap<uint1024, CBlock*> mapOrphanBlocksByPrev;
+	std::map<uint1024, uint1024> mapProofOfStake;
 
-	map<uint512, CDataStream*> mapOrphanTransactions;
-	map<uint512, map<uint512, CDataStream*> > mapOrphanTransactionsByPrev;
+	std::map<uint512, CDataStream*> mapOrphanTransactions;
+	std::map<uint512, std::map<uint512, CDataStream*> > mapOrphanTransactionsByPrev;
 
-	const string strMessageMagic = "Nexus Signed Message:\n";
+	const std::string strMessageMagic = "Nexus Signed Message:\n";
 
 	// Settings
 	int64 nTransactionFee = MIN_TX_FEE;

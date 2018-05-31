@@ -26,8 +26,6 @@
 #include <csignal>
 #endif
 
-using namespace std;
-using namespace boost;
 
 Wallet::CWallet* pwalletMain;
 LLP::Server<LLP::CoreLLP>* LLP_SERVER;
@@ -183,7 +181,7 @@ bool AppInit2(int argc, char* argv[])
 
     if (mapArgs.count("-?") || mapArgs.count("--help"))
     {
-        string strUsage = string() +
+        std::string strUsage = std::string() +
           _("Nexus version") + " " + FormatFullVersion() + "\n\n" +
           _("Usage:") + "\t\t\t\t\t\t\t\t\t\t\n" +
             "  Nexus [options]                   \t  " + "\n" +
@@ -255,14 +253,14 @@ bool AppInit2(int argc, char* argv[])
                     "  -checkblocks=<n> \t\t  " + _("How many blocks to check at startup (default: 2500, 0 = all)") + "\n" +
                     "  -checklevel=<n>  \t\t  " + _("How thorough the block verification is (0-6, default: 1)") + "\n";
 
-                strUsage += string() +
+                strUsage += std::string() +
                     _("\nSSL options: (see the Nexus Wiki for SSL setup instructions)") + "\n" +
                     "  -rpcssl                                \t  " + _("Use OpenSSL (https) for JSON-RPC connections") + "\n" +
                     "  -rpcsslcertificatechainfile=<file.cert>\t  " + _("Server certificate file (default: server.cert)") + "\n" +
                     "  -rpcsslprivatekeyfile=<file.pem>       \t  " + _("Server private key (default: server.pem)") + "\n" +
                     "  -rpcsslciphers=<ciphers>               \t  " + _("Acceptable ciphers (default: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)") + "\n";
 
-                strUsage += string() +
+                strUsage += std::string() +
                     "  -?               \t\t  " + _("This help message") + "\n";
 
                 // Remove tabs
@@ -521,9 +519,9 @@ bool AppInit2(int argc, char* argv[])
 
     if (mapArgs.count("-printblock"))
     {
-        string strMatch = mapArgs["-printblock"];
+        std::string strMatch = mapArgs["-printblock"];
         int nFound = 0;
-        for (map<uint1024, Core::CBlockIndex*>::iterator mi = Core::mapBlockIndex.begin(); mi != Core::mapBlockIndex.end(); ++mi)
+        for (std::map<uint1024, Core::CBlockIndex*>::iterator mi = Core::mapBlockIndex.begin(); mi != Core::mapBlockIndex.end(); ++mi)
         {
             uint1024 hash = (*mi).first;
             if (strncmp(hash.ToString().c_str(), strMatch.c_str(), strMatch.size()) == 0)
@@ -580,7 +578,7 @@ bool AppInit2(int argc, char* argv[])
 
     if (mapArgs.count("-addnode"))
     {
-        BOOST_FOREACH(string strAddr, mapMultiArgs["-addnode"])
+        BOOST_FOREACH(std::string strAddr, mapMultiArgs["-addnode"])
         {
             Net::CAddress addr(Net::CService(strAddr, Net::GetDefaultPort(), Net::fAllowDNS));
             addr.nTime = 0; // so it won't relay unless successfully connected

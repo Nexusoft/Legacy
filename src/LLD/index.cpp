@@ -1,20 +1,20 @@
 #include "index.h"
 #include "core.h"
 
+
 /** Lower Level Database Name Space. **/
 namespace LLD
 {
-	using namespace std;
 	
 	bool CIndexDB::ReadTxIndex(uint512 hash, Core::CTxIndex& txindex)
 	{
 		txindex.SetNull();
-		return Read(make_pair(string("tx"), hash), txindex);
+		return Read(std::make_pair(std::string("tx"), hash), txindex);
 	}
 
 	bool CIndexDB::UpdateTxIndex(uint512 hash, const Core::CTxIndex& txindex)
 	{
-		return Write(make_pair(string("tx"), hash), txindex);
+		return Write(std::make_pair(std::string("tx"), hash), txindex);
 	}
 	
 	bool CIndexDB::EraseTxIndex(const Core::CTransaction& tx)
@@ -22,7 +22,7 @@ namespace LLD
 		assert(!Net::fClient);
 		uint512 hash = tx.GetHash();
 
-		return Erase(make_pair(string("tx"), hash));
+		return Erase(std::make_pair(std::string("tx"), hash));
 	}
 
 	bool CIndexDB::AddTxIndex(const Core::CTransaction& tx, const Core::CDiskTxPos& pos, int nHeight)
@@ -30,13 +30,13 @@ namespace LLD
 		// Add to tx index
 		uint512 hash = tx.GetHash();
 		Core::CTxIndex txindex(pos, tx.vout.size());
-		return Write(make_pair(string("tx"), hash), txindex);
+		return Write(std::make_pair(std::string("tx"), hash), txindex);
 	}
 
 	bool CIndexDB::ContainsTx(uint512 hash)
 	{
 		assert(!Net::fClient);
-		return Exists(make_pair(string("tx"), hash));
+		return Exists(std::make_pair(std::string("tx"), hash));
 	}
 
 	bool CIndexDB::ReadDiskTx(uint512 hash, Core::CTransaction& tx, Core::CTxIndex& txindex)
@@ -67,37 +67,37 @@ namespace LLD
 
 	bool CIndexDB::WriteBlockIndex(const Core::CDiskBlockIndex& blockindex)
 	{
-		return Write(make_pair(string("blockindex"), blockindex.GetBlockHash()), blockindex);
+		return Write(std::make_pair(std::string("blockindex"), blockindex.GetBlockHash()), blockindex);
 	}
 
 	bool CIndexDB::ReadHashBestChain(uint1024& hashBestChain)
 	{
-		return Read(string("hashBestChain"), hashBestChain);
+		return Read(std::string("hashBestChain"), hashBestChain);
 	}
 
 	bool CIndexDB::WriteHashBestChain(uint1024 hashBestChain)
 	{
-		return Write(string("hashBestChain"), hashBestChain);
+		return Write(std::string("hashBestChain"), hashBestChain);
 	}
 	
 	bool CIndexDB::WriteTrustKey(uint512 hashTrustKey, Core::CTrustKey cTrustKey)
 	{
-		return Write(make_pair(string("trustKey"), hashTrustKey), cTrustKey);
+		return Write(std::make_pair(std::string("trustKey"), hashTrustKey), cTrustKey);
 	}
 	
 	bool CIndexDB::ReadTrustKey(uint512 hashTrustKey, Core::CTrustKey& cTrustKey)
 	{
-		return Read(make_pair(string("trustKey"), hashTrustKey), cTrustKey);
+		return Read(std::make_pair(std::string("trustKey"), hashTrustKey), cTrustKey);
 	}
 	
 	bool CIndexDB::AddTrustBlock(uint512 hashTrustKey, uint1024 hashTrustBlock)
 	{
-		return Write(make_pair(string("trustBlock"), hashTrustBlock), hashTrustKey);
+		return Write(std::make_pair(std::string("trustBlock"), hashTrustBlock), hashTrustKey);
 	}
 	
 	bool CIndexDB::RemoveTrustBlock(uint1024 hashTrustBlock)
 	{
-		return Erase(make_pair(string("trustBlock"), hashTrustBlock));
+		return Erase(std::make_pair(std::string("trustBlock"), hashTrustBlock));
 	}
 
 	Core::CBlockIndex static * InsertBlockIndex(uint1024 hash)
@@ -106,16 +106,16 @@ namespace LLD
 			return NULL;
 
 		// Return existing
-		map<uint1024, Core::CBlockIndex*>::iterator mi = Core::mapBlockIndex.find(hash);
+		std::map<uint1024, Core::CBlockIndex*>::iterator mi = Core::mapBlockIndex.find(hash);
 		if (mi != Core::mapBlockIndex.end())
 			return (*mi).second;
 
 		// Create new
 		Core::CBlockIndex* pindexNew = new Core::CBlockIndex();
 		if (!pindexNew)
-			throw runtime_error("LoadBlockIndex() : new Core::CBlockIndex failed");
+			throw std::runtime_error("LoadBlockIndex() : new Core::CBlockIndex failed");
 		
-		mi = Core::mapBlockIndex.insert(make_pair(hash, pindexNew)).first;
+		mi = Core::mapBlockIndex.insert(std::make_pair(hash, pindexNew)).first;
 		pindexNew->phashBlock = &((*mi).first);
 
 		return pindexNew;
@@ -131,7 +131,7 @@ namespace LLD
 		while(!fRequestShutdown)
 		{
 			Core::CDiskBlockIndex diskindex;
-			if(!Read(make_pair(string("blockindex"), hashBlock), diskindex))
+			if(!Read(std::make_pair(std::string("blockindex"), hashBlock), diskindex))
 			{
 				printf("Failed to Read Block %s Height %u\n", hashBlock.ToString().substr(0, 20).c_str(), diskindex.nHeight);
 				
@@ -239,7 +239,7 @@ namespace LLD
 				
 			/** Add the Pending Checkpoint into the Blockchain. **/
 			if(!pindexNew->pprev || Core::HardenCheckpoint(pindexNew, true))
-				pindexNew->PendingCheckpoint = make_pair(pindexNew->nHeight, pindexNew->GetBlockHash());
+				pindexNew->PendingCheckpoint = std::make_pair(pindexNew->nHeight, pindexNew->GetBlockHash());
 			else
 				pindexNew->PendingCheckpoint = pindexNew->pprev->PendingCheckpoint;
 				
@@ -278,7 +278,7 @@ namespace LLD
 		}
 		
 		
-		map<pair<unsigned int, unsigned int>, Core::CBlockIndex*> mapBlockPos;
+		std::map<std::pair<unsigned int, unsigned int>, Core::CBlockIndex*> mapBlockPos;
 		for (Core::CBlockIndex* pindex = Core::pindexBest; pindex && pindex->pprev && nCheckDepth > 0; pindex = pindex->pprev)
 		{
 			if (pindex->nHeight <= Core::nBestHeight - nCheckDepth)
@@ -299,7 +299,7 @@ namespace LLD
 			// check level 2: verify transaction index validity
 			if (nCheckLevel>1)
 			{
-				pair<unsigned int, unsigned int> pos = make_pair(pindex->nFile, pindex->nBlockPos);
+				std::pair<unsigned int, unsigned int> pos = std::make_pair(pindex->nFile, pindex->nBlockPos);
 				mapBlockPos[pos] = pindex;
 				BOOST_FOREACH(const Core::CTransaction &tx, block.vtx)
 				{
@@ -333,7 +333,7 @@ namespace LLD
 							{
 								if (!txpos.IsNull())
 								{
-									pair<unsigned int, unsigned int> posFind = make_pair(txpos.nFile, txpos.nBlockPos);
+									std::pair<unsigned int, unsigned int> posFind = std::make_pair(txpos.nFile, txpos.nBlockPos);
 									if (!mapBlockPos.count(posFind))
 									{
 										printf("LoadBlockIndex(): *** found bad spend at %d, hashBlock=%s, hashTx=%s\n", pindex->nHeight, pindex->GetBlockHash().ToString().c_str(), hashTx.ToString().c_str());
@@ -416,7 +416,7 @@ namespace LLD
 			// Read next record
 			CDataStream ssKey(SER_DISK, DATABASE_VERSION);
 			if (fFlags == DB_SET_RANGE)
-				ssKey << make_pair(string("blockindex"), uint1024(0));
+				ssKey << std::make_pair(std::string("blockindex"), uint1024(0));
 			CDataStream ssValue(SER_DISK, DATABASE_VERSION);
 			int ret = ReadAtCursor(pcursor, ssKey, ssValue, fFlags);
 			fFlags = DB_NEXT;
@@ -428,7 +428,7 @@ namespace LLD
 			// Unserialize
 
 			try {
-				string strType;
+				std::string strType;
 				ssKey >> strType;
 				if (strType == "blockindex" && !fRequestShutdown)
 				{
@@ -597,14 +597,14 @@ namespace LLD
 				
 			/** Add the Pending Checkpoint into the Blockchain. **/
 			if(!pindex->pprev || Core::HardenCheckpoint(pindex, true))
-				pindex->PendingCheckpoint = make_pair(pindex->nHeight, pindex->GetBlockHash());
+				pindex->PendingCheckpoint = std::make_pair(pindex->nHeight, pindex->GetBlockHash());
 			else
 				pindex->PendingCheckpoint = pindex->pprev->PendingCheckpoint;
 	
 			/** Exit the Loop on the Best Block. **/
 			if(pindex->GetBlockHash() == Core::hashBestChain)
 			{
-				printf("LoadBlockIndex(): hashBestChain=%s  height=%d  trust=%"PRIu64"\n", Core::hashBestChain.ToString().substr(0,20).c_str(), Core::nBestHeight, Core::nBestChainTrust);
+				printf("LoadBlockIndex(): hashBestChain=%s  height=%d  trust=%d PRIu64 \n", Core::hashBestChain.ToString().substr(0,20).c_str(), Core::nBestHeight, Core::nBestChainTrust);
 				break;
 			}
 			
@@ -638,7 +638,7 @@ namespace LLD
 		}
 		
 		
-		map<pair<unsigned int, unsigned int>, Core::CBlockIndex*> mapBlockPos;
+		std::map<std::pair<unsigned int, unsigned int>, Core::CBlockIndex*> mapBlockPos;
 		for (Core::CBlockIndex* pindex = Core::pindexBest; pindex && pindex->pprev && nCheckDepth > 0; pindex = pindex->pprev)
 		{
 			if (pindex->nHeight < Core::nBestHeight - nCheckDepth)
@@ -657,7 +657,7 @@ namespace LLD
 			// check level 2: verify transaction index validity
 			if (nCheckLevel>1)
 			{
-				pair<unsigned int, unsigned int> pos = make_pair(pindex->nFile, pindex->nBlockPos);
+				std::pair<unsigned int, unsigned int> pos = std::make_pair(pindex->nFile, pindex->nBlockPos);
 				mapBlockPos[pos] = pindex;
 				BOOST_FOREACH(const Core::CTransaction &tx, block.vtx)
 				{
@@ -690,7 +690,7 @@ namespace LLD
 							{
 								if (!txpos.IsNull())
 								{
-									pair<unsigned int, unsigned int> posFind = make_pair(txpos.nFile, txpos.nBlockPos);
+									std::pair<unsigned int, unsigned int> posFind = std::make_pair(txpos.nFile, txpos.nBlockPos);
 									if (!mapBlockPos.count(posFind))
 									{
 										printf("LoadBlockIndex(): *** found bad spend at %d, hashBlock=%s, hashTx=%s\n", pindex->nHeight, pindex->GetBlockHash().ToString().c_str(), hashTx.ToString().c_str());

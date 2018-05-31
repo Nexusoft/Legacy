@@ -17,8 +17,6 @@
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 
-using namespace std;
-using namespace boost;
 
 namespace Core
 {
@@ -29,7 +27,7 @@ namespace Core
 
 		LOCK(cs);
 		vtxid.reserve(mapTx.size());
-		for (map<uint512, CTransaction>::iterator mi = mapTx.begin(); mi != mapTx.end(); ++mi)
+		for (std::map<uint512, CTransaction>::iterator mi = mapTx.begin(); mi != mapTx.end(); ++mi)
 			vtxid.push_back((*mi).first);
 	}
 
@@ -60,7 +58,7 @@ namespace Core
 
 		mapOrphanTransactions[hash] = pvMsg;
 		BOOST_FOREACH(const CTxIn& txin, tx.vin)
-			mapOrphanTransactionsByPrev[txin.prevout.hash].insert(make_pair(hash, pvMsg));
+			mapOrphanTransactionsByPrev[txin.prevout.hash].insert(std::make_pair(hash, pvMsg));
 
 		printf("stored orphan tx %s (mapsz %u)\n", hash.ToString().substr(0,10).c_str(),
 			mapOrphanTransactions.size());
@@ -91,7 +89,7 @@ namespace Core
 		{
 			// Evict a random orphan:
 			uint512 randomhash = GetRand512();
-			map<uint512, CDataStream*>::iterator it = mapOrphanTransactions.lower_bound(randomhash);
+			std::map<uint512, CDataStream*>::iterator it = mapOrphanTransactions.lower_bound(randomhash);
 			if (it == mapOrphanTransactions.end())
 				it = mapOrphanTransactions.begin();
 			EraseOrphanTx(it->first);
@@ -177,7 +175,7 @@ namespace Core
 		{
 			const CTxOut& prev = GetOutputFor(vin[i], mapInputs);
 
-			vector<vector<unsigned char> > vSolutions;
+			std::vector<std::vector<unsigned char> > vSolutions;
 			Wallet::TransactionType whichType;
 			// get the scriptPubKey corresponding to this input:
 			const Wallet::CScript& prevScript = prev.scriptPubKey;
@@ -192,7 +190,7 @@ namespace Core
 			// be quick, because if there are any operations
 			// beside "push data" in the scriptSig the
 			// IsStandard() call returns false
-			vector<vector<unsigned char> > stack;
+			std::vector<std::vector<unsigned char> > stack;
 			if (!EvalScript(stack, vin[i].scriptSig, *this, i, 0))
 				return false;
 
@@ -201,7 +199,7 @@ namespace Core
 				if (stack.empty())
 					return false;
 				Wallet::CScript subscript(stack.back().begin(), stack.back().end());
-				vector<vector<unsigned char> > vSolutions2;
+				std::vector<std::vector<unsigned char> > vSolutions2;
 				Wallet::TransactionType whichType2;
 				if (!Solver(subscript, whichType2, vSolutions2))
 					return false;
@@ -283,7 +281,7 @@ namespace Core
 		}
 
 		// Is the tx in a block that's in the main chain
-		map<uint1024, CBlockIndex*>::iterator mi = mapBlockIndex.find(hashBlock);
+		std::map<uint1024, CBlockIndex*>::iterator mi = mapBlockIndex.find(hashBlock);
 		if (mi == mapBlockIndex.end())
 			return 0;
 		CBlockIndex* pindex = (*mi).second;
@@ -332,7 +330,7 @@ namespace Core
 		}
 
 		// Check for duplicate inputs
-		set<COutPoint> vInOutPoints;
+		std::set<COutPoint> vInOutPoints;
 		BOOST_FOREACH(const CTxIn& txin, vin)
 		{
 				
@@ -424,7 +422,7 @@ namespace Core
 		if (fCheckInputs)
 		{
 			MapPrevTx mapInputs;
-			map<uint512, CTxIndex> mapUnused;
+			std::map<uint512, CTxIndex> mapUnused;
 			bool fInvalid = false;
 			if (!tx.FetchInputs(indexdb, mapUnused, false, false, mapInputs, fInvalid))
 			{
@@ -553,7 +551,7 @@ namespace Core
 			return 0;
 
 		// Find the block it claims to be in
-		map<uint1024, CBlockIndex*>::iterator mi = mapBlockIndex.find(hashBlock);
+		std::map<uint1024, CBlockIndex*>::iterator mi = mapBlockIndex.find(hashBlock);
 		if (mi == mapBlockIndex.end())
 			return 0;
 		CBlockIndex* pindex = (*mi).second;
@@ -577,7 +575,7 @@ namespace Core
 	{
 		if (!(IsCoinBase() || IsCoinStake()))
 			return 0;
-		return max(0, (nCoinbaseMaturity + 20) - GetDepthInMainChain());
+		return std::max(0, (nCoinbaseMaturity + 20) - GetDepthInMainChain());
 	}
 
 
@@ -608,7 +606,7 @@ namespace Core
 		if (!block.ReadFromDisk(pos.nFile, pos.nBlockPos, false))
 			return 0;
 		// Find the block in the index
-		map<uint1024, CBlockIndex*>::iterator mi = mapBlockIndex.find(block.GetHash());
+		std::map<uint1024, CBlockIndex*>::iterator mi = mapBlockIndex.find(block.GetHash());
 		if (mi == mapBlockIndex.end())
 			return 0;
 		CBlockIndex* pindex = (*mi).second;
@@ -673,7 +671,7 @@ namespace Core
 	}
 
 
-	bool CTransaction::FetchInputs(LLD::CIndexDB& indexdb, const map<uint512, CTxIndex>& mapTestPool,
+	bool CTransaction::FetchInputs(LLD::CIndexDB& indexdb, const std::map<uint512, CTxIndex>& mapTestPool,
 								   bool fBlock, bool fMiner, MapPrevTx& inputsRet, bool& fInvalid)
 	{
 		// FetchInputs can return false either because we just haven't seen some inputs
@@ -790,7 +788,7 @@ namespace Core
 	}
 
 	bool CTransaction::ConnectInputs(LLD::CIndexDB& indexdb, MapPrevTx inputs,
-									 map<uint512, CTxIndex>& mapTestPool, const CDiskTxPos& posThisTx,
+									 std::map<uint512, CTxIndex>& mapTestPool, const CDiskTxPos& posThisTx,
 									 const CBlockIndex* pindexBlock, bool fBlock, bool fMiner)
 	{
 		// Take over previous transactions' spent pointers

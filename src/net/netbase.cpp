@@ -15,7 +15,6 @@
 
 #include "../util/strlcpy.h"
 
-using namespace std;
 
 namespace Net
 {

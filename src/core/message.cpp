@@ -17,20 +17,18 @@
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 
-using namespace std;
-using namespace boost;
 
 
 namespace Core
 {
 
-	string strMintMessage = _("Info: Minting suspended due to locked wallet."); 
-	string strMintWarning;
+	std::string strMintMessage = _("Info: Minting suspended due to locked wallet."); 
+	std::string strMintWarning;
 
-	string GetWarnings(string strFor)
+	std::string GetWarnings(std::string strFor)
 	{
-		string strStatusBar;
-		string strRPC;
+		std::string strStatusBar;
+		std::string strRPC;
 		if (GetBoolArg("-testsafemode"))
 			strRPC = "test";
 
@@ -91,9 +89,9 @@ namespace Core
 
 
 	/* Static Reference for now. */
-	bool ProcessMessage(Net::CNode* pfrom, string strCommand, CDataStream& vRecv)
+	bool ProcessMessage(Net::CNode* pfrom, std::string strCommand, CDataStream& vRecv)
 	{
-		static map<Net::CService, vector<unsigned char> > mapReuseKey;
+		static std::map<Net::CService, std::vector<unsigned char> > mapReuseKey;
 		RandAddSeedPerfmon();
 		if(GetArg("-verbose", 0) >= 3) {
 			printf("%s ", DateTimeStrFormat(GetUnifiedTimestamp()).c_str());
@@ -163,7 +161,7 @@ namespace Core
 
 			// Change version
 			pfrom->PushMessage("verack");
-			pfrom->vSend.SetVersion(min(pfrom->nVersion, PROTOCOL_VERSION));
+			pfrom->vSend.SetVersion(std::min(pfrom->nVersion, PROTOCOL_VERSION));
 
 			if (!pfrom->fInbound)
 			{
@@ -219,13 +217,13 @@ namespace Core
 
 		else if (strCommand == "verack")
 		{
-			pfrom->vRecv.SetVersion(min(pfrom->nVersion, PROTOCOL_VERSION));
+			pfrom->vRecv.SetVersion(std::min(pfrom->nVersion, PROTOCOL_VERSION));
 		}
 
 
 		else if (strCommand == "addr")
 		{
-			vector<Net::CAddress> vAddr;
+			std::vector<Net::CAddress> vAddr;
 			vRecv >> vAddr;
 
 			// Don't want addr from older versions unless seeding
@@ -236,7 +234,7 @@ namespace Core
 				pfrom->Misbehaving(20);
 				return error("message addr size() = %d", vAddr.size());
 			}
-
+			
 			// Store the new addresses
 			int64 nNow = GetUnifiedTimestamp();
 			int64 nSince = nNow - 10 * 60 * 60;
@@ -263,17 +261,17 @@ namespace Core
 						uint64 hashAddr = addr.GetHash();
 						uint512 hashRand = hashSalt ^ (hashAddr << 32) ^ ((GetUnifiedTimestamp() + hashAddr)/ (24*60*60));
 						hashRand = SK512(BEGIN(hashRand), END(hashRand));
-						multimap<uint512, Net::CNode*> mapMix;
+						std::multimap<uint512, Net::CNode*> mapMix;
 						BOOST_FOREACH(Net::CNode* pnode, Net::vNodes)
 						{
 							unsigned int nPointer;
 							memcpy(&nPointer, &pnode, sizeof(nPointer));
 							uint512 hashKey = hashRand ^ nPointer;
 							hashKey = SK512(BEGIN(hashKey), END(hashKey));
-							mapMix.insert(make_pair(hashKey, pnode));
+							mapMix.insert(std::make_pair(hashKey, pnode));
 						}
 						int nRelayNodes = 2;
-						for (multimap<uint512, Net::CNode*>::iterator mi = mapMix.begin(); mi != mapMix.end() && nRelayNodes-- > 0; ++mi)
+						for (std::multimap<uint512, Net::CNode*>::iterator mi = mapMix.begin(); mi != mapMix.end() && nRelayNodes-- > 0; ++mi)
 							((*mi).second)->PushAddress(addr);
 					}
 				}
@@ -286,7 +284,7 @@ namespace Core
 
 		else if (strCommand == "inv")
 		{
-			vector<Net::CInv> vInv;
+			std::vector<Net::CInv> vInv;
 			vRecv >> vInv;
 			if (vInv.size() > 50000)
 			{
@@ -337,7 +335,7 @@ namespace Core
 
 		else if (strCommand == "getdata")
 		{
-			vector<Net::CInv> vInv;
+			std::vector<Net::CInv> vInv;
 			vRecv >> vInv;
 			if (vInv.size() > 50000)
 			{
@@ -356,7 +354,7 @@ namespace Core
 				if (inv.type == Net::MSG_BLOCK)
 				{
 					// Send block from disk
-					map<uint1024, CBlockIndex*>::iterator mi = mapBlockIndex.find(inv.hash);
+					std::map<uint1024, CBlockIndex*>::iterator mi = mapBlockIndex.find(inv.hash);
 					if (mi != mapBlockIndex.end())
 					{
 						CBlock block;
@@ -374,7 +372,7 @@ namespace Core
 							// Nexus: send latest proof-of-work block to allow the
 							// download node to accept as orphan (proof-of-stake 
 							// block might be rejected by stake connection check)
-							vector<Net::CInv> vInv;
+							std::vector<Net::CInv> vInv;
 							vInv.push_back(Net::CInv(Net::MSG_BLOCK, GetLastBlockIndex(pindexBest, false)->GetBlockHash()));
 							pfrom->PushMessage("inv", vInv);
 							pfrom->hashContinue = 0;
@@ -386,7 +384,7 @@ namespace Core
 					// Send stream from relay memory
 					{
 						LOCK(Net::cs_mapRelay);
-						map<Net::CInv, CDataStream>::iterator mi = Net::mapRelay.find(inv);
+						std::map<Net::CInv, CDataStream>::iterator mi = Net::mapRelay.find(inv);
 						if (mi != Net::mapRelay.end())
 							pfrom->PushMessage(inv.GetCommand().c_str(), (*mi).second);
 					}
@@ -457,7 +455,7 @@ namespace Core
 			if (locator.IsNull())
 			{
 				// If locator is null, return the hashStop block
-				map<uint1024, CBlockIndex*>::iterator mi = mapBlockIndex.find(hashStop);
+				std::map<uint1024, CBlockIndex*>::iterator mi = mapBlockIndex.find(hashStop);
 				if (mi == mapBlockIndex.end())
 					return true;
 				pindex = (*mi).second;
@@ -470,7 +468,7 @@ namespace Core
 					pindex = pindex->pnext;
 			}
 
-			vector<CBlock> vHeaders;
+			std::vector<CBlock> vHeaders;
 			int nLimit = 2000;
 			
 			if(GetArg("-verbose", 0) >= 3)
@@ -488,8 +486,8 @@ namespace Core
 
 		else if (strCommand == "tx")
 		{
-			vector<uint512> vWorkQueue;
-			vector<uint512> vEraseQueue;
+			std::vector<uint512> vWorkQueue;
+			std::vector<uint512> vEraseQueue;
 			CDataStream vMsg(vRecv);
 			LLD::CIndexDB indexdb("r");
 			CTransaction tx;
@@ -511,7 +509,7 @@ namespace Core
 				for (unsigned int i = 0; i < vWorkQueue.size(); i++)
 				{
 					uint512 hashPrev = vWorkQueue[i];
-					for (map<uint512, CDataStream*>::iterator mi = mapOrphanTransactionsByPrev[hashPrev].begin();
+					for (std::map<uint512, CDataStream*>::iterator mi = mapOrphanTransactionsByPrev[hashPrev].begin();
 						 mi != mapOrphanTransactionsByPrev[hashPrev].end();
 						 ++mi)
 					{
@@ -582,7 +580,7 @@ namespace Core
 		else if (strCommand == "getaddr")
 		{
 			pfrom->vAddrToSend.clear();
-			vector<Net::CAddress> vAddr = Net::addrman.GetAddr();
+			std::vector<Net::CAddress> vAddr = Net::addrman.GetAddr();
 			BOOST_FOREACH(const Net::CAddress &addr, vAddr)
 				pfrom->PushAddress(addr);
 		}
@@ -644,8 +642,8 @@ namespace Core
 		static int64 nTimeLastPrintMessageStart = 0;
 		if (GetArg("-verbose", 0) >= 3 && nTimeLastPrintMessageStart + 30 < GetUnifiedTimestamp())
 		{
-			string strMessageStart((const char *)pchMessageStart, sizeof(pchMessageStart));
-			vector<unsigned char> vchMessageStart(strMessageStart.begin(), strMessageStart.end());
+			std::string strMessageStart((const char *)pchMessageStart, sizeof(pchMessageStart));
+			std::vector<unsigned char> vchMessageStart(strMessageStart.begin(), strMessageStart.end());
 			printf("ProcessMessages : AdjustedTime=%" PRI64d " MessageStart=%s\n", GetUnifiedTimestamp(), HexStr(vchMessageStart).c_str());
 			nTimeLastPrintMessageStart = GetUnifiedTimestamp();
 		}
@@ -668,7 +666,7 @@ namespace Core
 			vRecv.erase(vRecv.begin(), pstart);
 
 			// Read header
-			vector<char> vHeaderSave(vRecv.begin(), vRecv.begin() + nHeaderSize);
+			std::vector<char> vHeaderSave(vRecv.begin(), vRecv.begin() + nHeaderSize);
 			Net::CMessageHeader hdr;
 			vRecv >> hdr;
 			if (!hdr.IsValid())
@@ -676,7 +674,7 @@ namespace Core
 				printf("\n\nPROCESSMESSAGE: ERRORS IN HEADER %s\n\n\n", hdr.GetCommand().c_str());
 				continue;
 			}
-			string strCommand = hdr.GetCommand();
+			std::string strCommand = hdr.GetCommand();
 
 			// Message size
 			unsigned int nMessageSize = hdr.nMessageSize;
@@ -801,7 +799,7 @@ namespace Core
 			//
 			if (fSendTrickle)
 			{
-				vector<Net::CAddress> vAddr;
+				std::vector<Net::CAddress> vAddr;
 				vAddr.reserve(pto->vAddrToSend.size());
 				BOOST_FOREACH(const Net::CAddress& addr, pto->vAddrToSend)
 				{
@@ -826,8 +824,8 @@ namespace Core
 			//
 			// Message: inventory
 			//
-			vector<Net::CInv> vInv;
-			vector<Net::CInv> vInvWait;
+			std::vector<Net::CInv> vInv;
+			std::vector<Net::CInv> vInvWait;
 			{
 				LOCK(pto->cs_inventory);
 				vInv.reserve(pto->vInventoryToSend.size());
@@ -884,7 +882,7 @@ namespace Core
 			//
 			// Message: getdata
 			//
-			vector<Net::CInv> vGetData;
+			std::vector<Net::CInv> vGetData;
 			int64 nNow = GetUnifiedTimestamp() * 1000000;
 			LLD::CIndexDB CIndexDB("r");
 			while (!pto->mapAskFor.empty() && (*pto->mapAskFor.begin()).first <= nNow)

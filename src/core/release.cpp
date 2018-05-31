@@ -8,7 +8,6 @@
 
 #include "core.h"
 
-using namespace std;
 namespace Core
 {
 	/** These values reflect the Three Decay Equations.
@@ -88,8 +87,8 @@ namespace Core
 			return GetSubsidy(1, nType);
 			
 			
-		int64 nBlockTime = max(pindexFirst->GetBlockTime() - pindexLast->GetBlockTime(), (int64) 1 );
-		int64 nMinutes   = ((pindex->nVersion >= 3) ? GetChainAge(pindexFirst->GetBlockTime()) : min(pindexFirst->nChannelHeight,  GetChainAge(pindexFirst->GetBlockTime())));
+		int64 nBlockTime = std::max(pindexFirst->GetBlockTime() - pindexLast->GetBlockTime(), (int64) 1 );
+		int64 nMinutes   = ((pindex->nVersion >= 3) ? GetChainAge(pindexFirst->GetBlockTime()) : std::min(pindexFirst->nChannelHeight,  GetChainAge(pindexFirst->GetBlockTime())));
 
 		
 		/** Block Version 3 Coinbase Tx Calculations. **/
@@ -112,11 +111,11 @@ namespace Core
 			return GetFractionalSubsidy(nMinutes, nType, 2.5);
 
 					
-		double nFraction = min(nBlockTime / 60.0, 2.5);
+		double nFraction = std::min(nBlockTime / 60.0, 2.5);
 		if(pindexFirst->nReleasedReserve[nType] == 0 && ReleaseAvailable(pindex, nChannel))
 			return GetFractionalSubsidy(nMinutes, nType, nFraction);
 			
-		return min(GetFractionalSubsidy(nMinutes, nType, nFraction), pindexFirst->nReleasedReserve[nType]);
+		return std::min(GetFractionalSubsidy(nMinutes, nType, nFraction), pindexFirst->nReleasedReserve[nType]);
 	}
 
 

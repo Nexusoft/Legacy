@@ -20,11 +20,10 @@
 
 // using namespace boost::asio;
 using namespace json_spirit;
-using namespace std;
 
 namespace Net
 {
-	extern Object JSONRPCError(int code, const string& message);
+	extern Object JSONRPCError(int code, const std::string& message);
 
 	class CTxDump
 	{
@@ -47,7 +46,7 @@ namespace Net
 	Value rescan(const Array& params, bool fHelp)
 	{
 		if (fHelp || params.size() != 0)
-			throw runtime_error(
+			throw std::runtime_error(
 				"rescan\n"
 				"Rescans the database for relevant wallet transactions.");
 				
@@ -59,12 +58,12 @@ namespace Net
 	Value importprivkey(const Array& params, bool fHelp)
 	{
 		if (fHelp || params.size() < 1 || params.size() > 2)
-			throw runtime_error(
+			throw std::runtime_error(
 				"importprivkey <PrivateKey> [label]\n"
 				"Adds a private key (as returned by dumpprivkey) to your wallet.");
 
-		string strSecret = params[0].get_str();
-		string strLabel = "";
+		std::string strSecret = params[0].get_str();
+		std::string strLabel = "";
 		if (params.size() > 1)
 			strLabel = params[1].get_str();
 		Wallet::NexusSecret vchSecret;
@@ -100,11 +99,11 @@ namespace Net
 	Value dumpprivkey(const Array& params, bool fHelp)
 	{
 		if (fHelp || params.size() != 1)
-			throw runtime_error(
+			throw std::runtime_error(
 				"dumpprivkey <NexusAddress>\n"
 				"Reveals the private key corresponding to <NexusAddress>.");
 
-		string strAddress = params[0].get_str();
+		std::string strAddress = params[0].get_str();
 		Wallet::NexusAddress address;
 		if (!address.SetString(strAddress))
 			throw JSONRPCError(-5, "Invalid Nexus address");
@@ -124,7 +123,7 @@ namespace Net
 	{
 		if (fHelp || params.size() < 1)
 		{
-			throw runtime_error(
+			throw std::runtime_error(
 				"importkeys\n"
 				"The account and keypair need to \n"
 				"You need to list the imported keys in a JSON array of {[account],[privatekey]}\n");
@@ -184,7 +183,7 @@ namespace Net
 	Value exportkeys(const Array& params, bool fHelp)
 	{
 		if (fHelp || params.size() != 0)
-			throw runtime_error(
+			throw std::runtime_error(
 				"exportkeys\n"
 				"This command dumps the private keys and account names of all unspent outputs.\n"
 				"This allows the easy dumping and importing of all private keys on the system\n");
@@ -196,14 +195,14 @@ namespace Net
 			throw JSONRPCError(-102, "Wallet is unlocked for minting only.");
 		
 		/** Compile the list of available Nexus Addresses and their according Balances. **/
-		map<Wallet::NexusAddress, int64> mapAddresses;
+		std::map<Wallet::NexusAddress, int64> mapAddresses;
 		if(!pwalletMain->AvailableAddresses((unsigned int)GetUnifiedTimestamp(), mapAddresses))
 			throw JSONRPCError(-3, "Error Extracting the Addresses from Wallet File. Please Try Again.");
 		
 		/** Loop all entries of the memory map to compile the list of account names and their addresses. 
 			JSON object format is a reflection of the import and export options. **/
 		Object entry;
-		for (map<Wallet::NexusAddress, int64>::iterator it = mapAddresses.begin(); it != mapAddresses.end(); ++it)
+		for (std::map<Wallet::NexusAddress, int64>::iterator it = mapAddresses.begin(); it != mapAddresses.end(); ++it)
 		{
 			/** Extract the Secret key from the Wallet. **/
 			Wallet::CSecret vchSecret;
@@ -212,14 +211,14 @@ namespace Net
 				throw JSONRPCError(-4,"Private key for address " + it->first.ToString() + " is not known");
 			
 			/** Extract the account name from the address book. **/
-			string strAccount;
+			std::string strAccount;
 			if(!pwalletMain->mapAddressBook.count(it->first))
 				strAccount = "Default";
 			else
 				strAccount = pwalletMain->mapAddressBook[it->first];
 			
 			/** Compile the Secret Key and account information into a listed pair. **/
-			string strSecret = Wallet::NexusSecret(vchSecret, fCompressed).ToString();
+			std::string strSecret = Wallet::NexusSecret(vchSecret, fCompressed).ToString();
 			entry.push_back(Pair(strAccount, strSecret));
 		}
 

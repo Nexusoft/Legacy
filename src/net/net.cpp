@@ -25,8 +25,6 @@
 #include <miniupnpc/upnperrors.h>
 #endif
 
-using namespace std;
-using namespace boost;
 
 boost::array<int, THREAD_MAX> vnThreadsRunning;
 namespace Net
@@ -59,15 +57,15 @@ namespace Net
 	static SOCKET hListenSocket = INVALID_SOCKET;
 	CAddrMan addrman;
 
-	vector<CNode*> vNodes;
+	std::vector<CNode*> vNodes;
 	CCriticalSection cs_vNodes;
-	map<CInv, CDataStream> mapRelay;
-	deque<pair<int64, CInv> > vRelayExpiration;
+	std::map<CInv, CDataStream> mapRelay;
+	std::deque<std::pair<int64, CInv> > vRelayExpiration;
 	CCriticalSection cs_mapRelay;
-	map<CInv, int64> mapAlreadyAskedFor;
+	std::map<CInv, int64> mapAlreadyAskedFor;
 
 
-	set<CNetAddr> setservAddNodeAddresses;
+	std::set<CNetAddr> setservAddNodeAddresses;
 	CCriticalSection cs_setservAddNodeAddresses;
 
 	static CSemaphore *semOutbound = NULL;
@@ -91,7 +89,7 @@ namespace Net
 
 
 
-	bool RecvLine(SOCKET hSocket, string& strLine)
+	bool RecvLine(SOCKET hSocket, std::string& strLine)
 	{
 		strLine = "";
 		loop() {
@@ -153,7 +151,7 @@ namespace Net
 
 		send(hSocket, pszGet, strlen(pszGet), MSG_NOSIGNAL);
 
-		string strLine;
+		std::string strLine;
 		while (RecvLine(hSocket, strLine))
 		{
 			if (strLine.empty()) // HTTP response is separated from headers by blank line
@@ -166,14 +164,14 @@ namespace Net
 					}
 					if (pszKeyword == NULL)
 						break;
-					if (strLine.find(pszKeyword) != string::npos)
+					if (strLine.find(pszKeyword) != std::string::npos)
 					{
 						strLine = strLine.substr(strLine.find(pszKeyword) + strlen(pszKeyword));
 						break;
 					}
 				}
 				closesocket(hSocket);
-				if (strLine.find("<") != string::npos)
+				if (strLine.find("<") != std::string::npos)
 					strLine = strLine.substr(0, strLine.find("<"));
 				strLine = strLine.substr(strspn(strLine.c_str(), " \t\n\r"));
 				while (strLine.size() > 0 && isspace(strLine[strLine.size()-1]))
@@ -397,7 +395,7 @@ namespace Net
 		CAddress addrMe = (fUseProxy || !addrLocalHost.IsRoutable() ? CAddress(CService("0.0.0.0",0)) : addrLocalHost);
 		RAND_bytes((unsigned char*)&nLocalHostNonce, sizeof(nLocalHostNonce));
 		PushMessage("version", PROTOCOL_VERSION, nLocalServices, nTime, addrYou, addrMe,
-					nLocalHostNonce, FormatSubVersion(CLIENT_NAME, DATABASE_VERSION, std::vector<string>()), Core::nBestHeight);
+					nLocalHostNonce, FormatSubVersion(CLIENT_NAME, DATABASE_VERSION, std::vector<std::string>()), Core::nBestHeight);
 	}
 
 
@@ -509,7 +507,7 @@ namespace Net
 	void ThreadSocketHandler2(void* parg)
 	{
 		printf("ThreadSocketHandler started\n");
-		list<CNode*> vNodesDisconnected;
+		std::list<CNode*> vNodesDisconnected;
 		unsigned int nPrevNodeCount = 0;
 
 		loop() {
@@ -521,7 +519,7 @@ namespace Net
 			{
 				LOCK(cs_vNodes);
 				// Disconnect unused nodes
-				vector<CNode*> vNodesCopy = vNodes;
+				std::vector<CNode*> vNodesCopy = vNodes;
 				BOOST_FOREACH(CNode* pnode, vNodesCopy)
 				{
 					if (pnode->fDisconnect ||
@@ -539,7 +537,7 @@ namespace Net
 						pnode->Cleanup();
 
 						// hold in disconnected pool until all refs are released
-						pnode->nReleaseTime = max(pnode->nReleaseTime, GetUnifiedTimestamp() + 15 * 60);
+						pnode->nReleaseTime = std::max(pnode->nReleaseTime, GetUnifiedTimestamp() + 15 * 60);
 						if (pnode->fNetworkNode || pnode->fInbound)
 							pnode->Release();
 						vNodesDisconnected.push_back(pnode);
@@ -547,7 +545,7 @@ namespace Net
 				}
 
 				// Delete disconnected nodes
-				list<CNode*> vNodesDisconnectedCopy = vNodesDisconnected;
+				std::list<CNode*> vNodesDisconnectedCopy = vNodesDisconnected;
 				BOOST_FOREACH(CNode* pnode, vNodesDisconnectedCopy)
 				{
 					// wait until threads are done using it
@@ -603,7 +601,7 @@ namespace Net
 
 			if(hListenSocket != INVALID_SOCKET)
 				FD_SET(hListenSocket, &fdsetRecv);
-			hSocketMax = max(hSocketMax, hListenSocket);
+			hSocketMax = std::max(hSocketMax, hListenSocket);
 			{
 				LOCK(cs_vNodes);
 				BOOST_FOREACH(CNode* pnode, vNodes)
@@ -612,7 +610,7 @@ namespace Net
 						continue;
 					FD_SET(pnode->hSocket, &fdsetRecv);
 					FD_SET(pnode->hSocket, &fdsetError);
-					hSocketMax = max(hSocketMax, pnode->hSocket);
+					hSocketMax = std::max(hSocketMax, pnode->hSocket);
 					{
 						TRY_LOCK(pnode->cs_vSend, lockSend);
 						if (lockSend && !pnode->vSend.empty())
@@ -696,7 +694,7 @@ namespace Net
 			//
 			// Service each socket
 			//
-			vector<CNode*> vNodesCopy;
+			std::vector<CNode*> vNodesCopy;
 			{
 				LOCK(cs_vNodes);
 				vNodesCopy = vNodes;
@@ -913,7 +911,7 @@ namespace Net
 				}
 			}
 
-			string strDesc = "Nexus " + FormatFullVersion();
+			std::string strDesc = "Nexus " + FormatFullVersion();
 		#ifndef UPNPDISCOVER_SUCCESS
 				/* miniupnpc 1.5 */
 				r = UPNP_AddPortMapping(urls.controlURL, data.first.servicetype,
@@ -1041,8 +1039,8 @@ namespace Net
 				if (fTestNet && strDNSSeed[seed_idx][1][0] != 't') continue;
 				if ((!fTestNet) && strDNSSeed[seed_idx][1][0] == 't') continue;
 
-				vector<CNetAddr> vaddr;
-				vector<CAddress> vAdd;
+				std::vector<CNetAddr> vaddr;
+				std::vector<CAddress> vAdd;
 				if (LookupHost(strDNSSeed[seed_idx][1], vaddr))
 				{
 					BOOST_FOREACH(CNetAddr& ip, vaddr)
@@ -1122,7 +1120,7 @@ namespace Net
 		{
 			for (int64 nLoop = 0;; nLoop++)
 			{
-				BOOST_FOREACH(string strAddr, mapMultiArgs["-connect"])
+				BOOST_FOREACH(std::string strAddr, mapMultiArgs["-connect"])
 				{
 					CAddress addr(CService(strAddr, GetDefaultPort(), fAllowDNS));
 					if (addr.IsValid())
@@ -1160,7 +1158,7 @@ namespace Net
 			// Only connect to one address per a.b.?.? range.
 			// Do this here so we don't have to critsect vNodes inside mapAddresses critsect.
 			int nOutbound = 0;
-			set<vector<unsigned char> > setConnected;
+			std::set<std::vector<unsigned char> > setConnected;
 			{
 				LOCK(cs_vNodes);
 				BOOST_FOREACH(CNode* pnode, vNodes) {
@@ -1175,7 +1173,7 @@ namespace Net
 			int nTries = 0;
 			loop() {
 				// use an nUnkBias between 10 (no outgoing connections) and 90 (8 outgoing connections)
-				CAddress addr = addrman.Select(10 + min(nOutbound, 8) * 10);
+				CAddress addr = addrman.Select(10 + std::min(nOutbound, 8) * 10);
 
 				// if we selected an invalid address, restart
 				if (!addr.IsIPv4() || !addr.IsValid() || addr == addrLocalHost) // || setConnected.count(addr.GetGroup()) )
@@ -1228,10 +1226,10 @@ namespace Net
 		if (mapArgs.count("-addnode") == 0)
 			return;
 
-		vector<vector<CService> > vservAddressesToAdd(0);
-		BOOST_FOREACH(string& strAddNode, mapMultiArgs["-addnode"])
+		std::vector<std::vector<CService> > vservAddressesToAdd(0);
+		BOOST_FOREACH(std::string& strAddNode, mapMultiArgs["-addnode"])
 		{
-			vector<CService> vservNode(0);
+			std::vector<CService> vservNode(0);
 			if(Lookup(strAddNode.c_str(), vservNode, GetDefaultPort(), fAllowDNS, 0))
 			{
 				vservAddressesToAdd.push_back(vservNode);
@@ -1243,13 +1241,13 @@ namespace Net
 			}
 		}
 		loop() {
-			vector<vector<CService> > vservConnectAddresses = vservAddressesToAdd;
+			std::vector<std::vector<CService> > vservConnectAddresses = vservAddressesToAdd;
 			// Attempt to connect to each IP for each addnode entry until at least one is successful per addnode entry
 			// (keeping in mind that addnode entries can have many IPs if fAllowDNS)
 			{
 				LOCK(cs_vNodes);
 				BOOST_FOREACH(CNode* pnode, vNodes)
-					for (vector<vector<CService> >::iterator it = vservConnectAddresses.begin(); it != vservConnectAddresses.end(); it++)
+					for (std::vector<std::vector<CService> >::iterator it = vservConnectAddresses.begin(); it != vservConnectAddresses.end(); it++)
 						BOOST_FOREACH(CService& addrNode, *(it))
 							if (pnode->addr == addrNode)
 							{
@@ -1258,7 +1256,7 @@ namespace Net
 								break;
 							}
 			}
-			BOOST_FOREACH(vector<CService>& vserv, vservConnectAddresses)
+			BOOST_FOREACH(std::vector<CService>& vserv, vservConnectAddresses)
 			{
 				semOutbound->wait();
 				OpenNetworkConnection(CAddress(*(vserv.begin())));
@@ -1344,7 +1342,7 @@ namespace Net
 		SetThreadPriority(THREAD_PRIORITY_BELOW_NORMAL);
 		while (!fShutdown)
 		{
-			vector<CNode*> vNodesCopy;
+			std::vector<CNode*> vNodesCopy;
 			{
 				LOCK(cs_vNodes);
 				vNodesCopy = vNodes;
@@ -1403,7 +1401,7 @@ namespace Net
 
 
 
-	bool BindListenPort(string& strError)
+	bool BindListenPort(std::string& strError)
 	{
 		strError = "";
 		int nOne = 1;
@@ -1487,7 +1485,7 @@ namespace Net
 	{
 		if (semOutbound == NULL) {
 			// initialize semaphore
-			int nMaxOutbound = min(MAX_OUTBOUND_CONNECTIONS, (int)GetArg("-maxconnections", 125));
+			int nMaxOutbound = std::min(MAX_OUTBOUND_CONNECTIONS, (int)GetArg("-maxconnections", 125));
 			semOutbound = new CSemaphore(nMaxOutbound);
 		}
 

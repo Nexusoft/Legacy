@@ -12,7 +12,6 @@
 #include <string>
 #include <vector>
 
-using namespace std;
 
 
 /** Flag Declarations **/
@@ -138,7 +137,7 @@ static const std::vector<std::string> DNS_SeedNodes_LISPnet =
 };
 
 /** Seed Nodes for Unified Time. **/
-std::vector<string> SEEDS;
+std::vector<std::string> SEEDS;
 
 
 /** Baseline Maximum Values for Unified Time. **/
@@ -180,7 +179,7 @@ void ThreadUnifiedSamples(void* parg)
 		SEEDS.push_back(SEED_NODES[nIndex].ToStringIP());
 	
 	/* The Entry Client Loop for Core LLP. */
-	string ADDRESS = "";
+	std::string ADDRESS = "";
 	LLP::CoreOutbound SERVER("", strprintf("%u", fLispNet ? LISPNET_CORE_LLP_PORT : (fTestNet ? TESTNET_CORE_LLP_PORT : NEXUS_CORE_LLP_PORT)));
     
     //
