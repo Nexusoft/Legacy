@@ -19,9 +19,6 @@
 #include "sys/stat.h"
 #endif
 
-using namespace std;
-using namespace boost;
-
 
 namespace Wallet
 {
@@ -31,8 +28,8 @@ namespace Wallet
     static bool fDbEnvInit = false;
     bool fDetachDB = false;
     DbEnv dbenv((u_int32_t)0);
-    map<string, int> mapFileUseCount;
-    static map<string, Db*> mapDb;
+    std::map<std::string, int> mapFileUseCount;
+    static std::map<std::string, Db*> mapDb;
 
     static void EnvShutdown()
     {
@@ -83,10 +80,10 @@ namespace Wallet
             {
                 if (fShutdown)
                     return;
-                filesystem::path pathDataDir = GetDataDir();
-                filesystem::path pathLogDir = pathDataDir / "database";
-                filesystem::create_directory(pathLogDir);
-                filesystem::path pathErrorFile = pathDataDir / "db.log";
+                boost::filesystem::path pathDataDir = GetDataDir();
+                boost::filesystem::path pathLogDir = pathDataDir / "database";
+                boost::filesystem::create_directory(pathLogDir);
+                boost::filesystem::path pathErrorFile = pathDataDir / "db.log";
                 printf("dbenv.open LogDir=%s ErrorFile=%s\n", pathLogDir.string().c_str(), pathErrorFile.string().c_str());
 
                 int nDbCache = GetArg("-dbcache", 25);
@@ -110,7 +107,7 @@ namespace Wallet
                                 DB_RECOVER,
                                 S_IRUSR | S_IWUSR);
                 if (ret > 0)
-                    throw runtime_error(strprintf("CDB() : error %d opening database environment", ret));
+                    throw std::runtime_error(strprintf("CDB() : error %d opening database environment", ret));
                 fDbEnvInit = true;
             }
 
@@ -137,10 +134,10 @@ namespace Wallet
                         --mapFileUseCount[strFile];
                     }
                     strFile = "";
-                    throw runtime_error(strprintf("CDB() : can't open database file %s, error %d", pszFile, ret));
+                    throw std::runtime_error(strprintf("CDB() : can't open database file %s, error %d", pszFile, ret));
                 }
 
-                if (fCreate && !Exists(string("version")))
+                if (fCreate && !Exists(std::string("version")))
                 {
                     bool fTmp = fReadOnly;
                     fReadOnly = false;
@@ -181,7 +178,7 @@ namespace Wallet
         }
     }
 
-    void CloseDb(const string& strFile)
+    void CloseDb(const std::string& strFile)
     {
         {
             LOCK(cs_db);
@@ -196,7 +193,7 @@ namespace Wallet
         }
     }
 
-    bool CDB::Rewrite(const string& strFile, const char* pszSkip)
+    bool CDB::Rewrite(const std::string& strFile, const char* pszSkip)
     {
         while (!fShutdown)
         {
@@ -212,7 +209,7 @@ namespace Wallet
 
                     bool fSuccess = true;
                     printf("Rewriting %s...\n", strFile.c_str());
-                    string strFileRes = strFile + ".rewrite";
+                    std::string strFileRes = strFile + ".rewrite";
                     { // surround usage of db with extra {}
                         CDB db(strFile.c_str(), "r");
                         Db* pdbCopy = new Db(&dbenv, 0);
@@ -300,10 +297,10 @@ namespace Wallet
             return;
         {
             LOCK(cs_db);
-            map<string, int>::iterator mi = mapFileUseCount.begin();
+            std::map<std::string, int>::iterator mi = mapFileUseCount.begin();
             while (mi != mapFileUseCount.end())
             {
-                string strFile = (*mi).first;
+                std::string strFile = (*mi).first;
                 int nRefCount = (*mi).second;
                 printf("%s refcount=%d\n", strFile.c_str(), nRefCount);
                 if (nRefCount == 0)
@@ -356,13 +353,13 @@ namespace Wallet
     {
         assert(!Net::fClient);
         txindex.SetNull();
-        return Read(make_pair(string("tx"), hash), txindex);
+        return Read(std::make_pair(std::string("tx"), hash), txindex);
     }
 
     bool CTxDB::UpdateTxIndex(uint512 hash, const Core::CTxIndex& txindex)
     {
         assert(!Net::fClient);
-        return Write(make_pair(string("tx"), hash), txindex);
+        return Write(std::make_pair(std::string("tx"), hash), txindex);
     }
 
     bool CTxDB::AddTxIndex(const Core::CTransaction& tx, const Core::CDiskTxPos& pos, int nHeight)
@@ -372,7 +369,7 @@ namespace Wallet
         // Add to tx index
         uint512 hash = tx.GetHash();
         Core::CTxIndex txindex(pos, tx.vout.size());
-        return Write(make_pair(string("tx"), hash), txindex);
+        return Write(std::make_pair(std::string("tx"), hash), txindex);
     }
 
     bool CTxDB::EraseTxIndex(const Core::CTransaction& tx)
@@ -380,16 +377,16 @@ namespace Wallet
         assert(!Net::fClient);
         uint512 hash = tx.GetHash();
 
-        return Erase(make_pair(string("tx"), hash));
+        return Erase(std::make_pair(std::string("tx"), hash));
     }
 
     bool CTxDB::ContainsTx(uint512 hash)
     {
         assert(!Net::fClient);
-        return Exists(make_pair(string("tx"), hash));
+        return Exists(std::make_pair(std::string("tx"), hash));
     }
 
-    bool CTxDB::ReadOwnerTxes(uint512 hash, int nMinHeight, vector<Core::CTransaction>& vtx)
+    bool CTxDB::ReadOwnerTxes(uint512 hash, int nMinHeight, std::vector<Core::CTransaction>& vtx)
     {
         assert(!Net::fClient);
         vtx.clear();
@@ -404,7 +401,7 @@ namespace Wallet
             // Read next record
             CDataStream ssKey(SER_DISK, DATABASE_VERSION);
             if (fFlags == DB_SET_RANGE)
-                ssKey << string("owner") << hash << Core::CDiskTxPos(0, 0, 0);
+                ssKey << std::string("owner") << hash << Core::CDiskTxPos(0, 0, 0);
             CDataStream ssValue(SER_DISK, DATABASE_VERSION);
             int ret = ReadAtCursor(pcursor, ssKey, ssValue, fFlags);
             fFlags = DB_NEXT;
@@ -417,7 +414,7 @@ namespace Wallet
             }
 
             // Unserialize
-            string strType;
+            std::string strType;
             uint512 hashItem;
             Core::CDiskTxPos pos;
             int nItemHeight;
@@ -476,32 +473,32 @@ namespace Wallet
 
     bool CTxDB::WriteBlockIndex(const Core::CDiskBlockIndex& blockindex)
     {
-        return Write(make_pair(string("blockindex"), blockindex.GetBlockHash()), blockindex);
+        return Write(std::make_pair(std::string("blockindex"), blockindex.GetBlockHash()), blockindex);
     }
 
     bool CTxDB::EraseBlockIndex(uint1024 hash)
     {
-        return Erase(make_pair(string("blockindex"), hash));
+        return Erase(std::make_pair(std::string("blockindex"), hash));
     }
 
     bool CTxDB::ReadHashBestChain(uint1024& hashBestChain)
     {
-        return Read(string("hashBestChain"), hashBestChain);
+        return Read(std::string("hashBestChain"), hashBestChain);
     }
 
     bool CTxDB::WriteHashBestChain(uint1024 hashBestChain)
     {
-        return Write(string("hashBestChain"), hashBestChain);
+        return Write(std::string("hashBestChain"), hashBestChain);
     }
 
-    bool CTxDB::ReadCheckpointPubKey(string& strPubKey)
+    bool CTxDB::ReadCheckpointPubKey(std::string& strPubKey)
     {
-        return Read(string("strCheckpointPubKey"), strPubKey);
+        return Read(std::string("strCheckpointPubKey"), strPubKey);
     }
 
-    bool CTxDB::WriteCheckpointPubKey(const string& strPubKey)
+    bool CTxDB::WriteCheckpointPubKey(const std::string& strPubKey)
     {
-        return Write(string("strCheckpointPubKey"), strPubKey);
+        return Write(std::string("strCheckpointPubKey"), strPubKey);
     }
 
 
@@ -511,12 +508,12 @@ namespace Wallet
 
     bool CAddrDB::WriteAddrman(const Net::CAddrMan& addrman)
     {
-        return Write(string("addrman"), addrman);
+        return Write(std::string("addrman"), addrman);
     }
 
     bool CAddrDB::LoadAddresses()
     {
-        if (Read(string("addrman"), Net::addrman))
+        if (Read(std::string("addrman"), Net::addrman))
         {
             printf("Loaded %i addresses\n", Net::addrman.size());
             return true;
@@ -524,8 +521,8 @@ namespace Wallet
         
         // Read pre-0.6 addr records
 
-        vector<Net::CAddress> vAddr;
-        vector<vector<unsigned char> > vDelete;
+        std::vector<Net::CAddress> vAddr;
+        std::vector<std::vector<unsigned char> > vDelete;
 
         // Get cursor
         Dbc* pcursor = GetCursor();
@@ -543,7 +540,7 @@ namespace Wallet
                 return false;
 
             // Unserialize
-            string strType;
+            std::string strType;
             ssKey >> strType;
             if (strType == "addr")
             {

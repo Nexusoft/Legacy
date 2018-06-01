@@ -9,8 +9,6 @@
 #include <boost/foreach.hpp>
 #include <boost/tuple/tuple.hpp>
 
-using namespace std;
-using namespace boost;
 
 #include "script.h"
 #include "key.h"
@@ -23,7 +21,7 @@ using namespace boost;
 namespace Wallet
 {
 
-    bool CheckSig(vector<unsigned char> vchSig, vector<unsigned char> vchPubKey, CScript scriptCode, const Core::CTransaction& txTo, unsigned int nIn, int nHashType);
+    bool CheckSig(std::vector<unsigned char> vchSig, std::vector<unsigned char> vchPubKey, CScript scriptCode, const Core::CTransaction& txTo, unsigned int nIn, int nHashType);
 
     static const std::vector<unsigned char> vchFalse(0);
     static const std::vector<unsigned char> vchZero(0);
@@ -38,7 +36,7 @@ namespace Wallet
     CBigNum CastToBigNum(const std::vector<unsigned char>& vch)
     {
         if (vch.size() > nMaxNumSize)
-            throw runtime_error("CastToBigNum() : overflow");
+            throw std::runtime_error("CastToBigNum() : overflow");
         // Get rid of extra leading zeros
         return CBigNum(CBigNum(vch).getvch());
     }
@@ -78,10 +76,10 @@ namespace Wallet
     //
     #define stacktop(i)  (stack.at(stack.size()+(i)))
     #define altstacktop(i)  (altstack.at(altstack.size()+(i)))
-    static inline void popstack(vector<std::vector<unsigned char> >& stack)
+    static inline void popstack(std::vector<std::vector<unsigned char> >& stack)
     {
         if (stack.empty())
-            throw runtime_error("popstack() : stack empty");
+            throw std::runtime_error("popstack() : stack empty");
         stack.pop_back();
     }
 
@@ -239,7 +237,7 @@ namespace Wallet
         }
     }
 
-    bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, const Core::CTransaction& txTo, unsigned int nIn, int nHashType)
+    bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& script, const Core::CTransaction& txTo, unsigned int nIn, int nHashType)
     {
         CAutoBN_CTX pctx;
         CScript::const_iterator pc = script.begin();
@@ -247,8 +245,8 @@ namespace Wallet
         CScript::const_iterator pbegincodehash = script.begin();
         opcodetype opcode;
         std::vector<unsigned char> vchPushValue;
-        vector<bool> vfExec;
-        vector<std::vector<unsigned char> > altstack;
+        std::vector<bool> vfExec;
+        std::vector<std::vector<unsigned char> > altstack;
         if (script.size() > 10000)
             return false;
         int nOpCount = 0;
@@ -1147,7 +1145,7 @@ namespace Wallet
         }
     };
 
-    bool CheckSig(vector<unsigned char> vchSig, vector<unsigned char> vchPubKey, CScript scriptCode,
+    bool CheckSig(std::vector<unsigned char> vchSig, std::vector<unsigned char> vchPubKey, CScript scriptCode,
                 const Core::CTransaction& txTo, unsigned int nIn, int nHashType)
     {
         static CSignatureCache signatureCache;
@@ -1188,10 +1186,10 @@ namespace Wallet
     //
     // Return public keys or hashes from scriptPubKey, for 'standard' transaction types.
     //
-    bool Solver(const CScript& scriptPubKey, TransactionType& typeRet, vector<vector<unsigned char> >& vSolutionsRet)
+    bool Solver(const CScript& scriptPubKey, TransactionType& typeRet, std::vector<std::vector<unsigned char> >& vSolutionsRet)
     {
         // Templates
-        static map<TransactionType, CScript> mTemplates;
+        static std::map<TransactionType, CScript> mTemplates;
         if (mTemplates.empty())
         {
             // Standard tx, sender provides pubkey, receiver adds signature
@@ -1209,7 +1207,7 @@ namespace Wallet
         if (scriptPubKey.IsPayToScriptHash())
         {
             typeRet = TX_SCRIPTHASH;
-            vector<unsigned char> hashBytes(scriptPubKey.begin()+2, scriptPubKey.begin()+22);
+            std::vector<unsigned char> hashBytes(scriptPubKey.begin()+2, scriptPubKey.begin()+22);
             vSolutionsRet.push_back(hashBytes);
             return true;
         }
@@ -1222,7 +1220,7 @@ namespace Wallet
             vSolutionsRet.clear();
 
             opcodetype opcode1, opcode2;
-            vector<unsigned char> vch1, vch2;
+            std::vector<unsigned char> vch1, vch2;
 
             // Compare
             CScript::const_iterator pc1 = script1.begin();
@@ -1305,7 +1303,7 @@ namespace Wallet
         if (!keystore.GetKey(address, key))
             return false;
 
-        vector<unsigned char> vchSig;
+        std::vector<unsigned char> vchSig;
         if (!key.Sign(hash, vchSig, 256))
             return false;
         vchSig.push_back((unsigned char)nHashType);
@@ -1314,11 +1312,11 @@ namespace Wallet
         return true;
     }
 
-    bool SignN(const vector<std::vector<unsigned char> >& multisigdata, const CKeyStore& keystore, uint256 hash, int nHashType, CScript& scriptSigRet)
+    bool SignN(const std::vector<std::vector<unsigned char> >& multisigdata, const CKeyStore& keystore, uint256 hash, int nHashType, CScript& scriptSigRet)
     {
         int nSigned = 0;
         int nRequired = multisigdata.front()[0];
-        for (vector<std::vector<unsigned char> >::const_iterator it = multisigdata.begin()+1; it != multisigdata.begin()+multisigdata.size()-1; it++)
+        for (std::vector<std::vector<unsigned char> >::const_iterator it = multisigdata.begin()+1; it != multisigdata.begin()+multisigdata.size()-1; it++)
         {
             const std::vector<unsigned char>& pubkey = *it;
             NexusAddress address;
@@ -1343,7 +1341,7 @@ namespace Wallet
     {
         scriptSigRet.clear();
 
-        vector<std::vector<unsigned char> > vSolutions;
+        std::vector<std::vector<unsigned char> > vSolutions;
         if (!Solver(scriptPubKey, whichTypeRet, vSolutions))
             return false;
 
@@ -1398,7 +1396,7 @@ namespace Wallet
 
     bool IsStandard(const CScript& scriptPubKey)
     {
-        vector<std::vector<unsigned char> > vSolutions;
+        std::vector<std::vector<unsigned char> > vSolutions;
         TransactionType whichType;
         if (!Solver(scriptPubKey, whichType, vSolutions))
             return false;
@@ -1418,7 +1416,7 @@ namespace Wallet
     }
 
 
-    unsigned int HaveKeys(const vector<std::vector<unsigned char> >& pubkeys, const CKeyStore& keystore)
+    unsigned int HaveKeys(const std::vector<std::vector<unsigned char> >& pubkeys, const CKeyStore& keystore)
     {
         unsigned int nResult = 0;
         BOOST_FOREACH(const std::vector<unsigned char>& pubkey, pubkeys)
@@ -1433,7 +1431,7 @@ namespace Wallet
 
     bool IsMine(const CKeyStore &keystore, const CScript& scriptPubKey)
     {
-        vector<std::vector<unsigned char> > vSolutions;
+        std::vector<std::vector<unsigned char> > vSolutions;
         TransactionType whichType;
         if (!Solver(scriptPubKey, whichType, vSolutions))
             return false;
@@ -1464,7 +1462,7 @@ namespace Wallet
             // partially owned (somebody else has a key that can spend
             // them) enable spend-out-from-under-you attacks, especially
             // in shared-wallet situations.
-            vector<std::vector<unsigned char> > keys(vSolutions.begin()+1, vSolutions.begin()+vSolutions.size()-1);
+            std::vector<std::vector<unsigned char> > keys(vSolutions.begin()+1, vSolutions.begin()+vSolutions.size()-1);
             return HaveKeys(keys, keystore) == keys.size();
         }
         }
@@ -1473,7 +1471,7 @@ namespace Wallet
 
     bool ExtractAddress(const CScript& scriptPubKey, NexusAddress& addressRet)
     {
-        vector<std::vector<unsigned char> > vSolutions;
+        std::vector<std::vector<unsigned char> > vSolutions;
         TransactionType whichType;
         if (!Solver(scriptPubKey, whichType, vSolutions))
             return false;
@@ -1497,11 +1495,11 @@ namespace Wallet
         return false;
     }
 
-    bool ExtractAddresses(const CScript& scriptPubKey, TransactionType& typeRet, vector<NexusAddress>& addressRet, int& nRequiredRet)
+    bool ExtractAddresses(const CScript& scriptPubKey, TransactionType& typeRet, std::vector<NexusAddress>& addressRet, int& nRequiredRet)
     {
         addressRet.clear();
         typeRet = TX_NONSTANDARD;
-        vector<std::vector<unsigned char> > vSolutions;
+        std::vector<std::vector<unsigned char> > vSolutions;
         if (!Solver(scriptPubKey, typeRet, vSolutions))
             return false;
 
@@ -1533,7 +1531,7 @@ namespace Wallet
 
     bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const Core::CTransaction& txTo, unsigned int nIn, int nHashType)
     {
-        vector<vector<unsigned char> > stack, stackCopy;
+        std::vector<std::vector<unsigned char> > stack, stackCopy;
         if (!EvalScript(stack, scriptSig, txTo, nIn, nHashType))
             return false;
 

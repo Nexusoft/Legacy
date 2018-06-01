@@ -10,8 +10,6 @@
 #include "wallet.h"
 #include <boost/filesystem.hpp>
 
-using namespace std;
-using namespace boost;
 
 
 namespace Wallet
@@ -20,46 +18,46 @@ namespace Wallet
     static uint64 nAccountingEntryNumber = 0;
 
     extern CCriticalSection cs_db;
-    extern map<string, int> mapFileUseCount;
-    extern void CloseDb(const string& strFile);
+    extern std::map<std::string, int> mapFileUseCount;
+    extern void CloseDb(const std::string& strFile);
 
     //
     // CWalletDB
     //
 
-    bool CWalletDB::WriteName(const string& strAddress, const string& strName)
+    bool CWalletDB::WriteName(const std::string& strAddress, const std::string& strName)
     {
         nWalletDBUpdated++;
-        return Write(make_pair(string("name"), strAddress), strName);
+        return Write(std::make_pair(std::string("name"), strAddress), strName);
     }
 
-    bool CWalletDB::EraseName(const string& strAddress)
+    bool CWalletDB::EraseName(const std::string& strAddress)
     {
         // This should only be used for sending addresses, never for receiving addresses,
         // receiving addresses must always have an address book entry if they're not change return.
         nWalletDBUpdated++;
-        return Erase(make_pair(string("name"), strAddress));
+        return Erase(std::make_pair(std::string("name"), strAddress));
     }
 
-    bool CWalletDB::ReadAccount(const string& strAccount, CAccount& account)
+    bool CWalletDB::ReadAccount(const std::string& strAccount, CAccount& account)
     {
         account.SetNull();
-        return Read(make_pair(string("acc"), strAccount), account);
+        return Read(std::make_pair(std::string("acc"), strAccount), account);
     }
 
-    bool CWalletDB::WriteAccount(const string& strAccount, const CAccount& account)
+    bool CWalletDB::WriteAccount(const std::string& strAccount, const CAccount& account)
     {
-        return Write(make_pair(string("acc"), strAccount), account);
+        return Write(std::make_pair(std::string("acc"), strAccount), account);
     }
 
     bool CWalletDB::WriteAccountingEntry(const CAccountingEntry& acentry)
     {
-        return Write(boost::make_tuple(string("acentry"), acentry.strAccount, ++nAccountingEntryNumber), acentry);
+        return Write(boost::make_tuple(std::string("acentry"), acentry.strAccount, ++nAccountingEntryNumber), acentry);
     }
 
-    int64 CWalletDB::GetAccountCreditDebit(const string& strAccount)
+    int64 CWalletDB::GetAccountCreditDebit(const std::string& strAccount)
     {
-        list<CAccountingEntry> entries;
+        std::list<CAccountingEntry> entries;
         ListAccountCreditDebit(strAccount, entries);
 
         int64 nCreditDebit = 0;
@@ -69,19 +67,19 @@ namespace Wallet
         return nCreditDebit;
     }
 
-    void CWalletDB::ListAccountCreditDebit(const string& strAccount, list<CAccountingEntry>& entries)
+    void CWalletDB::ListAccountCreditDebit(const std::string& strAccount, std::list<CAccountingEntry>& entries)
     {
         bool fAllAccounts = (strAccount == "*");
 
         Dbc* pcursor = GetCursor();
         if (!pcursor)
-            throw runtime_error("CWalletDB::ListAccountCreditDebit() : cannot create DB cursor");
+            throw std::runtime_error("CWalletDB::ListAccountCreditDebit() : cannot create DB cursor");
         unsigned int fFlags = DB_SET_RANGE;
         loop() {
             // Read next record
             CDataStream ssKey(SER_DISK, DATABASE_VERSION);
             if (fFlags == DB_SET_RANGE)
-                ssKey << boost::make_tuple(string("acentry"), (fAllAccounts? string("") : strAccount), uint64(0));
+                ssKey << boost::make_tuple(std::string("acentry"), (fAllAccounts? std::string("") : strAccount), uint64(0));
             CDataStream ssValue(SER_DISK, DATABASE_VERSION);
             int ret = ReadAtCursor(pcursor, ssKey, ssValue, fFlags);
             fFlags = DB_NEXT;
@@ -90,11 +88,11 @@ namespace Wallet
             else if (ret != 0)
             {
                 pcursor->close();
-                throw runtime_error("CWalletDB::ListAccountCreditDebit() : error scanning DB");
+                throw std::runtime_error("CWalletDB::ListAccountCreditDebit() : error scanning DB");
             }
 
             // Unserialize
-            string strType;
+            std::string strType;
             ssKey >> strType;
             if (strType != "acentry")
                 break;
@@ -115,8 +113,8 @@ namespace Wallet
     {
         pwallet->vchDefaultKey.clear();
         int nFileVersion = 0;
-        vector<uint512> vWalletUpgrade;
-        vector<uint512> vWalletRemove;
+        std::vector<uint512> vWalletUpgrade;
+        std::vector<uint512> vWalletRemove;
         
         bool fIsEncrypted = false;
 
@@ -124,7 +122,7 @@ namespace Wallet
         {
             LOCK(pwallet->cs_wallet);
             int nMinVersion = 0;
-            if (Read((string)"minversion", nMinVersion))
+            if (Read((std::string)"minversion", nMinVersion))
             {
                 if (nMinVersion > DATABASE_VERSION)
                     return DB_TOO_NEW;
@@ -155,11 +153,11 @@ namespace Wallet
                 // Unserialize
                 // Taking advantage of the fact that pair serialization
                 // is just the two items serialized one after the other
-                string strType;
+                std::string strType;
                 ssKey >> strType;
                 if (strType == "name")
                 {
-                    string strAddress;
+                    std::string strAddress;
                     ssKey >> strAddress;
                     ssValue >> pwallet->mapAddressBook[strAddress];
                 }
@@ -210,7 +208,7 @@ namespace Wallet
                 }
                 else if (strType == "acentry")
                 {
-                    string strAccount;
+                    std::string strAccount;
                     ssKey >> strAccount;
                     uint64 nNumber;
                     ssKey >> nNumber;
@@ -219,7 +217,7 @@ namespace Wallet
                 }
                 else if (strType == "key" || strType == "wkey")
                 {
-                    vector<unsigned char> vchPubKey;
+                    std::vector<unsigned char> vchPubKey;
                     ssKey >> vchPubKey;
                     CKey key;
                     if (strType == "key")
@@ -279,9 +277,9 @@ namespace Wallet
                 }
                 else if (strType == "ckey")
                 {
-                    vector<unsigned char> vchPubKey;
+                    std::vector<unsigned char> vchPubKey;
                     ssKey >> vchPubKey;
-                    vector<unsigned char> vchPrivKey;
+                    std::vector<unsigned char> vchPrivKey;
                     ssValue >> vchPrivKey;
                     if (!pwallet->LoadCryptedKey(vchPubKey, vchPrivKey))
                     {
@@ -350,7 +348,7 @@ namespace Wallet
 
     void ThreadFlushWalletDB(void* parg)
     {
-        const string& strFile = ((const string*)parg)[0];
+        const std::string& strFile = ((const std::string*)parg)[0];
         static bool fOneThread;
         if (fOneThread)
             return;
@@ -378,7 +376,7 @@ namespace Wallet
                 {
                     // Don't do this if any databases are in use
                     int nRefCount = 0;
-                    map<string, int>::iterator mi = mapFileUseCount.begin();
+                    std::map<std::string, int>::iterator mi = mapFileUseCount.begin();
                     while (mi != mapFileUseCount.end())
                     {
                         nRefCount += (*mi).second;
@@ -387,7 +385,7 @@ namespace Wallet
 
                     if (nRefCount == 0 && !fShutdown)
                     {
-                        map<string, int>::iterator mi = mapFileUseCount.find(strFile);
+                        std::map<std::string, int>::iterator mi = mapFileUseCount.find(strFile);
                         if (mi != mapFileUseCount.end())
                         {
                             printf("%s ", DateTimeStrFormat(GetUnifiedTimestamp()).c_str());
@@ -409,7 +407,7 @@ namespace Wallet
         }
     }
 
-    bool BackupWallet(const CWallet& wallet, const string& strDest)
+    bool BackupWallet(const CWallet& wallet, const std::string& strDest)
     {
         if (!wallet.fFileBacked)
             return false;
@@ -426,20 +424,20 @@ namespace Wallet
                     mapFileUseCount.erase(wallet.strWalletFile);
 
                     // Copy wallet.dat
-                    filesystem::path pathSrc = GetDataDir() / wallet.strWalletFile;
-                    filesystem::path pathDest(strDest);
-                    if (filesystem::is_directory(pathDest))
+                    boost::filesystem::path pathSrc = GetDataDir() / wallet.strWalletFile;
+                    boost::filesystem::path pathDest(strDest);
+                    if (boost::filesystem::is_directory(pathDest))
                         pathDest /= wallet.strWalletFile;
 
                     try {
     #if BOOST_VERSION >= 104000
-                        filesystem::copy_file(pathSrc, pathDest, filesystem::copy_option::overwrite_if_exists);
+                        boost::filesystem::copy_file(pathSrc, pathDest, boost::filesystem::copy_option::overwrite_if_exists);
     #else
-                        filesystem::copy_file(pathSrc, pathDest);
+                        boost::filesystem::copy_file(pathSrc, pathDest);
     #endif
                         printf("copied wallet.dat to %s\n", pathDest.string().c_str());
                         return true;
-                    } catch(const filesystem::filesystem_error &e) {
+                    } catch(const boost::filesystem::filesystem_error &e) {
                         printf("error copying wallet.dat to %s - %s\n", pathDest.string().c_str(), e.what());
                         return false;
                     }

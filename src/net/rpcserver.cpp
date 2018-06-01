@@ -34,8 +34,6 @@
 // a certain size around 145MB.  If we need access to json_spirit outside this
 // file, we could use the compiled json_spirit option.
 
-using namespace boost;
-using namespace boost::asio;
 using namespace json_spirit;
 
 namespace Net
@@ -3013,7 +3011,7 @@ namespace Net
 
 	bool ClientAllowed(const std::string& strAddress)
 	{
-		if (strAddress == asio::ip::address_v4::loopback().to_string())
+		if (strAddress == boost::asio::ip::address_v4::loopback().to_string())
 			return true;
 		const std::vector<std::string>& vAllow = mapMultiArgs["-rpcallowip"];
 		BOOST_FOREACH(std::string strAllow, vAllow)
@@ -3025,7 +3023,7 @@ namespace Net
 	//
 	// IOStream device that speaks SSL but can also speak non-SSL
 	//
-	class SSLIOStreamDevice : public iostreams::device<iostreams::bidirectional> {
+	class SSLIOStreamDevice : public boost::iostreams::device<boost::iostreams::bidirectional> {
 	public:
 		SSLIOStreamDevice(SSLStream &streamIn, bool fUseSSLIn) : stream(streamIn)
 		{
@@ -3033,7 +3031,7 @@ namespace Net
 			fNeedHandshake = fUseSSLIn;
 		}
 
-		void handshake(ssl::stream_base::handshake_type role)
+		void handshake(boost::asio::ssl::stream_base::handshake_type role)
 		{
 			if (!fNeedHandshake) return;
 			fNeedHandshake = false;
@@ -3041,23 +3039,23 @@ namespace Net
 		}
 		std::streamsize read(char* s, std::streamsize n)
 		{
-			handshake(ssl::stream_base::server); // HTTPS servers read first
-			if (fUseSSL) return stream.read_some(asio::buffer(s, n));
-			return stream.next_layer().read_some(asio::buffer(s, n));
+			handshake(boost::asio::ssl::stream_base::server); // HTTPS servers read first
+			if (fUseSSL) return stream.read_some(boost::asio::buffer(s, n));
+			return stream.next_layer().read_some(boost::asio::buffer(s, n));
 		}
 		std::streamsize write(const char* s, std::streamsize n)
 		{
-			handshake(ssl::stream_base::client); // HTTPS clients write first
-			if (fUseSSL) return asio::write(stream, asio::buffer(s, n));
-			return asio::write(stream.next_layer(), asio::buffer(s, n));
+			handshake(boost::asio::ssl::stream_base::client); // HTTPS clients write first
+			if (fUseSSL) return boost::asio::write(stream, boost::asio::buffer(s, n));
+			return boost::asio::write(stream.next_layer(), boost::asio::buffer(s, n));
 		}
 		bool connect(const std::string& server, const std::string& port)
 		{
-			ip::tcp::resolver resolver(stream.get_io_service());
-			ip::tcp::resolver::query query(server.c_str(), port.c_str());
-			ip::tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
-			ip::tcp::resolver::iterator end;
-			boost::system::error_code error = asio::error::host_not_found;
+			boost::asio::ip::tcp::resolver resolver(stream.get_io_service());
+			boost::asio::ip::tcp::resolver::query query(server.c_str(), port.c_str());
+			boost::asio::ip::tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
+			boost::asio::ip::tcp::resolver::iterator end;
+			boost::system::error_code error = boost::asio::error::host_not_found;
 			while (error && endpoint_iterator != end)
 			{
 				stream.lowest_layer().close();
@@ -3128,17 +3126,17 @@ namespace Net
 		}
 
 		bool fUseSSL = GetBoolArg("-rpcssl");
-		asio::ip::address bindAddress = mapArgs.count("-rpcallowip") ? asio::ip::address_v4::any() : asio::ip::address_v4::loopback();
+		boost::asio::ip::address bindAddress = mapArgs.count("-rpcallowip") ? boost::asio::ip::address_v4::any() : boost::asio::ip::address_v4::loopback();
 
-		asio::io_service io_service;
-		ip::tcp::endpoint endpoint(bindAddress, GetArg("-rpcport", fTestNet? TESTNET_RPC_PORT : RPC_PORT));
-		ip::tcp::acceptor acceptor(io_service);
+		boost::asio::io_service io_service;
+		boost::asio::ip::tcp::endpoint endpoint(bindAddress, GetArg("-rpcport", fTestNet? TESTNET_RPC_PORT : RPC_PORT));
+		boost::asio::ip::tcp::acceptor acceptor(io_service);
 		try
 		{
 			acceptor.open(endpoint.protocol());
 			acceptor.set_option(boost::asio::ip::tcp::acceptor::reuse_address(true));
 			acceptor.bind(endpoint);
-			acceptor.listen(socket_base::max_connections);
+			acceptor.listen(boost::asio::socket_base::max_connections);
 		}
 		catch(boost::system::system_error &e)
 		{
@@ -3148,19 +3146,19 @@ namespace Net
 			return;
 		}
 
-		ssl::context context(ssl::context::sslv23);
+		boost::asio::ssl::context context(boost::asio::ssl::context::sslv23);
 		if (fUseSSL)
 		{
-			context.set_options(ssl::context::no_sslv2);
+			context.set_options(boost::asio::ssl::context::no_sslv2);
 
-			filesystem::path pathCertFile(GetArg("-rpcsslcertificatechainfile", "server.cert"));
-			if (!pathCertFile.is_complete()) pathCertFile = filesystem::path(GetDataDir()) / pathCertFile;
-			if (filesystem::exists(pathCertFile)) context.use_certificate_chain_file(pathCertFile.string());
+			boost::filesystem::path pathCertFile(GetArg("-rpcsslcertificatechainfile", "server.cert"));
+			if (!pathCertFile.is_complete()) pathCertFile = boost::filesystem::path(GetDataDir()) / pathCertFile;
+			if (boost::filesystem::exists(pathCertFile)) context.use_certificate_chain_file(pathCertFile.string());
 			else printf("ThreadRPCServer ERROR: missing server certificate file %s\n", pathCertFile.string().c_str());
 
-			filesystem::path pathPKFile(GetArg("-rpcsslprivatekeyfile", "server.pem"));
-			if (!pathPKFile.is_complete()) pathPKFile = filesystem::path(GetDataDir()) / pathPKFile;
-			if (filesystem::exists(pathPKFile)) context.use_private_key_file(pathPKFile.string(), ssl::context::pem);
+			boost::filesystem::path pathPKFile(GetArg("-rpcsslprivatekeyfile", "server.pem"));
+			if (!pathPKFile.is_complete()) pathPKFile = boost::filesystem::path(GetDataDir()) / pathPKFile;
+			if (boost::filesystem::exists(pathPKFile)) context.use_private_key_file(pathPKFile.string(), boost::asio::ssl::context::pem);
 			else printf("ThreadRPCServer ERROR: missing server private key file %s\n", pathPKFile.string().c_str());
 
 			std::string strCiphers = GetArg("-rpcsslciphers", "TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH");
@@ -3171,9 +3169,9 @@ namespace Net
 			// Accept connection
 			SSLStream sslStream(io_service, context);
 			SSLIOStreamDevice d(sslStream, fUseSSL);
-			iostreams::stream<SSLIOStreamDevice> stream(d);
+			boost::iostreams::stream<SSLIOStreamDevice> stream(d);
 
-			ip::tcp::endpoint peer;
+			boost::asio::ip::tcp::endpoint peer;
 			vnThreadsRunning[THREAD_RPCSERVER]--;
 			acceptor.accept(sslStream.lowest_layer(), peer);
 			vnThreadsRunning[4]++;
@@ -3309,12 +3307,12 @@ namespace Net
 
 		// Connect to localhost
 		bool fUseSSL = GetBoolArg("-rpcssl");
-		asio::io_service io_service;
-		ssl::context context(ssl::context::sslv23);
-		context.set_options(ssl::context::no_sslv2);
+		boost::asio::io_service io_service;
+		boost::asio::ssl::context context(boost::asio::ssl::context::sslv23);
+		context.set_options(boost::asio::ssl::context::no_sslv2);
 		SSLStream sslStream(io_service, context);
 		SSLIOStreamDevice d(sslStream, fUseSSL);
-		iostreams::stream<SSLIOStreamDevice> stream(d);
+		boost::iostreams::stream<SSLIOStreamDevice> stream(d);
 		if (!d.connect(GetArg("-rpcconnect", "127.0.0.1"), GetArg("-rpcport", CBigNum(fTestNet? TESTNET_RPC_PORT : RPC_PORT).ToString().c_str())))
 			throw std::runtime_error("couldn't connect to server");
 

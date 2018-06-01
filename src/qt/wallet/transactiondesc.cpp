@@ -20,7 +20,6 @@
 
 #include <QString>
 
-using namespace std;
 
 QString TransactionDesc::FormatTxStatus(const Wallet::CWalletTx& wtx)
 {
@@ -119,7 +118,7 @@ QString TransactionDesc::toHTML(Wallet::CWallet *wallet, Wallet::CWalletTx &wtx)
         //
         // To
         //
-        string strAddress;
+        std::string strAddress;
         if (!wtx.mapValue["to"].empty())
         {
             // Online transaction

@@ -15,14 +15,10 @@
 #include "../util/util.h"
 #include "qtipcserver.h"
 
-using namespace boost::interprocess;
-using namespace boost::posix_time;
-using namespace boost;
-using namespace std;
 
 void ipcShutdown()
 {
-    message_queue::remove(NEXUS_URI_QUEUE_NAME);
+    boost::interprocess::message_queue::remove(NEXUS_URI_QUEUE_NAME);
 }
 
 void ipcThread(void* parg)
