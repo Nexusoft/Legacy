@@ -1034,8 +1034,13 @@ namespace Wallet
                 pcoin.first->print();
             
             printf("total %s\n", FormatMoney(nValueRet).c_str());
-        }
-        
+                }
+
+        //Ensure total inputs does not exceed maximum
+        if(!Core::MoneyRange(nValueRet))
+            return error("CWallet::SelectCoins() : Input total over TX limit Total: %" PRI64d " Limit %" PRI64d, nValueRet, Core::MAX_TXOUT_AMOUNT);
+
+        //Ensure balance is sufficient to cover transaction
         if(nValueRet < nTargetValue)
             return error("CWallet::SelectCoins() : Insufficient Balance Target: %" PRI64d " Actual %" PRI64d, nTargetValue, nValueRet);
 
