@@ -552,7 +552,10 @@ namespace Core
         {
             /** Don't allow multiple Genesis Coinstakes. **/
             if(mapTrustKeys.count(cKey))
-                return error("CTrustPool::check() : First Transaction Must be Genesis Coinstake.");
+            {
+                mapTrustKeys.erase(cKey);
+                //return error("CTrustPool::check() : First Transaction Must be Genesis Coinstake.");
+            }
             
             /** Create the Trust Key from Genesis Transaction Block. **/			
             CTrustKey cTrustKey(vKeys[0], cBlock.GetHash(), cBlock.vtx[0].GetHash(), cBlock.nTime);
