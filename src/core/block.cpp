@@ -914,14 +914,6 @@ namespace Core
             return true;
         }
         
-        if(GetBoolArg("-softban", true) && pblock->IsProofOfStake() && !cTrustPool.IsValid(*pblock))
-        {
-            printf("\x1b[31m WARNING: \u001b[37;1m %s misbehavior (score=%d) \x1b[0m \n", pfrom ? pfrom->addr.ToString().c_str() : "unknown", 100);
-                
-            if(GetBoolArg("-hardban", false))
-                return pblock->DoS(100, error("Banning Node..."));
-        }
-        
         if (!pblock->AcceptBlock())
             return error("ProcessBlock() : AcceptBlock FAILED");
 

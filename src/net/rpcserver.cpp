@@ -2685,7 +2685,7 @@ namespace Net
 			if (out.nDepth < nMinDepth || out.nDepth > nMaxDepth)
 				continue;
 
-			if(setAddress.size())
+			if(!setAddress.empty())
 			{
 				Wallet::NexusAddress address;
 				if(!ExtractAddress(out.tx->vout[out.i].scriptPubKey, address))
