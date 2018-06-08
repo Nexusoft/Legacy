@@ -32,7 +32,11 @@ using namespace boost;
 
 Wallet::CWallet* pwalletMain;
 LLP::Server<LLP::CoreLLP>* LLP_SERVER;
-LLP::Server<LLP::MiningLLP>* MINING_LLP;
+
+namespace LLP 
+{
+    LLP::Server<LLP::MiningLLP>* MINING_LLP;
+}
 
 //////////////////////////////////////////////////////////////////////////////
 //

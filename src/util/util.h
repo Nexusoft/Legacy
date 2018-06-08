@@ -588,6 +588,7 @@ inline bool IsSwitchChar(char c)
 #endif
 }
 
+
 /**
  * Return string argument or default value
  *
