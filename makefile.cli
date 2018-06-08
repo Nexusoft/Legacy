@@ -219,6 +219,7 @@ OBJS= build/version.o \
 	build/rpcdump.o \
 	build/script.o \
 	build/util.o \
+	build/mining.o \
 	build/wallet.o \
 	build/walletdb.o \
 	build/noui.o \
@@ -235,7 +236,6 @@ OBJS= build/version.o \
 	build/block.o \
 	build/dispatch.o \
 	build/message.o \
-	build/mining.o \
 	build/transaction.o \
 	build/global.o \
 	build/keychain.o \

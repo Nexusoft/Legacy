@@ -254,7 +254,6 @@ namespace Core
 	
 	
 	/** MINING.CPP **/
-	void StartMiningLLP();
 	void StartStaking(Wallet::CWallet *pwallet);
 	CBlock CreateNewBlock(Wallet::CReserveKey& reservekey, Wallet::CWallet* pwallet, unsigned int nChannel, unsigned int nID = 1, LLP::Coinbase* pCoinbase = NULL);
 	void AddTransactions(std::vector<CTransaction>& vtx, CBlockIndex* pindexPrev);

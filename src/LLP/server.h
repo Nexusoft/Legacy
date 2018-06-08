@@ -192,6 +192,17 @@ namespace LLP
 				DATA_THREADS.push_back(new DataThread<ProtocolType>(index, fDDOS, rScore, cScore, nTimeout));
 		}
 		
+        
+        /** Returns the total connections in this LLP. **/
+		int TotalConnections()
+        {
+            int nGlobalConnections = 0;
+            for(int nIndex = 0; nIndex < MAX_THREADS; nIndex++)
+                nGlobalConnections += DATA_THREADS[nIndex]->nConnections;
+            
+            return nGlobalConnections;
+        }
+		
 	private:
 	
 		/** Basic Socket Handle Variables. **/
@@ -306,15 +317,6 @@ namespace LLP
 			}
 		}
 		
-		/** Returns the total connections in this LLP. **/
-		int TotalConnections()
-        {
-            int nGlobalConnections = 0;
-            for(int nIndex = 0; nIndex < MAX_THREADS; nIndex++)
-                nGlobalConnections += DATA_THREADS[nIndex]->nConnections;
-            
-            return nGlobalConnections;
-        }
 		
 		/** Used for Meter. Adds up the total amount of requests from each Data Thread. **/
 		int TotalRequests()

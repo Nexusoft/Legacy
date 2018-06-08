@@ -16,6 +16,7 @@
 #include "net.h"
 
 #include "../LLD/index.h"
+#include "../LLP/miningserver.h"
 
 #undef printf
 #include <boost/asio.hpp>
@@ -638,7 +639,7 @@ namespace Net
         
         if(GetBoolArg("-mining", false))
         {
-            //obj.push_back(Pair("totalConnections", Core::MINING_LLP->TotalConnections()));
+            obj.push_back(Pair("totalConnections", LLP::MINING_LLP->TotalConnections()));
         }
         
         
