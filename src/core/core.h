@@ -191,7 +191,8 @@ namespace Core
 	/** Small function to ensure the global supply remains within reasonable bounds **/
 	inline bool MoneyRange(int64 nValue) { return (nValue >= 0 && nValue <= MAX_TXOUT_AMOUNT); }
 	
-	extern LLP::Server<LLP::MiningLLP>* MINING_LLP;
+	
+	//extern LLP::Server<LLP::MiningLLP>* MINING_LLP;
 		
 		
 	

@@ -983,10 +983,6 @@ namespace Wallet
 
     bool CWallet::SelectCoinsMinConf(int64 nTargetValue, unsigned int nSpendTime, int nConfMine, int nConfTheirs, set<pair<const CWalletTx*,unsigned int> >& setCoinsRet, int64& nValueRet) const
     {
-        //Ensure total inputs does not exceed maximum
-        if(!Core::MoneyRange(nTargetValue))
-            return error("CWallet::SelectCoins() : Input total over TX limit Total: %" PRI64d " Limit %" PRI64d, nTargetValue, Core::MAX_TXOUT_AMOUNT);
-        
         /* Add Each Input to Transaction. */
         setCoinsRet.clear();
         vector<const CWalletTx*> vCoins;
@@ -1039,6 +1035,10 @@ namespace Wallet
             
             printf("total %s\n", FormatMoney(nValueRet).c_str());
         }
+
+        //Ensure total inputs does not exceed maximum
+        if(!Core::MoneyRange(nValueRet))
+            return error("CWallet::SelectCoins() : Input total over TX limit Total: %" PRI64d " Limit %" PRI64d, nValueRet, Core::MAX_TXOUT_AMOUNT);
 
         //Ensure balance is sufficient to cover transaction
         if(nValueRet < nTargetValue)

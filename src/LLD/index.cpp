@@ -186,7 +186,7 @@ namespace LLD
                             if(!ExtractAddress(block.vtx[nTx].vout[nOut].scriptPubKey, cAddress))
                                 continue;
                                 
-                            if(Core::mapAddressTransactions.count(cAddress.GetHash256())
+                            if(Core::mapAddressTransactions.count(cAddress.GetHash256()))
                                 Core::mapAddressTransactions[cAddress.GetHash256()] += block.vtx[nTx].vout[nOut].nValue;
                             else
                                 Core::mapAddressTransactions[cAddress.GetHash256()] = block.vtx[nTx].vout[nOut].nValue;

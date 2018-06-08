@@ -638,7 +638,7 @@ namespace Net
         
         if(GetBoolArg("-mining", false))
         {
-            obj.push_back(Pair("totalConnections", Core::MINING_LLP->TotalConnections()));
+            //obj.push_back(Pair("totalConnections", Core::MINING_LLP->TotalConnections()));
         }
         
         
