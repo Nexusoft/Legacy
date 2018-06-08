@@ -1162,6 +1162,9 @@ namespace Net
 		string strAddress = params[0].get_str();
 		Wallet::NexusAddress cAddress(strAddress);
 		
+		if (!cAddress.IsValid())
+			throw JSONRPCError(-5, "Invalid Nexus address");
+		
 		/** Dump the Address and Values. **/
 		Object entry;
 		entry.push_back(Pair(strAddress, (double)Core::mapAddressTransactions[cAddress.GetHash256()] / COIN));
