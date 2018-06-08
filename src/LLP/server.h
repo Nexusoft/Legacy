@@ -306,6 +306,16 @@ namespace LLP
 			}
 		}
 		
+		/** Returns the total connections in this LLP. **/
+		int TotalConnections()
+        {
+            int nGlobalConnections = 0;
+            for(int nIndex = 0; nIndex < MAX_THREADS; nIndex++)
+                nGlobalConnections += DATA_THREADS[nIndex]->nConnections;
+            
+            return nGlobalConnections;
+        }
+		
 		/** Used for Meter. Adds up the total amount of requests from each Data Thread. **/
 		int TotalRequests()
 		{

@@ -615,6 +615,7 @@ namespace Net
 		nHashAverageTime /= nHTotal;
 
 		uint64 nHashRate = (nTimeConstant / nHashAverageTime) * nHashAverageDifficulty;
+        
 
 		Object obj;
 		obj.push_back(Pair("blocks",        (int)Core::nBestHeight));
@@ -634,6 +635,13 @@ namespace Net
 		obj.push_back(Pair("pooledtx",      		(boost::uint64_t)Core::mempool.size()));	
 		obj.push_back(Pair("primesPerSecond", 		(boost::uint64_t)nPrimePS));
 		obj.push_back(Pair("hashPerSecond", 		(boost::uint64_t)nHashRate));
+        
+        if(GetBoolArg("-mining", false))
+        {
+            obj.push_back(Pair("totalConnections", Core::MINING_LLP->TotalConnections()));
+        }
+        
+        
 		return obj;
 	}
 
@@ -2661,8 +2669,10 @@ namespace Net
 				Wallet::NexusAddress address(input.get_str());
 				if (!address.IsValid())
 					throw JSONRPCError(-5, string("Invalid Nexus address: ")+input.get_str());
+                
 				if (setAddress.count(address))
 					throw JSONRPCError(-8, string("Invalid parameter, duplicated address: ")+input.get_str());
+                
 			   setAddress.insert(address);
 			}
 		}
@@ -2700,6 +2710,7 @@ namespace Net
 			entry.push_back(Pair("scriptPubKey", HexStr(pk.begin(), pk.end())));
 			entry.push_back(Pair("amount",ValueFromAmount(nValue)));
 			entry.push_back(Pair("confirmations",out.nDepth));
+            
 			results.push_back(entry);
 		}
 
