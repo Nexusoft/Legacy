@@ -1556,7 +1556,7 @@ namespace Core
 		bool CheckBlock() const;
 		
 		bool VerifyWork() const;
-		bool VerifyStake(bool fInit = false) const;
+		bool VerifyStake() const;
 		
 		bool AcceptBlock();
 		bool StakeWeight();

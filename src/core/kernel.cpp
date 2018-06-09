@@ -100,7 +100,7 @@ namespace Core
 {
     
     /** Check the Coinstake Transaction is within the rules applied for Proof of Stake. **/
-    bool CBlock::VerifyStake(bool fInit) const
+    bool CBlock::VerifyStake() const
     {
             
         /* Check Average age is above Limit if No Trust Key Seen. */
@@ -173,7 +173,7 @@ namespace Core
         if(GetHash() > hashTarget)
             return error("CBlock::VerifyStake() : Proof of Stake Hash not meeting Target.");
             
-        if(!fInit && GetArg("-verbose", 0) >= 2)
+        if(GetArg("-verbose", 0) >= 2)
         {
             printf("CBlock::VerifyStake() : Stake Hash  %s\n", GetHash().ToString().substr(0, 20).c_str());
             printf("CBlock::VerifyStake() : Target Hash %s\n", hashTarget.ToString().substr(0, 20).c_str());
@@ -620,7 +620,7 @@ namespace Core
         LOCK(cs);
         
         /* Verify the Stake Kernel. */
-        if(!cBlock.VerifyStake(fInit))
+        if(!fInit && !cBlock.VerifyStake())
             return error("CTrustPool::Connect() : Invalid Proof of Stake");
             
         /* Extract the Key from the Script Signature. */

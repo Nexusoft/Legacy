@@ -589,22 +589,15 @@ inline bool IsSwitchChar(char c)
 }
 
 
-inline double round_to_digits(double value, int digits)
-{
-    if (value == 0.0) // otherwise it will return 'nan' due to the log10() of zero
-        return 0.0;
-
-    double factor = pow(10.0, digits - ceil(log10(fabs(value))));
-    return round(value * factor) / factor;   
-}
-
-
 inline int64 round_coin_digits(int64 nValue, int digits)
 {
-    double dValue = (double)nValue / COIN;
-    double dRound = round_to_digits(dValue, digits);
+    double dValue = ((double)nValue / COIN);
+    int    nWhole = (int) dValue;
     
-    return (int64)(dRound * COIN);
+    int nDigits = pow(10, digits);
+    double newValue  = (((int)((dValue - nWhole) * nDigits)) / (double)nDigits);
+    
+    return (int64)(newValue * COIN) + (nWhole * COIN);
 }
 
 

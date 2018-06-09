@@ -862,7 +862,7 @@ namespace Core
 				
 				printf("ConnectInputs() : %f Value Out, %f Interest, %f Expected\n", (double)vout[0].nValue / COIN, (double)nInterest / COIN, (double)(nInterest + nValueIn) / COIN);
                 
-				if (round_coin_digits(vout[0].nValue, 5) != round_coin_digits((nInterest + nValueIn), 5))
+				if (round_coin_digits(vout[0].nValue, 3) != round_coin_digits((nInterest + nValueIn), 3))
 					return DoS(100, error("ConnectInputs() : %s stake reward mismatch", GetHash().ToString().substr(0,10).c_str()));
 					
 			}
