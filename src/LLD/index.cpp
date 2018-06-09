@@ -69,6 +69,11 @@ namespace LLD
     {
         return Write(make_pair(string("blockindex"), blockindex.GetBlockHash()), blockindex);
     }
+    
+    bool CIndexDB::ReadBlockIndex(const uint1024 hashBlock, Core::CDiskBlockIndex& blockindex)
+    {
+        return Read(make_pair(string("blockindex"), hashBlock), blockindex);
+    }
 
     bool CIndexDB::ReadHashBestChain(uint1024& hashBestChain)
     {

@@ -674,7 +674,6 @@ namespace Core
             
             /* Only Debug when Not Initializing. */
             if(!fInit && GetArg("-verbose", 0) >= 1) {
-                TrustScore(cKey, mapBlockIndex[cBlock.hashPrevBlock]->GetBlockTime());
                 printf("CTrustPool::ACCEPTED %s\n", cKey.ToString().substr(0, 20).c_str());
             }
             
@@ -799,7 +798,6 @@ namespace Core
             
             /** Only Debug when Not Initializing. **/
             if(!fInit && GetArg("-verbose", 0) >= 1) {
-                TrustScore(cKey, mapBlockIndex[cBlock.hashPrevBlock]->GetBlockTime());
                 printf("CTrustPool::ACCEPTED %s\n", cKey.ToString().substr(0, 20).c_str());
             }
             
@@ -826,59 +824,6 @@ namespace Core
         nDays = nAge / 1440;
         nHours = (nAge - (nDays * 1440)) / 60;
         nMinutes = nAge % 60;
-    }
-    
-    /* Trust Scoie for Trust Keys:
-        Determines how trusted a key is by score. Age of the Key is determined in combination with the Trust Score and Age. */
-    uint64 CTrustPool::TrustScore(uint576 cKey, unsigned int nTime) const
-    {
-        /** Genesis Transactions worth Zero Trust. **/
-        if(!Exists(cKey) || IsGenesis(cKey))
-            return 0;
-        
-        /* Get the Trust Key from the Trust Pool. */
-        CTrustKey cTrustKey = Find(cKey);
-        
-        
-        /* The Average Block Consistency. */
-        double nAverageConsistency = 0.0, nMeanHistory = 0.0;
-
-        
-        /* The Trust Scores. */
-        double nPositiveTrust = 0.0, nNegativeTrust = 0.0;
-        for(int nIndex = 1; nIndex < cTrustKey.hashPrevBlocks.size(); nIndex++)
-        {
-            /* Calculate the Trust Time of Blocks. */
-            unsigned int nTrustTime = mapBlockIndex[cTrustKey.hashPrevBlocks[nIndex].first]->GetBlockTime() - mapBlockIndex[cTrustKey.hashPrevBlocks[nIndex - 1].first]->GetBlockTime();
-            
-                
-            /* Calculate Consistency Moving Average over Scope of Consistency History. */
-            unsigned int nMaxTimespan = TRUST_KEY_MAX_TIMESPAN * ((GetDifficulty(mapBlockIndex[cTrustKey.hashPrevBlocks[nIndex].first]->nBits, 0)) / TRUST_KEY_DIFFICULTY_THRESHOLD);
-            
-            
-            /* Calculate the Positive Trust Time in the Key. */
-            if(nTrustTime < nMaxTimespan)
-                nPositiveTrust += (double)((nMaxTimespan * log(((3.0 * nTrustTime) / nMaxTimespan) + 1.0)) / log(4));
-            
-            
-            /* Calculate the Negative Trust Time in the Key. */
-            else if(nTrustTime > nMaxTimespan)
-                nNegativeTrust += (double)((3.0 * nMaxTimespan * log(((3.0 * nTrustTime) / nMaxTimespan) - 2.0)) / log(4));
-            
-        }
-        
-        /* Final Computation of the Trust Score. */
-        double nTrustScore = std::max(0.0, (nPositiveTrust - nNegativeTrust));
-        
-        
-        unsigned int nDays, nHours, nMinutes;
-        GetTimes(cTrustKey.Age(nTime) / 60, nDays, nHours, nMinutes);
-        
-        if(GetArg("-verbose", 0) >= 2)
-            printf("CTrustPool::TRUST [%f %%] Score %f | Age %u Days, %u Hours, %u Minutes | Positive %f | Negative %f \n", (nTrustScore * 100.0) / cTrustKey.Age(nTime), nTrustScore,  nDays, nHours, nMinutes, nPositiveTrust, nNegativeTrust);
-        
-        
-        return (uint64)nPositiveTrust - nNegativeTrust;
     }
     
     
