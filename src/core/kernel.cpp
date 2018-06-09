@@ -582,14 +582,6 @@ namespace Core
             if(mapTrustKeys[cKey].Expired(mapBlockIndex[cBlock.hashPrevBlock]))
                 return error("CTrustPool::check() : Cannot Create Block for Expired Trust Key.");
                 
-            /* Don't allow Blocks Created Before Minimum Interval. */
-            uint1024 back = mapTrustKeys[cKey].Back();
-            if(back == 0)
-                return error("CTrustPool::check() : No back of vector connected.");
-            
-            if((cBlock.nHeight - mapBlockIndex[back]->nHeight) < TRUST_KEY_MIN_INTERVAL)
-                return error("CTrustPool::check() : Trust Block Created Before Minimum Trust Key Interval.");
-                
             /* Don't allow Blocks Created without First Input Previous Output hash of Trust Key Hash. 
                 This Secures and Anchors the Trust Key to all Descending Trust Blocks of that Key. */
             if(cBlock.vtx[0].vin[0].prevout.hash != mapTrustKeys[cKey].GetHash()) {
@@ -664,6 +656,14 @@ namespace Core
         /* Handle Adding Trust Transactions. */
         else if(cBlock.vtx[0].IsTrust())
         {
+            /* Don't allow Blocks Created Before Minimum Interval. */
+            uint1024 back = mapTrustKeys[cKey].Back();
+            if(back == 0)
+                return error("CTrustPool::Connect() : No back of vector connected.");
+            
+            if((cBlock.nHeight - mapBlockIndex[back]->nHeight) < TRUST_KEY_MIN_INTERVAL)
+                return error("CTrustPool::Connect() : Trust Block Created Before Minimum Trust Key Interval.");
+            
             std::vector< std::pair<uint1024, bool> >::iterator itFalse = std::find(mapTrustKeys[cKey].hashPrevBlocks.begin(), mapTrustKeys[cKey].hashPrevBlocks.end(), std::make_pair(cBlock.GetHash(), false) );
             
             if(itFalse != mapTrustKeys[cKey].hashPrevBlocks.end())

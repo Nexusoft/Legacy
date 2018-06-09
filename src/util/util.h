@@ -223,6 +223,9 @@ void LogStackTrace();
 /** Gets the UNIX Timestamp from the Nexus Network **/
 extern int64 GetUnifiedTimestamp();
 
+/** Gets the local UNIX Timestamp converted. **/
+extern int64 UniversalTime(int64 nTimestamp);
+
 
 extern std::map<std::string, std::string> mapArgs;
 extern std::map<std::string, std::vector<std::string> > mapMultiArgs;

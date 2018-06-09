@@ -154,6 +154,10 @@ int64 GetLocalTimestamp(){ return time(NULL); }
 int64 GetUnifiedTimestamp(){ return GetLocalTimestamp() + UNIFIED_AVERAGE_OFFSET; }
 
 
+/** Gets the Local Unversal time converted. **/
+int64 UniversalTime(int64 nTimestamp) { return nTimestamp - UNIFIED_AVERAGE_OFFSET; }
+
+
 /** Called from Thread Time Regulator.
     This keeps time keeping separate from regular processing. **/
 void InitializeUnifiedTime()
