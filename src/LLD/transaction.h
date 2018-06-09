@@ -54,44 +54,26 @@ namespace LLD
 		boost::mutex TX_MUTEX;
 		
 		/** New Data to be Added. **/
-		std::vector< std::vector<unsigned char> > vKeys;
-        std::vector< std::vector<unsigned char> > vData;
+		std::map< std::vector<unsigned char>, std::vector<unsigned char> > mapTransactions;
 		
 		/** Original Data that is retained when new one is added. **/
 		std::map< std::vector<unsigned char>, std::vector<unsigned char> > mapOriginalData;
 		
+		/** Vector to hold the keys of transactions to be erased. **/
+		std::map< std::vector<unsigned char>, unsigned int > mapEraseData;
+		
 		/** Basic Constructor. **/
 		SectorTransaction(){ }
 		
-		
-		bool Has(std::vector<unsigned char> vKey){
-            std::vector< std::vector<unsigned char> >::iterator it = std::find(vKeys.begin(), vKeys.end(), vKey);
-            
-            return (it != vKeys.end());
-        }
-        
-        std::vector<unsigned char> Get(std::vector<unsigned char> vKey)
-        {
-            std::vector< std::vector<unsigned char> >::iterator it = std::find(vKeys.begin(), vKeys.end(), vKey);
-            if(it == vKeys.end())
-            {
-                std::vector<unsigned char> vEmpty;
-                return vEmpty;
-            }
-            
-            int nIndex = (it - vKeys.begin());
-            return vData[nIndex];
-        }
-		
 		/** Add a new Transaction to the Memory Map. **/
-		bool AddTransaction(std::vector<unsigned char> vKey, std::vector<unsigned char> vDataIn,
+		bool AddTransaction(std::vector<unsigned char> vKey, std::vector<unsigned char> vData,
 							std::vector<unsigned char> vOriginalData)
 		{
 			MUTEX_LOCK(TX_MUTEX);
 			
-            vKeys.push_back(vKey);
-            vData.push_back(vDataIn);
-            
+			mapTransactions[vKey] = vData;
+			mapOriginalData[vKey] = vOriginalData;
+			
 			return true;
 		}
 		
@@ -100,21 +82,15 @@ namespace LLD
 		{
 			MUTEX_LOCK(TX_MUTEX);
 			
-			std::vector< std::vector<unsigned char> >::iterator it = std::find(vKeys.begin(), vKeys.end(), vKey);
-            if(it == vKeys.end()){
-                int nIndex = (it - vKeys.begin());
-                
-                vData[nIndex].clear();
-            }
-            else {
-                std::vector<unsigned char> vEmpty;
-                
-                vKeys.push_back(vKey);
-                vData.push_back(vEmpty);
-            }
+			mapEraseData[vKey] = 0;
+			if(mapTransactions.count(vKey))
+				mapTransactions.erase(vKey);
+			
+			if(mapOriginalData.count(vKey))
+				mapOriginalData.erase(vKey);
 			
 			return true;
-		}
+		}	
 		
 		//TODO: Add Journal Flush to Disk Here
 		//OF the following serialization format
