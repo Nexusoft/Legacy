@@ -539,68 +539,6 @@ namespace Core
         /** Ensure the Key is Public Key. No Pay Hash or Script Hash for Trust Keys. **/
         if (keyType != Wallet::TX_PUBKEY)
             return error("CTrustPool::check() : Trust Key must be of Public Key Type Created from Keypool.");
-            
-        
-        /** Set the Public Key Integer Key from Bytes. **/
-        uint576 cKey;
-        cKey.SetBytes(vKeys[0]);
-            
-        /** Handle Genesis Transaction Rules. Genesis is checked after Trust Key Established. **/
-        if(cBlock.vtx[0].IsGenesis())
-        {
-            /** TODO: Remove this check **/
-            if(mapTrustKeys.count(cKey))
-            {
-                //mapTrustKeys.erase(cKey);
-                //return error("CTrustPool::check() : First Transaction Must be Genesis Coinstake.");
-            }
-            
-            /** Create the Trust Key from Genesis Transaction Block. **/			
-            CTrustKey cTrustKey(vKeys[0], cBlock.GetHash(), cBlock.vtx[0].GetHash(), cBlock.nTime);
-            if(!cTrustKey.CheckGenesis(cBlock))
-                return error("CTrustPool::check() : Invalid Genesis Transaction.");
-            
-            return true;
-        }
-        
-        /** Handle Adding Trust Transactions. **/
-        else if(cBlock.vtx[0].IsTrust())
-        {
-            /* No Trust Transaction without a Genesis. */
-            if(!mapTrustKeys.count(cKey))
-                return error("CTrustPool::check() : Cannot Create Trust Transaction without Genesis.");
-                
-            /* Check that the Trust Key and Current Block match. */
-            if(mapTrustKeys[cKey].vchPubKey != vKeys[0])
-                return error("CTrustPool::check() : Trust Key and Block Key Mismatch.");
-                
-            /* Trust Keys can only exist after the Genesis Transaction. */
-            if(!mapBlockIndex.count(mapTrustKeys[cKey].hashGenesisBlock))
-                return error("CTrustKey::check() : Block Not Found.");
-                
-            /* Don't allow Expired Trust Keys. Check Expiration from Previous Block Timestamp. */
-            if(mapTrustKeys[cKey].Expired(mapBlockIndex[cBlock.hashPrevBlock]))
-                return error("CTrustPool::check() : Cannot Create Block for Expired Trust Key.");
-                
-            /* Don't allow Blocks Created without First Input Previous Output hash of Trust Key Hash. 
-                This Secures and Anchors the Trust Key to all Descending Trust Blocks of that Key. */
-            if(cBlock.vtx[0].vin[0].prevout.hash != mapTrustKeys[cKey].GetHash()) {
-                mapTrustKeys[cKey].Print();
-                
-                return error("CTrustPool::check() : Trust Block Input Hash Mismatch to Trust Key Hash\n%s\n%s", cBlock.vtx[0].vin[0].prevout.hash.ToString().c_str(), mapTrustKeys[cKey].GetHash().ToString().c_str());
-            }
-            
-            /* Read the Genesis Transaction's Block from Disk. */
-            CBlock cBlockGenesis;
-            if(!cBlockGenesis.ReadFromDisk(mapBlockIndex[mapTrustKeys[cKey].hashGenesisBlock]->nFile, mapBlockIndex[mapTrustKeys[cKey].hashGenesisBlock]->nBlockPos, true))
-                return error("CTrustKey::CheckGenesis() : Could not Read Previous Block.");
-            
-            /* Double Check the Genesis Transaction. */
-            if(!mapTrustKeys[cKey].CheckGenesis(cBlockGenesis))
-                return error("CTrustPool::check() : Invalid Genesis Transaction.");
-            
-            return true;
-        }
         
         return false;
     }
@@ -640,6 +578,11 @@ namespace Core
             else //Accept key if genesis not found
                 return Accept(cBlock, fInit);
             
+            /** Create the Trust Key from Genesis Transaction Block. **/			
+            CTrustKey cTrustKey(vKeys[0], cBlock.GetHash(), cBlock.vtx[0].GetHash(), cBlock.nTime);
+            if(!cTrustKey.CheckGenesis(cBlock))
+                return error("CTrustPool::check() : Invalid Genesis Transaction.");
+            
             /* Dump the Trust Key To Console if not Initializing. */
             if(!fInit && GetArg("-verbose", 0) >= 2)
                 mapTrustKeys[cKey].Print();
@@ -656,6 +599,39 @@ namespace Core
         /* Handle Adding Trust Transactions. */
         else if(cBlock.vtx[0].IsTrust())
         {
+            /* No Trust Transaction without a Genesis. */
+            if(!mapTrustKeys.count(cKey))
+                return error("CTrustPool::Connect() : Cannot Create Trust Transaction without Genesis.");
+            
+            /* Check that the Trust Key and Current Block match. */
+            if(mapTrustKeys[cKey].vchPubKey != vKeys[0])
+                return error("CTrustPool::Connect() : Trust Key and Block Key Mismatch.");
+                
+            /* Trust Keys can only exist after the Genesis Transaction. */
+            if(!mapBlockIndex.count(mapTrustKeys[cKey].hashGenesisBlock))
+                return error("CTrustPool::Connect() : Block Not Found.");
+                
+            /* Don't allow Expired Trust Keys. Check Expiration from Previous Block Timestamp. */
+            if(mapTrustKeys[cKey].Expired(mapBlockIndex[cBlock.hashPrevBlock]))
+                return error("CTrustPool::Connect() : Cannot Create Block for Expired Trust Key.");
+                
+            /* Don't allow Blocks Created without First Input Previous Output hash of Trust Key Hash. 
+                This Secures and Anchors the Trust Key to all Descending Trust Blocks of that Key. */
+            if(cBlock.vtx[0].vin[0].prevout.hash != mapTrustKeys[cKey].GetHash()) {
+                mapTrustKeys[cKey].Print();
+                
+                return error("CTrustPool::Connect() : Trust Block Input Hash Mismatch to Trust Key Hash\n%s\n%s", cBlock.vtx[0].vin[0].prevout.hash.ToString().c_str(), mapTrustKeys[cKey].GetHash().ToString().c_str());
+            }
+            
+            /* Read the Genesis Transaction's Block from Disk. */
+            CBlock cBlockGenesis;
+            if(!cBlockGenesis.ReadFromDisk(mapBlockIndex[mapTrustKeys[cKey].hashGenesisBlock]->nFile, mapBlockIndex[mapTrustKeys[cKey].hashGenesisBlock]->nBlockPos, true))
+                return error("CTrustPool::Connect() : Could not Read Previous Block.");
+            
+            /* Double Check the Genesis Transaction. */
+            if(!mapTrustKeys[cKey].CheckGenesis(cBlockGenesis))
+                return error("CTrustPool::Connect() : Invalid Genesis Transaction.");
+            
             /* Don't allow Blocks Created Before Minimum Interval. */
             uint1024 back = mapTrustKeys[cKey].Back();
             if(back == 0)
