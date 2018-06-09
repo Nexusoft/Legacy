@@ -861,6 +861,7 @@ namespace Core
 				GetCoinstakeInterest(indexdb, nInterest);
 				
 				printf("ConnectInputs() : %f Value Out, %f Interest, %f Expected\n", (double)vout[0].nValue / COIN, (double)nInterest / COIN, (double)(nInterest + nValueIn) / COIN);
+                
 				if (vout[0].nValue != (nInterest + nValueIn))
 					return DoS(100, error("ConnectInputs() : %s stake reward mismatch", GetHash().ToString().substr(0,10).c_str()));
 					

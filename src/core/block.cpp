@@ -296,7 +296,7 @@ namespace Core
                     return error("CBlock::SetBestChain() : DisconnectBlock %s failed", pindex->GetBlockHash().ToString().substr(0,20).c_str());
                     
                 /** Remove Transactions from Current Trust Keys **/
-                if(block.IsProofOfStake() && !cTrustPool.Remove(block))
+                if(block.IsProofOfStake() && !cTrustPool.Disconnect(block))
                     return error("CBlock::SetBestChain() : Disconnect Failed to Remove Trust Key at Block %s", pindex->GetBlockHash().ToString().substr(0,20).c_str());
                 
                 /** Resurrect Memory Pool Transactions. **/
@@ -327,7 +327,7 @@ namespace Core
                     HardenCheckpoint(pindex);
                 
                 /** Add Transaction to Current Trust Keys **/
-                if(block.IsProofOfStake() && !cTrustPool.Accept(block))
+                if(block.IsProofOfStake() && !cTrustPool.Connect(block))
                     return error("CBlock::SetBestChain() : Failed To Accept Trust Key Block.");
 
                 /* Delete Memory Pool Transactions contained already. **/
@@ -862,9 +862,11 @@ namespace Core
         /** Check the Proof of Stake Claims. **/
         else if (IsProofOfStake())
         {
-                
             if(!cTrustPool.Check(*this))
                 return DoS(50, error("AcceptBlock() : Invalid Trust Key"));
+            
+            if(!cTrustPool.Accept(*this))
+                return DoS(50, error("AcceptBlock() : Unable to Accept Trust Key"));
             
             /** Verify the Stake Kernel. **/
             if(!VerifyStake())
@@ -939,14 +941,6 @@ namespace Core
                 ++mi)
             {
                 CBlock* pblockOrphan = (*mi).second;
-                
-                if(GetBoolArg("-softban", true) && pblockOrphan->IsProofOfStake() && !cTrustPool.IsValid(*pblockOrphan))
-                {
-                    printf("\x1b[31m WARNING: \u001b[37;1m %s misbehavior (score=%d) \x1b[0m \n", pfrom ? pfrom->addr.ToString().c_str() : "unknown", 100);
-                        
-                    if(GetBoolArg("-hardban", false))
-                        return pblock->DoS(100, error("Banning Node..."));
-                }
         
                 if (pblockOrphan->AcceptBlock())
                     vWorkQueue.push_back(pblockOrphan->GetHash());

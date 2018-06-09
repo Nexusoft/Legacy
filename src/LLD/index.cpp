@@ -232,6 +232,8 @@ namespace LLD
                     }
                 }
                 
+                
+                //TODO: Trust key accept with no cBlock (CBlockIndex instead)
                 if(pindexNew->IsProofOfStake())
                 {
                     Core::CBlock block;
@@ -240,6 +242,9 @@ namespace LLD
                     
                     if(!Core::cTrustPool.Accept(block, true))
                         return error("CTxDB::LoadBlockIndex() : Failed To Accept Trust Key Block.");
+                    
+                    if(!Core::cTrustPool.Connect(block, true))
+                        return error("CTxDB::LoadBlockIndex() : Failed To Connect Trust Key Block.");
                 }
                 
             }
@@ -403,6 +408,7 @@ namespace LLD
             Core::CBlock block;
             if (!block.ReadFromDisk(pindexFork))
                 return error("LoadBlockIndex() : block.ReadFromDisk failed");
+            
             CIndexDB txdb;
             block.SetBestChain(txdb, pindexFork);
         }
@@ -515,9 +521,15 @@ namespace LLD
                     pindex->nCoinbaseRewards[2] = block.vtx[0].vout[nSize - 1].nValue;
                 }
                 
-                /** Add Transaction to Current Trust Keys **/
-                else if(pindex->IsProofOfStake() && !Core::cTrustPool.Accept(block, true))
-                    return error("CTxDB::LoadBlockIndex() : Failed To Accept Trust Key Block.");
+                //TODO: Trust key accept with no cBlock (CBlockIndex instead)
+                else
+                {
+                    if(!Core::cTrustPool.Accept(block, true))
+                        return error("CTxDB::LoadBlockIndex() : Failed To Accept Trust Key Block.");
+                    
+                    if(!Core::cTrustPool.Connect(block, true))
+                        return error("CTxDB::LoadBlockIndex() : Failed To Connect Trust Key Block.");
+                }
                 
                 /** Grab the transactions for the block and set the address balances. **/
                 if(GetBoolArg("-richlist", false))

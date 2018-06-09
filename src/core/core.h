@@ -607,7 +607,7 @@ namespace Core
 	{
 	public:
 	
-		/** The Public Key associated with Trust Key. **/
+		/* The Public Key associated with Trust Key. */
 		std::vector<unsigned char> vchPubKey;
 		
 		unsigned int nVersion;
@@ -615,8 +615,8 @@ namespace Core
 		uint512   hashGenesisTx;
 		unsigned int nGenesisTime;
 		
-		/** Previous Blocks Vector to store list of blocks of this Trust Key. **/
-		mutable std::vector<uint1024> hashPrevBlocks;
+		/* Previous Blocks Vector to store list of blocks of this Trust Key. */
+		mutable std::vector< std::pair<uint1024, bool> > hashPrevBlocks;
 		
 		CTrustKey() { SetNull(); }
 		CTrustKey(std::vector<unsigned char> vchPubKeyIn, uint1024 hashBlockIn, uint512 hashTxIn, unsigned int nTimeIn)
@@ -642,7 +642,7 @@ namespace Core
 		)
 		
 		
-		/** Set the Data structure to Null. **/
+		/* Set the Data structure to Null. */
 		void SetNull() 
 		{ 
 			nVersion             = 1;
@@ -653,16 +653,27 @@ namespace Core
 			vchPubKey.clear();
 		}
 		
-		/** Hash of a Trust Key to Verify the Key's Root. **/
+		/* Hash of a Trust Key to Verify the Key's Root. */
 		uint512 GetHash() const { return SK512(vchPubKey, BEGIN(hashGenesisBlock), END(nGenesisTime)); }
 		
-		/** Determine how old the Trust Key is From Timestamp. **/
+		/* Determine how old the Trust Key is From Timestamp. */
 		uint64 Age(unsigned int nTime) const;
 		
-		/** Time Since last Trust Block. **/
+		/* Time Since last Trust Block. */
         uint64 BlockAge(CBlockIndex* pindexNew) const;
+        
+        /* Get the Back of the Vector Connected block. */
+        uint1024 Back() const
+        {
+            for(auto prev = hashPrevBlocks.rbegin() ; prev != hashPrevBlocks.rend() ; prev ++){
+                if((*prev).second)
+                    return (*prev).first;
+            }
+            
+            return 0;
+        }
 		
-		/** Flag to Determine if Class is Empty and Null. **/
+		/* Flag to Determine if Class is Empty and Null. */
 		bool IsNull()  const { return (hashGenesisBlock == 0 || hashGenesisTx == 0 || nGenesisTime == 0 || vchPubKey.empty()); }
 		bool Expired(CBlockIndex* pindexNew) const;
 		bool CheckGenesis(CBlock cBlock) const;
@@ -700,10 +711,19 @@ namespace Core
         bool IsValid(CBlock cBlock);
 		bool Check(CBlock cBlock);
 		bool Accept(CBlock cBlock, bool fInit = false);
-		bool Remove(CBlock cBlock);
+        bool Connect(CBlock cBlock, bool fInit = false);
+        bool Disconnect(CBlock cBlock, bool fInit = false);
 		
 		bool Exists(uint576 cKey)    const { return mapTrustKeys.count(cKey); }
-		bool IsGenesis(uint576 cKey) const { return mapTrustKeys[cKey].hashPrevBlocks.empty(); }
+		bool IsGenesis(uint576 cKey, uint1024 hashBlock) const 
+		{ 
+            return mapTrustKeys[cKey].hashGenesisBlock == hashBlock; 
+        }
+        
+        bool IsGenesis(uint576 cKey) const 
+        {
+            return mapTrustKeys[cKey].hashPrevBlocks.size() == 1;
+        }
 		
 		double InterestRate(uint576 cKey, unsigned int nTime) const;
 		
