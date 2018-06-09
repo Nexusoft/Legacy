@@ -316,6 +316,9 @@ namespace Core
                 if (!block.ReadFromDisk(pindex))
                     return error("CBlock::SetBestChain() : ReadFromDisk for connect failed");
                 
+                if(GetArg("-verbose", 0) >= 2)
+                    block.print();
+                
                 if (!block.ConnectBlock(indexdb, pindex))
                 {
                     indexdb.TxnAbort();
@@ -789,16 +792,6 @@ namespace Core
     }
     
     
-    double round_to_digits(double value, int digits)
-    {
-        if (value == 0.0) // otherwise it will return 'nan' due to the log10() of zero
-            return 0.0;
-
-        double factor = pow(10.0, digits - ceil(log10(fabs(value))));
-        return round(value * factor) / factor;   
-    }
-    
-    
     bool CBlock::AcceptBlock()
     {
         /** Check for Duplicate Block. **/
@@ -846,16 +839,16 @@ namespace Core
                 nMiningReward += vtx[0].vout[nIndex].nValue;
                     
             /** Check that the Mining Reward Matches the Coinbase Calculations. **/
-            if (round_to_digits((double)(nMiningReward / COIN), 4) != round_to_digits((double)(GetCoinbaseReward(pindexPrev, GetChannel(), 0) / COIN), 4))
-                return error("AcceptBlock() : miner reward mismatch %" PRId64 " : %" PRId64 "", nMiningReward, GetCoinbaseReward(pindexPrev, GetChannel(), 0));
+            if (round_coin_digits(nMiningReward, 5) != round_coin_digits(GetCoinbaseReward(pindexPrev, GetChannel(), 0), 5))
+                return error("AcceptBlock() : miner reward mismatch %" PRId64 " : %" PRId64 "", round_coin_digits(nMiningReward, 5), round_coin_digits(GetCoinbaseReward(pindexPrev, GetChannel(), 0), 5));
                     
             /** Check that the Exchange Reward Matches the Coinbase Calculations. **/
-            if (round_to_digits((double)(vtx[0].vout[nSize - 2].nValue / COIN), 4) != round_to_digits((double)(GetCoinbaseReward(pindexPrev, GetChannel(), 1) / COIN), 4))
-                return error("AcceptBlock() : exchange reward mismatch %" PRId64 " : %" PRId64 "\n", vtx[0].vout[1].nValue, GetCoinbaseReward(pindexPrev, GetChannel(), 1));
+            if (round_coin_digits(vtx[0].vout[nSize - 2].nValue, 5) != round_coin_digits(GetCoinbaseReward(pindexPrev, GetChannel(), 1), 5))
+                return error("AcceptBlock() : exchange reward mismatch %" PRId64 " : %" PRId64 "\n", round_coin_digits(vtx[0].vout[nSize - 2].nValue, 5), round_coin_digits(GetCoinbaseReward(pindexPrev, GetChannel(), 1), 5));
                         
             /** Check that the Developer Reward Matches the Coinbase Calculations. **/
-            if (round_to_digits((double)(vtx[0].vout[nSize - 1].nValue / COIN), 4) != round_to_digits((double)(GetCoinbaseReward(pindexPrev, GetChannel(), 2) / COIN), 4))
-                return error("AcceptBlock() : developer reward mismatch %" PRId64 " : %" PRId64 "\n", vtx[0].vout[2].nValue, GetCoinbaseReward(pindexPrev, GetChannel(), 2));
+            if (round_coin_digits(vtx[0].vout[nSize - 1].nValue, 5) != round_coin_digits(GetCoinbaseReward(pindexPrev, GetChannel(), 2), 5))
+                return error("AcceptBlock() : developer reward mismatch %" PRId64 " : %" PRId64 "\n", round_coin_digits(vtx[0].vout[nSize - 1].nValue, 5), round_coin_digits(GetCoinbaseReward(pindexPrev, GetChannel(), 2), 5));
                     
         }
         

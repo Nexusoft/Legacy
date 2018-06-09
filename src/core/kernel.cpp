@@ -636,12 +636,12 @@ namespace Core
         if(cBlock.vtx[0].IsGenesis())
         {
             
-            std::vector< std::pair<uint1024, bool> >::iterator it = std::find(mapTrustKeys[cKey].hashPrevBlocks.begin(), mapTrustKeys[cKey].hashPrevBlocks.end(), std::make_pair(cBlock.GetHash(), false) );
+            std::vector< std::pair<uint1024, bool> >::iterator itFalse = std::find(mapTrustKeys[cKey].hashPrevBlocks.begin(), mapTrustKeys[cKey].hashPrevBlocks.end(), std::make_pair(cBlock.GetHash(), false) );
             
-            if(it != mapTrustKeys[cKey].hashPrevBlocks.end())
-                (*it).second = true;
-            else
-                return error("CTrustPool::connect() : Trying to connect a trust key not accepted.");
+            if(itFalse != mapTrustKeys[cKey].hashPrevBlocks.end())
+                (*itFalse).second = true;
+            else //Accept key if genesis not found
+                return Accept(cBlock, fInit);
             
             /* Dump the Trust Key To Console if not Initializing. */
             if(!fInit && GetArg("-verbose", 0) >= 2)
@@ -659,12 +659,17 @@ namespace Core
         /* Handle Adding Trust Transactions. */
         else if(cBlock.vtx[0].IsTrust())
         {
-            std::vector< std::pair<uint1024, bool> >::iterator it = std::find(mapTrustKeys[cKey].hashPrevBlocks.begin(), mapTrustKeys[cKey].hashPrevBlocks.end(), std::make_pair(cBlock.GetHash(), false) );
+            std::vector< std::pair<uint1024, bool> >::iterator itFalse = std::find(mapTrustKeys[cKey].hashPrevBlocks.begin(), mapTrustKeys[cKey].hashPrevBlocks.end(), std::make_pair(cBlock.GetHash(), false) );
             
-            if(it != mapTrustKeys[cKey].hashPrevBlocks.end())
-                (*it).second = true;
+            if(itFalse != mapTrustKeys[cKey].hashPrevBlocks.end())
+                (*itFalse).second = true;
             else
-                return error("CTrustPool::connect() : Trying to connect a trust key not accepted.");
+            {
+                std::vector< std::pair<uint1024, bool> >::iterator itTrue = std::find(mapTrustKeys[cKey].hashPrevBlocks.begin(), mapTrustKeys[cKey].hashPrevBlocks.end(), std::make_pair(cBlock.GetHash(), true) );
+                
+                if(itTrue == mapTrustKeys[cKey].hashPrevBlocks.end())
+                    return error("CTrustPool::connect() : Trying to connect a trust key not accepted.");
+            }
             
             /* Dump the Trust Key to Console if not Initializing. */
             if(!fInit && GetArg("-verbose", 0) >= 2)
@@ -725,7 +730,11 @@ namespace Core
             std::vector< std::pair<uint1024, bool> >::iterator it = std::find(mapTrustKeys[cKey].hashPrevBlocks.begin(), mapTrustKeys[cKey].hashPrevBlocks.end(), std::make_pair(cBlock.GetHash(), true) );
             
             if(it == mapTrustKeys[cKey].hashPrevBlocks.end())
-                return error("CTrustPool::Disconnect() Block %s not found in Trust Key", cBlock.GetHash().ToString().substr(0, 20).c_str());
+            {
+                std::vector< std::pair<uint1024, bool> >::iterator itFalse = std::find(mapTrustKeys[cKey].hashPrevBlocks.begin(), mapTrustKeys[cKey].hashPrevBlocks.end(), std::make_pair(cBlock.GetHash(), false) );
+                if(itFalse == mapTrustKeys[cKey].hashPrevBlocks.end())
+                    return error("CTrustPool::Disconnect() Block %s not found in Trust Key", cBlock.GetHash().ToString().substr(0, 20).c_str());
+            }
             else
                 (*it).second = false;
                     
