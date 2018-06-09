@@ -540,7 +540,7 @@ namespace Core
         if (keyType != Wallet::TX_PUBKEY)
             return error("CTrustPool::check() : Trust Key must be of Public Key Type Created from Keypool.");
         
-        return false;
+        return true;
     }
     
     
