@@ -622,8 +622,7 @@ namespace Core
             /* Don't allow Blocks Created without First Input Previous Output hash of Trust Key Hash. 
                 This Secures and Anchors the Trust Key to all Descending Trust Blocks of that Key. */
             if(cBlock.vtx[0].vin[0].prevout.hash != mapTrustKeys[cKey].GetHash()) {
-                mapTrustKeys[cKey].Print();
-                
+
                 return error("CTrustPool::Connect() : Trust Block Input Hash Mismatch to Trust Key Hash\n%s\n%s", cBlock.vtx[0].vin[0].prevout.hash.ToString().c_str(), mapTrustKeys[cKey].GetHash().ToString().c_str());
             }
             
@@ -783,10 +782,6 @@ namespace Core
         {
             /** Add the new block to the Trust Key. **/
             mapTrustKeys[cKey].hashPrevBlocks.push_back(std::make_pair(cBlock.GetHash(), false));
-            
-            /** Dump the Trust Key to Console if not Initializing. **/
-            if(!fInit && GetArg("-verbose", 0) >= 2)
-                mapTrustKeys[cKey].Print();
             
             /** Only Debug when Not Initializing. **/
             if(!fInit && GetArg("-verbose", 0) >= 1) {
