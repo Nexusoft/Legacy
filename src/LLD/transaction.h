@@ -74,7 +74,7 @@ namespace LLD
 			mapTransactions[vKey] = vData;
 			mapOriginalData[vKey] = vOriginalData;
             
-            if(mapEraseData.count(vKey)
+            if(mapEraseData.count(vKey))
                 mapEraseData.erase(vKey);
 			
 			return true;
