@@ -212,15 +212,13 @@ namespace LLD
 			KeyDatabase* SectorKeys = GetKeychain(strKeychainRegistry);
 			if(!SectorKeys)
 				return error("Get() : Sector Keys not Registered for Name %s\n", strKeychainRegistry.c_str());
-			
-            /* Check that the key is not pending in a transaction for Erase. */
-            if(pTransaction && pTransaction->Get(vKey).empty())
-                return false;
             
             /* Check if the new data is set in a transaction to ensure that the database knows what is in volatile memory. */
             if(pTransaction && pTransaction->Has(vKey))
             {
                 vData = pTransaction->Get(vKey);
+                if(vData.empty())
+                    return false;
                 
                 if(GetArg("-verbose", 0) >= 4)
                     printf("SECTOR GET:%s\n", HexStr(vData.begin(), vData.end()).c_str());
