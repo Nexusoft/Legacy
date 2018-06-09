@@ -890,7 +890,7 @@ namespace Core
     uint64 CTrustKey::BlockAge(CBlockIndex* pindexNew) const
     {
         /* Genesis Transaction Block Age is Time to Genesis Time. */
-        if(hashPrevBlocks[0].first == hashGenesisBlock)
+        if(hashPrevBlocks.size() == 1)
             return 0;
         
         /* Catch overflow attacks. Should be caught in verify stake but double check here. */

@@ -70,9 +70,41 @@ namespace LLD
         return Write(make_pair(string("blockindex"), blockindex.GetBlockHash()), blockindex);
     }
     
-    bool CIndexDB::ReadBlockIndex(const uint1024 hashBlock, Core::CDiskBlockIndex& blockindex)
+    bool CIndexDB::ReadBlockIndex(const uint1024 hashBlock, Core::CBlockIndex* pindexNew)
     {
-        return Read(make_pair(string("blockindex"), hashBlock), blockindex);
+        Core::CDiskBlockIndex diskindex;
+        if(!Read(make_pair(string("blockindex"), hashBlock), diskindex))
+            return false;
+        
+        pindexNew                 = new Core::CBlockIndex();
+        pindexNew->phashBlock     = &hashBlock;
+        //pindexNew->pprev        = InsertBlockIndex(diskindex.hashPrev);
+        //pindexNew->pnext        = InsertBlockIndex(diskindex.hashNext);
+        pindexNew->nFile          = diskindex.nFile;
+        pindexNew->nBlockPos      = diskindex.nBlockPos;
+        pindexNew->nMint          = diskindex.nMint;
+        pindexNew->nMoneySupply   = diskindex.nMoneySupply;
+        pindexNew->nChannelHeight = diskindex.nChannelHeight;
+        pindexNew->nChainTrust    = diskindex.nChainTrust;
+            
+        /* Handle the Reserves. */
+        pindexNew->nCoinbaseRewards[0] = diskindex.nCoinbaseRewards[0];
+        pindexNew->nCoinbaseRewards[1] = diskindex.nCoinbaseRewards[1];
+        pindexNew->nCoinbaseRewards[2] = diskindex.nCoinbaseRewards[2];
+        pindexNew->nReleasedReserve[0] = diskindex.nReleasedReserve[0];
+        pindexNew->nReleasedReserve[1] = diskindex.nReleasedReserve[1];
+        pindexNew->nReleasedReserve[2] = diskindex.nReleasedReserve[2];
+                
+        /* Handle the Block Headers. */
+        pindexNew->nVersion       = diskindex.nVersion;
+        pindexNew->hashMerkleRoot = diskindex.hashMerkleRoot;
+        pindexNew->nChannel       = diskindex.nChannel;
+        pindexNew->nHeight        = diskindex.nHeight;
+        pindexNew->nBits          = diskindex.nBits;
+        pindexNew->nNonce         = diskindex.nNonce;
+        pindexNew->nTime          = diskindex.nTime;
+        
+        return true;
     }
 
     bool CIndexDB::ReadHashBestChain(uint1024& hashBestChain)
