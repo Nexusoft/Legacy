@@ -102,37 +102,22 @@ namespace Core
     /** Check the Coinstake Transaction is within the rules applied for Proof of Stake. **/
     bool CBlock::VerifyStake() const
     {
-        /** A] Make Sure Coinstake Transaction is First. **/
-        if (!vtx[0].IsCoinStake())
-            return error("CBlock::VerifyStake() : First transaction non-coinstake %s", vtx[0].GetHash().ToString().c_str());
-
-        /** B] Make Sure Coinstake Transaction Time is Before Block. **/
-        if (vtx[0].nTime > nTime)
-            return error("CBlock::VerifyStake()() : Coinstake Timestamp to far into Future.");
             
-        /** C] Check that the Coinbase / CoinstakeTimstamp is after Previous Block. **/
-        if (mapBlockIndex[hashPrevBlock]->GetBlockTime() > vtx[0].nTime)
-            return error("CBlock::VerifyStake() : Coinstake Timestamp too Early.");
-            
-        /** D] Check Average age is above Limit if No Trust Key Seen. **/
+        /* Check Average age is above Limit if No Trust Key Seen. */
         vector< std::vector<unsigned char> > vKeys;
         Wallet::TransactionType keyType;
         if (!Wallet::Solver(vtx[0].vout[0].scriptPubKey, keyType, vKeys))
             return error("CBlock::VerifyStake() : Failed To Solve Trust Key Script.");
             
-        /** E] Ensure the Key is Public Key. No Pay Hash or Script Hash for Trust Keys. **/
+        /* Ensure the Key is Public Key. No Pay Hash or Script Hash for Trust Keys. */
         if (keyType != Wallet::TX_PUBKEY)
             return error("CBlock::VerifyStake() : Trust Key must be of Public Key Type Created from Keypool.");
-            
-        /** F] Check the Coinstake Time is before Unified Timestamp. **/
-        if(vtx[0].nTime > (GetUnifiedTimestamp() + MAX_UNIFIED_DRIFT))
-            return error("CBlock::VerifyStake() : Coinstake Transaction too far in Future.");
         
-        /** Set the Public Key Integer Key from Bytes. **/
+        /* Set the Public Key Integer Key from Bytes. */
         uint576 cKey;
         cKey.SetBytes(vKeys[0]);
         
-        /** Determine Trust Age if the Trust Key Exists. **/
+        /* Determine Trust Age if the Trust Key Exists. */
         uint64 nCoinAge = 0, nTrustAge = 0, nBlockAge = 0;
         double nTrustWeight = 0.0, nBlockWeight = 0.0;
         if(!cTrustPool.Exists(cKey))
@@ -522,12 +507,28 @@ namespace Core
     **/
     bool CTrustPool::Check(CBlock cBlock)
     {
-        /** Lock Accepting Trust Keys to Mutex. **/
+        /* Lock Accepting Trust Keys to Mutex. */
         LOCK(cs);
         
-        /** Ensure the Block is for Proof of Stake Only. **/
+        /* Ensure the Block is for Proof of Stake Only. */
         if(!cBlock.IsProofOfStake())
             return error("CTrustPool::check() : Cannot Accept non Coinstake Transactions.");
+        
+        /* Check the Coinstake Time is before Unified Timestamp. */
+        if(cBlock.vtx[0].nTime > (GetUnifiedTimestamp() + MAX_UNIFIED_DRIFT))
+            return error("CTrustPool::check() : Coinstake Transaction too far in Future.");
+        
+        /* Make Sure Coinstake Transaction is First. */
+        if (!cBlock.vtx[0].IsCoinStake())
+            return error("CTrustPool::check() : First transaction non-coinstake %s", cBlock.vtx[0].GetHash().ToString().c_str());
+        
+        /* Make Sure Coinstake Transaction Time is Before Block. */
+        if (cBlock.vtx[0].nTime > cBlock.nTime)
+            return error("CTrustPool::check()  : Coinstake Timestamp to far into Future.");
+            
+        /* Check that the Coinbase / CoinstakeTimstamp is after Previous Block. */
+        if (mapBlockIndex[cBlock.hashPrevBlock]->GetBlockTime() > cBlock.vtx[0].nTime)
+            return error("CTrustPool::check()  : Coinstake Timestamp too Early.");
             
         /** Extract the Key from the Script Signature. **/
         vector< std::vector<unsigned char> > vKeys;
@@ -617,16 +618,20 @@ namespace Core
     {
         /* Lock Accepting Trust Keys to Mutex. */
         LOCK(cs);
+        
+        /* Verify the Stake Kernel. */
+        if(!cBlock.VerifyStake())
+            return error("CTrustPool::Connect() : Invalid Proof of Stake");
             
         /* Extract the Key from the Script Signature. */
         vector< std::vector<unsigned char> > vKeys;
         Wallet::TransactionType keyType;
         if (!Wallet::Solver(cBlock.vtx[0].vout[0].scriptPubKey, keyType, vKeys))
-            return error("CTrustPool::accept() : Failed To Solve Trust Key Script.");
+            return error("CTrustPool::Connect() : Failed To Solve Trust Key Script.");
 
         /* Ensure the Key is Public Key. No Pay Hash or Script Hash for Trust Keys. */
         if (keyType != Wallet::TX_PUBKEY)
-            return error("CTrustPool::accept() : Trust Key must be of Public Key Type Created from Keypool.");
+            return error("CTrustPool::Connect() : Trust Key must be of Public Key Type Created from Keypool.");
             
         /* Set the Public Key Integer Key from Bytes. */
         uint576 cKey;
@@ -649,7 +654,7 @@ namespace Core
             
             /* Only Debug when Not Initializing. */
             if(GetArg("-verbose", 0) >= 1 && !fInit) {
-                printf("CTrustPool::accept() : New Genesis Coinstake Transaction From Block %u\n", cBlock.nHeight);
+                printf("CTrustPool::Connect() : New Genesis Coinstake Transaction From Block %u\n", cBlock.nHeight);
                 printf("CTrustPool::ACCEPTED %s\n", cKey.ToString().substr(0, 20).c_str());
             }
             
@@ -668,7 +673,7 @@ namespace Core
                 std::vector< std::pair<uint1024, bool> >::iterator itTrue = std::find(mapTrustKeys[cKey].hashPrevBlocks.begin(), mapTrustKeys[cKey].hashPrevBlocks.end(), std::make_pair(cBlock.GetHash(), true) );
                 
                 if(itTrue == mapTrustKeys[cKey].hashPrevBlocks.end())
-                    return error("CTrustPool::connect() : Trying to connect a trust key not accepted.");
+                    return error("CTrustPool::Connect() : Trying to connect a trust key not accepted.");
             }
             
             /* Dump the Trust Key to Console if not Initializing. */
@@ -683,7 +688,7 @@ namespace Core
             return true;
         }
         
-        return error("CTrustPool::accept() : Missing Trust or Genesis Transaction in Block.");
+        return error("CTrustPool::Connect() : Missing Trust or Genesis Transaction in Block.");
     }
         
         

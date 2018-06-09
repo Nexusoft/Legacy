@@ -861,9 +861,6 @@ namespace Core
             if(!cTrustPool.Accept(*this))
                 return DoS(50, error("AcceptBlock() : Unable to Accept Trust Key"));
             
-            /** Verify the Stake Kernel. **/
-            if(!VerifyStake())
-                return DoS(50, error("AcceptBlock() : Invalid Proof of Stake"));
         }
         
             
