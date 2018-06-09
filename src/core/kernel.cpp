@@ -135,11 +135,11 @@ namespace Core
         /** Determine Trust Age if the Trust Key Exists. **/
         uint64 nCoinAge = 0, nTrustAge = 0, nBlockAge = 0;
         double nTrustWeight = 0.0, nBlockWeight = 0.0;
-        if(cTrustPool.Exists(cKey))
+        if(!cTrustPool.Exists(cKey))
+            return error("CBlock::VerifyStake() : No Trust Key in Trust Pool (Missing Accept)");
+        
+        if(vtx[0].IsTrust())
         {
-            /** Check that Transaction is not Genesis when Trust Key is Established. **/
-            if(vtx[0].IsGenesis())
-                return error("CBlock::VerifyStake() : Cannot Produce Genesis Transaction when Trust Key Exists.");
             
             /* Check the genesis and trust timestamps. */
             if(cTrustPool.Find(cKey).nGenesisTime > mapBlockIndex[hashPrevBlock]->GetBlockTime())
@@ -156,20 +156,18 @@ namespace Core
         }
         else
         {
-            /** Check that Transaction is not Trust when no Genesis. **/
-            if(vtx[0].IsTrust())
-                return error("CBlock::VerifyStake() : Cannot Produce Trust Transaction without Genesis.");
+            /* Check that Transaction is not Genesis when Trust Key is Established. */
+            if(GetHash() != cTrustPool.Find(cKey).hashGenesisBlock)
+                return error("CBlock::VerifyStake() : Duplicate Genesis not Allowed");
                 
-            /** Check that Genesis has no Transactions. **/
+            /* Check that Genesis has no Transactions. */
             if(vtx.size() != 1)
                 return error("CBlock::VerifyStake() : Cannot Include Transactions with Genesis Transaction");
                 
             /** Calculate the Average Coinstake Age. **/
             LLD::CIndexDB indexdb("r");
             if(!vtx[0].GetCoinstakeAge(indexdb, nCoinAge))
-            {
                 return error("CBlock::VerifyStake() : Failed to Get Coinstake Age.");
-            }
             
             /** Trust Weight For Genesis Transaction Reaches Maximum at 90 day Limit. **/
             nTrustWeight = min(17.5, (((16.5 * log(((2.0 * nCoinAge) / (60 * 60 * 24 * 28 * 3)) + 1.0)) / log(3))) + 1.0);
