@@ -576,7 +576,11 @@ namespace Core
             if(itFalse != mapTrustKeys[cKey].hashPrevBlocks.end())
                 (*itFalse).second = true;
             else //Accept key if genesis not found
-                return Accept(cBlock, fInit);
+            {
+                Accept(cBlock, fInit);
+                
+                return Connect(cBlock, fInit);
+            }
             
             /** Create the Trust Key from Genesis Transaction Block. **/			
             CTrustKey cTrustKey(vKeys[0], cBlock.GetHash(), cBlock.vtx[0].GetHash(), cBlock.nTime);
