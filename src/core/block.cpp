@@ -167,7 +167,7 @@ namespace Core
             {
                 bool fInvalid;
                 if (!tx.FetchInputs(indexdb, mapQueuedChanges, true, false, mapInputs, fInvalid))
-                    return error("ConnectBlock() : Failed to Connect Inputs.");
+                    return error("ConnectBlock() : Failed to Fetch Inputs.");
 
 
                 // Add in sigops done by pay-to-script-hash inputs;
