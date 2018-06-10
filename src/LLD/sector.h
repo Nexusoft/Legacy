@@ -205,7 +205,7 @@ namespace LLD
 			
             /* Check that the key is not pending in a transaction for Erase. */
             if(pTransaction && pTransaction->mapEraseData.count(vKey))
-                return error("Get() : Record is in Erase Queue");
+                return false;
             
             /* Check if the new data is set in a transaction to ensure that the database knows what is in volatile memory. */
             if(pTransaction && pTransaction->mapTransactions.count(vKey))
