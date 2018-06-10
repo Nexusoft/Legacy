@@ -114,16 +114,17 @@ namespace Core
 	bool CTransaction::ReadFromDisk(LLD::CIndexDB& indexdb, COutPoint prevout, CTxIndex& txindexRet)
 	{
 		SetNull();
+        
 		if (!indexdb.ReadTxIndex(prevout.hash, txindexRet))
-			return error("CTransaction::ReadFromDisk() : Failed to ReadTxIndex");
+			return false;
         
 		if (!ReadFromDisk(txindexRet.pos))
-			return error("CTransaction::ReadFromDisk() : Failed to ReadFromDisk");
+			return false;
         
 		if (prevout.n >= vout.size())
 		{
 			SetNull();
-			return error("CTransaction::ReadFromDisk() : prevout.n >= vout.size");
+			return false;
 		}
 		return true;
 	}
