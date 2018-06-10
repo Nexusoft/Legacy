@@ -660,25 +660,36 @@ namespace Core
 		uint64 Age(unsigned int nTime) const;
 		
 		/* Time Since last Trust Block. */
-        uint64 BlockAge(CBlockIndex* pindexNew) const;
+        uint64 BlockAge(uint1024 hashThisBlock, uint1024 hashPrevBlock) const;
         
         /* Get the Back of the Vector Connected block. */
-        uint1024 Back() const
+        uint1024 Back(uint1024 hashThisBlock = 0) const
         {
+            bool fFound = false;
             for(auto prev = hashPrevBlocks.rbegin() ; prev != hashPrevBlocks.rend() ; prev ++){
+                if(hashThisBlock != 0){
+                    if((*prev).first == hashThisBlock){
+                        fFound = true;
+                    
+                        continue;
+                    }
+                    
+                    if(!fFound)
+                        continue;
+                }
                 if((*prev).second)
                     return (*prev).first;
             }
             
-            return 0;
+            return hashGenesisBlock;
         }
 		
 		/* Flag to Determine if Class is Empty and Null. */
 		bool IsNull()  const { return (hashGenesisBlock == 0 || hashGenesisTx == 0 || nGenesisTime == 0 || vchPubKey.empty()); }
-		bool Expired(CBlockIndex* pindexNew) const;
+		bool Expired(uint1024 hashThisBlock, uint1024 hashPrevBlock) const;
 		bool CheckGenesis(CBlock cBlock) const;
 		
-		std::string ToString()
+		std::string ToString() const
 		{
 			uint576 cKey;
 			cKey.SetBytes(vchPubKey);
@@ -686,7 +697,7 @@ namespace Core
 			return strprintf("Hash = %s, Key = %s, Genesis = %s, Tx = %s, Time = %u, Age = %u", GetHash().ToString().c_str(), cKey.ToString().c_str(), hashGenesisBlock.ToString().c_str(), hashGenesisTx.ToString().c_str(), nGenesisTime, Age(GetUnifiedTimestamp()));
 		}
 		
-		void Print()
+		void Print() const
 		{
 			printf("CTrustKey(%s)\n", ToString().c_str());
 		}

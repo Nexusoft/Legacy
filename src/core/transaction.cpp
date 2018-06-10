@@ -115,13 +115,13 @@ namespace Core
 	{
 		SetNull();
 		if (!indexdb.ReadTxIndex(prevout.hash, txindexRet))
-			return false;
+			return error("CTransaction::ReadFromDisk() : Failed to ReadTxIndex");
 		if (!ReadFromDisk(txindexRet.pos))
-			return false;
+			return error("CTransaction::ReadFromDisk() : Failed to ReadFromDisk");
 		if (prevout.n >= vout.size())
 		{
 			SetNull();
-			return false;
+			return error("CTransaction::ReadFromDisk() : prevout.n >= vout.size");
 		}
 		return true;
 	}

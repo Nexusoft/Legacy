@@ -189,16 +189,6 @@ namespace LLD
 			ssValue.reserve(value.GetSerializeSize(SER_LLD, DATABASE_VERSION));
 			ssValue << value;
 			std::vector<unsigned char> vData(ssValue.begin(), ssValue.end());
-
-			/** Commit to the Database. **/
-			if(pTransaction)
-			{
-				
-				std::vector<unsigned char> vOriginalData;
-				//Get(vKey, vOriginalData);
-				
-				return pTransaction->AddTransaction(vKey, vData, vOriginalData);
-			}
 			
 			return Put(vKey, vData);
 		}
@@ -227,7 +217,8 @@ namespace LLD
                 
                 return true;
             }
-			else if(SectorKeys->HasKey(vKey))
+			
+			if(SectorKeys->HasKey(vKey))
 			{
                 
 				/** Read the Sector Key from Keychain. **/
@@ -269,6 +260,14 @@ namespace LLD
 			KeyDatabase* SectorKeys = GetKeychain(strKeychainRegistry);
 			if(!SectorKeys)
 				return error("Put() : Sector Keys not Registered for Name %s\n", strKeychainRegistry.c_str());
+            
+			if(pTransaction)
+			{
+				std::vector<unsigned char> vOriginalData;
+				//Get(vKey, vOriginalData);
+				
+				return pTransaction->AddTransaction(vKey, vData, vOriginalData);
+			}
 			
 			/** Write Header if First Update. **/
 			if(!SectorKeys->HasKey(vKey))

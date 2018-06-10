@@ -10,6 +10,7 @@
 
 namespace Core
 {
+    
 	/** Dispatching Functions: To Dispatch to Registered Wallets **/
 	void RegisterWallet(Wallet::CWallet* pwalletIn)
 	{

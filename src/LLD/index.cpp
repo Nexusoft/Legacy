@@ -295,6 +295,8 @@ namespace LLD
             Core::pindexBest  = pindexNew;
             hashBlock = diskindex.hashNext;
         }
+        if(fRequestShutdown)
+            return true;
         
         Core::nBestHeight = Core::pindexBest->nHeight;
         Core::nBestChainTrust = Core::pindexBest->nChainTrust;
@@ -446,8 +448,9 @@ namespace LLD
             if (!block.ReadFromDisk(pindexFork))
                 return error("LoadBlockIndex() : block.ReadFromDisk failed");
             
-            CIndexDB txdb;
-            block.SetBestChain(txdb, pindexFork);
+            TxnBegin();
+            block.SetBestChain(*this, pindexFork);
+            TxnCommit();
         }
 
         return true;
@@ -462,7 +465,8 @@ namespace LLD
 
 
         unsigned int fFlags = DB_SET_RANGE;
-        loop() {
+        while(!fRequestShutdown)
+        {
             // Read next record
             CDataStream ssKey(SER_DISK, DATABASE_VERSION);
             if (fFlags == DB_SET_RANGE)
@@ -808,8 +812,8 @@ namespace LLD
             Core::CBlock block;
             if (!block.ReadFromDisk(pindexFork))
                 return error("LoadBlockIndex() : block.ReadFromDisk failed");
-            CIndexDB txdb;
-            block.SetBestChain(txdb, pindexFork);
+            
+            block.SetBestChain(*this, pindexFork);
         }
 
         return true;
