@@ -224,7 +224,7 @@ namespace LLD
 				/** Read the Sector Key from Keychain. **/
 				SectorKey cKey;
 				if(!SectorKeys->Get(vKey, cKey))
-					return false;
+					return error("Sector Get() : Cannot Find Key in Keychain");
 				
 				/** Open the Stream to Read the data from Sector on File. **/
 				std::fstream fStream(strprintf("%s%s%u.dat", strBaseLocation.c_str(), strBaseName.c_str(), cKey.nSectorFile).c_str(), std::ios::in | std::ios::binary);

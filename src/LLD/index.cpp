@@ -44,7 +44,8 @@ namespace LLD
         assert(!Net::fClient);
         tx.SetNull();
         if (!ReadTxIndex(hash, txindex))
-            return false;
+            return error("CIndexDB::ReadDiskTx() : Failed to ReadTxIndex");
+        
         return (tx.ReadFromDisk(txindex.pos));
     }
 

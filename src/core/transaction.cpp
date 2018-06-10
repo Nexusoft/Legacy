@@ -116,8 +116,10 @@ namespace Core
 		SetNull();
 		if (!indexdb.ReadTxIndex(prevout.hash, txindexRet))
 			return error("CTransaction::ReadFromDisk() : Failed to ReadTxIndex");
+        
 		if (!ReadFromDisk(txindexRet.pos))
 			return error("CTransaction::ReadFromDisk() : Failed to ReadFromDisk");
+        
 		if (prevout.n >= vout.size())
 		{
 			SetNull();

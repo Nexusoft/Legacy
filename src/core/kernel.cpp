@@ -363,11 +363,11 @@ namespace Core
         vector< std::vector<unsigned char> > vKeys;
         Wallet::TransactionType keyType;
         if (!Wallet::Solver(cBlock.vtx[0].vout[0].scriptPubKey, keyType, vKeys))
-            return error("CTrustPool::IsValid() : Failed To Solve Trust Key Script.");
+            return true;
 
         /* Ensure the Key is Public Key. No Pay Hash or Script Hash for Trust Keys. */
         if (keyType != Wallet::TX_PUBKEY)
-            return error("CTrustPool::IsValid() : Trust Key must be of Public Key Type Created from Keypool.");
+            return true;
             
         /* Set the Public Key Integer Key from Bytes. */
         uint576 cKey;
@@ -382,10 +382,10 @@ namespace Core
         {
             pindex[i] = GetLastChannelIndex(i == 0 ? mapBlockIndex[cBlock.hashPrevBlock] : pindex[i - 1]->pprev, 0);
             if(!pindex[i])
-                return error("CTrustPool::IsValid() : Can't Find last Channel Index");
+                return true;
             
             if(!pblock[i].ReadFromDisk(pindex[i]->nFile, pindex[i]->nBlockPos, true))
-                return error("CTrustPool::IsValid() : Can't Read Block from Disk");
+                return true;
                 
             if(i > 0)
                 nAverageTime += (pblock[i - 1].nTime - pblock[i].nTime);
@@ -413,12 +413,12 @@ namespace Core
                 
                 /* Ignore Outputs that are not in the Main Chain. */
                 if (!txPrev.ReadFromDisk(indexdb, cBlock.vtx[0].vin[nIndex].prevout, txindex))
-                    return error("GetCoinstakeAge() : Invalid Previous Transaction");
+                    return true;
 
                 /* Read the Previous Transaction's Block from Disk. */
                 CBlock block;
                 if (!block.ReadFromDisk(txindex.pos.nFile, txindex.pos.nBlockPos, false))
-                    return error("GetCoinstakeAge() : Failed To Read Block from Disk");
+                    return true;
                 
                 /* RULE: No Genesis if coin age is less than 1 days old. */
                 if((cBlock.nTime - block.GetBlockTime()) < 24 * 60 * 60)
@@ -461,12 +461,12 @@ namespace Core
                 
                 /* Ignore Outputs that are not in the Main Chain. */
                 if (!txPrev.ReadFromDisk(indexdb, cBlock.vtx[0].vin[nIndex].prevout, txindex))
-                    return error("GetCoinstakeAge() : Invalid Previous Transaction");
+                    return true;
 
                 /* Read the Previous Transaction's Block from Disk. */
                 CBlock block;
                 if (!block.ReadFromDisk(txindex.pos.nFile, txindex.pos.nBlockPos, false))
-                    return error("GetCoinstakeAge() : Failed To Read Block from Disk");
+                    return true;
                 
                 /* RULE: Inputs need to have at least 100 confirmations */
                 if(cBlock.nHeight - block.nHeight < 100)
