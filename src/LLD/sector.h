@@ -82,8 +82,12 @@ namespace LLD
 		}
 		~SectorDatabase()
         { 
-            if (pTransaction) 
+            if(pTransaction && !pTransaction->fCommit)
                 delete pTransaction;
+            else {
+                while(pTransaction)
+                    Sleep(100);
+            }
         }
 		
 		/** Initialize Sector Database. **/
@@ -411,6 +415,9 @@ namespace LLD
 		bool TxnCommit()
 		{
 			MUTEX_LOCK(SECTOR_MUTEX);
+            
+            //Set the transaction to commit status
+            fCommit = true;
             
             //TODO: Commit Transaction to Journal Here before writing to Keychain
 			

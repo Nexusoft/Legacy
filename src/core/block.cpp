@@ -838,6 +838,18 @@ namespace Core
             int64 nMiningReward = 0;
             for(int nIndex = 0; nIndex < nSize - 2; nIndex++)
                 nMiningReward += vtx[0].vout[nIndex].nValue;
+            
+            /* Soft Check on Floating Point Precision (logging only) */
+            if(GetBoolArg("-logerrors", false)) {
+                if(nMiningReward != GetCoinbaseReward(pindexPrev, GetChannel(), 0))
+                    error("AcceptBlock() : miner reward mismatch %" PRId64 " : %" PRId64 "", nMiningReward, GetCoinbaseReward(pindexPrev, GetChannel(), 0));
+                
+                if(vtx[0].vout[nSize - 2].nValue != GetCoinbaseReward(pindexPrev, GetChannel(), 1))
+                    error("AcceptBlock() : ambassador reward mismatch %" PRId64 " : %" PRId64 "", vtx[0].vout[nSize - 2].nValue, GetCoinbaseReward(pindexPrev, GetChannel(), 0));
+                
+                if(vtx[0].vout[nSize - 1].nValue != GetCoinbaseReward(pindexPrev, GetChannel(), 2))
+                    error("AcceptBlock() : developer reward mismatch %" PRId64 " : %" PRId64 "", vtx[0].vout[nSize - 1].nValue, GetCoinbaseReward(pindexPrev, GetChannel(), 0));
+            }
                     
             /* Check that the Mining Reward Matches the Coinbase Calculations. */
             if (round_coin_digits(nMiningReward, 3) != round_coin_digits(GetCoinbaseReward(pindexPrev, GetChannel(), 0), 3))
@@ -845,7 +857,7 @@ namespace Core
                     
             /* Check that the Exchange Reward Matches the Coinbase Calculations. */
             if (round_coin_digits(vtx[0].vout[nSize - 2].nValue, 3) != round_coin_digits(GetCoinbaseReward(pindexPrev, GetChannel(), 1), 3))
-                return error("AcceptBlock() : exchange reward mismatch %" PRId64 " : %" PRId64 "\n", round_coin_digits(vtx[0].vout[nSize - 2].nValue, 3), round_coin_digits(GetCoinbaseReward(pindexPrev, GetChannel(), 1), 3));
+                return error("AcceptBlock() : ambassador reward mismatch %" PRId64 " : %" PRId64 "\n", round_coin_digits(vtx[0].vout[nSize - 2].nValue, 3), round_coin_digits(GetCoinbaseReward(pindexPrev, GetChannel(), 1), 3));
                         
             /* Check that the Developer Reward Matches the Coinbase Calculations. */
             if (round_coin_digits(vtx[0].vout[nSize - 1].nValue, 3) != round_coin_digits(GetCoinbaseReward(pindexPrev, GetChannel(), 2), 3))

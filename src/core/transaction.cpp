@@ -503,6 +503,7 @@ namespace Core
 			EraseFromWallets(ptxOld->GetHash());
 
 		printf("CTxMemPool::accept() : accepted %s\n", hash.ToString().substr(0,10).c_str());
+        
 		return true;
 	}
 
