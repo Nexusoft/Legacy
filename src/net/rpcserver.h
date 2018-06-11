@@ -7,16 +7,16 @@
 *******************************************************************************************/
 
 #ifndef _NexusRPC_H_
-#define _NexusRPC_H_ 1
+#define _NexusRPC_H_
 
 #include <string>
 #include <map>
 
 namespace Wallet { class CReserveKey; }
 
-#include "json/json_spirit_reader_template.h"
-#include "json/json_spirit_writer_template.h"
-#include "json/json_spirit_utils.h"
+#include "../json/json_spirit_reader_template.h"
+#include "../json/json_spirit_writer_template.h"
+#include "../json/json_spirit_utils.h"
 
 namespace Net
 {

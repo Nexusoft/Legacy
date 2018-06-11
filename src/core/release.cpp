@@ -72,6 +72,11 @@ namespace Core
 		int64 nSubsidy = 0;
 		for(int nMinute = 0; nMinute < nInterval; nMinute++)
 			nSubsidy += GetSubsidy(nMinutes + nMinute, nType);
+        
+        if(GetBoolArg("-logcoinbase", false))
+        {
+            printf("GetFractionalSubsidy(nMinutes=%i, nType=%i, nFraction=%f, nRemainder=%f, nReturn=%" PRId64 ")\n", nMinutes, nType, nFraction, nRemainder, (nSubsidy + (GetSubsidy(nMinutes + nInterval, nType) * nRemainder)));
+        }
 
 		return nSubsidy + (GetSubsidy(nMinutes + nInterval, nType) * nRemainder);
 	}
@@ -90,6 +95,13 @@ namespace Core
 			
 		int64 nBlockTime = max(pindexFirst->GetBlockTime() - pindexLast->GetBlockTime(), (int64) 1 );
 		int64 nMinutes   = ((pindex->nVersion >= 3) ? GetChainAge(pindexFirst->GetBlockTime()) : min(pindexFirst->nChannelHeight,  GetChainAge(pindexFirst->GetBlockTime())));
+        
+        if(GetBoolArg("-logcoinbase", false))
+        {
+            printf("GetCoinbaseReward\n%s\n(nChannel=%i, nType=%i, nBlockTime=%" PRId64 ", nMinutes=%" PRId64 ")\n", pindex->ToString().c_str(), nChannel, nType);
+            printf("FIRST::%s\n", pindexFirst->ToString().c_str());
+            printf("LAST ::%s\n", pindexLast->ToString().c_str());
+        }
 
 		
 		/** Block Version 3 Coinbase Tx Calculations. **/
