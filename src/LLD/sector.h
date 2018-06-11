@@ -417,7 +417,7 @@ namespace LLD
 			MUTEX_LOCK(SECTOR_MUTEX);
             
             //Set the transaction to commit status
-            fCommit = true;
+            pTransaction->fCommit = true;
             
             //TODO: Commit Transaction to Journal Here before writing to Keychain
 			
