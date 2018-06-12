@@ -495,11 +495,6 @@ namespace Core
         pindexNew->nChannelHeight = (pindexPrev ? pindexPrev->nChannelHeight : 0) + 1;
         
         
-        /* Check the Block Signature. */
-        if (!CheckBlockSignature())
-            return DoS(100, error("CheckBlock() : bad block signature"));
-        
-        
         /** Compute the Released Reserves. **/
         for(int nType = 0; nType < 3; nType++)
         {
@@ -538,11 +533,10 @@ namespace Core
             
             if(GetArg("-verbose", 0) >= 2)
                 printg("===== Pending Checkpoint Age = %u Hash = %s Height = %u\n", nAge, pindexNew->PendingCheckpoint.second.ToString().substr(0, 15).c_str(), pindexNew->PendingCheckpoint.first);
-        }								 
+        }
 
-        /** Add to the MapBlockIndex **/
-        map<uint1024, CBlockIndex*>::iterator mi = mapBlockIndex.insert(make_pair(hash, pindexNew)).first;
-        pindexNew->phashBlock = &((*mi).first);
+        /* Add to the MapBlockIndex */
+        mapBlockIndex[hash] = pindexNew;
 
 
         /** Write the new Block to Disk. **/
@@ -787,6 +781,11 @@ namespace Core
         // Check merkleroot
         if (hashMerkleRoot != BuildMerkleTree())
             return DoS(100, error("CheckBlock() : hashMerkleRoot mismatch"));
+        
+        
+        /* Check the Block Signature. */
+        if (!CheckBlockSignature())
+            return DoS(100, error("CheckBlock() : bad block signature"));
 
         return true;
     }
@@ -891,7 +890,12 @@ namespace Core
         // Check for duplicate
         uint1024 hash = pblock->GetHash();
         if (mapBlockIndex.count(hash))
-            return error("ProcessBlock() : already have block %d %s", mapBlockIndex[hash]->nHeight, hash.ToString().substr(0,20).c_str());
+        {
+            if(mapInvalidBlocks.count(hash) && mapInvalidBlocks[hash] != hash.SignatureHash())
+                printf("ProcessBlock() : detected mutated signature hash");
+            else
+                return error("ProcessBlock() : already have block %d %s", mapBlockIndex[hash]->nHeight, hash.ToString().substr(0,20).c_str());
+        }
         if (mapOrphanBlocks.count(hash))
             return error("ProcessBlock() : already have block (orphan) %s", hash.ToString().substr(0,20).c_str());
 
@@ -917,7 +921,49 @@ namespace Core
         }
         
         if (!pblock->AcceptBlock())
+        {
+            //attempt a 5 block rollback if this block is invalid and not rolled back before
+            if(!mapInvalidBlocks.count(pblock->GetHash()))
+            {
+                /* Find the Previous block from hashPrevBlock. */
+                map<uint1024, CBlockIndex*>::iterator mi = mapBlockIndex.find(pblock->hashPrevBlock);
+                if (mi == mapBlockIndex.end())
+                    return error("ProcessBlock() : (invalid checks - prev) AcceptBlock FAILED");
+
+                    
+                /* Check That Block Timestamp is not before previous block. */
+                if (GetBlockTime() <= pindexPrev->GetBlockTime())
+                    return error("ProcessBlock() : (invalid checks - time) AcceptBlock FAILED");
+        
+                const CBlockIndex* pindexFirst = pindexBest;
+                for(int nIndex = 5; nIndex > 0; nIndex--)
+                {
+                    const CBlockIndex* pindexLast = GetLastChannelIndex(pindexFirst->pprev, pindex->GetChannel());
+                    if(!pindexLast->pprev)
+                        break;
+                    
+                    CBlock block;
+                    if(!block.ReadFromDisk(pindexLast))
+                        return error("ProcessBlock() : (invalid checks - read) couldn't read from disk");
+                    
+                    mapInvalidBlocks[pindexLast->GetBlockHash()] = block.SignatureHash();
+                    if(nIndex == 1)
+                    {
+                        printf("MALICIOUS BLOCK IN CHAIN: Rolling Chain Back to nHeight=%u, nHash=%s\n", block.nHeight, block.GetHash().ToString().substr(0, 20).c_str());
+                        
+                        LLD::CIndexDB indexdb("r+");
+                        indexdb.TxnBegin();
+                        block.SetBestChain(indexdb, pindexLast);
+                        indexdb.TxnCommit();
+                        
+                        if(pfrom)
+                            pfrom->PushGetBlocks(pindexBest, 0);
+                    }
+                }
+            }
+            
             return error("ProcessBlock() : AcceptBlock FAILED");
+        }
 
 
         // Recursively process any orphan blocks that depended on this one

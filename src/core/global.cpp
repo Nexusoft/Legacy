@@ -206,6 +206,7 @@ namespace Core
 
 	/** In memory Indexing of Blocks into Blockchain. **/
 	map<uint1024, CBlockIndex*> mapBlockIndex;
+    map<uint1024, uint1024>     mapInvalidBlocks;
 	
 	/** In Memory Holdings of each Address Balance. **/
 	map<uint256, std::vector<std::pair<bool, uint512> > > mapRichList;

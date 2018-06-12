@@ -147,6 +147,7 @@ namespace Core
 	
 	/** The "Block Chain" or index of the chain linking each block to its previous block. **/
 	extern std::map<uint1024, CBlockIndex*> mapBlockIndex;
+    extern std::map<uint1024, CBlock*>   mapInvalidBlocks;
 	
 	extern std::map<uint1024, uint1024> mapProofOfStake;
 	extern std::map<uint512, CDataStream*> mapOrphanTransactions;
