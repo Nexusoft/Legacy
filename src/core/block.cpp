@@ -496,11 +496,6 @@ namespace Core
         pindexNew->nChannelHeight = (pindexPrev ? pindexPrev->nChannelHeight : 0) + 1;
         
         
-        /* Check that Block is Descendant of Hardened Checkpoints. */
-        if(!IsDescendant(pindexNew->pprev))
-            return error("AcceptBlock() : Not a descendant of Last Checkpoint");
-        
-        
         /** Compute the Released Reserves. **/
         for(int nType = 0; nType < 3; nType++)
         {
@@ -825,6 +820,11 @@ namespace Core
         /** Check That Block Timestamp is not before previous block. **/
         if (GetBlockTime() <= pindexPrev->GetBlockTime())
             return error("AcceptBlock() : block's timestamp too early Block: %" PRId64 " Prev: %" PRId64 "", GetBlockTime(), pindexPrev->GetBlockTime());
+        
+        
+        /* Check that Block is Descendant of Hardened Checkpoints. */
+        if(pindexPrev && !IsDescendant(pindexPrev))
+            return error("AcceptBlock() : Not a descendant of Last Checkpoint");
             
             
         /** Check the Coinbase Transactions in Block Version 3. **/
