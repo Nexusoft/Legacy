@@ -499,29 +499,6 @@ namespace Core
         if (!CheckBlockSignature())
             return DoS(100, error("CheckBlock() : bad block signature"));
         
-        
-        /** Compute the Released Reserves. **/
-        for(int nType = 0; nType < 3; nType++)
-        {
-            if(pindexNew->IsProofOfWork() && pindexPrev)
-            {
-                /** Calculate the Reserves from the Previous Block in Channel's reserve and new Release. **/
-                int64 nReserve  = pindexPrev->nReleasedReserve[nType] + GetReleasedReserve(pindexNew, pindexNew->GetChannel(), nType);
-                
-                /** Block Version 3 Check. Disable Reserves from going below 0. **/
-                if(pindexNew->nVersion >= 3 && pindexNew->nCoinbaseRewards[nType] >= nReserve)
-                    return error("AddToBlockIndex() : Coinbase Transaction too Large. Out of Reserve Limits");
-                
-                pindexNew->nReleasedReserve[nType] =  nReserve - pindexNew->nCoinbaseRewards[nType];
-                
-                if(GetArg("-verbose", 0) >= 2)
-                    printf("Reserve Balance %i | %f Nexus | Released %f\n", nType, pindexNew->nReleasedReserve[nType] / 1000000.0, (nReserve - pindexPrev->nReleasedReserve[nType]) / 1000000.0 );
-            }
-            else
-                pindexNew->nReleasedReserve[nType] = 0;
-                
-        }
-        
         /* Check the Coinbase Transactions in Block Version 3. */
         if(IsProofOfWork() && nHeight > 0 && nVersion >= 3)
         {
@@ -552,12 +529,35 @@ namespace Core
                     
             /* Check that the Exchange Reward Matches the Coinbase Calculations. */
             if (round_coin_digits(vtx[0].vout[nSize - 2].nValue, 3) != round_coin_digits(GetCoinbaseReward(pindexPrev, GetChannel(), 1), 3))
-                return error("AcceptBlock() : exchange reward mismatch %" PRId64 " : %" PRId64 "\n", round_coin_digits(vtx[0].vout[nSize - 2].nValue, 3), round_coin_digits(GetCoinbaseReward(pindexPrev, GetChannel(), 1), 3));
+                return error("AcceptBlock() : ambassador reward mismatch %" PRId64 " : %" PRId64 "\n", round_coin_digits(vtx[0].vout[nSize - 2].nValue, 3), round_coin_digits(GetCoinbaseReward(pindexPrev, GetChannel(), 1), 3));
                         
             /* Check that the Developer Reward Matches the Coinbase Calculations. */
             if (round_coin_digits(vtx[0].vout[nSize - 1].nValue, 3) != round_coin_digits(GetCoinbaseReward(pindexPrev, GetChannel(), 2), 3))
                 return error("AcceptBlock() : developer reward mismatch %" PRId64 " : %" PRId64 "\n", round_coin_digits(vtx[0].vout[nSize - 1].nValue, 3), round_coin_digits(GetCoinbaseReward(pindexPrev, GetChannel(), 2), 3));
                     
+        }
+        
+        
+        /** Compute the Released Reserves. **/
+        for(int nType = 0; nType < 3; nType++)
+        {
+            if(pindexNew->IsProofOfWork() && pindexPrev)
+            {
+                /** Calculate the Reserves from the Previous Block in Channel's reserve and new Release. **/
+                int64 nReserve  = pindexPrev->nReleasedReserve[nType] + GetReleasedReserve(pindexNew, pindexNew->GetChannel(), nType);
+                
+                /** Block Version 3 Check. Disable Reserves from going below 0. **/
+                if(pindexNew->nVersion >= 3 && pindexNew->nCoinbaseRewards[nType] >= nReserve)
+                    return error("AddToBlockIndex() : Coinbase Transaction too Large. Out of Reserve Limits");
+                
+                pindexNew->nReleasedReserve[nType] =  nReserve - pindexNew->nCoinbaseRewards[nType];
+                
+                if(GetArg("-verbose", 0) >= 2)
+                    printf("Reserve Balance %i | %f Nexus | Released %f\n", nType, pindexNew->nReleasedReserve[nType] / 1000000.0, (nReserve - pindexPrev->nReleasedReserve[nType]) / 1000000.0 );
+            }
+            else
+                pindexNew->nReleasedReserve[nType] = 0;
+                
         }
                                                 
         /** Add the Pending Checkpoint into the Blockchain. **/

@@ -75,7 +75,8 @@ namespace Core
         
         if(GetBoolArg("-logcoinbase", false))
         {
-            printf("GetFractionalSubsidy(nMinutes=%i, nType=%i, nFraction=%f, nRemainder=%f, nReturn=%" PRId64 ")\n", nMinutes, nType, nFraction, nRemainder, (nSubsidy + (GetSubsidy(nMinutes + nInterval, nType) * nRemainder)));
+            int64 nReturn = (nSubsidy + (GetSubsidy(nMinutes + nInterval, nType) * nRemainder));
+            printf("\nGetFractionalSubsidy(nMinutes=%i, nType=%i, nFraction=%f, nRemainder=%f, nReturn=%lld)\n", nMinutes, nType, nFraction, nRemainder, nReturn);
         }
 
 		return nSubsidy + (GetSubsidy(nMinutes + nInterval, nType) * nRemainder);
@@ -96,11 +97,31 @@ namespace Core
 		int64 nBlockTime = max(pindexFirst->GetBlockTime() - pindexLast->GetBlockTime(), (int64) 1 );
 		int64 nMinutes   = ((pindex->nVersion >= 3) ? GetChainAge(pindexFirst->GetBlockTime()) : min(pindexFirst->nChannelHeight,  GetChainAge(pindexFirst->GetBlockTime())));
         
+        
         if(GetBoolArg("-logcoinbase", false))
         {
-            printf("GetCoinbaseReward\n%s\n(nChannel=%i, nType=%i, nBlockTime=%" PRId64 ", nMinutes=%" PRId64 ")\n", pindex->ToString().c_str(), nChannel, nType);
-            printf("FIRST::%s\n", pindexFirst->ToString().c_str());
-            printf("LAST ::%s\n", pindexLast->ToString().c_str());
+            printf("\nGetCoinbaseReward\n%s\n(nChannel=%i, nType=%i, nBlockTime=%lld, nMinutes=%lld)\n", pindex->ToString().c_str(), nChannel, nType, nBlockTime, nMinutes);
+            
+            printf("\nFIRST::%s\n", pindexFirst->ToString().c_str());
+            CBlock block1;
+            if(!block1.ReadFromDisk(pindexFirst))
+                error("Failed To Read Block FIRST\n");
+            else
+                block1.print();
+            
+            printf("\nLAST ::%s\n", pindexLast->ToString().c_str());
+            CBlock block2;
+            if(!block2.ReadFromDisk(pindexLast))
+                error("Failed To Read Block FIRST\n");
+            else
+                block2.print();
+            
+            int64 nBlockTimeTest = max(block1.GetBlockTime() - block2.GetBlockTime(), (int64) 1 );
+            int64 nMinutesTest   = GetChainAge(block1.GetBlockTime());
+            
+            printf("\nBLOCK TEST::(nChannel=%i, nType=%i, nBlockTime=%lld, nMinutes=%lld)\n", nChannel, nType, nBlockTimeTest, nMinutesTest);
+            
+            printf("\nTime First %lld, Time Second %lld\n", pindexFirst->GetBlockTime(), pindexLast->GetBlockTime());
         }
 
 		
