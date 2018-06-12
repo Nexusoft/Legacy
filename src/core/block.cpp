@@ -989,7 +989,11 @@ namespace Core
                         
                         CBlock block;
                         if(!block.ReadFromDisk(mapBlockIndex[pindexLast->GetBlockHash()]))
+                        {
+                            printf("ProcessBlock() : Failed To Read from Disk %s\n", pindexLast->GetBlockHash().ToString().c_str());
+                            
                             break;
+                        }
                         
                         mapInvalidBlocks[pindexLast->GetBlockHash()] = block.SignatureHash();
                         
