@@ -934,10 +934,16 @@ namespace Core
                 /* Check That Block Timestamp is not before previous block. */
                 if (GetBlockTime() <= pindexPrev->GetBlockTime())
                     return error("ProcessBlock() : (invalid checks - time) AcceptBlock FAILED");
+                
+                /* Write the top block as invalid for protocol checks. */
+                mapInvalidBlocks[pblock->GetHash()] = pblock->SignatureHash();
         
+                /* Scan back 5 blocks and check if there are invalid blocks. */
                 const CBlockIndex* pindexFirst = pindexBest;
                 for(int nIndex = 5; nIndex > 0; nIndex--)
                 {
+                    
+                    /* Get the last block index from the channel. */
                     const CBlockIndex* pindexLast = GetLastChannelIndex(pindexFirst->pprev, pindex->GetChannel());
                     if(!pindexLast->pprev)
                         break;
@@ -946,6 +952,7 @@ namespace Core
                     if(!block.ReadFromDisk(pindexLast))
                         return error("ProcessBlock() : (invalid checks - read) couldn't read from disk");
                     
+                    /* Flag the block as invalid and lock to the signature hash. */
                     mapInvalidBlocks[pindexLast->GetBlockHash()] = block.SignatureHash();
                     if(nIndex == 1)
                     {
