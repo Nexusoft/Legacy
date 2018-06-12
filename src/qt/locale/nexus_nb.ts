@@ -1,5 +1,6 @@
-<?xml version="1.0" ?><!DOCTYPE TS><TS language="nb" version="2.0">
-
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE TS>
+<TS version="2.1" language="nb">
 <context>
     <name>AboutDialog</name>
     <message>
@@ -13,7 +14,22 @@
         <translation>&lt;b&gt;Nexus&lt;/b&gt; versjon</translation>
     </message>
     <message>
-        <location filename="../forms/aboutdialog.ui" line="85"/>
+        <location filename="../forms/aboutdialog.ui" line="91"/>
+        <source>Copyright © 2011-2014 Peercoin / Nexus Developers</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/aboutdialog.ui" line="104"/>
+        <source>Copyright © 2014 Videlicet ++
+
+This is experimental software.
+
+Distributed under the MIT/X11 software license, see the accompanying file license.txt or http://www.opensource.org/licenses/mit-license.php.
+
+This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit (http://www.openssl.org/) and cryptographic software written by Eric Young (eay@cryptsoft.com) and UPnP software written by Thomas Bernard.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Copyright © 2011-2013 Nexus Developers
 
 This is experimental software.
@@ -21,7 +37,7 @@ This is experimental software.
 Distributed under the MIT/X11 software license, see the accompanying file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
 This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit (http://www.openssl.org/) and cryptographic software written by Eric Young (eay@cryptsoft.com) and UPnP software written by Thomas Bernard.</source>
-        <translation>Copyright © 2011-2013 Nexus Utviklerne
+        <translation type="vanished">Copyright © 2011-2013 Nexus Utviklerne
 
 Dette er eksperimentell programvare.
 
@@ -93,42 +109,42 @@ Dette produktet inneholder programvare utviklet av OpenSSL prosjektet for bruk i
         <translation>&amp;Slett</translation>
     </message>
     <message>
-        <location filename="../addressbookpage.cpp" line="61"/>
+        <location filename="../pages/addressbookpage.cpp" line="73"/>
         <source>Copy address</source>
         <translation>Kopier adresse</translation>
     </message>
     <message>
-        <location filename="../addressbookpage.cpp" line="62"/>
+        <location filename="../pages/addressbookpage.cpp" line="74"/>
         <source>Copy label</source>
         <translation>Kopier merkelapp</translation>
     </message>
     <message>
-        <location filename="../addressbookpage.cpp" line="63"/>
+        <location filename="../pages/addressbookpage.cpp" line="75"/>
         <source>Edit</source>
         <translation>Rediger</translation>
     </message>
     <message>
-        <location filename="../addressbookpage.cpp" line="64"/>
+        <location filename="../pages/addressbookpage.cpp" line="76"/>
         <source>Delete</source>
         <translation>Slett</translation>
     </message>
     <message>
-        <location filename="../addressbookpage.cpp" line="281"/>
+        <location filename="../pages/addressbookpage.cpp" line="296"/>
         <source>Export Address Book Data</source>
         <translation>Eksporter adressebok</translation>
     </message>
     <message>
-        <location filename="../addressbookpage.cpp" line="282"/>
+        <location filename="../pages/addressbookpage.cpp" line="297"/>
         <source>Comma separated file (*.csv)</source>
         <translation>Kommaseparert fil (*.csv)</translation>
     </message>
     <message>
-        <location filename="../addressbookpage.cpp" line="295"/>
+        <location filename="../pages/addressbookpage.cpp" line="310"/>
         <source>Error exporting</source>
         <translation>Feil ved eksportering</translation>
     </message>
     <message>
-        <location filename="../addressbookpage.cpp" line="295"/>
+        <location filename="../pages/addressbookpage.cpp" line="310"/>
         <source>Could not write to file %1.</source>
         <translation>Kunne ikke skrive til filen %1.</translation>
     </message>
@@ -136,17 +152,17 @@ Dette produktet inneholder programvare utviklet av OpenSSL prosjektet for bruk i
 <context>
     <name>AddressTableModel</name>
     <message>
-        <location filename="../addresstablemodel.cpp" line="77"/>
+        <location filename="../models/addresstablemodel.cpp" line="86"/>
         <source>Label</source>
         <translation>Merkelapp</translation>
     </message>
     <message>
-        <location filename="../addresstablemodel.cpp" line="77"/>
+        <location filename="../models/addresstablemodel.cpp" line="86"/>
         <source>Address</source>
         <translation>Adresse</translation>
     </message>
     <message>
-        <location filename="../addresstablemodel.cpp" line="113"/>
+        <location filename="../models/addresstablemodel.cpp" line="122"/>
         <source>(no label)</source>
         <translation>(ingen merkelapp)</translation>
     </message>
@@ -159,470 +175,200 @@ Dette produktet inneholder programvare utviklet av OpenSSL prosjektet for bruk i
         <translation>Dialog</translation>
     </message>
     <message>
-        <location filename="../forms/askpassphrasedialog.ui" line="32"/>
-        <location filename="../forms/askpassphrasedialog.ui" line="97"/>
+        <location filename="../forms/askpassphrasedialog.ui" line="108"/>
         <source>TextLabel</source>
         <translation>Merkelapp</translation>
     </message>
     <message>
-        <location filename="../forms/askpassphrasedialog.ui" line="50"/>
+        <location filename="../forms/askpassphrasedialog.ui" line="61"/>
         <source>Enter passphrase</source>
         <translation>Angi adgangsfrase</translation>
     </message>
     <message>
-        <location filename="../forms/askpassphrasedialog.ui" line="64"/>
+        <location filename="../forms/askpassphrasedialog.ui" line="47"/>
+        <source>Unlock for Mint Only?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/askpassphrasedialog.ui" line="75"/>
         <source>New passphrase</source>
         <translation>Ny adgangsfrase</translation>
     </message>
     <message>
-        <location filename="../forms/askpassphrasedialog.ui" line="78"/>
+        <location filename="../forms/askpassphrasedialog.ui" line="89"/>
         <source>Repeat new passphrase</source>
         <translation>Gjenta ny adgangsfrase</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="34"/>
+        <location filename="../dialogs/askpassphrasedialog.cpp" line="53"/>
         <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;10 or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
         <translation>Skriv inn den nye adgangsfrasen for lommeboken.&lt;br/&gt;Vennligst bruk en adgangsfrase med &lt;b&gt;10 eller flere tilfeldige tegn&lt;/b&gt;, eller &lt;b&gt;åtte eller flere ord&lt;/b&gt;.</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="35"/>
+        <location filename="../dialogs/askpassphrasedialog.cpp" line="54"/>
         <source>Encrypt wallet</source>
         <translation>Krypter lommebok</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="38"/>
         <source>This operation needs your wallet passphrase to unlock the wallet.</source>
-        <translation>Denne operasjonen krever adgangsfrasen til lommeboken for å låse den opp.</translation>
+        <translation type="vanished">Denne operasjonen krever adgangsfrasen til lommeboken for å låse den opp.</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="43"/>
         <source>Unlock wallet</source>
-        <translation>Lås opp lommebok</translation>
+        <translation type="vanished">Lås opp lommebok</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="46"/>
+        <location filename="../dialogs/askpassphrasedialog.cpp" line="75"/>
         <source>This operation needs your wallet passphrase to decrypt the wallet.</source>
         <translation>Denne operasjonen krever adgangsfrasen til lommeboken for å dekryptere den.</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="51"/>
+        <location filename="../dialogs/askpassphrasedialog.cpp" line="80"/>
         <source>Decrypt wallet</source>
         <translation>Dekrypter lommebok</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="54"/>
+        <location filename="../dialogs/askpassphrasedialog.cpp" line="83"/>
         <source>Change passphrase</source>
         <translation>Endre adgangsfrase</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="55"/>
+        <location filename="../dialogs/askpassphrasedialog.cpp" line="86"/>
         <source>Enter the old and new passphrase to the wallet.</source>
         <translation>Skriv inn gammel og ny adgangsfrase for lommeboken.</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="101"/>
+        <location filename="../dialogs/askpassphrasedialog.cpp" line="132"/>
         <source>Confirm wallet encryption</source>
         <translation>Bekreft kryptering av lommebok</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="102"/>
+        <location filename="../dialogs/askpassphrasedialog.cpp" line="133"/>
         <source>WARNING: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR NXS&lt;/b&gt;!
 Are you sure you wish to encrypt your wallet?</source>
         <translation>ADVARSEL: Hvis du krypterer lommeboken og mister adgangsfrasen vil du &lt;b&gt;MISTE ALLE DINE NXS&lt;/b&gt;!
 Er du sikker på at du vil kryptere lommeboken?</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="111"/>
-        <location filename="../askpassphrasedialog.cpp" line="160"/>
+        <location filename="../dialogs/askpassphrasedialog.cpp" line="142"/>
+        <location filename="../dialogs/askpassphrasedialog.cpp" line="208"/>
         <source>Wallet encrypted</source>
         <translation>Lommebok kryptert</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="112"/>
+        <location filename="../dialogs/askpassphrasedialog.cpp" line="143"/>
         <source>Nexus will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your NXS from being stolen by malware infecting your computer.</source>
         <translation>Nexus vil nå lukkes for å fullføre krypteringsprosessen. Husk at kryptering av lommeboken ikke fullt ut kan beskytte dine NXS fra å bli stjålet om skadevare infiserer datamaskinen.</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="208"/>
-        <location filename="../askpassphrasedialog.cpp" line="232"/>
+        <location filename="../dialogs/askpassphrasedialog.cpp" line="257"/>
+        <location filename="../dialogs/askpassphrasedialog.cpp" line="281"/>
         <source>Warning: The Caps Lock key is on.</source>
         <translation>Advarsel: Caps lock tasten er på.</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="117"/>
-        <location filename="../askpassphrasedialog.cpp" line="124"/>
-        <location filename="../askpassphrasedialog.cpp" line="166"/>
-        <location filename="../askpassphrasedialog.cpp" line="172"/>
+        <location filename="../dialogs/askpassphrasedialog.cpp" line="148"/>
+        <location filename="../dialogs/askpassphrasedialog.cpp" line="155"/>
+        <location filename="../dialogs/askpassphrasedialog.cpp" line="214"/>
+        <location filename="../dialogs/askpassphrasedialog.cpp" line="220"/>
         <source>Wallet encryption failed</source>
         <translation>Kryptering av lommebok feilet</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="118"/>
+        <location filename="../dialogs/askpassphrasedialog.cpp" line="64"/>
+        <source>Enter your Password to manually unlock your wallet (NOTE: Your wallet will remain unlocked until manually locked)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../dialogs/askpassphrasedialog.cpp" line="65"/>
+        <source>Unlock Wallet</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../dialogs/askpassphrasedialog.cpp" line="68"/>
+        <source>Please enter your Password to Continue this Operation</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../dialogs/askpassphrasedialog.cpp" line="71"/>
+        <source>Passphrase Required</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../dialogs/askpassphrasedialog.cpp" line="149"/>
         <source>Wallet encryption failed due to an internal error. Your wallet was not encrypted.</source>
         <translation>Kryptering av lommebok feilet på grunn av en intern feil. Din lommebok ble ikke kryptert.</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="125"/>
-        <location filename="../askpassphrasedialog.cpp" line="173"/>
+        <location filename="../dialogs/askpassphrasedialog.cpp" line="156"/>
+        <location filename="../dialogs/askpassphrasedialog.cpp" line="221"/>
         <source>The supplied passphrases do not match.</source>
         <translation>De angitte adgangsfrasene er ulike.</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="136"/>
+        <location filename="../dialogs/askpassphrasedialog.cpp" line="170"/>
         <source>Wallet unlock failed</source>
         <translation>Opplåsing av lommebok feilet</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="137"/>
-        <location filename="../askpassphrasedialog.cpp" line="148"/>
-        <location filename="../askpassphrasedialog.cpp" line="167"/>
+        <location filename="../dialogs/askpassphrasedialog.cpp" line="171"/>
+        <location filename="../dialogs/askpassphrasedialog.cpp" line="196"/>
+        <location filename="../dialogs/askpassphrasedialog.cpp" line="215"/>
         <source>The passphrase entered for the wallet decryption was incorrect.</source>
         <translation>Adgangsfrasen angitt for dekryptering av lommeboken var feil.</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="147"/>
+        <location filename="../dialogs/askpassphrasedialog.cpp" line="179"/>
+        <location filename="../dialogs/askpassphrasedialog.cpp" line="184"/>
+        <source>Wallet Unlocked</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../dialogs/askpassphrasedialog.cpp" line="180"/>
+        <source>Wallet successfully unlocked for block minting only.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../dialogs/askpassphrasedialog.cpp" line="185"/>
+        <source>Wallet successfully unlocked.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../dialogs/askpassphrasedialog.cpp" line="195"/>
         <source>Wallet decryption failed</source>
         <translation>Dekryptering av lommebok feilet</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="161"/>
+        <location filename="../dialogs/askpassphrasedialog.cpp" line="209"/>
         <source>Wallet passphrase was succesfully changed.</source>
         <translation>Lommebokens adgangsfrase ble endret.</translation>
     </message>
 </context>
 <context>
-    <name>NexusGUI</name>
-    <message>
-        <location filename="../core/gui.cpp" line="69"/>
-        <source>Nexus Wallet</source>
-        <translation>Nexus Lommebok</translation>
-    </message>
-    <message>
-        <location filename="../core/gui.cpp" line="142"/>
-        <location filename="../core/gui.cpp" line="464"/>
-        <source>Synchronizing with network...</source>
-        <translation>Synkroniserer med nettverk...</translation>
-    </message>
-    <message>
-        <location filename="../core/gui.cpp" line="145"/>
-        <source>Block chain synchronization in progress</source>
-        <translation>Synkronisering av blokk-kjede igang</translation>
-    </message>
-    <message>
-        <location filename="../core/gui.cpp" line="176"/>
-        <source>&amp;Overview</source>
-        <translation>&amp;Oversikt</translation>
-    </message>
-    <message>
-        <location filename="../core/gui.cpp" line="177"/>
-        <source>Show general overview of wallet</source>
-        <translation>Vis generell oversikt over lommeboken</translation>
-    </message>
-    <message>
-        <location filename="../core/gui.cpp" line="182"/>
-        <source>&amp;Transactions</source>
-        <translation>&amp;Transaksjoner</translation>
-    </message>
-    <message>
-        <location filename="../core/gui.cpp" line="183"/>
-        <source>Browse transaction history</source>
-        <translation>Vis transaksjonshistorikk</translation>
-    </message>
-    <message>
-        <location filename="../core/gui.cpp" line="188"/>
-        <source>&amp;Address Book</source>
-        <translation>&amp;Adressebok</translation>
-    </message>
-    <message>
-        <location filename="../core/gui.cpp" line="189"/>
-        <source>Edit the list of stored addresses and labels</source>
-        <translation>Rediger listen over adresser og deres merkelapper</translation>
-    </message>
-    <message>
-        <location filename="../core/gui.cpp" line="194"/>
-        <source>&amp;Receive coins</source>
-        <translation>&amp;Motta NXS</translation>
-    </message>
-    <message>
-        <location filename="../core/gui.cpp" line="195"/>
-        <source>Show the list of addresses for receiving payments</source>
-        <translation>Vis listen over adresser for mottak av betalinger</translation>
-    </message>
-    <message>
-        <location filename="../core/gui.cpp" line="200"/>
-        <source>&amp;Send coins</source>
-        <translation>&amp;Send NXS</translation>
-    </message>
-    <message>
-        <location filename="../core/gui.cpp" line="201"/>
-        <source>Send coins to a Nexus address</source>
-        <translation>Send NXS til en adresse</translation>
-    </message>
-    <message>
-        <location filename="../core/gui.cpp" line="206"/>
-        <source>Sign &amp;message</source>
-        <translation>Signér &amp;melding</translation>
-    </message>
-    <message>
-        <location filename="../core/gui.cpp" line="207"/>
-        <source>Prove you control an address</source>
-        <translation>Bevis at du kontrollerer en adresse</translation>
-    </message>
-    <message>
-        <location filename="../core/gui.cpp" line="226"/>
-        <source>E&amp;xit</source>
-        <translation>&amp;Avslutt</translation>
-    </message>
-    <message>
-        <location filename="../core/gui.cpp" line="227"/>
-        <source>Quit application</source>
-        <translation>Avslutt applikasjonen</translation>
-    </message>
-    <message>
-        <location filename="../core/gui.cpp" line="230"/>
-        <source>&amp;About %1</source>
-        <translation> &amp;Om %1</translation>
-    </message>
-    <message>
-        <location filename="../core/gui.cpp" line="231"/>
-        <source>Show information about Nexus</source>
-        <translation>Vis informasjon om Nexus</translation>
-    </message>
-    <message>
-        <location filename="../core/gui.cpp" line="233"/>
-        <source>About &amp;Qt</source>
-        <translation>Om &amp;Qt</translation>
-    </message>
-    <message>
-        <location filename="../core/gui.cpp" line="234"/>
-        <source>Show information about Qt</source>
-        <translation>Vis informasjon om Qt</translation>
-    </message>
-    <message>
-        <location filename="../core/gui.cpp" line="236"/>
-        <source>&amp;Options...</source>
-        <translation>&amp;Innstillinger...</translation>
-    </message>
-    <message>
-        <location filename="../core/gui.cpp" line="237"/>
-        <source>Modify configuration options for Nexus</source>
-        <translation>Endre innstillinger for Nexus</translation>
-    </message>
-    <message>
-        <location filename="../core/gui.cpp" line="239"/>
-        <source>Open &amp;Nexus</source>
-        <translation>Åpne &amp;Nexus</translation>
-    </message>
-    <message>
-        <location filename="../core/gui.cpp" line="240"/>
-        <source>Show the Nexus window</source>
-        <translation>Vis Nexus-vinduet</translation>
-    </message>
-    <message>
-        <location filename="../core/gui.cpp" line="241"/>
-        <source>&amp;Export...</source>
-        <translation>&amp;Eksporter...</translation>
-    </message>
-    <message>
-        <location filename="../core/gui.cpp" line="242"/>
-        <source>Export the data in the current tab to a file</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location filename="../core/gui.cpp" line="243"/>
-        <source>&amp;Encrypt Wallet</source>
-        <translation>&amp;Krypter Lommebok</translation>
-    </message>
-    <message>
-        <location filename="../core/gui.cpp" line="244"/>
-        <source>Encrypt or decrypt wallet</source>
-        <translation>Krypter eller dekrypter lommebok</translation>
-    </message>
-    <message>
-        <location filename="../core/gui.cpp" line="246"/>
-        <source>&amp;Backup Wallet</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location filename="../core/gui.cpp" line="247"/>
-        <source>Backup wallet to another location</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location filename="../core/gui.cpp" line="248"/>
-        <source>&amp;Change Passphrase</source>
-        <translation>&amp;Endre Adgangsfrase</translation>
-    </message>
-    <message>
-        <location filename="../core/gui.cpp" line="249"/>
-        <source>Change the passphrase used for wallet encryption</source>
-        <translation>Endre adgangsfrasen brukt for kryptering av lommebok</translation>
-    </message>
-    <message>
-        <location filename="../core/gui.cpp" line="272"/>
-        <source>&amp;File</source>
-        <translation>&amp;Fil</translation>
-    </message>
-    <message>
-        <location filename="../core/gui.cpp" line="281"/>
-        <source>&amp;Settings</source>
-        <translation>&amp;Innstillinger</translation>
-    </message>
-    <message>
-        <location filename="../core/gui.cpp" line="287"/>
-        <source>&amp;Help</source>
-        <translation>&amp;Hjelp</translation>
-    </message>
-    <message>
-        <location filename="../core/gui.cpp" line="294"/>
-        <source>Tabs toolbar</source>
-        <translation>Verktøylinje for faner</translation>
-    </message>
-    <message>
-        <location filename="../core/gui.cpp" line="305"/>
-        <source>Actions toolbar</source>
-        <translation>Verktøylinje for handlinger</translation>
-    </message>
-    <message>
-        <location filename="../core/gui.cpp" line="317"/>
-        <source>[testnet]</source>
-        <translation>[testnett]</translation>
-    </message>
-    <message>
-        <location filename="../core/gui.cpp" line="407"/>
-        <source>Nexus-qt</source>
-        <translation>Nexus-qt</translation>
-    </message>
-    <message numerus="yes">
-        <location filename="../core/gui.cpp" line="449"/>
-        <source>%n active connection(s) to Nexus network</source>
-        <translation><numerusform>%n aktiv forbindelse til Nexus-nettverket</numerusform><numerusform>%n aktive forbindelser til Nexus-nettverket</numerusform></translation>
-    </message>
-    <message>
-        <location filename="../core/gui.cpp" line="475"/>
-        <source>Downloaded %1 of %2 blocks of transaction history.</source>
-        <translation>Lastet ned %1 av %2 blokker med transaksjonshistorikk.</translation>
-    </message>
-    <message>
-        <location filename="../core/gui.cpp" line="487"/>
-        <source>Downloaded %1 blocks of transaction history.</source>
-        <translation>Lastet ned %1 blokker med transaksjonshistorikk.</translation>
-    </message>
-    <message numerus="yes">
-        <location filename="../core/gui.cpp" line="502"/>
-        <source>%n second(s) ago</source>
-        <translation><numerusform>for %n sekund siden</numerusform><numerusform>for %n sekunder siden</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <location filename="../core/gui.cpp" line="506"/>
-        <source>%n minute(s) ago</source>
-        <translation><numerusform>for %n minutt siden</numerusform><numerusform>for %n minutter siden</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <location filename="../core/gui.cpp" line="510"/>
-        <source>%n hour(s) ago</source>
-        <translation><numerusform>for %n time siden</numerusform><numerusform>for %n timer siden</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <location filename="../core/gui.cpp" line="514"/>
-        <source>%n day(s) ago</source>
-        <translation><numerusform>for %n dag siden</numerusform><numerusform>for %n dager siden</numerusform></translation>
-    </message>
-    <message>
-        <location filename="../core/gui.cpp" line="520"/>
-        <source>Up to date</source>
-        <translation>Ajour</translation>
-    </message>
-    <message>
-        <location filename="../core/gui.cpp" line="525"/>
-        <source>Catching up...</source>
-        <translation>Kommer ajour...</translation>
-    </message>
-    <message>
-        <location filename="../core/gui.cpp" line="533"/>
-        <source>Last received block was generated %1.</source>
-        <translation>Siste mottatte blokk ble generert %1.</translation>
-    </message>
-    <message>
-        <location filename="../core/gui.cpp" line="597"/>
-        <source>This transaction is over the size limit.  You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network.  Do you want to pay the fee?</source>
-        <translation>Denne transaksjonen overstiger størrelsesbegrensningen.  Du kan likevel sende den med et gebyr på %1, som går til nodene som prosesserer transaksjonen din og støtter nettverket.  Vil du betale gebyret?</translation>
-    </message>
-    <message>
-        <location filename="../core/gui.cpp" line="602"/>
-        <source>Sending...</source>
-        <translation>Sender...</translation>
-    </message>
-    <message>
-        <location filename="../core/gui.cpp" line="629"/>
-        <source>Sent transaction</source>
-        <translation>Sendt transaksjon</translation>
-    </message>
-    <message>
-        <location filename="../core/gui.cpp" line="630"/>
-        <source>Incoming transaction</source>
-        <translation>Innkommende transaksjon</translation>
-    </message>
-    <message>
-        <location filename="../core/gui.cpp" line="631"/>
-        <source>Date: %1
-Amount: %2
-Type: %3
-Address: %4
-</source>
-        <translation>Dato: %1
-Beløp: %2
-Type: %3
-Adresse: %4
-</translation>
-    </message>
-    <message>
-        <location filename="../core/gui.cpp" line="751"/>
-        <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
-        <translation>Lommeboken er &lt;b&gt;kryptert&lt;/b&gt; og for tiden &lt;b&gt;ulåst&lt;/b&gt;</translation>
-    </message>
-    <message>
-        <location filename="../core/gui.cpp" line="759"/>
-        <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
-        <translation>Lommeboken er &lt;b&gt;kryptert&lt;/b&gt; og for tiden &lt;b&gt;låst&lt;/b&gt;</translation>
-    </message>
-    <message>
-        <location filename="../core/gui.cpp" line="782"/>
-        <source>Backup Wallet</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location filename="../core/gui.cpp" line="782"/>
-        <source>Wallet Data (*.dat)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location filename="../core/gui.cpp" line="785"/>
-        <source>Backup Failed</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location filename="../core/gui.cpp" line="785"/>
-        <source>There was an error trying to save the wallet data to the new location.</source>
-        <translation type="unfinished"/>
-    </message>
-</context>
-<context>
     <name>DisplayOptionsPage</name>
     <message>
-        <location filename="../optionsdialog.cpp" line="270"/>
+        <location filename="../dialogs/optionsdialog.cpp" line="294"/>
         <source>&amp;Unit to show amounts in: </source>
         <translation>&amp;Enhet for å vise beløp i: </translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="274"/>
+        <location filename="../dialogs/optionsdialog.cpp" line="298"/>
         <source>Choose the default subdivision unit to show in the interface, and when sending coins</source>
         <translation>Velg standard underenhet som skal vises i grensesnittet og ved sending av mynter</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="281"/>
+        <location filename="../dialogs/optionsdialog.cpp" line="305"/>
+        <source>&amp;Display addresses in transaction list</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../dialogs/optionsdialog.cpp" line="306"/>
+        <source>Whether to show Nexus addresses in the transaction list</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Display addresses in transaction list</source>
-        <translation>Vis adresser i transaksjonslisten</translation>
+        <translation type="vanished">Vis adresser i transaksjonslisten</translation>
     </message>
 </context>
 <context>
@@ -653,42 +399,42 @@ Adresse: %4
         <translation>Adressen til denne oppføringen i adresseboken. Denne kan kun endres for utsendingsadresser.</translation>
     </message>
     <message>
-        <location filename="../editaddressdialog.cpp" line="20"/>
+        <location filename="../dialogs/editaddressdialog.cpp" line="33"/>
         <source>New receiving address</source>
         <translation>Ny mottaksadresse</translation>
     </message>
     <message>
-        <location filename="../editaddressdialog.cpp" line="24"/>
+        <location filename="../dialogs/editaddressdialog.cpp" line="37"/>
         <source>New sending address</source>
         <translation>Ny utsendingsadresse</translation>
     </message>
     <message>
-        <location filename="../editaddressdialog.cpp" line="27"/>
+        <location filename="../dialogs/editaddressdialog.cpp" line="40"/>
         <source>Edit receiving address</source>
         <translation>Rediger mottaksadresse</translation>
     </message>
     <message>
-        <location filename="../editaddressdialog.cpp" line="31"/>
+        <location filename="../dialogs/editaddressdialog.cpp" line="44"/>
         <source>Edit sending address</source>
         <translation>Rediger utsendingsadresse</translation>
     </message>
     <message>
-        <location filename="../editaddressdialog.cpp" line="91"/>
+        <location filename="../dialogs/editaddressdialog.cpp" line="104"/>
         <source>The entered address &quot;%1&quot; is already in the address book.</source>
         <translation>Den oppgitte adressen &quot;%1&quot; er allerede i adresseboken.</translation>
     </message>
     <message>
-        <location filename="../editaddressdialog.cpp" line="96"/>
+        <location filename="../dialogs/editaddressdialog.cpp" line="109"/>
         <source>The entered address &quot;%1&quot; is not a valid Nexus address.</source>
         <translation>en oppgitte adressen &quot;%1&quot; er ikke en gyldig Nexus-adresse.</translation>
     </message>
     <message>
-        <location filename="../editaddressdialog.cpp" line="101"/>
+        <location filename="../dialogs/editaddressdialog.cpp" line="114"/>
         <source>Could not unlock wallet.</source>
         <translation>Kunne ikke låse opp lommeboken.</translation>
     </message>
     <message>
-        <location filename="../editaddressdialog.cpp" line="106"/>
+        <location filename="../dialogs/editaddressdialog.cpp" line="119"/>
         <source>New key generation failed.</source>
         <translation>Generering av ny nøkkel feilet.</translation>
     </message>
@@ -696,87 +442,100 @@ Adresse: %4
 <context>
     <name>MainOptionsPage</name>
     <message>
-        <location filename="../optionsdialog.cpp" line="170"/>
+        <location filename="../dialogs/optionsdialog.cpp" line="192"/>
         <source>&amp;Start Nexus on window system startup</source>
         <translation>&amp;Start Nexus ved oppstart</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="171"/>
+        <location filename="../dialogs/optionsdialog.cpp" line="193"/>
         <source>Automatically start Nexus after the computer is turned on</source>
         <translation>Start Nexus automatisk når datamaskinen blir slått på</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="175"/>
+        <location filename="../dialogs/optionsdialog.cpp" line="197"/>
         <source>&amp;Minimize to the tray instead of the taskbar</source>
         <translation>&amp;Minimer til systemkurv istedenfor oppgavelinjen</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="176"/>
+        <location filename="../dialogs/optionsdialog.cpp" line="198"/>
         <source>Show only a tray icon after minimizing the window</source>
         <translation>Vis kun ikon i systemkurv etter minimering av vinduet</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="180"/>
+        <location filename="../dialogs/optionsdialog.cpp" line="206"/>
         <source>Map port using &amp;UPnP</source>
         <translation>Sett opp port vha. &amp;UPnP</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="181"/>
+        <location filename="../dialogs/optionsdialog.cpp" line="207"/>
         <source>Automatically open the Nexus client port on the router. This only works when your router supports UPnP and it is enabled.</source>
         <translation>Åpne automatisk Nexus klientporten på ruteren. Dette virker kun om din ruter støtter UPnP og dette er påslått.</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="185"/>
+        <location filename="../dialogs/optionsdialog.cpp" line="211"/>
+        <source>Connect to Nexus through a SOCKS4 proxy (e.g. when connecting through Tor)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../dialogs/optionsdialog.cpp" line="253"/>
+        <source>Detach databases at shutdown</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../dialogs/optionsdialog.cpp" line="254"/>
+        <source>Detach block and address databases at shutdown. This means they can be moved to another data directory, but it slows down shutdown. The wallet is always detached.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../dialogs/optionsdialog.cpp" line="201"/>
         <source>M&amp;inimize on close</source>
         <translation>M&amp;inimér ved lukking</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="186"/>
+        <location filename="../dialogs/optionsdialog.cpp" line="202"/>
         <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Quit in the menu.</source>
         <translation>Minimerer vinduet istedenfor å avslutte applikasjonen når vinduet lukkes. Når dette er slått på avsluttes applikasjonen kun ved å velge avslutt i menyen.</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="190"/>
+        <location filename="../dialogs/optionsdialog.cpp" line="210"/>
         <source>&amp;Connect through SOCKS4 proxy:</source>
         <translation>&amp;Koble til gjennom SOCKS4 proxy:</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="191"/>
         <source>Connect to the Bitcon network through a SOCKS4 proxy (e.g. when connecting through Tor)</source>
-        <translation>Koble til Nexus nettverket gjennom en SOCKS4 mellomtjener (f.eks. for tilkobling gjennom Tor)</translation>
+        <translation type="vanished">Koble til Nexus nettverket gjennom en SOCKS4 mellomtjener (f.eks. for tilkobling gjennom Tor)</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="196"/>
+        <location filename="../dialogs/optionsdialog.cpp" line="216"/>
         <source>Proxy &amp;IP: </source>
         <translation>Mellomtjeners &amp;IP: </translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="202"/>
+        <location filename="../dialogs/optionsdialog.cpp" line="222"/>
         <source>IP address of the proxy (e.g. 127.0.0.1)</source>
         <translation>IP-adresse for mellomtjener (f.eks. 127.0.0.1)</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="205"/>
+        <location filename="../dialogs/optionsdialog.cpp" line="225"/>
         <source>&amp;Port: </source>
         <translation>&amp;Port: </translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="211"/>
+        <location filename="../dialogs/optionsdialog.cpp" line="231"/>
         <source>Port of the proxy (e.g. 1234)</source>
         <translation>Port for mellomtjener (f.eks. 1234)</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="217"/>
         <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly.  Most transactions are 1 kB.  Fee 0.01 recommended.</source>
-        <translation>Valgfritt transaksjonsgebyr per kB som sikrer at dine transaksjoner blir raskt prosessert.  De fleste transaksjoner er 1 kB.  Et gebyr på 0.01 er anbefalt.</translation>
+        <translation type="vanished">Valgfritt transaksjonsgebyr per kB som sikrer at dine transaksjoner blir raskt prosessert.  De fleste transaksjoner er 1 kB.  Et gebyr på 0.01 er anbefalt.</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="223"/>
+        <location filename="../dialogs/optionsdialog.cpp" line="243"/>
         <source>Pay transaction &amp;fee</source>
         <translation>Betal transaksjons&amp;gebyr</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="226"/>
+        <location filename="../dialogs/optionsdialog.cpp" line="237"/>
         <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly. Most transactions are 1 kB. Fee 0.01 recommended.</source>
         <translation>Valgfritt transaksjonsgebyr per kB som sikrer at dine transaksjoner blir raskt prosessert. De fleste transaksjoner er 1 kB. Et gebyr på 0.01 er anbefalt.</translation>
     </message>
@@ -791,17 +550,25 @@ Adresse: %4
     <message>
         <location filename="../forms/messagepage.ui" line="20"/>
         <source>You can sign messages with your addresses to prove you own them. Be careful not to sign anything vague, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The address to send the payment to  (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
+        <translation type="vanished">Adressen betalingen skal sendes til  (f.eks. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
+    </message>
+    <message>
+        <source>Choose adress from address book</source>
+        <translation type="vanished">Velg adresse fra adresseboken</translation>
     </message>
     <message>
         <location filename="../forms/messagepage.ui" line="38"/>
-        <source>The address to send the payment to  (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
-        <translation>Adressen betalingen skal sendes til  (f.eks. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
+        <source>The address to sign the message with  (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../forms/messagepage.ui" line="48"/>
-        <source>Choose adress from address book</source>
-        <translation>Velg adresse fra adresseboken</translation>
+        <source>Choose address from address book</source>
+        <translation type="unfinished">Velg adresse fra adresseboken</translation>
     </message>
     <message>
         <location filename="../forms/messagepage.ui" line="58"/>
@@ -824,67 +591,1053 @@ Adresse: %4
         <translation>Skriv inn meldingen du vil signere her</translation>
     </message>
     <message>
-        <location filename="../forms/messagepage.ui" line="105"/>
-        <source>Click &quot;Sign Message&quot; to get signature</source>
-        <translation>Klikk &quot;Signér Melding&quot; for signatur</translation>
+        <location filename="../forms/messagepage.ui" line="115"/>
+        <source>Click &quot;Sign Message&quot; to get signature or Paste a signature here and click &quot;Verify Message&quot;</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../forms/messagepage.ui" line="117"/>
+        <location filename="../forms/messagepage.ui" line="141"/>
+        <source>Generate an Address from Signature and Message.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/messagepage.ui" line="144"/>
+        <source>&amp;Verify Message</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/messagepage.ui" line="155"/>
+        <source>Copy the current signature to the system clipboard</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Click &quot;Sign Message&quot; to get signature</source>
+        <translation type="vanished">Klikk &quot;Signér Melding&quot; for signatur</translation>
+    </message>
+    <message>
+        <location filename="../forms/messagepage.ui" line="127"/>
         <source>Sign a message to prove you own this address</source>
         <translation>Signér en melding for å bevise at du eier denne adressen</translation>
     </message>
     <message>
-        <location filename="../forms/messagepage.ui" line="120"/>
+        <location filename="../forms/messagepage.ui" line="130"/>
         <source>&amp;Sign Message</source>
         <translation>&amp;Signér Melding</translation>
     </message>
     <message>
-        <location filename="../forms/messagepage.ui" line="131"/>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation>Kopier den valgte adressen til systemets utklippstavle</translation>
+        <translation type="vanished">Kopier den valgte adressen til systemets utklippstavle</translation>
     </message>
     <message>
-        <location filename="../forms/messagepage.ui" line="134"/>
+        <location filename="../forms/messagepage.ui" line="158"/>
         <source>&amp;Copy to Clipboard</source>
         <translation>&amp;Kopier til utklippstavle</translation>
     </message>
     <message>
-        <location filename="../messagepage.cpp" line="74"/>
-        <location filename="../messagepage.cpp" line="89"/>
-        <location filename="../messagepage.cpp" line="101"/>
+        <location filename="../pages/messagepage.cpp" line="81"/>
+        <location filename="../pages/messagepage.cpp" line="96"/>
+        <location filename="../pages/messagepage.cpp" line="108"/>
         <source>Error signing</source>
         <translation>Feil ved signering</translation>
     </message>
     <message>
-        <location filename="../messagepage.cpp" line="74"/>
+        <location filename="../pages/messagepage.cpp" line="81"/>
         <source>%1 is not a valid address.</source>
         <translation>%1 er ikke en gyldig adresse</translation>
     </message>
     <message>
-        <location filename="../messagepage.cpp" line="89"/>
+        <location filename="../pages/messagepage.cpp" line="96"/>
         <source>Private key for %1 is not available.</source>
         <translation>Privat nøkkel for %1 er ikke tilgjengelig.</translation>
     </message>
     <message>
-        <location filename="../messagepage.cpp" line="101"/>
+        <location filename="../pages/messagepage.cpp" line="108"/>
         <source>Sign failed</source>
         <translation>Signering feilet</translation>
+    </message>
+    <message>
+        <location filename="../pages/messagepage.cpp" line="126"/>
+        <location filename="../pages/messagepage.cpp" line="140"/>
+        <source>Error verifying</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../pages/messagepage.cpp" line="126"/>
+        <source>Malformed Base64 Encoding</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../pages/messagepage.cpp" line="140"/>
+        <source>Invalid Signature</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>Nexus-core</name>
+    <message>
+        <location filename="../core/strings.cpp" line="20"/>
+        <source>Nexus version</source>
+        <translation>Nexus versjon</translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="21"/>
+        <source>Usage:</source>
+        <translation>Bruk:</translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="22"/>
+        <source>Send command to -server or Nexus</source>
+        <translation>Send kommando til -server eller Nexus</translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="23"/>
+        <source>List commands</source>
+        <translation>List opp kommandoer</translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="24"/>
+        <source>Get help for a command</source>
+        <translation>Vis hjelpetekst for en kommando</translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="25"/>
+        <source>Options:</source>
+        <translation>Innstillinger:</translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="26"/>
+        <source>Specify configuration file (default: nexus.conf)</source>
+        <translation>Angi konfigurasjonsfil (standardverdi: nexus.conf)</translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="27"/>
+        <source>Specify pid file (default: Nexus.pid)</source>
+        <translation>Angi pid-fil (standardverdi: Nexus.pid)</translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="28"/>
+        <source>Generate coins</source>
+        <translation>Generér NXS</translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="29"/>
+        <source>Don&apos;t generate coins</source>
+        <translation>Ikke generér NXS</translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="30"/>
+        <source>Start minimized</source>
+        <translation>Start minimert
+</translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="31"/>
+        <source>Show splash screen on startup (default: 1)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="32"/>
+        <source>Specify data directory</source>
+        <translation>Angi mappe for datafiler</translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="33"/>
+        <source>Set database cache size in megabytes (default: 25)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="34"/>
+        <source>Set database disk log size in megabytes (default: 100)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="35"/>
+        <source>Specify connection timeout (in milliseconds)</source>
+        <translation>Angi tidsavbrudd for forbindelse (i millisekunder)</translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="36"/>
+        <source>Connect through socks4 proxy</source>
+        <translation>Koble til gjennom socks4 proxy</translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="37"/>
+        <source>Allow DNS lookups for addnode and connect</source>
+        <translation>Tillat DNS-oppslag for addnode og connect</translation>
+    </message>
+    <message>
+        <source>Listen for connections on &lt;port&gt; (default: 8333 or testnet: 18333)</source>
+        <translation type="vanished">Lytt etter tilkoblinger på &lt;port&gt; (standardverdi: 8333 eller testnet: 18333)</translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="39"/>
+        <source>Maintain at most &lt;n&gt; connections to peers (default: 125)</source>
+        <translation>Hold maks &lt;n&gt; koblinger åpne til andre noder (standardverdi: 125)</translation>
+    </message>
+    <message>
+        <source>Add a node to connect to</source>
+        <translation type="vanished">Legg til node for tilkobling</translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="41"/>
+        <source>Connect only to the specified node</source>
+        <translation>Koble kun til angitt node</translation>
+    </message>
+    <message>
+        <source>Don&apos;t accept connections from outside</source>
+        <translation type="vanished">Ikke ta imot tilkoblinger fra omverden</translation>
+    </message>
+    <message>
+        <source>Don&apos;t bootstrap list of peers using DNS</source>
+        <translation type="vanished">Ikke lag initiell nodeliste ved hjelp av DNS</translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="46"/>
+        <source>Threshold for disconnecting misbehaving peers (default: 100)</source>
+        <translation>Grenseverdi for å koble fra noder med dårlig oppførsel (standardverdi: 100)</translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="47"/>
+        <source>Number of seconds to keep misbehaving peers from reconnecting (default: 86400)</source>
+        <translation>Antall sekunder noder med dårlig oppførsel hindres fra å koble til på nytt (standardverdi: 86400)</translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="50"/>
+        <source>Maximum per-connection receive buffer, &lt;n&gt;*1000 bytes (default: 10000)</source>
+        <translation>Maksimum mottaksbuffer per tilkobling, &lt;n&gt;*1000 bytes (standardverdi: 10000)</translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="51"/>
+        <source>Maximum per-connection send buffer, &lt;n&gt;*1000 bytes (default: 10000)</source>
+        <translation>Maksimum sendebuffer per tilkobling, &lt;n&gt;*1000 bytes (standardverdi: 10000)</translation>
+    </message>
+    <message>
+        <source>Don&apos;t attempt to use UPnP to map the listening port</source>
+        <translation type="vanished">Ikke sett opp port vha. UPnP</translation>
+    </message>
+    <message>
+        <source>Attempt to use UPnP to map the listening port</source>
+        <translation type="vanished">Sett opp port vha. UPnP</translation>
+    </message>
+    <message>
+        <source>Fee per kB to add to transactions you send</source>
+        <translation type="vanished">Gebyr per kB for transaksjoner du sender</translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="55"/>
+        <source>Accept command line and JSON-RPC commands</source>
+        <translation>Ta imot kommandolinje- og JSON-RPC-kommandoer</translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="56"/>
+        <source>Run in the background as a daemon and accept commands</source>
+        <translation>Kjør i bakgrunnen som daemon og ta imot kommandoer</translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="57"/>
+        <source>Use the test network</source>
+        <translation>Bruk testnettverket</translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="58"/>
+        <source>Output extra debugging information</source>
+        <translation>Gi ut ekstra debuginformasjon</translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="59"/>
+        <source>Prepend debug output with timestamp</source>
+        <translation>Sett tidsstempel på debugmeldinger</translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="60"/>
+        <source>Send trace/debug info to console instead of debug.log file</source>
+        <translation>Send spor/debug informasjon til konsollet istedenfor debug.log filen</translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="61"/>
+        <source>Send trace/debug info to debugger</source>
+        <translation>Send spor/debug informasjon til debugger</translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="62"/>
+        <source>Username for JSON-RPC connections</source>
+        <translation>Brukernavn for JSON-RPC forbindelser</translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="63"/>
+        <source>Password for JSON-RPC connections</source>
+        <translation>Passord for JSON-RPC forbindelser</translation>
+    </message>
+    <message>
+        <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 8332)</source>
+        <translation type="vanished">Lytt etter JSON-RPC tilkoblinger på &lt;port&gt; (standardverdi: 8332)</translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="65"/>
+        <source>Allow JSON-RPC connections from specified IP address</source>
+        <translation>Tillat JSON-RPC tilkoblinger fra angitt IP-adresse</translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="66"/>
+        <source>Send commands to node running on &lt;ip&gt; (default: 127.0.0.1)</source>
+        <translation>Send kommandoer til node på &lt;ip&gt; (standardverdi: 127.0.0.1)</translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="67"/>
+        <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="70"/>
+        <source>Upgrade wallet to latest format</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="71"/>
+        <source>Set key pool size to &lt;n&gt; (default: 100)</source>
+        <translation>Angi størrelse på nøkkel-lager til &lt;n&gt; (standardverdi: 100)</translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="72"/>
+        <source>Rescan the block chain for missing wallet transactions</source>
+        <translation>Se gjennom blokk-kjeden etter manglende lommeboktransaksjoner</translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="73"/>
+        <source>How many blocks to check at startup (default: 2500, 0 = all)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="74"/>
+        <source>How thorough the block verification is (0-6, default: 1)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="75"/>
+        <source>
+SSL options: (see the Nexus Wiki for SSL setup instructions)</source>
+        <translation>
+SSL innstillinger: (se Nexus Wiki for instruksjoner om SSL oppsett)</translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="78"/>
+        <source>Use OpenSSL (https) for JSON-RPC connections</source>
+        <translation>Bruk OpenSSL (https) for JSON-RPC forbindelser</translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="79"/>
+        <source>Server certificate file (default: server.cert)</source>
+        <translation>Servers sertifikat (standardverdi: server.cert)</translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="80"/>
+        <source>Server private key (default: server.pem)</source>
+        <translation>Servers private nøkkel (standardverdi: server.pem)</translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="81"/>
+        <source>Acceptable ciphers (default: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</source>
+        <translation>Akseptable krypteringsmetoder (standardverdi: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="84"/>
+        <source>This help message</source>
+        <translation>Denne hjelpemeldingen</translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="85"/>
+        <source>Usage</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="86"/>
+        <source>Cannot obtain a lock on data directory %s.  Nexus is probably already running.</source>
+        <translation>Kunne ikke låse datamappen %s.  Nexus kjører sannsynligvis allerede.</translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="89"/>
+        <source>Nexus</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="90"/>
+        <source>Loading addresses...</source>
+        <translation>Laster adresser...</translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="91"/>
+        <source>Error loading addr.dat</source>
+        <translation>Feil ved lasting av addr.dat</translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="93"/>
+        <source>Error loading blkindex.dat</source>
+        <translation>Feil ved lasting av blkindex.dat</translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="95"/>
+        <source>Error loading wallet.dat: Wallet corrupted</source>
+        <translation>Feil ved lasting av wallet.dat: Lommeboken er skadet</translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="96"/>
+        <source>Error loading wallet.dat: Wallet requires newer version of Nexus</source>
+        <translation>Feil ved lasting av wallet.dat: Lommeboken krever en nyere versjon av Nexus</translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="97"/>
+        <source>Wallet needed to be rewritten: restart Nexus to complete</source>
+        <translation>Lommeboken måtte skrives om: start Nexus på nytt for å fullføre</translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="98"/>
+        <source>Error loading wallet.dat</source>
+        <translation>Feil ved lasting av wallet.dat</translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="130"/>
+        <source>Error: Wallet locked, unable to create transaction  </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="131"/>
+        <source>Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds  </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="134"/>
+        <source>Error: Transaction creation failed  </source>
+        <translation type="unfinished">Feil: Opprettelse av transaksjon feilet  </translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="135"/>
+        <source>Sending...</source>
+        <translation type="unfinished">Sender...</translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="136"/>
+        <source>Error: The transaction was rejected.  This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
+        <translation type="unfinished">Feil: Transaksjonen ble avvist.  Dette kan skje hvis noen av myntene i lommeboken allerede var brukt, f.eks. hvis du kopierte wallet.dat og mynter ble brukt i kopien uten å bli markert brukt her.</translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="140"/>
+        <source>Invalid amount</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="141"/>
+        <source>Insufficient funds</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="92"/>
+        <source>Loading block index...</source>
+        <translation>Laster blokkindeks...</translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="38"/>
+        <source>Listen for connections on &lt;port&gt; (default: 9901 or testnet: 9903)</source>
+        <translation type="unfinished">Lytt etter tilkoblinger på &lt;port&gt; (standardverdi: 8333 eller testnet: 18333) {9901 ?} {9903)?}</translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="40"/>
+        <source>Add a node to connect to and attempt to keep the connection open</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="42"/>
+        <source>Find peers using internet relay chat (default: 0)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="43"/>
+        <source>Accept connections from outside (default: 1)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="44"/>
+        <source>Set language, for example &quot;de_DE&quot; (default: system locale)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="45"/>
+        <source>Find peers using DNS lookup (default: 1)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="52"/>
+        <source>Use Universal Plug and Play to map the listening port (default: 1)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="53"/>
+        <source>Use Universal Plug and Play to map the listening port (default: 0)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="54"/>
+        <source>Fee per KB to add to transactions you send</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="64"/>
+        <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 9902)</source>
+        <translation type="unfinished">Lytt etter JSON-RPC tilkoblinger på &lt;port&gt; (standardverdi: 8332) {9902)?}</translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="94"/>
+        <source>Loading wallet...</source>
+        <translation>Laster lommebok...</translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="99"/>
+        <source>Cannot downgrade wallet</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="100"/>
+        <source>Cannot initialize keypool</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="101"/>
+        <source>Cannot write default address</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="102"/>
+        <source>Rescanning...</source>
+        <translation>Leser gjennom...</translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="103"/>
+        <source>Done loading</source>
+        <translation>Ferdig med lasting</translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="104"/>
+        <source>Invalid -proxy address</source>
+        <translation>Ugyldig -proxy adresse for mellomtjener</translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="105"/>
+        <source>Invalid amount for -paytxfee=&lt;amount&gt;</source>
+        <translation>Ugyldig gebyrbeløp for -paytxfee=&lt;beløp&gt;</translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="106"/>
+        <source>Warning: -paytxfee is set very high.  This is the transaction fee you will pay if you send a transaction.</source>
+        <translation>Advarsel: -paytxfee er satt veldig høyt.  Dette er transaksjonsgebyret du betaler når du sender en transaksjon.</translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="109"/>
+        <source>Error: CreateThread(StartNode) failed</source>
+        <translation>Feil: CreateThread(StartNode) feilet</translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="19"/>
+        <source>Warning: Disk space is low  </source>
+        <translation>Advarsel: Lite ledig diskplass  </translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="16"/>
+        <source>Unable to bind to port %d on this computer.  Nexus is probably already running.</source>
+        <translation>Klarer ikke binde til port %d på denne datamaskinen.  Nexus kjører sannsynligvis allerede.</translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="110"/>
+        <source>To use the %s option</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="111"/>
+        <source>%s, you must set a rpcpassword in the configuration file:
+ %s
+It is recommended you use the following random password:
+rpcuser=Nexusrpc
+rpcpassword=%s
+(you do not need to remember this password)
+If the file does not exist, create it with owner-readable-only file permissions.
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="120"/>
+        <source>Error</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="121"/>
+        <source>An error occured while setting up the RPC port %i for listening: %s</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="122"/>
+        <source>You must set rpcpassword=&lt;password&gt; in the configuration file:
+%s
+If the file does not exist, create it with owner-readable-only file permissions.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../core/strings.cpp" line="127"/>
+        <source>Warning: Please check that your computer&apos;s date and time are correct.  If your clock is wrong Nexus will not work properly.</source>
+        <translation>Advarsel: Vennligst sjekk at dato og klokke er riktig innstilt på datamaskinen.  Hvis klokken er feil vil ikke Nexus fungere ordentlig.</translation>
+    </message>
+    <message>
+        <source>beta</source>
+        <translation type="vanished">beta</translation>
+    </message>
+</context>
+<context>
+    <name>NexusGUI</name>
+    <message>
+        <location filename="../core/gui.cpp" line="97"/>
+        <source>Nexus Wallet</source>
+        <translation>Nexus Lommebok</translation>
+    </message>
+    <message>
+        <location filename="../core/gui.cpp" line="235"/>
+        <source>&amp;Receive</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../core/gui.cpp" line="241"/>
+        <source>&amp;Send</source>
+        <translation type="unfinished">&amp;Send</translation>
+    </message>
+    <message>
+        <location filename="../core/gui.cpp" line="280"/>
+        <source>Show/Hide &amp;Nexus</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../core/gui.cpp" line="281"/>
+        <source>Show or hide the Nexus window</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message numerus="yes">
+        <location filename="../core/gui.cpp" line="540"/>
+        <source>%n Connection(s) to Nexus</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+        </translation>
+    </message>
+    <message>
+        <location filename="../core/gui.cpp" line="562"/>
+        <source>Staking Inactive...
+No Coins to Stake</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../core/gui.cpp" line="566"/>
+        <source>Interest Rate %1 %</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../core/gui.cpp" line="566"/>
+        <source>Stake Weight %1 %</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../core/gui.cpp" line="566"/>
+        <source>%1 % Trust Weight</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../core/gui.cpp" line="566"/>
+        <source>%1 % Block Weight</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../core/gui.cpp" line="596"/>
+        <source>Synchronizing with network...</source>
+        <translation>Synkroniserer med nettverk...</translation>
+    </message>
+    <message>
+        <source>Block chain synchronization in progress</source>
+        <translation type="vanished">Synkronisering av blokk-kjede igang</translation>
+    </message>
+    <message>
+        <location filename="../core/gui.cpp" line="217"/>
+        <source>&amp;Overview</source>
+        <translation>&amp;Oversikt</translation>
+    </message>
+    <message>
+        <location filename="../core/gui.cpp" line="218"/>
+        <source>Show general overview of wallet</source>
+        <translation>Vis generell oversikt over lommeboken</translation>
+    </message>
+    <message>
+        <location filename="../core/gui.cpp" line="223"/>
+        <source>&amp;Transactions</source>
+        <translation>&amp;Transaksjoner</translation>
+    </message>
+    <message>
+        <location filename="../core/gui.cpp" line="224"/>
+        <source>Browse transaction history</source>
+        <translation>Vis transaksjonshistorikk</translation>
+    </message>
+    <message>
+        <location filename="../core/gui.cpp" line="229"/>
+        <source>&amp;Address Book</source>
+        <translation>&amp;Adressebok</translation>
+    </message>
+    <message>
+        <location filename="../core/gui.cpp" line="230"/>
+        <source>Edit the list of stored addresses and labels</source>
+        <translation>Rediger listen over adresser og deres merkelapper</translation>
+    </message>
+    <message>
+        <source>&amp;Receive coins</source>
+        <translation type="vanished">&amp;Motta NXS</translation>
+    </message>
+    <message>
+        <location filename="../core/gui.cpp" line="236"/>
+        <source>Show the list of addresses for receiving payments</source>
+        <translation>Vis listen over adresser for mottak av betalinger</translation>
+    </message>
+    <message>
+        <source>&amp;Send coins</source>
+        <translation type="vanished">&amp;Send NXS</translation>
+    </message>
+    <message>
+        <location filename="../core/gui.cpp" line="242"/>
+        <source>Send coins to a Nexus address</source>
+        <translation>Send NXS til en adresse</translation>
+    </message>
+    <message>
+        <location filename="../core/gui.cpp" line="247"/>
+        <source>Sign &amp;message</source>
+        <translation>Signér &amp;melding</translation>
+    </message>
+    <message>
+        <location filename="../core/gui.cpp" line="248"/>
+        <source>Prove you control an address</source>
+        <translation>Bevis at du kontrollerer en adresse</translation>
+    </message>
+    <message>
+        <location filename="../core/gui.cpp" line="267"/>
+        <source>E&amp;xit</source>
+        <translation>&amp;Avslutt</translation>
+    </message>
+    <message>
+        <location filename="../core/gui.cpp" line="268"/>
+        <source>Quit application</source>
+        <translation>Avslutt applikasjonen</translation>
+    </message>
+    <message>
+        <location filename="../core/gui.cpp" line="271"/>
+        <source>&amp;About %1</source>
+        <translation> &amp;Om %1</translation>
+    </message>
+    <message>
+        <location filename="../core/gui.cpp" line="272"/>
+        <source>Show information about Nexus</source>
+        <translation>Vis informasjon om Nexus</translation>
+    </message>
+    <message>
+        <location filename="../core/gui.cpp" line="274"/>
+        <source>About &amp;Qt</source>
+        <translation>Om &amp;Qt</translation>
+    </message>
+    <message>
+        <location filename="../core/gui.cpp" line="275"/>
+        <source>Show information about Qt</source>
+        <translation>Vis informasjon om Qt</translation>
+    </message>
+    <message>
+        <location filename="../core/gui.cpp" line="277"/>
+        <source>&amp;Options...</source>
+        <translation>&amp;Innstillinger...</translation>
+    </message>
+    <message>
+        <location filename="../core/gui.cpp" line="278"/>
+        <source>Modify configuration options for Nexus</source>
+        <translation>Endre innstillinger for Nexus</translation>
+    </message>
+    <message>
+        <source>Open &amp;Nexus</source>
+        <translation type="vanished">Åpne &amp;Nexus</translation>
+    </message>
+    <message>
+        <source>Show the Nexus window</source>
+        <translation type="vanished">Vis Nexus-vinduet</translation>
+    </message>
+    <message>
+        <location filename="../core/gui.cpp" line="282"/>
+        <source>&amp;Export...</source>
+        <translation>&amp;Eksporter...</translation>
+    </message>
+    <message>
+        <location filename="../core/gui.cpp" line="283"/>
+        <source>Export the data in the current tab to a file</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../core/gui.cpp" line="284"/>
+        <source>&amp;Encrypt Wallet</source>
+        <translation>&amp;Krypter Lommebok</translation>
+    </message>
+    <message>
+        <location filename="../core/gui.cpp" line="285"/>
+        <source>Encrypt or decrypt wallet</source>
+        <translation>Krypter eller dekrypter lommebok</translation>
+    </message>
+    <message>
+        <location filename="../core/gui.cpp" line="287"/>
+        <source>&amp;Unlock Wallet</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../core/gui.cpp" line="288"/>
+        <source>Unlock Wallet for Minting or Transactions</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../core/gui.cpp" line="290"/>
+        <source>&amp;Lock Wallet</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../core/gui.cpp" line="291"/>
+        <source>Lock Wallet Manually</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../core/gui.cpp" line="293"/>
+        <source>&amp;Backup Wallet</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../core/gui.cpp" line="294"/>
+        <source>Backup wallet to another location</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../core/gui.cpp" line="295"/>
+        <source>&amp;Change Passphrase</source>
+        <translation>&amp;Endre Adgangsfrase</translation>
+    </message>
+    <message>
+        <location filename="../core/gui.cpp" line="296"/>
+        <source>Change the passphrase used for wallet encryption</source>
+        <translation>Endre adgangsfrasen brukt for kryptering av lommebok</translation>
+    </message>
+    <message>
+        <location filename="../core/gui.cpp" line="297"/>
+        <source>&amp;Debug window</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../core/gui.cpp" line="298"/>
+        <source>Open debugging and diagnostic console</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../core/gui.cpp" line="327"/>
+        <source>&amp;File</source>
+        <translation>&amp;Fil</translation>
+    </message>
+    <message>
+        <location filename="../core/gui.cpp" line="336"/>
+        <source>&amp;Settings</source>
+        <translation>&amp;Innstillinger</translation>
+    </message>
+    <message>
+        <location filename="../core/gui.cpp" line="344"/>
+        <source>&amp;Help</source>
+        <translation>&amp;Hjelp</translation>
+    </message>
+    <message>
+        <location filename="../core/gui.cpp" line="353"/>
+        <source>Tabs toolbar</source>
+        <translation>Verktøylinje for faner</translation>
+    </message>
+    <message>
+        <location filename="../core/gui.cpp" line="364"/>
+        <source>Actions toolbar</source>
+        <translation>Verktøylinje for handlinger</translation>
+    </message>
+    <message>
+        <location filename="../core/gui.cpp" line="376"/>
+        <source>[testnet]</source>
+        <translation>[testnett]</translation>
+    </message>
+    <message>
+        <location filename="../core/gui.cpp" line="449"/>
+        <source>Nexus client</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../core/gui.cpp" line="476"/>
+        <source>Nexus-qt</source>
+        <translation>Nexus-qt</translation>
+    </message>
+    <message numerus="yes">
+        <location filename="../core/gui.cpp" line="598"/>
+        <source>~%n block(s) remaining</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+        </translation>
+    </message>
+    <message>
+        <location filename="../core/gui.cpp" line="609"/>
+        <source>Downloaded %1 of %2 blocks of transaction history (%3% done).</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message numerus="yes">
+        <source>%n active connection(s) to Nexus network</source>
+        <translation type="vanished">
+            <numerusform>%n aktiv forbindelse til Nexus-nettverket</numerusform>
+            <numerusform>%n aktive forbindelser til Nexus-nettverket</numerusform>
+        </translation>
+    </message>
+    <message>
+        <source>Downloaded %1 of %2 blocks of transaction history.</source>
+        <translation type="vanished">Lastet ned %1 av %2 blokker med transaksjonshistorikk.</translation>
+    </message>
+    <message>
+        <location filename="../core/gui.cpp" line="621"/>
+        <source>Downloaded %1 blocks of transaction history.</source>
+        <translation>Lastet ned %1 blokker med transaksjonshistorikk.</translation>
+    </message>
+    <message numerus="yes">
+        <location filename="../core/gui.cpp" line="636"/>
+        <source>%n second(s) ago</source>
+        <translation>
+            <numerusform>for %n sekund siden</numerusform>
+            <numerusform>for %n sekunder siden</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <location filename="../core/gui.cpp" line="640"/>
+        <source>%n minute(s) ago</source>
+        <translation>
+            <numerusform>for %n minutt siden</numerusform>
+            <numerusform>for %n minutter siden</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <location filename="../core/gui.cpp" line="644"/>
+        <source>%n hour(s) ago</source>
+        <translation>
+            <numerusform>for %n time siden</numerusform>
+            <numerusform>for %n timer siden</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <location filename="../core/gui.cpp" line="648"/>
+        <source>%n day(s) ago</source>
+        <translation>
+            <numerusform>for %n dag siden</numerusform>
+            <numerusform>for %n dager siden</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location filename="../core/gui.cpp" line="654"/>
+        <source>Up to date</source>
+        <translation>Ajour</translation>
+    </message>
+    <message>
+        <location filename="../core/gui.cpp" line="659"/>
+        <source>Catching up...</source>
+        <translation>Kommer ajour...</translation>
+    </message>
+    <message>
+        <location filename="../core/gui.cpp" line="667"/>
+        <source>Last received block was generated %1.</source>
+        <translation>Siste mottatte blokk ble generert %1.</translation>
+    </message>
+    <message>
+        <location filename="../core/gui.cpp" line="723"/>
+        <source>This transaction is over the size limit.  You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network.  Do you want to pay the fee?</source>
+        <translation>Denne transaksjonen overstiger størrelsesbegrensningen.  Du kan likevel sende den med et gebyr på %1, som går til nodene som prosesserer transaksjonen din og støtter nettverket.  Vil du betale gebyret?</translation>
+    </message>
+    <message>
+        <location filename="../core/gui.cpp" line="728"/>
+        <source>Sending...</source>
+        <translation>Sender...</translation>
+    </message>
+    <message>
+        <location filename="../core/gui.cpp" line="755"/>
+        <source>Sent transaction</source>
+        <translation>Sendt transaksjon</translation>
+    </message>
+    <message>
+        <location filename="../core/gui.cpp" line="756"/>
+        <source>Incoming transaction</source>
+        <translation>Innkommende transaksjon</translation>
+    </message>
+    <message>
+        <location filename="../core/gui.cpp" line="757"/>
+        <source>Date: %1
+Amount: %2
+Type: %3
+Address: %4
+</source>
+        <translation>Dato: %1
+Beløp: %2
+Type: %3
+Adresse: %4
+</translation>
+    </message>
+    <message>
+        <location filename="../core/gui.cpp" line="884"/>
+        <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
+        <translation>Lommeboken er &lt;b&gt;kryptert&lt;/b&gt; og for tiden &lt;b&gt;ulåst&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <location filename="../core/gui.cpp" line="884"/>
+        <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked for block minting only&lt;/b&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../core/gui.cpp" line="895"/>
+        <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
+        <translation>Lommeboken er &lt;b&gt;kryptert&lt;/b&gt; og for tiden &lt;b&gt;låst&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <location filename="../core/gui.cpp" line="926"/>
+        <source>Backup Wallet</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../core/gui.cpp" line="926"/>
+        <source>Wallet Data (*.dat)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../core/gui.cpp" line="929"/>
+        <source>Backup Failed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../core/gui.cpp" line="929"/>
+        <source>There was an error trying to save the wallet data to the new location.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../main-qt.cpp" line="138"/>
+        <source>A fatal error occured. Nexus can no longer continue safely and will quit.</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
     <name>OptionsDialog</name>
     <message>
-        <location filename="../optionsdialog.cpp" line="79"/>
+        <location filename="../dialogs/optionsdialog.cpp" line="100"/>
         <source>Main</source>
         <translation>Hoved</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="84"/>
+        <location filename="../dialogs/optionsdialog.cpp" line="105"/>
         <source>Display</source>
         <translation>Visning</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="104"/>
+        <location filename="../dialogs/optionsdialog.cpp" line="125"/>
         <source>Options</source>
         <translation>Innstillinger</translation>
     </message>
@@ -897,65 +1650,69 @@ Adresse: %4
         <translation>Skjema</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="40"/>
+        <location filename="../forms/overviewpage.ui" line="69"/>
+        <source>Nexus Wallet</source>
+        <translation type="unfinished">Nexus Lommebok</translation>
+    </message>
+    <message>
+        <location filename="../forms/overviewpage.ui" line="76"/>
         <source>Balance:</source>
         <translation>Saldo:</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="47"/>
         <source>123.456 Niro</source>
-        <translation>123.456 Niro</translation>
+        <translation type="vanished">123.456 Niro</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="54"/>
+        <location filename="../forms/overviewpage.ui" line="90"/>
         <source>Number of transactions:</source>
         <translation>Antall transaksjoner:</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="61"/>
+        <location filename="../forms/overviewpage.ui" line="97"/>
         <source>0</source>
         <translation>0</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="68"/>
         <source>Unconfirmed:</source>
-        <translation>Ubekreftet</translation>
+        <translation type="vanished">Ubekreftet</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="75"/>
         <source>0 Niro</source>
-        <translation>0 Niro</translation>
+        <translation type="vanished">0 Niro</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="82"/>
         <source>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
-&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Ubuntu'; font-size:11pt; font-weight:400; font-style:normal;&quot;&gt;
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:&apos;Ubuntu&apos;; font-size:11pt; font-weight:400; font-style:normal;&quot;&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Wallet&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+        <translation type="vanished">&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:&apos;Ubuntu&apos;; font-size:11pt; font-weight:400; font-style:normal;&quot;&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Lommebok&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="122"/>
+        <location filename="../forms/overviewpage.ui" line="120"/>
         <source>&lt;b&gt;Recent transactions&lt;/b&gt;</source>
         <translation>&lt;b&gt;Siste transaksjoner&lt;/b&gt;</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="103"/>
         <source>Your current balance</source>
-        <translation>Din nåværende saldo</translation>
+        <translation type="vanished">Din nåværende saldo</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="108"/>
         <source>Total of transactions that have yet to be confirmed, and do not yet count toward the current balance</source>
-        <translation>Totalt antall ubekreftede transaksjoner som ikke telles med i saldo enda</translation>
+        <translation type="vanished">Totalt antall ubekreftede transaksjoner som ikke telles med i saldo enda</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="111"/>
+        <location filename="../pages/overviewpage.cpp" line="126"/>
+        <source>Your current balance, pending balances, immature, and stake balances. Values of 0 ommited.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../pages/overviewpage.cpp" line="129"/>
         <source>Total number of transactions in wallet</source>
         <translation>Totalt antall transaksjoner i lommeboken</translation>
     </message>
@@ -973,59 +1730,224 @@ p, li { white-space: pre-wrap; }
         <translation>QR Kode</translation>
     </message>
     <message>
-        <location filename="../forms/qrcodedialog.ui" line="52"/>
+        <location filename="../forms/qrcodedialog.ui" line="55"/>
         <source>Request Payment</source>
         <translation>Etterspør Betaling</translation>
     </message>
     <message>
-        <location filename="../forms/qrcodedialog.ui" line="67"/>
+        <location filename="../forms/qrcodedialog.ui" line="70"/>
         <source>Amount:</source>
         <translation>Beløp:</translation>
     </message>
     <message>
-        <location filename="../forms/qrcodedialog.ui" line="102"/>
         <source>Niro</source>
-        <translation>Niro</translation>
+        <translation type="vanished">Niro</translation>
     </message>
     <message>
-        <location filename="../forms/qrcodedialog.ui" line="118"/>
+        <location filename="../forms/qrcodedialog.ui" line="120"/>
         <source>Label:</source>
         <translation>Merkelapp:</translation>
     </message>
     <message>
-        <location filename="../forms/qrcodedialog.ui" line="141"/>
+        <location filename="../forms/qrcodedialog.ui" line="143"/>
         <source>Message:</source>
         <translation>Melding:</translation>
     </message>
     <message>
-        <location filename="../forms/qrcodedialog.ui" line="183"/>
+        <location filename="../forms/qrcodedialog.ui" line="185"/>
         <source>&amp;Save As...</source>
         <translation>&amp;Lagre Som...</translation>
     </message>
     <message>
-        <location filename="../qrcodedialog.cpp" line="101"/>
-        <source>Save Image...</source>
-        <translation type="unfinished"/>
+        <location filename="../dialogs/qrcodedialog.cpp" line="54"/>
+        <source>Error encoding URI into QR Code.</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qrcodedialog.cpp" line="101"/>
+        <location filename="../dialogs/qrcodedialog.cpp" line="72"/>
+        <source>Resulting URI too long, try to reduce the text for label / message.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../dialogs/qrcodedialog.cpp" line="129"/>
+        <source>Save Image...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../dialogs/qrcodedialog.cpp" line="129"/>
         <source>PNG Images (*.png)</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>RPCConsole</name>
+    <message>
+        <location filename="../forms/rpcconsole.ui" line="14"/>
+        <source>Nexus Debug Window</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/rpcconsole.ui" line="24"/>
+        <source>Information</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/rpcconsole.ui" line="33"/>
+        <source>Client name</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/rpcconsole.ui" line="40"/>
+        <location filename="../forms/rpcconsole.ui" line="60"/>
+        <location filename="../forms/rpcconsole.ui" line="108"/>
+        <location filename="../forms/rpcconsole.ui" line="164"/>
+        <location filename="../forms/rpcconsole.ui" line="186"/>
+        <location filename="../forms/rpcconsole.ui" line="208"/>
+        <location filename="../forms/rpcconsole.ui" line="258"/>
+        <location filename="../forms/rpcconsole.ui" line="280"/>
+        <location filename="../forms/rpcconsole.ui" line="330"/>
+        <location filename="../forms/rpcconsole.ui" line="352"/>
+        <location filename="../forms/rpcconsole.ui" line="442"/>
+        <location filename="../core/rpcconsole.cpp" line="404"/>
+        <source>N/A</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/rpcconsole.ui" line="53"/>
+        <source>Client version</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/rpcconsole.ui" line="79"/>
+        <source>Version</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/rpcconsole.ui" line="92"/>
+        <source>Network</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/rpcconsole.ui" line="101"/>
+        <source>Number of connections</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/rpcconsole.ui" line="123"/>
+        <source>On testnet</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/rpcconsole.ui" line="148"/>
+        <source>Block chain</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/rpcconsole.ui" line="157"/>
+        <source>Current number of blocks</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/rpcconsole.ui" line="179"/>
+        <source>Estimated total blocks</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/rpcconsole.ui" line="201"/>
+        <source>Last block time</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/rpcconsole.ui" line="229"/>
+        <source>Prime Channel</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/rpcconsole.ui" line="242"/>
+        <location filename="../forms/rpcconsole.ui" line="314"/>
+        <source>Height [N/A]</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/rpcconsole.ui" line="251"/>
+        <location filename="../forms/rpcconsole.ui" line="323"/>
+        <source>Difficulty</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/rpcconsole.ui" line="273"/>
+        <location filename="../forms/rpcconsole.ui" line="345"/>
+        <source>Reserves</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/rpcconsole.ui" line="301"/>
+        <source>Hashing Channel</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/rpcconsole.ui" line="373"/>
+        <source>Distribution</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/rpcconsole.ui" line="386"/>
+        <source>Total Nexus in Circulation</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/rpcconsole.ui" line="395"/>
+        <source>Total to Date</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/rpcconsole.ui" line="403"/>
+        <source>N/A [N/A %]</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/rpcconsole.ui" line="433"/>
+        <source>Build date</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/rpcconsole.ui" line="454"/>
+        <source>Console</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/rpcconsole.ui" line="487"/>
+        <source>&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/rpcconsole.ui" line="503"/>
+        <source>Clear console</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../core/rpcconsole.cpp" line="315"/>
+        <source>Welcome to the Nexus RPC console.&lt;br&gt;Use up and down arrows to navigate history, and &lt;b&gt;Ctrl-L&lt;/b&gt; to clear screen.&lt;br&gt;Type &lt;b&gt;help&lt;/b&gt; for an overview of available commands.</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
     <name>SendCoinsDialog</name>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="14"/>
-        <location filename="../sendcoinsdialog.cpp" line="122"/>
-        <location filename="../sendcoinsdialog.cpp" line="127"/>
-        <location filename="../sendcoinsdialog.cpp" line="132"/>
-        <location filename="../sendcoinsdialog.cpp" line="137"/>
-        <location filename="../sendcoinsdialog.cpp" line="143"/>
-        <location filename="../sendcoinsdialog.cpp" line="148"/>
-        <location filename="../sendcoinsdialog.cpp" line="153"/>
+        <location filename="../dialogs/sendcoinsdialog.cpp" line="140"/>
+        <location filename="../dialogs/sendcoinsdialog.cpp" line="145"/>
+        <location filename="../dialogs/sendcoinsdialog.cpp" line="150"/>
+        <location filename="../dialogs/sendcoinsdialog.cpp" line="155"/>
+        <location filename="../dialogs/sendcoinsdialog.cpp" line="161"/>
+        <location filename="../dialogs/sendcoinsdialog.cpp" line="166"/>
+        <location filename="../dialogs/sendcoinsdialog.cpp" line="171"/>
         <source>Send Coins</source>
         <translation>Send NXS</translation>
+    </message>
+    <message>
+        <location filename="../forms/sendcoinsdialog.ui" line="14"/>
+        <source>Send</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="64"/>
@@ -1054,8 +1976,12 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="113"/>
+        <source>123.456</source>
+        <translation type="unfinished">123.456</translation>
+    </message>
+    <message>
         <source>123.456 Niro</source>
-        <translation>123.456 Niro</translation>
+        <translation type="vanished">123.456 Niro</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="144"/>
@@ -1068,57 +1994,62 @@ p, li { white-space: pre-wrap; }
         <translation>&amp;Send</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="94"/>
+        <location filename="../dialogs/sendcoinsdialog.cpp" line="109"/>
+        <location filename="../dialogs/sendcoinsdialog.cpp" line="111"/>
         <source>&lt;b&gt;%1&lt;/b&gt; to %2 (%3)</source>
         <translation>&lt;b&gt;%1&lt;/b&gt; til %2 (%3)</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="99"/>
+        <location filename="../dialogs/sendcoinsdialog.cpp" line="117"/>
         <source>Confirm send coins</source>
         <translation>Bekreft sending av NXS</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="100"/>
+        <location filename="../dialogs/sendcoinsdialog.cpp" line="118"/>
         <source>Are you sure you want to send %1?</source>
         <translation>Er du sikker på at du vil sende %1?</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="100"/>
+        <location filename="../dialogs/sendcoinsdialog.cpp" line="118"/>
         <source> and </source>
         <translation> og </translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="123"/>
+        <location filename="../dialogs/sendcoinsdialog.cpp" line="141"/>
         <source>The recepient address is not valid, please recheck.</source>
         <translation>Mottaksadressen er ugyldig, prøv igjen.</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="128"/>
-        <source>The amount to pay must be larger than 0.</source>
-        <translation>Beløpen som skal betales må være over 0.</translation>
+        <location filename="../dialogs/sendcoinsdialog.cpp" line="146"/>
+        <source>The amount to pay must be at least one cent (0.01).</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="133"/>
+        <source>The amount to pay must be larger than 0.</source>
+        <translation type="vanished">Beløpen som skal betales må være over 0.</translation>
+    </message>
+    <message>
+        <location filename="../dialogs/sendcoinsdialog.cpp" line="151"/>
         <source>Amount exceeds your balance</source>
         <translation>Beløpet overstiger saldoen din</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="138"/>
+        <location filename="../dialogs/sendcoinsdialog.cpp" line="156"/>
         <source>Total exceeds your balance when the %1 transaction fee is included</source>
         <translation>Totalen overgår din saldo når transaksjonsgebyret på %1 tas med</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="144"/>
+        <location filename="../dialogs/sendcoinsdialog.cpp" line="162"/>
         <source>Duplicate address found, can only send to each address once in one send operation</source>
         <translation>Duplikate adresser funnet, kan kun sende til hver adresse en gang i hver sendeoperasjon</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="149"/>
+        <location filename="../dialogs/sendcoinsdialog.cpp" line="167"/>
         <source>Error: Transaction creation failed  </source>
         <translation>Feil: Opprettelse av transaksjon feilet  </translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="154"/>
+        <location filename="../dialogs/sendcoinsdialog.cpp" line="172"/>
         <source>Error: The transaction was rejected.  This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
         <translation>Feil: Transaksjonen ble avvist.  Dette kan skje hvis noen av myntene i lommeboken allerede var brukt, f.eks. hvis du kopierte wallet.dat og mynter ble brukt i kopien uten å bli markert brukt her.</translation>
     </message>
@@ -1142,7 +2073,7 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="66"/>
-        <location filename="../sendcoinsentry.cpp" line="26"/>
+        <location filename="../wallet/sendcoinsentry.cpp" line="34"/>
         <source>Enter a label for this address to add it to your address book</source>
         <translation>Skriv inn en merkelapp for denne adressen for å legge den til i din adressebok</translation>
     </message>
@@ -1153,8 +2084,12 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="93"/>
+        <source>The address to send the payment to</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>The address to send the payment to  (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
-        <translation>Adressen betalingen skal sendes til  (f.eks. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
+        <translation type="vanished">Adressen betalingen skal sendes til  (f.eks. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="103"/>
@@ -1182,150 +2117,163 @@ p, li { white-space: pre-wrap; }
         <translation>Fjern denne mottakeren</translation>
     </message>
     <message>
-        <location filename="../sendcoinsentry.cpp" line="25"/>
         <source>Enter a Nexus address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
-        <translation>Skriv inn en Nexus adresse (f.eks. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
+        <translation type="vanished">Skriv inn en Nexus adresse (f.eks. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
+    </message>
+    <message>
+        <location filename="../wallet/sendcoinsentry.cpp" line="33"/>
+        <source>Enter a Nexus address</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
     <name>TransactionDesc</name>
     <message>
-        <location filename="../transactiondesc.cpp" line="18"/>
+        <location filename="../wallet/transactiondesc.cpp" line="30"/>
         <source>Open for %1 blocks</source>
         <translation>Åpen for %1 blokker</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="20"/>
+        <location filename="../wallet/transactiondesc.cpp" line="32"/>
         <source>Open until %1</source>
         <translation>Åpen til %1</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="26"/>
+        <location filename="../wallet/transactiondesc.cpp" line="38"/>
         <source>%1/offline?</source>
         <translation>%1/frakoblet?</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="28"/>
+        <location filename="../wallet/transactiondesc.cpp" line="40"/>
         <source>%1/unconfirmed</source>
         <translation>%1/ubekreftet</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="30"/>
+        <location filename="../wallet/transactiondesc.cpp" line="42"/>
         <source>%1 confirmations</source>
         <translation>%1 bekreftelser</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="47"/>
+        <location filename="../wallet/transactiondesc.cpp" line="60"/>
         <source>&lt;b&gt;Status:&lt;/b&gt; </source>
         <translation>&lt;b&gt;Status:&lt;/b&gt; </translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="52"/>
+        <location filename="../wallet/transactiondesc.cpp" line="65"/>
         <source>, has not been successfully broadcast yet</source>
         <translation>, har ikke blitt kringkastet uten problemer enda.</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="54"/>
+        <location filename="../wallet/transactiondesc.cpp" line="67"/>
         <source>, broadcast through %1 node</source>
         <translation>, kringkast gjennom %1 node</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="56"/>
+        <location filename="../wallet/transactiondesc.cpp" line="69"/>
         <source>, broadcast through %1 nodes</source>
         <translation>, kringkast gjennom %1 noder</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="60"/>
+        <location filename="../wallet/transactiondesc.cpp" line="73"/>
         <source>&lt;b&gt;Date:&lt;/b&gt; </source>
         <translation>&lt;b&gt;Dato:&lt;/b&gt; </translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="67"/>
+        <location filename="../wallet/transactiondesc.cpp" line="80"/>
         <source>&lt;b&gt;Source:&lt;/b&gt; Generated&lt;br&gt;</source>
         <translation>&lt;b&gt;Kilde:&lt;/b&gt; Generert&lt;br&gt;</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="73"/>
-        <location filename="../transactiondesc.cpp" line="90"/>
+        <location filename="../wallet/transactiondesc.cpp" line="86"/>
+        <location filename="../wallet/transactiondesc.cpp" line="103"/>
         <source>&lt;b&gt;From:&lt;/b&gt; </source>
         <translation>&lt;b&gt;Fra:&lt;/b&gt; </translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="90"/>
+        <location filename="../wallet/transactiondesc.cpp" line="103"/>
         <source>unknown</source>
         <translation>ukjent</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="91"/>
-        <location filename="../transactiondesc.cpp" line="114"/>
-        <location filename="../transactiondesc.cpp" line="173"/>
+        <location filename="../wallet/transactiondesc.cpp" line="104"/>
+        <location filename="../wallet/transactiondesc.cpp" line="127"/>
+        <location filename="../wallet/transactiondesc.cpp" line="186"/>
         <source>&lt;b&gt;To:&lt;/b&gt; </source>
         <translation>&lt;b&gt;Til:&lt;/b&gt; </translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="94"/>
+        <location filename="../wallet/transactiondesc.cpp" line="107"/>
         <source> (yours, label: </source>
         <translation> (din, merkelapp: </translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="96"/>
+        <location filename="../wallet/transactiondesc.cpp" line="109"/>
         <source> (yours)</source>
         <translation> (din)</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="131"/>
-        <location filename="../transactiondesc.cpp" line="145"/>
-        <location filename="../transactiondesc.cpp" line="190"/>
-        <location filename="../transactiondesc.cpp" line="207"/>
+        <location filename="../wallet/transactiondesc.cpp" line="144"/>
+        <location filename="../wallet/transactiondesc.cpp" line="158"/>
+        <location filename="../wallet/transactiondesc.cpp" line="203"/>
+        <location filename="../wallet/transactiondesc.cpp" line="220"/>
         <source>&lt;b&gt;Credit:&lt;/b&gt; </source>
         <translation>&lt;b&gt;Kredit:&lt;/b&gt; </translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="133"/>
+        <location filename="../wallet/transactiondesc.cpp" line="146"/>
         <source>(%1 matures in %2 more blocks)</source>
         <translation>(%1 modnes om %2 flere blokker)</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="137"/>
+        <location filename="../wallet/transactiondesc.cpp" line="150"/>
         <source>(not accepted)</source>
         <translation>(ikke akseptert)</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="181"/>
-        <location filename="../transactiondesc.cpp" line="189"/>
-        <location filename="../transactiondesc.cpp" line="204"/>
+        <location filename="../wallet/transactiondesc.cpp" line="194"/>
+        <location filename="../wallet/transactiondesc.cpp" line="202"/>
+        <location filename="../wallet/transactiondesc.cpp" line="217"/>
         <source>&lt;b&gt;Debit:&lt;/b&gt; </source>
         <translation>&lt;b&gt;Debet:&lt;/b&gt; </translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="195"/>
+        <location filename="../wallet/transactiondesc.cpp" line="208"/>
         <source>&lt;b&gt;Transaction fee:&lt;/b&gt; </source>
         <translation>&lt;b&gt;Transaksjonsgebyr:&lt;/b&gt; </translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="211"/>
+        <location filename="../wallet/transactiondesc.cpp" line="224"/>
         <source>&lt;b&gt;Net amount:&lt;/b&gt; </source>
         <translation>&lt;b&gt;Nettobeløp:&lt;/b&gt; </translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="217"/>
+        <location filename="../wallet/transactiondesc.cpp" line="230"/>
         <source>Message:</source>
         <translation>Melding:</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="219"/>
+        <location filename="../wallet/transactiondesc.cpp" line="232"/>
         <source>Comment:</source>
         <translation>Kommentar:</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="221"/>
+        <location filename="../wallet/transactiondesc.cpp" line="234"/>
         <source>Transaction ID:</source>
         <translation>Transaksjons-ID:</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="224"/>
+        <location filename="../wallet/transactiondesc.cpp" line="237"/>
+        <source>Generated Nexus must wait 120 blocks before they can be spent.  When you generated this block, it was broadcast to the network to be added to the block chain.  If it fails to get into the chain, it will change to &quot;not accepted&quot; and not be spendable.  This may occasionally happen if another node generates a block within a few seconds of yours.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../wallet/transactiondesc.cpp" line="239"/>
+        <source>Staked Nexus must wait 120 blocks before they can return to balance and be spent.  When you generated this proof-of-stake block, it was broadcast to the network to be added to the block chain.  If it fails to get into the chain, it will change to &quot;not accepted&quot; and not be a valid stake.  This may occasionally happen if another node generates a proof-of-stake block within a few seconds of yours.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Generated coins must wait 120 blocks before they can be spent.  When you generated this block, it was broadcast to the network to be added to the block chain.  If it fails to get into the chain, it will change to &quot;not accepted&quot; and not be spendable.  This may occasionally happen if another node generates a block within a few seconds of yours.</source>
-        <translation>Genererte mynter må vente 120 blokker før de kan brukes.  Da du genererte denne blokken ble den kringkastet på nettverket for å bli lagt til i kjeden av blokker.  Hvis den ikke kommer med i kjeden vil den endre seg til &quot;ikke akseptert og pengene vil ikke kunne brukes.  Dette vil noen ganger skje hvis en annen node genererer en blokk noen sekunder i tid fra din egen.</translation>
+        <translation type="vanished">Genererte mynter må vente 120 blokker før de kan brukes.  Da du genererte denne blokken ble den kringkastet på nettverket for å bli lagt til i kjeden av blokker.  Hvis den ikke kommer med i kjeden vil den endre seg til &quot;ikke akseptert og pengene vil ikke kunne brukes.  Dette vil noen ganger skje hvis en annen node genererer en blokk noen sekunder i tid fra din egen.</translation>
     </message>
 </context>
 <context>
@@ -1344,117 +2292,144 @@ p, li { white-space: pre-wrap; }
 <context>
     <name>TransactionTableModel</name>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="213"/>
+        <location filename="../models/transactiontablemodel.cpp" line="225"/>
         <source>Date</source>
         <translation>Dato</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="213"/>
+        <location filename="../models/transactiontablemodel.cpp" line="225"/>
         <source>Type</source>
         <translation>Type</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="213"/>
+        <location filename="../models/transactiontablemodel.cpp" line="225"/>
         <source>Address</source>
         <translation>Adresse</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="213"/>
+        <location filename="../models/transactiontablemodel.cpp" line="225"/>
         <source>Amount</source>
         <translation>Beløp</translation>
     </message>
+    <message>
+        <location filename="../models/transactiontablemodel.cpp" line="288"/>
+        <source>Immature (%1 of %2 confirmations)</source>
+        <translation type="unfinished"></translation>
+    </message>
     <message numerus="yes">
-        <location filename="../transactiontablemodel.cpp" line="274"/>
+        <location filename="../models/transactiontablemodel.cpp" line="288"/>
+        <source>Balance will be available in %n more blocks</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <location filename="../models/transactiontablemodel.cpp" line="306"/>
         <source>Open for %n block(s)</source>
-        <translation><numerusform>Åpen for %n blokk</numerusform><numerusform>Åpen for %n blokker</numerusform></translation>
+        <translation>
+            <numerusform>Åpen for %n blokk</numerusform>
+            <numerusform>Åpen for %n blokker</numerusform>
+        </translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="277"/>
+        <location filename="../models/transactiontablemodel.cpp" line="309"/>
         <source>Open until %1</source>
         <translation>Åpen til %1</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="280"/>
+        <location filename="../models/transactiontablemodel.cpp" line="312"/>
         <source>Offline (%1 confirmations)</source>
         <translation>Frakoblet (%1 bekreftelser)</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="283"/>
+        <location filename="../models/transactiontablemodel.cpp" line="315"/>
         <source>Unconfirmed (%1 of %2 confirmations)</source>
         <translation>Ubekreftet (%1 av %2 bekreftelser)</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="286"/>
+        <location filename="../models/transactiontablemodel.cpp" line="318"/>
         <source>Confirmed (%1 confirmations)</source>
         <translation>Bekreftet (%1 bekreftelser)</translation>
     </message>
-    <message numerus="yes">
-        <location filename="../transactiontablemodel.cpp" line="295"/>
-        <source>Mined balance will be available in %n more blocks</source>
-        <translation><numerusform>Utvunnet saldo vil bli tilgjengelig om %n blokk</numerusform><numerusform>Utvunnet saldo vil bli tilgjengelig om %n blokker</numerusform></translation>
+    <message>
+        <location filename="../models/transactiontablemodel.cpp" line="372"/>
+        <source>Genesis</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="301"/>
+        <location filename="../models/transactiontablemodel.cpp" line="374"/>
+        <source>Trust</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message numerus="yes">
+        <source>Mined balance will be available in %n more blocks</source>
+        <translation type="vanished">
+            <numerusform>Utvunnet saldo vil bli tilgjengelig om %n blokk</numerusform>
+            <numerusform>Utvunnet saldo vil bli tilgjengelig om %n blokker</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location filename="../models/transactiontablemodel.cpp" line="294"/>
         <source>This block was not received by any other nodes and will probably not be accepted!</source>
         <translation>Denne blokken har ikke blitt mottatt av noen andre noder og vil sannsynligvis ikke bli akseptert!</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="304"/>
+        <location filename="../models/transactiontablemodel.cpp" line="297"/>
         <source>Generated but not accepted</source>
         <translation>Generert men ikke akseptert</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="347"/>
+        <location filename="../models/transactiontablemodel.cpp" line="361"/>
         <source>Received with</source>
         <translation>Mottatt med</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="349"/>
+        <location filename="../models/transactiontablemodel.cpp" line="363"/>
         <source>Received from</source>
         <translation>Mottatt fra</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="352"/>
+        <location filename="../models/transactiontablemodel.cpp" line="366"/>
         <source>Sent to</source>
         <translation>Sendt til</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="354"/>
+        <location filename="../models/transactiontablemodel.cpp" line="368"/>
         <source>Payment to yourself</source>
         <translation>Betaling til deg selv</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="356"/>
+        <location filename="../models/transactiontablemodel.cpp" line="370"/>
         <source>Mined</source>
         <translation>Utvunnet</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="394"/>
         <source>(n/a)</source>
-        <translation>-</translation>
+        <translation type="vanished">-</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="593"/>
+        <location filename="../models/transactiontablemodel.cpp" line="611"/>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
         <translation>Transaksjonsstatus. Hold muspekeren over dette feltet for å se antall bekreftelser.</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="595"/>
+        <location filename="../models/transactiontablemodel.cpp" line="613"/>
         <source>Date and time that the transaction was received.</source>
         <translation>Dato og tid for da transaksjonen ble mottat.</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="597"/>
+        <location filename="../models/transactiontablemodel.cpp" line="615"/>
         <source>Type of transaction.</source>
         <translation>Type transaksjon.</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="599"/>
+        <location filename="../models/transactiontablemodel.cpp" line="617"/>
         <source>Destination address of transaction.</source>
         <translation>Mottaksadresse for transaksjonen</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="601"/>
+        <location filename="../models/transactiontablemodel.cpp" line="619"/>
         <source>Amount removed from or added to balance.</source>
         <translation>Beløp fjernet eller lagt til saldo.</translation>
     </message>
@@ -1462,163 +2437,173 @@ p, li { white-space: pre-wrap; }
 <context>
     <name>TransactionView</name>
     <message>
-        <location filename="../transactionview.cpp" line="55"/>
-        <location filename="../transactionview.cpp" line="71"/>
+        <location filename="../wallet/transactionview.cpp" line="63"/>
+        <location filename="../wallet/transactionview.cpp" line="79"/>
         <source>All</source>
         <translation>Alle</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="56"/>
+        <location filename="../wallet/transactionview.cpp" line="64"/>
         <source>Today</source>
         <translation>I dag</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="57"/>
+        <location filename="../wallet/transactionview.cpp" line="65"/>
         <source>This week</source>
         <translation>Denne uken</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="58"/>
+        <location filename="../wallet/transactionview.cpp" line="66"/>
         <source>This month</source>
         <translation>Denne måneden</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="59"/>
+        <location filename="../wallet/transactionview.cpp" line="67"/>
         <source>Last month</source>
         <translation>Forrige måned</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="60"/>
+        <location filename="../wallet/transactionview.cpp" line="68"/>
         <source>This year</source>
         <translation>Dette året</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="61"/>
+        <location filename="../wallet/transactionview.cpp" line="69"/>
         <source>Range...</source>
         <translation>Intervall...</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="72"/>
+        <location filename="../wallet/transactionview.cpp" line="80"/>
         <source>Received with</source>
         <translation>Mottatt med</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="74"/>
+        <location filename="../wallet/transactionview.cpp" line="82"/>
         <source>Sent to</source>
         <translation>Sendt til</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="76"/>
+        <location filename="../wallet/transactionview.cpp" line="84"/>
         <source>To yourself</source>
         <translation>Til deg selv</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="77"/>
+        <location filename="../wallet/transactionview.cpp" line="85"/>
         <source>Mined</source>
         <translation>Utvunnet</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="78"/>
+        <location filename="../wallet/transactionview.cpp" line="86"/>
+        <source>Genesis</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../wallet/transactionview.cpp" line="87"/>
+        <source>Trust</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../wallet/transactionview.cpp" line="88"/>
         <source>Other</source>
         <translation>Andre</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="84"/>
+        <location filename="../wallet/transactionview.cpp" line="94"/>
         <source>Enter address or label to search</source>
         <translation>Skriv inn adresse eller merkelapp for søk</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="90"/>
+        <location filename="../wallet/transactionview.cpp" line="100"/>
         <source>Min amount</source>
         <translation>Minimumsbeløp</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="124"/>
+        <location filename="../wallet/transactionview.cpp" line="134"/>
         <source>Copy address</source>
         <translation>Kopier adresse</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="125"/>
+        <location filename="../wallet/transactionview.cpp" line="135"/>
         <source>Copy label</source>
         <translation>Kopier merkelapp</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="126"/>
+        <location filename="../wallet/transactionview.cpp" line="136"/>
         <source>Copy amount</source>
         <translation>Kopiér beløp</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="127"/>
+        <location filename="../wallet/transactionview.cpp" line="137"/>
         <source>Edit label</source>
         <translation>Rediger merkelapp</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="128"/>
+        <location filename="../wallet/transactionview.cpp" line="138"/>
         <source>Show details...</source>
         <translation>Vis detaljer...</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="268"/>
+        <location filename="../wallet/transactionview.cpp" line="283"/>
         <source>Export Transaction Data</source>
         <translation>Eksporter transaksjonsdata</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="269"/>
+        <location filename="../wallet/transactionview.cpp" line="284"/>
         <source>Comma separated file (*.csv)</source>
         <translation>Kommaseparert fil (*.csv)</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="277"/>
+        <location filename="../wallet/transactionview.cpp" line="292"/>
         <source>Confirmed</source>
         <translation>Bekreftet</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="278"/>
+        <location filename="../wallet/transactionview.cpp" line="293"/>
         <source>Date</source>
         <translation>Dato</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="279"/>
+        <location filename="../wallet/transactionview.cpp" line="294"/>
         <source>Type</source>
         <translation>Type</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="280"/>
+        <location filename="../wallet/transactionview.cpp" line="295"/>
         <source>Label</source>
         <translation>Merkelapp</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="281"/>
+        <location filename="../wallet/transactionview.cpp" line="296"/>
         <source>Address</source>
         <translation>Adresse</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="282"/>
+        <location filename="../wallet/transactionview.cpp" line="297"/>
         <source>Amount</source>
         <translation>Beløp</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="283"/>
+        <location filename="../wallet/transactionview.cpp" line="298"/>
         <source>ID</source>
         <translation>ID</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="287"/>
+        <location filename="../wallet/transactionview.cpp" line="302"/>
         <source>Error exporting</source>
         <translation>Feil ved eksport</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="287"/>
+        <location filename="../wallet/transactionview.cpp" line="302"/>
         <source>Could not write to file %1.</source>
         <translation>Kunne ikke skrive til filen %1.</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="382"/>
+        <location filename="../wallet/transactionview.cpp" line="397"/>
         <source>Range:</source>
         <translation>Intervall:</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="390"/>
+        <location filename="../wallet/transactionview.cpp" line="405"/>
         <source>to</source>
         <translation>til</translation>
     </message>
@@ -1626,355 +2611,9 @@ p, li { white-space: pre-wrap; }
 <context>
     <name>WalletModel</name>
     <message>
-        <location filename="../walletmodel.cpp" line="145"/>
+        <location filename="../models/walletmodel.cpp" line="162"/>
         <source>Sending...</source>
         <translation>Sender...</translation>
-    </message>
-</context>
-<context>
-    <name>Nexus-core</name>
-    <message>
-        <location filename="../core/strings.cpp" line="3"/>
-        <source>Nexus version</source>
-        <translation>Nexus versjon</translation>
-    </message>
-    <message>
-        <location filename="../core/strings.cpp" line="4"/>
-        <source>Usage:</source>
-        <translation>Bruk:</translation>
-    </message>
-    <message>
-        <location filename="../core/strings.cpp" line="5"/>
-        <source>Send command to -server or Nexus</source>
-        <translation>Send kommando til -server eller Nexus</translation>
-    </message>
-    <message>
-        <location filename="../core/strings.cpp" line="6"/>
-        <source>List commands</source>
-        <translation>List opp kommandoer</translation>
-    </message>
-    <message>
-        <location filename="../core/strings.cpp" line="7"/>
-        <source>Get help for a command</source>
-        <translation>Vis hjelpetekst for en kommando</translation>
-    </message>
-    <message>
-        <location filename="../core/strings.cpp" line="8"/>
-        <source>Options:</source>
-        <translation>Innstillinger:</translation>
-    </message>
-    <message>
-        <location filename="../core/strings.cpp" line="9"/>
-        <source>Specify configuration file (default: nexus.conf)</source>
-        <translation>Angi konfigurasjonsfil (standardverdi: nexus.conf)</translation>
-    </message>
-    <message>
-        <location filename="../core/strings.cpp" line="10"/>
-        <source>Specify pid file (default: Nexus.pid)</source>
-        <translation>Angi pid-fil (standardverdi: Nexus.pid)</translation>
-    </message>
-    <message>
-        <location filename="../core/strings.cpp" line="11"/>
-        <source>Generate coins</source>
-        <translation>Generér NXS</translation>
-    </message>
-    <message>
-        <location filename="../core/strings.cpp" line="12"/>
-        <source>Don&apos;t generate coins</source>
-        <translation>Ikke generér NXS</translation>
-    </message>
-    <message>
-        <location filename="../core/strings.cpp" line="13"/>
-        <source>Start minimized</source>
-        <translation>Start minimert
-</translation>
-    </message>
-    <message>
-        <location filename="../core/strings.cpp" line="14"/>
-        <source>Specify data directory</source>
-        <translation>Angi mappe for datafiler</translation>
-    </message>
-    <message>
-        <location filename="../core/strings.cpp" line="15"/>
-        <source>Specify connection timeout (in milliseconds)</source>
-        <translation>Angi tidsavbrudd for forbindelse (i millisekunder)</translation>
-    </message>
-    <message>
-        <location filename="../core/strings.cpp" line="16"/>
-        <source>Connect through socks4 proxy</source>
-        <translation>Koble til gjennom socks4 proxy</translation>
-    </message>
-    <message>
-        <location filename="../core/strings.cpp" line="17"/>
-        <source>Allow DNS lookups for addnode and connect</source>
-        <translation>Tillat DNS-oppslag for addnode og connect</translation>
-    </message>
-    <message>
-        <location filename="../core/strings.cpp" line="18"/>
-        <source>Listen for connections on &lt;port&gt; (default: 8333 or testnet: 18333)</source>
-        <translation>Lytt etter tilkoblinger på &lt;port&gt; (standardverdi: 8333 eller testnet: 18333)</translation>
-    </message>
-    <message>
-        <location filename="../core/strings.cpp" line="19"/>
-        <source>Maintain at most &lt;n&gt; connections to peers (default: 125)</source>
-        <translation>Hold maks &lt;n&gt; koblinger åpne til andre noder (standardverdi: 125)</translation>
-    </message>
-    <message>
-        <location filename="../core/strings.cpp" line="20"/>
-        <source>Add a node to connect to</source>
-        <translation>Legg til node for tilkobling</translation>
-    </message>
-    <message>
-        <location filename="../core/strings.cpp" line="21"/>
-        <source>Connect only to the specified node</source>
-        <translation>Koble kun til angitt node</translation>
-    </message>
-    <message>
-        <location filename="../core/strings.cpp" line="22"/>
-        <source>Don&apos;t accept connections from outside</source>
-        <translation>Ikke ta imot tilkoblinger fra omverden</translation>
-    </message>
-    <message>
-        <location filename="../core/strings.cpp" line="23"/>
-        <source>Don&apos;t bootstrap list of peers using DNS</source>
-        <translation>Ikke lag initiell nodeliste ved hjelp av DNS</translation>
-    </message>
-    <message>
-        <location filename="../core/strings.cpp" line="24"/>
-        <source>Threshold for disconnecting misbehaving peers (default: 100)</source>
-        <translation>Grenseverdi for å koble fra noder med dårlig oppførsel (standardverdi: 100)</translation>
-    </message>
-    <message>
-        <location filename="../core/strings.cpp" line="25"/>
-        <source>Number of seconds to keep misbehaving peers from reconnecting (default: 86400)</source>
-        <translation>Antall sekunder noder med dårlig oppførsel hindres fra å koble til på nytt (standardverdi: 86400)</translation>
-    </message>
-    <message>
-        <location filename="../core/strings.cpp" line="28"/>
-        <source>Maximum per-connection receive buffer, &lt;n&gt;*1000 bytes (default: 10000)</source>
-        <translation>Maksimum mottaksbuffer per tilkobling, &lt;n&gt;*1000 bytes (standardverdi: 10000)</translation>
-    </message>
-    <message>
-        <location filename="../core/strings.cpp" line="29"/>
-        <source>Maximum per-connection send buffer, &lt;n&gt;*1000 bytes (default: 10000)</source>
-        <translation>Maksimum sendebuffer per tilkobling, &lt;n&gt;*1000 bytes (standardverdi: 10000)</translation>
-    </message>
-    <message>
-        <location filename="../core/strings.cpp" line="30"/>
-        <source>Don&apos;t attempt to use UPnP to map the listening port</source>
-        <translation>Ikke sett opp port vha. UPnP</translation>
-    </message>
-    <message>
-        <location filename="../core/strings.cpp" line="31"/>
-        <source>Attempt to use UPnP to map the listening port</source>
-        <translation>Sett opp port vha. UPnP</translation>
-    </message>
-    <message>
-        <location filename="../core/strings.cpp" line="32"/>
-        <source>Fee per kB to add to transactions you send</source>
-        <translation>Gebyr per kB for transaksjoner du sender</translation>
-    </message>
-    <message>
-        <location filename="../core/strings.cpp" line="33"/>
-        <source>Accept command line and JSON-RPC commands</source>
-        <translation>Ta imot kommandolinje- og JSON-RPC-kommandoer</translation>
-    </message>
-    <message>
-        <location filename="../core/strings.cpp" line="34"/>
-        <source>Run in the background as a daemon and accept commands</source>
-        <translation>Kjør i bakgrunnen som daemon og ta imot kommandoer</translation>
-    </message>
-    <message>
-        <location filename="../core/strings.cpp" line="35"/>
-        <source>Use the test network</source>
-        <translation>Bruk testnettverket</translation>
-    </message>
-    <message>
-        <location filename="../core/strings.cpp" line="36"/>
-        <source>Output extra debugging information</source>
-        <translation>Gi ut ekstra debuginformasjon</translation>
-    </message>
-    <message>
-        <location filename="../core/strings.cpp" line="37"/>
-        <source>Prepend debug output with timestamp</source>
-        <translation>Sett tidsstempel på debugmeldinger</translation>
-    </message>
-    <message>
-        <location filename="../core/strings.cpp" line="38"/>
-        <source>Send trace/debug info to console instead of debug.log file</source>
-        <translation>Send spor/debug informasjon til konsollet istedenfor debug.log filen</translation>
-    </message>
-    <message>
-        <location filename="../core/strings.cpp" line="39"/>
-        <source>Send trace/debug info to debugger</source>
-        <translation>Send spor/debug informasjon til debugger</translation>
-    </message>
-    <message>
-        <location filename="../core/strings.cpp" line="40"/>
-        <source>Username for JSON-RPC connections</source>
-        <translation>Brukernavn for JSON-RPC forbindelser</translation>
-    </message>
-    <message>
-        <location filename="../core/strings.cpp" line="41"/>
-        <source>Password for JSON-RPC connections</source>
-        <translation>Passord for JSON-RPC forbindelser</translation>
-    </message>
-    <message>
-        <location filename="../core/strings.cpp" line="42"/>
-        <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 8332)</source>
-        <translation>Lytt etter JSON-RPC tilkoblinger på &lt;port&gt; (standardverdi: 8332)</translation>
-    </message>
-    <message>
-        <location filename="../core/strings.cpp" line="43"/>
-        <source>Allow JSON-RPC connections from specified IP address</source>
-        <translation>Tillat JSON-RPC tilkoblinger fra angitt IP-adresse</translation>
-    </message>
-    <message>
-        <location filename="../core/strings.cpp" line="44"/>
-        <source>Send commands to node running on &lt;ip&gt; (default: 127.0.0.1)</source>
-        <translation>Send kommandoer til node på &lt;ip&gt; (standardverdi: 127.0.0.1)</translation>
-    </message>
-    <message>
-        <location filename="../core/strings.cpp" line="45"/>
-        <source>Set key pool size to &lt;n&gt; (default: 100)</source>
-        <translation>Angi størrelse på nøkkel-lager til &lt;n&gt; (standardverdi: 100)</translation>
-    </message>
-    <message>
-        <location filename="../core/strings.cpp" line="46"/>
-        <source>Rescan the block chain for missing wallet transactions</source>
-        <translation>Se gjennom blokk-kjeden etter manglende lommeboktransaksjoner</translation>
-    </message>
-    <message>
-        <location filename="../core/strings.cpp" line="47"/>
-        <source>
-SSL options: (see the Nexus Wiki for SSL setup instructions)</source>
-        <translation>
-SSL innstillinger: (se Nexus Wiki for instruksjoner om SSL oppsett)</translation>
-    </message>
-    <message>
-        <location filename="../core/strings.cpp" line="50"/>
-        <source>Use OpenSSL (https) for JSON-RPC connections</source>
-        <translation>Bruk OpenSSL (https) for JSON-RPC forbindelser</translation>
-    </message>
-    <message>
-        <location filename="../core/strings.cpp" line="51"/>
-        <source>Server certificate file (default: server.cert)</source>
-        <translation>Servers sertifikat (standardverdi: server.cert)</translation>
-    </message>
-    <message>
-        <location filename="../core/strings.cpp" line="52"/>
-        <source>Server private key (default: server.pem)</source>
-        <translation>Servers private nøkkel (standardverdi: server.pem)</translation>
-    </message>
-    <message>
-        <location filename="../core/strings.cpp" line="53"/>
-        <source>Acceptable ciphers (default: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</source>
-        <translation>Akseptable krypteringsmetoder (standardverdi: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</translation>
-    </message>
-    <message>
-        <location filename="../core/strings.cpp" line="56"/>
-        <source>This help message</source>
-        <translation>Denne hjelpemeldingen</translation>
-    </message>
-    <message>
-        <location filename="../core/strings.cpp" line="57"/>
-        <source>Cannot obtain a lock on data directory %s.  Nexus is probably already running.</source>
-        <translation>Kunne ikke låse datamappen %s.  Nexus kjører sannsynligvis allerede.</translation>
-    </message>
-    <message>
-        <location filename="../core/strings.cpp" line="60"/>
-        <source>Loading addresses...</source>
-        <translation>Laster adresser...</translation>
-    </message>
-    <message>
-        <location filename="../core/strings.cpp" line="61"/>
-        <source>Error loading addr.dat</source>
-        <translation>Feil ved lasting av addr.dat</translation>
-    </message>
-    <message>
-        <location filename="../core/strings.cpp" line="63"/>
-        <source>Error loading blkindex.dat</source>
-        <translation>Feil ved lasting av blkindex.dat</translation>
-    </message>
-    <message>
-        <location filename="../core/strings.cpp" line="65"/>
-        <source>Error loading wallet.dat: Wallet corrupted</source>
-        <translation>Feil ved lasting av wallet.dat: Lommeboken er skadet</translation>
-    </message>
-    <message>
-        <location filename="../core/strings.cpp" line="66"/>
-        <source>Error loading wallet.dat: Wallet requires newer version of Nexus</source>
-        <translation>Feil ved lasting av wallet.dat: Lommeboken krever en nyere versjon av Nexus</translation>
-    </message>
-    <message>
-        <location filename="../core/strings.cpp" line="67"/>
-        <source>Wallet needed to be rewritten: restart Nexus to complete</source>
-        <translation>Lommeboken måtte skrives om: start Nexus på nytt for å fullføre</translation>
-    </message>
-    <message>
-        <location filename="../core/strings.cpp" line="68"/>
-        <source>Error loading wallet.dat</source>
-        <translation>Feil ved lasting av wallet.dat</translation>
-    </message>
-    <message>
-        <location filename="../core/strings.cpp" line="62"/>
-        <source>Loading block index...</source>
-        <translation>Laster blokkindeks...</translation>
-    </message>
-    <message>
-        <location filename="../core/strings.cpp" line="64"/>
-        <source>Loading wallet...</source>
-        <translation>Laster lommebok...</translation>
-    </message>
-    <message>
-        <location filename="../core/strings.cpp" line="69"/>
-        <source>Rescanning...</source>
-        <translation>Leser gjennom...</translation>
-    </message>
-    <message>
-        <location filename="../core/strings.cpp" line="70"/>
-        <source>Done loading</source>
-        <translation>Ferdig med lasting</translation>
-    </message>
-    <message>
-        <location filename="../core/strings.cpp" line="71"/>
-        <source>Invalid -proxy address</source>
-        <translation>Ugyldig -proxy adresse for mellomtjener</translation>
-    </message>
-    <message>
-        <location filename="../core/strings.cpp" line="72"/>
-        <source>Invalid amount for -paytxfee=&lt;amount&gt;</source>
-        <translation>Ugyldig gebyrbeløp for -paytxfee=&lt;beløp&gt;</translation>
-    </message>
-    <message>
-        <location filename="../core/strings.cpp" line="73"/>
-        <source>Warning: -paytxfee is set very high.  This is the transaction fee you will pay if you send a transaction.</source>
-        <translation>Advarsel: -paytxfee er satt veldig høyt.  Dette er transaksjonsgebyret du betaler når du sender en transaksjon.</translation>
-    </message>
-    <message>
-        <location filename="../core/strings.cpp" line="76"/>
-        <source>Error: CreateThread(StartNode) failed</source>
-        <translation>Feil: CreateThread(StartNode) feilet</translation>
-    </message>
-    <message>
-        <location filename="../core/strings.cpp" line="77"/>
-        <source>Warning: Disk space is low  </source>
-        <translation>Advarsel: Lite ledig diskplass  </translation>
-    </message>
-    <message>
-        <location filename="../core/strings.cpp" line="78"/>
-        <source>Unable to bind to port %d on this computer.  Nexus is probably already running.</source>
-        <translation>Klarer ikke binde til port %d på denne datamaskinen.  Nexus kjører sannsynligvis allerede.</translation>
-    </message>
-    <message>
-        <location filename="../core/strings.cpp" line="81"/>
-        <source>Warning: Please check that your computer&apos;s date and time are correct.  If your clock is wrong Nexus will not work properly.</source>
-        <translation>Advarsel: Vennligst sjekk at dato og klokke er riktig innstilt på datamaskinen.  Hvis klokken er feil vil ikke Nexus fungere ordentlig.</translation>
-    </message>
-    <message>
-        <location filename="../core/strings.cpp" line="84"/>
-        <source>beta</source>
-        <translation>beta</translation>
     </message>
 </context>
 </TS>
