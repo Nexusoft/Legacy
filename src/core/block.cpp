@@ -929,6 +929,18 @@ namespace Core
                 /* Write the Valid Block to Chain. */
                 pblock->WriteToDisk(pindex->nFile, pindex->nBlockPos);
                 
+                
+                if(GetArg("-verbose", 0) >= 2)
+                {
+                    CBlock blockRead;
+                    if(!blockRead.ReadFromDisk(pindex))
+                        if(!blockRead.ReadFromDisk(pindex->nFile, pindex->nBlockPos))
+                            return error("ProcessBlock() : Failed to Read new block overwrite");
+                    
+                    printf("ProcessBlock() : Read New Block Overwrite");
+                    blockRead.print();
+                }
+                
                 /* Change Invalid Flags to current block. */
                 mapInvalidBlocks[pblock->GetHash()] = pblock->SignatureHash();
                 
