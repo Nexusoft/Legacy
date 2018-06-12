@@ -295,6 +295,8 @@ namespace LLD
             Core::pindexBest  = pindexNew;
             hashBlock = diskindex.hashNext;
         }
+        if(fRequestShutdown)
+            return false;
         
         Core::nBestHeight = Core::pindexBest->nHeight;
         Core::nBestChainTrust = Core::pindexBest->nChainTrust;

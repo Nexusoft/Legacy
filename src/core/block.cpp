@@ -86,8 +86,9 @@ namespace Core
         }
         if (!ReadFromDisk(pindex->nFile, pindex->nBlockPos, fReadTransactions))
             return false;
+        
         if (GetHash() != pindex->GetBlockHash())
-            return error("CBlock::ReadFromDisk() : GetHash() doesn't match index");
+            return error("CBlock::ReadFromDisk() : GetHash() %s doesn't match Index %s", GetHash().ToString().c_str(), pindex->GetBlockHash().ToString().c_str());
         return true;
     }
 
@@ -543,8 +544,7 @@ namespace Core
         /* Add to the MapBlockIndex */
         mapBlockIndex[hash] = pindexNew;
 
-
-        /** Write the new Block to Disk. **/
+        /* Write the new Block to Disk. */
         LLD::CIndexDB indexdb("r+");
         indexdb.TxnBegin();
         indexdb.WriteBlockIndex(CDiskBlockIndex(pindexNew));
@@ -553,7 +553,7 @@ namespace Core
         if(GetBoolArg("-softban", true) && IsProofOfStake() && !cTrustPool.IsValid(*this))
             fValid = false;
 
-        /** Set the Best chain if Highest Trust. **/
+        /* Set the Best chain if Highest Trust. */
         if(fValid || IsInitialBlockDownload()) {
             if (pindexNew->nChainTrust > nBestChainTrust)
                 if (!SetBestChain(indexdb, pindexNew))
@@ -893,13 +893,21 @@ namespace Core
         {
             if(mapInvalidBlocks.count(hash) && mapInvalidBlocks[hash] != pblock->SignatureHash())
             {
-                printf("ProcessBlock() : Mutated Block Signatures Detected... Overwriting");
+                printf("ProcessBlock() : Mutated Block Signatures Detected... Overwriting\n");
                 
                 /* Get current block index. */
                 CBlockIndex* pindex = mapBlockIndex[hash];
                 
+                /* Read the Mutated Block for Comparison. */
+                CBlock pblockMut;
+                if(!pblockMut.ReadFromDisk(pindex))
+                    return error("ProcessBlock() : Couldn't read mutated block");
+                
                 if(GetArg("-verbose", 0) >= 2) {
                     printf("ProcessBlock() : Mutated Block:\n");
+                    pblockMut.print();
+                    
+                    printf("ProcessBlock() : Mutated Index:\n");
                     pindex->print();
                 }
                 
@@ -908,6 +916,9 @@ namespace Core
                 
                 if(GetArg("-verbose", 0) >= 2) {
                     printf("ProcessBlock() : Valid Block:\n");
+                    pblock->print();
+                    
+                    printf("ProcessBlock() : Valid Index:\n");
                     pindex->print();
                 }
                 
