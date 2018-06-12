@@ -977,8 +977,10 @@ namespace Core
                     || pblock->nBits != GetNextTargetRequired(pindexPrev, pblock->GetChannel(), false))
                 {
                     
-                    printf("ProcessBlock() : Flagged Invalid Block %s\n", pblock->GetHash().ToString().c_str());
+                    printf("ProcessBlock() : Flagged Invalid Block nHeight=%u, nHash=%s\n", pblock->nHeight, pblock->GetHash().ToString().c_str());
+                    
                     mapInvalidBlocks[pblock->GetHash()] = pblock->SignatureHash();
+                    std::vector<Net::CInv> vInv = { Net::CInv(Net::MSG_BLOCK, pblock->GetHash()) };
                     
                     const CBlockIndex* pindexFirst = pindexBest;
                     for(int nIndex = 5; nIndex > 0; nIndex--)
@@ -1000,13 +1002,15 @@ namespace Core
                         printf("ProcessBlock() : Flagged Invalid Block nHeight=%u, nHash=%s\n", block.nHeight, block.GetHash().ToString().c_str());
                             
                         pindexFirst = pindexLast;
+                        
+                        vInv.push_back(Net::CInv(Net::MSG_BLOCK, block.GetHash()));
                     }
                     
                     printf("ProcessBlock() : Asking Nodes for Blocks %s from stop 000000\n", pindexFirst->GetBlockHash().ToString().c_str());
                     
                     LOCK(Net::cs_vNodes);
                     for(auto pnode : Net::vNodes)
-                        pnode->PushGetBlocks(mapBlockIndex[pindexFirst->GetBlockHash()], 0);
+                        pnode->PushMessage("getdata", vInv);
                     
                     return error("ProcessBlock() : Found Invalid Block");
                 }
