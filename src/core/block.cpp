@@ -495,6 +495,11 @@ namespace Core
         pindexNew->nChannelHeight = (pindexPrev ? pindexPrev->nChannelHeight : 0) + 1;
         
         
+        /* Check that Block is Descendant of Hardened Checkpoints. */
+        if(!IsDescendant(pindexNew->pprev))
+            return error("AcceptBlock() : Not a descendant of Last Checkpoint");
+        
+        
         /** Compute the Released Reserves. **/
         for(int nType = 0; nType < 3; nType++)
         {
@@ -534,10 +539,6 @@ namespace Core
             if(GetArg("-verbose", 0) >= 2)
                 printg("===== Pending Checkpoint Age = %u Hash = %s Height = %u\n", nAge, pindexNew->PendingCheckpoint.second.ToString().substr(0, 15).c_str(), pindexNew->PendingCheckpoint.first);
         }
-        
-        /* Check that Block is Descendant of Hardened Checkpoints. */
-        if(!IsDescendant(mapBlockIndex[hashPrevBlock]))
-            return error("AcceptBlock() : Not a descendant of Last Checkpoint");
 
         /* Add to the MapBlockIndex */
         mapBlockIndex[hash] = pindexNew;
@@ -957,7 +958,7 @@ namespace Core
         {
             if(pblock->IsProofOfWork() && pblock->nHeight > 0 && pblock->nVersion >= 3)
             {
-                printf("ProcessBlock() : Checking Invalid Proof of Work Block");
+                printf("ProcessBlock() : Checking Invalid Proof of Work Block\n");
                 
                 /* Get previous block. */
                 CBlockIndex* pindexPrev = mapBlockIndex[pblock->hashPrevBlock];
@@ -991,16 +992,17 @@ namespace Core
                             break;
                         
                         mapInvalidBlocks[pindexLast->GetBlockHash()] = block.SignatureHash();
-                        printf("ProcessBlock() : Flagged Invalid Block %s\n", block.GetHash().ToString().c_str());
+                        
+                        printf("ProcessBlock() : Flagged Invalid Block nHeight=%u, nHash=%s\n", block.nHeight, block.GetHash().ToString().c_str());
                             
                         pindexFirst = pindexLast;
                     }
                     
-                    printf("ProcessBlock() : Asking Nodes for Blocks %s to %s\n", pindexFirst->GetBlockHash().ToString().c_str(), pblock->GetHash().ToString().c_str());
+                    printf("ProcessBlock() : Asking Nodes for Blocks %s from stop 000000\n", pindexFirst->GetBlockHash().ToString().c_str());
                     
                     LOCK(Net::cs_vNodes);
                     for(auto pnode : Net::vNodes)
-                        pnode->PushGetBlocks(mapBlockIndex[pindexFirst->GetBlockHash()], pblock->GetHash());
+                        pnode->PushGetBlocks(mapBlockIndex[pindexFirst->GetBlockHash()], 0);
                     
                     return error("ProcessBlock() : Found Invalid Block");
                 }
