@@ -7,7 +7,7 @@
 *******************************************************************************************/
 
 #include <string>
-#include "core/version.h"
+#include "version.h"
 
 /** Used for Visual Reference Only **/
 const std::string CLIENT_NAME("Nexus");

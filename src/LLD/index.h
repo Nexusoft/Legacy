@@ -2,7 +2,7 @@
 #define LOWER_LEVEL_LIBRARY_LLD_INDEX
 
 #include "sector.h"
-#include "core.h"
+#include "../core/core.h"
 #include "../wallet/db.h"
 
 /** Lower Level Database Name Space. **/
