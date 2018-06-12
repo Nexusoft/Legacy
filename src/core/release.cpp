@@ -146,7 +146,7 @@ namespace Core
 
 					
 		double nFraction = min(nBlockTime / 60.0, 2.5);
-        double dFractionTest = min((double) nBlockTime / 60.0, 2.5);
+        double dFractionTest = min((double) nBlockTime / (double)60, (double)2.5);
         printf("\nFractional Test With Variables nBlockTime=%lld, nFraction=%f, dFractionTest=%f\n", nBlockTime, nFraction, dFractionTest);
         
 		if(pindexFirst->nReleasedReserve[nType] == 0 && ReleaseAvailable(pindex, nChannel))

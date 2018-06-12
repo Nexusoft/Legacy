@@ -845,10 +845,10 @@ namespace Core
                     error("AcceptBlock() : miner reward mismatch %" PRId64 " : %" PRId64 "", nMiningReward, GetCoinbaseReward(pindexPrev, GetChannel(), 0));
                 
                 if(vtx[0].vout[nSize - 2].nValue != GetCoinbaseReward(pindexPrev, GetChannel(), 1))
-                    error("AcceptBlock() : ambassador reward mismatch %" PRId64 " : %" PRId64 "", vtx[0].vout[nSize - 2].nValue, GetCoinbaseReward(pindexPrev, GetChannel(), 0));
+                    error("AcceptBlock() : ambassador reward mismatch %" PRId64 " : %" PRId64 "", vtx[0].vout[nSize - 2].nValue, GetCoinbaseReward(pindexPrev, GetChannel(), 1));
                 
                 if(vtx[0].vout[nSize - 1].nValue != GetCoinbaseReward(pindexPrev, GetChannel(), 2))
-                    error("AcceptBlock() : developer reward mismatch %" PRId64 " : %" PRId64 "", vtx[0].vout[nSize - 1].nValue, GetCoinbaseReward(pindexPrev, GetChannel(), 0));
+                    error("AcceptBlock() : developer reward mismatch %" PRId64 " : %" PRId64 "", vtx[0].vout[nSize - 1].nValue, GetCoinbaseReward(pindexPrev, GetChannel(), 2));
             }
             
                     
