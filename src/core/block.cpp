@@ -842,11 +842,11 @@ namespace Core
                     
             /* Check that the Exchange Reward Matches the Coinbase Calculations. */
             if (round_coin_digits(vtx[0].vout[nSize - 2].nValue, 3) != round_coin_digits(GetCoinbaseReward(pindexPrev, GetChannel(), 1), 3))
-                return error("AcceptBlock() : exchange reward mismatch %" PRId64 " : %" PRId64 "\n", round_coin_digits(vtx[0].vout[nSize - 2].nValue, 3), round_coin_digits(GetCoinbaseReward(pindexPrev, GetChannel(), 1), 3));
+                return error("AcceptBlock() : exchange reward mismatch %" PRId64 " : %" PRId64 "", round_coin_digits(vtx[0].vout[nSize - 2].nValue, 3), round_coin_digits(GetCoinbaseReward(pindexPrev, GetChannel(), 1), 3));
                         
             /* Check that the Developer Reward Matches the Coinbase Calculations. */
             if (round_coin_digits(vtx[0].vout[nSize - 1].nValue, 3) != round_coin_digits(GetCoinbaseReward(pindexPrev, GetChannel(), 2), 3))
-                return error("AcceptBlock() : developer reward mismatch %" PRId64 " : %" PRId64 "\n", round_coin_digits(vtx[0].vout[nSize - 1].nValue, 3), round_coin_digits(GetCoinbaseReward(pindexPrev, GetChannel(), 2), 3));
+                return error("AcceptBlock() : developer reward mismatch %" PRId64 " : %" PRId64 "", round_coin_digits(vtx[0].vout[nSize - 1].nValue, 3), round_coin_digits(GetCoinbaseReward(pindexPrev, GetChannel(), 2), 3));
                     
         }
         
@@ -957,6 +957,8 @@ namespace Core
         {
             if(pblock->IsProofOfWork() && pblock->nHeight > 0 && pblock->nVersion >= 3)
             {
+                printf("ProcessBlock() : Checking Invalid Proof of Work Block");
+                
                 /* Get previous block. */
                 CBlockIndex* pindexPrev = mapBlockIndex[pblock->hashPrevBlock];
 
@@ -968,11 +970,13 @@ namespace Core
                     nMiningReward += pblock->vtx[0].vout[nIndex].nValue;
                         
                 /* Check that time sensitive rules are not violated. */
-                if (nMiningReward, 3 != GetCoinbaseReward(pindexPrev, pblock->GetChannel(), 0)
+                if (nMiningReward != GetCoinbaseReward(pindexPrev, pblock->GetChannel(), 0)
                     || pblock->vtx[0].vout[nSize - 2].nValue != GetCoinbaseReward(pindexPrev, pblock->GetChannel(), 1)
                     || pblock->vtx[0].vout[nSize - 1].nValue != GetCoinbaseReward(pindexPrev, pblock->GetChannel(), 2)
                     || pblock->nBits != GetNextTargetRequired(pindexPrev, pblock->GetChannel(), false))
                 {
+                    
+                    printf("ProcessBlock() : Flagged Invalid Block %s\n", pblock->GetHash().ToString().c_str());
                     mapInvalidBlocks[pblock->GetHash()] = pblock->SignatureHash();
                     
                     const CBlockIndex* pindexFirst = pindexBest;
@@ -987,12 +991,18 @@ namespace Core
                             break;
                         
                         mapInvalidBlocks[pindexLast->GetBlockHash()] = block.SignatureHash();
+                        printf("ProcessBlock() : Flagged Invalid Block %s\n", block.GetHash().ToString().c_str());
                             
                         pindexFirst = pindexLast;
                     }
                     
-                    if(pfrom)
-                        pfrom->PushGetBlocks(mapBlockIndex[pindexFirst->GetBlockHash()], 0);
+                    printf("ProcessBlock() : Asking Nodes for Blocks %s to %s\n", pindexFirst->GetBlockHash().ToString().c_str(), pblock->GetHash().ToString().c_str());
+                    
+                    LOCK(Net::cs_vNodes);
+                    for(auto pnode : Net::vNodes)
+                        pnode->PushGetBlocks(mapBlockIndex[pindexFirst->GetBlockHash()], pblock->GetHash());
+                    
+                    return error("ProcessBlock() : Found Invalid Block");
                 }
             }
             
