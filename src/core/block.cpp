@@ -534,6 +534,10 @@ namespace Core
             if(GetArg("-verbose", 0) >= 2)
                 printg("===== Pending Checkpoint Age = %u Hash = %s Height = %u\n", nAge, pindexNew->PendingCheckpoint.second.ToString().substr(0, 15).c_str(), pindexNew->PendingCheckpoint.first);
         }
+        
+        /* Check that Block is Descendant of Hardened Checkpoints. */
+        if(!IsDescendant(mapBlockIndex[hashPrevBlock]))
+            return error("AcceptBlock() : Not a descendant of Last Checkpoint");
 
         /* Add to the MapBlockIndex */
         mapBlockIndex[hash] = pindexNew;
@@ -815,11 +819,6 @@ namespace Core
         /** Check that the nBits match the current Difficulty. **/
         if (nBits != GetNextTargetRequired(pindexPrev, GetChannel(), !IsInitialBlockDownload()))
             return DoS(100, error("AcceptBlock() : incorrect proof-of-work/proof-of-stake"));
-            
-            
-        /** Check that Block is Descendant of Hardened Checkpoints. **/
-        if(pindexPrev && !IsDescendant(pindexPrev))
-            return error("AcceptBlock() : Not a descendant of Last Checkpoint");
 
             
         /** Check That Block Timestamp is not before previous block. **/
@@ -889,11 +888,46 @@ namespace Core
     {
         // Check for duplicate
         uint1024 hash = pblock->GetHash();
-        if(mapInvalidBlocks.count(hash) && mapInvalidBlocks[hash] != pblock->SignatureHash())
-            printf("ProcessBlock() : detected mutated signature hash");
-                
         if (mapBlockIndex.count(hash))
-            return error("ProcessBlock() : already have block %d %s", mapBlockIndex[hash]->nHeight, hash.ToString().substr(0,20).c_str());
+        {
+            if(mapInvalidBlocks.count(hash) && mapInvalidBlocks[hash] != pblock->SignatureHash())
+            {
+                printf("ProcessBlock() : Mutated Block Signatures Detected... Overwriting");
+                
+                /* Get current block index. */
+                CBlockIndex* pindex = mapBlockIndex[hash];
+                
+                if(GetArg("-verbose", 0) >= 2) {
+                    printf("ProcessBlock() : Mutated Block:\n");
+                    pindex->print();
+                }
+                
+                /* Correct the mutated block time. */
+                pindex->nTime = pblock->nTime;
+                
+                if(GetArg("-verbose", 0) >= 2) {
+                    printf("ProcessBlock() : Valid Block:\n");
+                    pindex->print();
+                }
+                
+                /* Write the Proper Index to Chain. */
+                LLD::CIndexDB indexdb("r+");
+                indexdb.WriteBlockIndex(CDiskBlockIndex(pindex));
+                
+                /* Write the Valid Block to Chain. */
+                pblock->WriteToDisk(pindex->nFile, pindex->nBlockPos);
+                
+                /* Change Invalid Flags to current block. */
+                mapInvalidBlocks[pblock->GetHash()] = pblock->SignatureHash();
+                
+                if(GetArg("-verbose", 0) >= 2)
+                    printf("ProcessBlock() : ACCEPTED (Resolved Mutated Block)");
+                
+                return true;
+            }
+            else
+                return error("ProcessBlock() : already have block %d %s", mapBlockIndex[hash]->nHeight, hash.ToString().substr(0,20).c_str());
+        }
         
         if (mapOrphanBlocks.count(hash))
             return error("ProcessBlock() : already have block (orphan) %s", hash.ToString().substr(0,20).c_str());
@@ -912,71 +946,54 @@ namespace Core
             mapOrphanBlocks.insert(make_pair(hash, pblock2));
             mapOrphanBlocksByPrev.insert(make_pair(pblock2->hashPrevBlock, pblock2));
             
-            /** Simple Catch until I finish Checkpoint Syncing. **/
             if(pfrom)
                 pfrom->PushGetBlocks(pindexBest, 0);
             
             return true;
         }
         
+        
         if (!pblock->AcceptBlock())
         {
-            //attempt a 5 block rollback if this block is invalid and not rolled back before
-            if(!mapInvalidBlocks.count(pblock->GetHash()))
+            if(pblock->IsProofOfWork() && pblock->nHeight > 0 && pblock->nVersion >= 3)
             {
-                /* Find the Previous block from hashPrevBlock. */
-                if(!mapBlockIndex.count(pblock->hashPrevBlock))
-                    return error("ProcessBlock() : (invalid checks - prev) AcceptBlock FAILED");
+                /* Get previous block. */
+                CBlockIndex* pindexPrev = mapBlockIndex[pblock->hashPrevBlock];
 
-                    
-                /* Check That Block Timestamp is not before previous block. */
-                if (pblock->GetBlockTime() <= mapBlockIndex[pblock->hashPrevBlock]->GetBlockTime())
-                    return error("ProcessBlock() : (invalid checks - time) AcceptBlock FAILED");
+                /* Add up the Miner Rewards from Coinbase Tx Outputs. */
+                unsigned int nSize = pblock->vtx[0].vout.size();
                 
-                /* Write the top block as invalid for protocol checks. */
-                mapInvalidBlocks[pblock->GetHash()] = pblock->SignatureHash();
-        
-                /* Scan back 5 blocks and check if there are invalid blocks. */
-                const CBlockIndex* pindexFirst = pindexBest;
-                for(int nIndex = 5; nIndex > 0; nIndex--)
-                {
-                    
-                    /* Get the last block index from the channel. */
-                    const CBlockIndex* pindexLast = GetLastChannelIndex(pindexFirst->pprev, pindexFirst->GetChannel());
-                    if(!pindexLast->pprev)
-                        break;
-                    
-                    CBlock block;
-                    if(!block.ReadFromDisk(pindexLast))
-                        return error("ProcessBlock() : (invalid checks - read) couldn't read from disk");
-                    
-                    /* Flag the block as invalid and lock to the signature hash. */
-                    mapInvalidBlocks[pindexLast->GetBlockHash()] = block.SignatureHash();
-                    
-                    /* Iterate Back to previous index. */
-                    pindexFirst = pindexLast;
-                }
-                
-                CBlockIndex* pindex = pindexBest;
-                while(pindex->GetBlockHash() != pindexFirst->GetBlockHash())
-                {
-                    mapBlockIndex.erase(pindex->GetBlockHash());
-                    pindex = pindex->pprev;
-                }
-                
-                CBlock block;
-                if(!block.ReadFromDisk(pindex))
-                    return error("ProcessBlock() : (invalid checks - read) couldn't read from disk");
-                
-                printf("MALICIOUS BLOCK IN CHAIN: Rolling Chain Back to nHeight=%u, nHash=%s\n", block.nHeight, block.GetHash().ToString().substr(0, 20).c_str());
+                int64 nMiningReward = 0;
+                for(int nIndex = 0; nIndex < nSize - 2; nIndex++)
+                    nMiningReward += pblock->vtx[0].vout[nIndex].nValue;
                         
-                LLD::CIndexDB indexdb("r+");
-                indexdb.TxnBegin();
-                block.SetBestChain(indexdb, pindex);
-                indexdb.TxnCommit();
+                /* Check that time sensitive rules are not violated. */
+                if (nMiningReward, 3 != GetCoinbaseReward(pindexPrev, pblock->GetChannel(), 0)
+                    || pblock->vtx[0].vout[nSize - 2].nValue != GetCoinbaseReward(pindexPrev, pblock->GetChannel(), 1)
+                    || pblock->vtx[0].vout[nSize - 1].nValue != GetCoinbaseReward(pindexPrev, pblock->GetChannel(), 2)
+                    || pblock->nBits != GetNextTargetRequired(pindexPrev, pblock->GetChannel(), false))
+                {
+                    mapInvalidBlocks[pblock->GetHash()] = pblock->SignatureHash();
+                    
+                    const CBlockIndex* pindexFirst = pindexBest;
+                    for(int nIndex = 5; nIndex > 0; nIndex--)
+                    {
+                        const CBlockIndex* pindexLast = GetLastChannelIndex(pindexFirst->pprev, pblock->GetChannel());
+                        if(!pindexLast->pprev)
+                            break;
                         
-                if(pfrom)
-                    pfrom->PushGetBlocks(pindexBest, 0);
+                        CBlock block;
+                        if(!block.ReadFromDisk(mapBlockIndex[pindexLast->GetBlockHash()]))
+                            break;
+                        
+                        mapInvalidBlocks[pindexLast->GetBlockHash()] = block.SignatureHash();
+                            
+                        pindexFirst = pindexLast;
+                    }
+                    
+                    if(pfrom)
+                        pfrom->PushGetBlocks(mapBlockIndex[pindexFirst->GetBlockHash()], 0);
+                }
             }
             
             return error("ProcessBlock() : AcceptBlock FAILED");
