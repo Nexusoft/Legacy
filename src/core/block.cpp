@@ -75,6 +75,36 @@ namespace Core
         return (GetUnifiedTimestamp() - nLastUpdate < 10 &&
                 pindexBest->GetBlockTime() < GetUnifiedTimestamp() - 24 * 60 * 60);
     }
+    
+    bool CBlock::Rewrite(CBlockIndex* pindex)
+    {
+        if(GetHash() != pindex->GetBlockHash())
+            return error("CBlock::Rewrite() : Index hash %s doesn't match block hash %s\n", pindex->GetBlockHash().ToString().substr(0, 20).c_str(), GetHash().ToString().substr(0, 20).c_str());
+        
+        // Open history file to append
+        CAutoFile fileout = CAutoFile(OpenBlockFile(pindex->nFile, pindex->nBlockPos, "w"), SER_DISK, DATABASE_VERSION);
+        if (!fileout)
+            return error("CBlock::Rewrite() : AppendBlockFile failed");
+
+        // Write index header
+        unsigned char pchMessageStart[4];
+        Net::GetMessageStart(pchMessageStart);
+        unsigned int nSize = fileout.GetSerializeSize(*this);
+        fileout << FLATDATA(pchMessageStart) << nSize;
+
+        // Write block
+        fileout << *this;
+
+        // Flush stdio buffers and commit to disk before returning
+        fflush(fileout);
+#ifdef WIN32
+        _commit(_fileno(fileout));
+#else
+        fsync(fileno(fileout));
+#endif
+        
+        return true;
+    }
 
 
     bool CBlock::ReadFromDisk(const CBlockIndex* pindex, bool fReadTransactions)
@@ -927,7 +957,7 @@ namespace Core
                 indexdb.WriteBlockIndex(CDiskBlockIndex(pindex));
                 
                 /* Write the Valid Block to Chain. */
-                pblock->WriteToDisk(pindex->nFile, pindex->nBlockPos);
+                pblock->Rewrite(pindex);
                 
                 
                 if(GetArg("-verbose", 0) >= 2)
@@ -1143,10 +1173,12 @@ namespace Core
     {
         if (nFile == -1)
             return NULL;
+        
         FILE* file = fopen((GetDataDir() / strprintf("blk%04d.dat", nFile)).string().c_str(), pszMode);
         if (!file)
             return NULL;
-        if (nBlockPos != 0 && !strchr(pszMode, 'a') && !strchr(pszMode, 'w'))
+        
+        if (nBlockPos != 0 && !strchr(pszMode, 'a'))
         {
             if (fseek(file, nBlockPos, SEEK_SET) != 0)
             {
@@ -1154,6 +1186,7 @@ namespace Core
                 return NULL;
             }
         }
+        
         return file;
     }
 

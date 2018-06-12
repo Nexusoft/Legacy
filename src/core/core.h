@@ -1467,6 +1467,9 @@ namespace Core
 			}
 			return hash;
 		}
+		
+		
+        bool Rewrite(CBlockIndex* pindex);
 
 
 		bool WriteToDisk(unsigned int& nFileRet, unsigned int& nBlockPosRet)
