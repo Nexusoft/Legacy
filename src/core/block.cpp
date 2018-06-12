@@ -889,13 +889,12 @@ namespace Core
     {
         // Check for duplicate
         uint1024 hash = pblock->GetHash();
+        if(mapInvalidBlocks.count(hash) && mapInvalidBlocks[hash] != pblock->SignatureHash())
+            printf("ProcessBlock() : detected mutated signature hash");
+                
         if (mapBlockIndex.count(hash))
-        {
-            if(mapInvalidBlocks.count(hash) && mapInvalidBlocks[hash] != pblock->SignatureHash())
-                printf("ProcessBlock() : detected mutated signature hash");
-            else
-                return error("ProcessBlock() : already have block %d %s", mapBlockIndex[hash]->nHeight, hash.ToString().substr(0,20).c_str());
-        }
+            return error("ProcessBlock() : already have block %d %s", mapBlockIndex[hash]->nHeight, hash.ToString().substr(0,20).c_str());
+        
         if (mapOrphanBlocks.count(hash))
             return error("ProcessBlock() : already have block (orphan) %s", hash.ToString().substr(0,20).c_str());
 
@@ -953,21 +952,31 @@ namespace Core
                     
                     /* Flag the block as invalid and lock to the signature hash. */
                     mapInvalidBlocks[pindexLast->GetBlockHash()] = block.SignatureHash();
-                    if(nIndex == 1)
-                    {
-                        printf("MALICIOUS BLOCK IN CHAIN: Rolling Chain Back to nHeight=%u, nHash=%s\n", block.nHeight, block.GetHash().ToString().substr(0, 20).c_str());
-                        
-                        LLD::CIndexDB indexdb("r+");
-                        indexdb.TxnBegin();
-                        block.SetBestChain(indexdb, mapBlockIndex[pindexLast->GetBlockHash()]);
-                        indexdb.TxnCommit();
-                        
-                        if(pfrom)
-                            pfrom->PushGetBlocks(pindexBest, 0);
-                    }
                     
+                    /* Iterate Back to previous index. */
                     pindexFirst = pindexLast;
                 }
+                
+                CBlockIndex* pindex = pindexBest;
+                while(pindex->GetBlockHash() != pindexFirst->GetBlockHash())
+                {
+                    mapBlockIndex.erase(pindex->GetBlockHash());
+                    pindex = pindex->pprev;
+                }
+                
+                CBlock block;
+                if(!block.ReadFromDisk(pindex))
+                    return error("ProcessBlock() : (invalid checks - read) couldn't read from disk");
+                
+                printf("MALICIOUS BLOCK IN CHAIN: Rolling Chain Back to nHeight=%u, nHash=%s\n", block.nHeight, block.GetHash().ToString().substr(0, 20).c_str());
+                        
+                LLD::CIndexDB indexdb("r+");
+                indexdb.TxnBegin();
+                block.SetBestChain(indexdb, pindex);
+                indexdb.TxnCommit();
+                        
+                if(pfrom)
+                    pfrom->PushGetBlocks(pindexBest, 0);
             }
             
             return error("ProcessBlock() : AcceptBlock FAILED");
