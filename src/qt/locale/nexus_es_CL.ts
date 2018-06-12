@@ -245,6 +245,11 @@ Are you sure you wish to encrypt your wallet?</source>
         <translation>Nexus se cerrará para finalizar el proceso de encriptación. Recuerde que encriptar su billetera no protegera completatamente sus NXS de ser robados por malware que infecte su computador</translation>
     </message>
     <message>
+        <location filename="../dialogs/askpassphrasedialog.cpp" line="209"/>
+        <source>Wallet passphrase was successfully changed.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location filename="../dialogs/askpassphrasedialog.cpp" line="257"/>
         <location filename="../dialogs/askpassphrasedialog.cpp" line="281"/>
         <source>Warning: The Caps Lock key is on.</source>
@@ -323,9 +328,8 @@ Are you sure you wish to encrypt your wallet?</source>
         <translation>Ha fallado la decodificación de la billetera</translation>
     </message>
     <message>
-        <location filename="../dialogs/askpassphrasedialog.cpp" line="209"/>
         <source>Wallet passphrase was succesfully changed.</source>
-        <translation>La contraseña de billetera ha sido cambiada con éxito.</translation>
+        <translation type="vanished">La contraseña de billetera ha sido cambiada con éxito.</translation>
     </message>
 </context>
 <context>

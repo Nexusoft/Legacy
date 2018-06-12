@@ -261,6 +261,11 @@ Are you sure you wish to encrypt your wallet?</source>
         <translation>Сейчас программа закроется для завершения процесса шифрования. Помните, что шифрование вашего бумажника не может полностью защитить ваши Nexus от кражи с помощью инфицирования вашего компьютера вредоносным ПО.</translation>
     </message>
     <message>
+        <location filename="../dialogs/askpassphrasedialog.cpp" line="209"/>
+        <source>Wallet passphrase was successfully changed.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location filename="../dialogs/askpassphrasedialog.cpp" line="257"/>
         <location filename="../dialogs/askpassphrasedialog.cpp" line="281"/>
         <source>Warning: The Caps Lock key is on.</source>
@@ -339,9 +344,8 @@ Are you sure you wish to encrypt your wallet?</source>
         <translation>Расшифрование бумажника не удалось</translation>
     </message>
     <message>
-        <location filename="../dialogs/askpassphrasedialog.cpp" line="209"/>
         <source>Wallet passphrase was succesfully changed.</source>
-        <translation>Пароль бумажника успешно изменён.</translation>
+        <translation type="vanished">Пароль бумажника успешно изменён.</translation>
     </message>
 </context>
 <context>

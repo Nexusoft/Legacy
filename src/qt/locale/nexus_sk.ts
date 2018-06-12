@@ -245,6 +245,11 @@ Ste si istí, že si želáte zašifrovať peňaženku?</translation>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <location filename="../dialogs/askpassphrasedialog.cpp" line="209"/>
+        <source>Wallet passphrase was successfully changed.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location filename="../dialogs/askpassphrasedialog.cpp" line="257"/>
         <location filename="../dialogs/askpassphrasedialog.cpp" line="281"/>
         <source>Warning: The Caps Lock key is on.</source>
@@ -323,9 +328,8 @@ Ste si istí, že si želáte zašifrovať peňaženku?</translation>
         <translation>Zlyhalo šifrovanie peňaženky.</translation>
     </message>
     <message>
-        <location filename="../dialogs/askpassphrasedialog.cpp" line="209"/>
         <source>Wallet passphrase was succesfully changed.</source>
-        <translation>Heslo k peňaženke bolo úspešne zmenené.</translation>
+        <translation type="vanished">Heslo k peňaženke bolo úspešne zmenené.</translation>
     </message>
 </context>
 <context>

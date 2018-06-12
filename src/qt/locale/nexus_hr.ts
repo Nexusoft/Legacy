@@ -245,6 +245,11 @@ Jeste li sigurni da želite šifrirati svoj novčanik?</translation>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <location filename="../dialogs/askpassphrasedialog.cpp" line="209"/>
+        <source>Wallet passphrase was successfully changed.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location filename="../dialogs/askpassphrasedialog.cpp" line="257"/>
         <location filename="../dialogs/askpassphrasedialog.cpp" line="281"/>
         <source>Warning: The Caps Lock key is on.</source>
@@ -323,9 +328,8 @@ Jeste li sigurni da želite šifrirati svoj novčanik?</translation>
         <translation>Dešifriranje novčanika nije uspjelo</translation>
     </message>
     <message>
-        <location filename="../dialogs/askpassphrasedialog.cpp" line="209"/>
         <source>Wallet passphrase was succesfully changed.</source>
-        <translation>Lozinka novčanika je uspješno promijenjena.</translation>
+        <translation type="vanished">Lozinka novčanika je uspješno promijenjena.</translation>
     </message>
 </context>
 <context>

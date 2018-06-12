@@ -261,6 +261,11 @@ Are you sure you wish to encrypt your wallet?</source>
         <translation>Nexus va à présent se fermer pour terminer la procédure de cryptage. N&apos;oubliez pas que le chiffrement de votre porte-monnaie ne peut pas fournir une protection totale contre le vol par des logiciels malveillants qui infecteraient votre ordinateur.</translation>
     </message>
     <message>
+        <location filename="../dialogs/askpassphrasedialog.cpp" line="209"/>
+        <source>Wallet passphrase was successfully changed.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location filename="../dialogs/askpassphrasedialog.cpp" line="257"/>
         <location filename="../dialogs/askpassphrasedialog.cpp" line="281"/>
         <source>Warning: The Caps Lock key is on.</source>
@@ -339,9 +344,8 @@ Are you sure you wish to encrypt your wallet?</source>
         <translation>Le décryptage du porte-monnaie a échoué</translation>
     </message>
     <message>
-        <location filename="../dialogs/askpassphrasedialog.cpp" line="209"/>
         <source>Wallet passphrase was succesfully changed.</source>
-        <translation>La phrase de passe du porte-monnaie a été modifiée avec succès.</translation>
+        <translation type="vanished">La phrase de passe du porte-monnaie a été modifiée avec succès.</translation>
     </message>
 </context>
 <context>

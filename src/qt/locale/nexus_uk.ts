@@ -261,6 +261,11 @@ Are you sure you wish to encrypt your wallet?</source>
         <translation>Біткоін-клієнт буде закрито для завершення процесу шифрування. Пам’ятайте, що шифрування гаманця не може повністю захистити ваші біткоіни від кражі, у випадку якщо ваш комп’ютер буде інфіковано шкідливими програмами.</translation>
     </message>
     <message>
+        <location filename="../dialogs/askpassphrasedialog.cpp" line="209"/>
+        <source>Wallet passphrase was successfully changed.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location filename="../dialogs/askpassphrasedialog.cpp" line="257"/>
         <location filename="../dialogs/askpassphrasedialog.cpp" line="281"/>
         <source>Warning: The Caps Lock key is on.</source>
@@ -339,9 +344,8 @@ Are you sure you wish to encrypt your wallet?</source>
         <translation>Не вдалося розшифрувати гаманець</translation>
     </message>
     <message>
-        <location filename="../dialogs/askpassphrasedialog.cpp" line="209"/>
         <source>Wallet passphrase was succesfully changed.</source>
-        <translation>Пароль було успішно змінено.</translation>
+        <translation type="vanished">Пароль було успішно змінено.</translation>
     </message>
 </context>
 <context>

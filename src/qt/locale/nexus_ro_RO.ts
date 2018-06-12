@@ -245,6 +245,11 @@ Sunteţi sigur că doriţi să criptaţi portofelul electronic?</translation>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <location filename="../dialogs/askpassphrasedialog.cpp" line="209"/>
+        <source>Wallet passphrase was successfully changed.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location filename="../dialogs/askpassphrasedialog.cpp" line="257"/>
         <location filename="../dialogs/askpassphrasedialog.cpp" line="281"/>
         <source>Warning: The Caps Lock key is on.</source>
@@ -323,9 +328,8 @@ Sunteţi sigur că doriţi să criptaţi portofelul electronic?</translation>
         <translation>Decriptarea portofelului electronic a eşuat.</translation>
     </message>
     <message>
-        <location filename="../dialogs/askpassphrasedialog.cpp" line="209"/>
         <source>Wallet passphrase was succesfully changed.</source>
-        <translation>Parola portofelului electronic a fost schimbată.</translation>
+        <translation type="vanished">Parola portofelului electronic a fost schimbată.</translation>
     </message>
 </context>
 <context>

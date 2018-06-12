@@ -262,6 +262,11 @@ Bent u er zeker van uw dat u uw portemonnee wilt versleutelen?</translation>
         <translation>Nexus zal nu afsluiten om het versleutelingsproces te voltooien. Onthoud dat het versleutelen van uw portemonnee u niet volledig kan beschermen: Malware kan uw computer infecteren en uw NXS stelen.</translation>
     </message>
     <message>
+        <location filename="../dialogs/askpassphrasedialog.cpp" line="209"/>
+        <source>Wallet passphrase was successfully changed.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location filename="../dialogs/askpassphrasedialog.cpp" line="257"/>
         <location filename="../dialogs/askpassphrasedialog.cpp" line="281"/>
         <source>Warning: The Caps Lock key is on.</source>
@@ -340,9 +345,8 @@ Bent u er zeker van uw dat u uw portemonnee wilt versleutelen?</translation>
         <translation>Portemonnee-ontsleuteling mislukt</translation>
     </message>
     <message>
-        <location filename="../dialogs/askpassphrasedialog.cpp" line="209"/>
         <source>Wallet passphrase was succesfully changed.</source>
-        <translation>Portemonneewachtwoord is succesvol gewijzigd</translation>
+        <translation type="vanished">Portemonneewachtwoord is succesvol gewijzigd</translation>
     </message>
 </context>
 <context>

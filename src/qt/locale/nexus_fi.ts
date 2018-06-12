@@ -261,6 +261,11 @@ Tahdotko varmasti salata lompakon?</translation>
         <translation>Nexus sulkeutuu lopettaessaan salausprosessin. Muista että salattu lompakko ei täysin suojaa sitä haittaohjelmien aiheuttamilta varkauksilta.</translation>
     </message>
     <message>
+        <location filename="../dialogs/askpassphrasedialog.cpp" line="209"/>
+        <source>Wallet passphrase was successfully changed.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location filename="../dialogs/askpassphrasedialog.cpp" line="257"/>
         <location filename="../dialogs/askpassphrasedialog.cpp" line="281"/>
         <source>Warning: The Caps Lock key is on.</source>
@@ -339,9 +344,8 @@ Tahdotko varmasti salata lompakon?</translation>
         <translation>Lompakon salauksen purku epäonnistui.</translation>
     </message>
     <message>
-        <location filename="../dialogs/askpassphrasedialog.cpp" line="209"/>
         <source>Wallet passphrase was succesfully changed.</source>
-        <translation>Lompakon tunnuslause on vaihdettu.</translation>
+        <translation type="vanished">Lompakon tunnuslause on vaihdettu.</translation>
     </message>
 </context>
 <context>

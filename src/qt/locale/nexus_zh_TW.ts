@@ -261,6 +261,11 @@ Are you sure you wish to encrypt your wallet?</source>
         <translation>位元幣現在要關閉以完成加密程序. 請記住, 加密錢包無法完全防止入侵電腦的惡意程式偷取你的位元幣.</translation>
     </message>
     <message>
+        <location filename="../dialogs/askpassphrasedialog.cpp" line="209"/>
+        <source>Wallet passphrase was successfully changed.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location filename="../dialogs/askpassphrasedialog.cpp" line="257"/>
         <location filename="../dialogs/askpassphrasedialog.cpp" line="281"/>
         <source>Warning: The Caps Lock key is on.</source>
@@ -339,9 +344,8 @@ Are you sure you wish to encrypt your wallet?</source>
         <translation>錢包解密失敗</translation>
     </message>
     <message>
-        <location filename="../dialogs/askpassphrasedialog.cpp" line="209"/>
         <source>Wallet passphrase was succesfully changed.</source>
-        <translation>錢包密碼變更成功.</translation>
+        <translation type="vanished">錢包密碼變更成功.</translation>
     </message>
 </context>
 <context>

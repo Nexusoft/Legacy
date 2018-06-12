@@ -262,6 +262,11 @@ Ar jūs tikrai norite užšifruoti savo piniginę?</translation>
         <translation>Nexus dabar užsidarys šifravimo proceso pabaigai. Atminkite, kad piniginės šifravimas  negali pilnai apsaugoti Nexusų vagysčių kai tinkle esančios kenkėjiškos programos patenka į jūsų kompiuterį.</translation>
     </message>
     <message>
+        <location filename="../dialogs/askpassphrasedialog.cpp" line="209"/>
+        <source>Wallet passphrase was successfully changed.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location filename="../dialogs/askpassphrasedialog.cpp" line="257"/>
         <location filename="../dialogs/askpassphrasedialog.cpp" line="281"/>
         <source>Warning: The Caps Lock key is on.</source>
@@ -340,9 +345,8 @@ Ar jūs tikrai norite užšifruoti savo piniginę?</translation>
         <translation>Nepavyko iššifruoti piniginę</translation>
     </message>
     <message>
-        <location filename="../dialogs/askpassphrasedialog.cpp" line="209"/>
         <source>Wallet passphrase was succesfully changed.</source>
-        <translation>Sėkmingai pakeistas piniginės slaptažodis</translation>
+        <translation type="vanished">Sėkmingai pakeistas piniginės slaptažodis</translation>
     </message>
 </context>
 <context>

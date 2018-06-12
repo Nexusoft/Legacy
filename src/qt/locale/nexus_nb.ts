@@ -261,6 +261,11 @@ Er du sikker på at du vil kryptere lommeboken?</translation>
         <translation>Nexus vil nå lukkes for å fullføre krypteringsprosessen. Husk at kryptering av lommeboken ikke fullt ut kan beskytte dine NXS fra å bli stjålet om skadevare infiserer datamaskinen.</translation>
     </message>
     <message>
+        <location filename="../dialogs/askpassphrasedialog.cpp" line="209"/>
+        <source>Wallet passphrase was successfully changed.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location filename="../dialogs/askpassphrasedialog.cpp" line="257"/>
         <location filename="../dialogs/askpassphrasedialog.cpp" line="281"/>
         <source>Warning: The Caps Lock key is on.</source>
@@ -339,9 +344,8 @@ Er du sikker på at du vil kryptere lommeboken?</translation>
         <translation>Dekryptering av lommebok feilet</translation>
     </message>
     <message>
-        <location filename="../dialogs/askpassphrasedialog.cpp" line="209"/>
         <source>Wallet passphrase was succesfully changed.</source>
-        <translation>Lommebokens adgangsfrase ble endret.</translation>
+        <translation type="vanished">Lommebokens adgangsfrase ble endret.</translation>
     </message>
 </context>
 <context>

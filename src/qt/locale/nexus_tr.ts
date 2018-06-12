@@ -261,6 +261,11 @@ Cüzdanınızı şifrelemek istediğinizden emin misiniz?</translation>
         <translation>Şifreleme işlemini tamamlamak için Nexus şimdi kapanacaktır. Cüzdanınızı şifrelemenin, Nexuslerinizin bilgisayara bulaşan kötücül bir yazılım tarafından çalınmaya karşı tamamen koruyamayacağını unutmayınız.</translation>
     </message>
     <message>
+        <location filename="../dialogs/askpassphrasedialog.cpp" line="209"/>
+        <source>Wallet passphrase was successfully changed.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location filename="../dialogs/askpassphrasedialog.cpp" line="257"/>
         <location filename="../dialogs/askpassphrasedialog.cpp" line="281"/>
         <source>Warning: The Caps Lock key is on.</source>
@@ -339,9 +344,8 @@ Cüzdanınızı şifrelemek istediğinizden emin misiniz?</translation>
         <translation>Cüzdan şifresinin açılması başarısız oldu</translation>
     </message>
     <message>
-        <location filename="../dialogs/askpassphrasedialog.cpp" line="209"/>
         <source>Wallet passphrase was succesfully changed.</source>
-        <translation>Cüzdan parolası başarılı bir şekilde değiştirildi.</translation>
+        <translation type="vanished">Cüzdan parolası başarılı bir şekilde değiştirildi.</translation>
     </message>
 </context>
 <context>

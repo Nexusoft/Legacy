@@ -261,6 +261,11 @@ Jsi si jistý, že chceš peněženku zašifrovat?</translation>
         <translation>Nexus se teď ukončí, aby dokončil zašifrování. Pamatuj však, že pouhé zašifrování peněženky úplně nezabraňuje krádeži tvých Nexusů malwarem, kterým se může počítač nakazit.</translation>
     </message>
     <message>
+        <location filename="../dialogs/askpassphrasedialog.cpp" line="209"/>
+        <source>Wallet passphrase was successfully changed.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location filename="../dialogs/askpassphrasedialog.cpp" line="257"/>
         <location filename="../dialogs/askpassphrasedialog.cpp" line="281"/>
         <source>Warning: The Caps Lock key is on.</source>
@@ -339,9 +344,8 @@ Jsi si jistý, že chceš peněženku zašifrovat?</translation>
         <translation>Dešifrování peněženky selhalo</translation>
     </message>
     <message>
-        <location filename="../dialogs/askpassphrasedialog.cpp" line="209"/>
         <source>Wallet passphrase was succesfully changed.</source>
-        <translation>Heslo k peněžence bylo v pořádku změněno.</translation>
+        <translation type="vanished">Heslo k peněžence bylo v pořádku změněno.</translation>
     </message>
 </context>
 <context>

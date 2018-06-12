@@ -245,6 +245,11 @@ Are you sure you wish to encrypt your wallet?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <location filename="../dialogs/askpassphrasedialog.cpp" line="209"/>
+        <source>Wallet passphrase was successfully changed.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location filename="../dialogs/askpassphrasedialog.cpp" line="257"/>
         <location filename="../dialogs/askpassphrasedialog.cpp" line="281"/>
         <source>Warning: The Caps Lock key is on.</source>
@@ -323,9 +328,8 @@ Are you sure you wish to encrypt your wallet?</source>
         <translation>Decriptación de cartera fallida</translation>
     </message>
     <message>
-        <location filename="../dialogs/askpassphrasedialog.cpp" line="209"/>
         <source>Wallet passphrase was succesfully changed.</source>
-        <translation>La contraseña de cartera ha sido cambiada con exit.</translation>
+        <translation type="vanished">La contraseña de cartera ha sido cambiada con exit.</translation>
     </message>
 </context>
 <context>

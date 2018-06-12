@@ -261,6 +261,11 @@ Si è sicuri di voler cifrare il portamonete?</translation>
         <translation>Nexus verrà ora chiuso per finire il processo di crittazione. Ricorda che criptare il tuo portamonete non può fornire una protezione totale contro furti causati da malware che dovessero infettare il tuo computer.</translation>
     </message>
     <message>
+        <location filename="../dialogs/askpassphrasedialog.cpp" line="209"/>
+        <source>Wallet passphrase was successfully changed.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location filename="../dialogs/askpassphrasedialog.cpp" line="257"/>
         <location filename="../dialogs/askpassphrasedialog.cpp" line="281"/>
         <source>Warning: The Caps Lock key is on.</source>
@@ -339,9 +344,8 @@ Si è sicuri di voler cifrare il portamonete?</translation>
         <translation>Decifrazione del portamonete fallita</translation>
     </message>
     <message>
-        <location filename="../dialogs/askpassphrasedialog.cpp" line="209"/>
         <source>Wallet passphrase was succesfully changed.</source>
-        <translation>Passphrase del portamonete modificata con successo.</translation>
+        <translation type="vanished">Passphrase del portamonete modificata con successo.</translation>
     </message>
 </context>
 <context>

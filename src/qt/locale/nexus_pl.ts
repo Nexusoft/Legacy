@@ -266,6 +266,11 @@ Czy na pewno chcesz zaszyfrować swój portfel?</translation>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <location filename="../dialogs/askpassphrasedialog.cpp" line="209"/>
+        <source>Wallet passphrase was successfully changed.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location filename="../dialogs/askpassphrasedialog.cpp" line="257"/>
         <location filename="../dialogs/askpassphrasedialog.cpp" line="281"/>
         <source>Warning: The Caps Lock key is on.</source>
@@ -344,9 +349,8 @@ Czy na pewno chcesz zaszyfrować swój portfel?</translation>
         <translation>Odszyfrowywanie portfela nie powiodło się</translation>
     </message>
     <message>
-        <location filename="../dialogs/askpassphrasedialog.cpp" line="209"/>
         <source>Wallet passphrase was succesfully changed.</source>
-        <translation>Hasło do portfela zostało pomyślnie zmienione.</translation>
+        <translation type="vanished">Hasło do portfela zostało pomyślnie zmienione.</translation>
     </message>
 </context>
 <context>
