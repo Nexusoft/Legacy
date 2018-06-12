@@ -891,7 +891,7 @@ namespace Core
         uint1024 hash = pblock->GetHash();
         if (mapBlockIndex.count(hash))
         {
-            if(mapInvalidBlocks.count(hash) && mapInvalidBlocks[hash] != hash.SignatureHash())
+            if(mapInvalidBlocks.count(hash) && mapInvalidBlocks[hash] != pblock->SignatureHash())
                 printf("ProcessBlock() : detected mutated signature hash");
             else
                 return error("ProcessBlock() : already have block %d %s", mapBlockIndex[hash]->nHeight, hash.ToString().substr(0,20).c_str());
@@ -926,13 +926,12 @@ namespace Core
             if(!mapInvalidBlocks.count(pblock->GetHash()))
             {
                 /* Find the Previous block from hashPrevBlock. */
-                map<uint1024, CBlockIndex*>::iterator mi = mapBlockIndex.find(pblock->hashPrevBlock);
-                if (mi == mapBlockIndex.end())
+                if(!mapBlockIndex.count(pblock->hashPrevBlock))
                     return error("ProcessBlock() : (invalid checks - prev) AcceptBlock FAILED");
 
                     
                 /* Check That Block Timestamp is not before previous block. */
-                if (GetBlockTime() <= pindexPrev->GetBlockTime())
+                if (pblock->GetBlockTime() <= mapBlockIndex[pblock->hashPrevBlock]->GetBlockTime())
                     return error("ProcessBlock() : (invalid checks - time) AcceptBlock FAILED");
                 
                 /* Write the top block as invalid for protocol checks. */
@@ -944,7 +943,7 @@ namespace Core
                 {
                     
                     /* Get the last block index from the channel. */
-                    const CBlockIndex* pindexLast = GetLastChannelIndex(pindexFirst->pprev, pindex->GetChannel());
+                    const CBlockIndex* pindexLast = GetLastChannelIndex(pindexFirst->pprev, pindexFirst->GetChannel());
                     if(!pindexLast->pprev)
                         break;
                     
@@ -960,12 +959,14 @@ namespace Core
                         
                         LLD::CIndexDB indexdb("r+");
                         indexdb.TxnBegin();
-                        block.SetBestChain(indexdb, pindexLast);
+                        block.SetBestChain(indexdb, mapBlockIndex[pindexLast->GetBlockHash()]);
                         indexdb.TxnCommit();
                         
                         if(pfrom)
                             pfrom->PushGetBlocks(pindexBest, 0);
                     }
+                    
+                    pindexFirst = pindexLast;
                 }
             }
             
