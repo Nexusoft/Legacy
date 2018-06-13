@@ -918,34 +918,13 @@ namespace Core
         {
             if(mapInvalidBlocks.count(hash) && mapInvalidBlocks[hash] != pblock->SignatureHash())
             {
-                printf("ProcessBlock() : Mutated Block Signatures Detected... Overwriting\n");
+                printf("ProcessBlock() : Mutated Block Signatures Detected... Rewriting\n");
                 
                 /* Get current block index. */
                 CBlockIndex* pindex = mapBlockIndex[hash];
                 
-                /* Read the Mutated Block for Comparison. */
-                CBlock pblockMut;
-                if(!pblockMut.ReadFromDisk(pindex))
-                    return error("ProcessBlock() : Couldn't read mutated block");
-                
-                if(GetArg("-verbose", 0) >= 2) {
-                    printf("ProcessBlock() : Mutated Block:\n");
-                    pblockMut.print();
-                    
-                    printf("ProcessBlock() : Mutated Index:\n");
-                    pindex->print();
-                }
-                
                 /* Correct the mutated block time. */
                 pindex->nTime = pblock->nTime;
-                
-                if(GetArg("-verbose", 0) >= 2) {
-                    printf("ProcessBlock() : Valid Block:\n");
-                    pblock->print();
-                    
-                    printf("ProcessBlock() : Valid Index:\n");
-                    pindex->print();
-                }
                 
                 /* Write the Proper Index to Chain. */
                 LLD::CIndexDB indexdb("r+");
@@ -954,22 +933,14 @@ namespace Core
                 /* Write the Valid Block to Chain. */
                 pblock->Rewrite(pindex);
                 
-                
-                if(GetArg("-verbose", 0) >= 2)
-                {
-                    CBlock blockRead;
-                    if(!blockRead.ReadFromDisk(pindex))
-                        return error("ProcessBlock() : Failed to Read new block rewrite");
-                    
-                    printf("ProcessBlock() : Read New Block Rewrite");
-                    blockRead.print();
-                }
-                
                 /* Change Invalid Flags to current block. */
                 mapInvalidBlocks[pblock->GetHash()] = pblock->SignatureHash();
                 
                 if(GetArg("-verbose", 0) >= 2)
-                    printf("ProcessBlock() : ACCEPTED (Resolved Mutated Block)");
+                    printf("ProcessBlock() : ACCEPTED (Resolved Mutated Block)\n");
+                
+                if(pfrom)
+                    pfrom->PushGetBlocks(pindexBest, 0);
                 
                 return true;
             }
