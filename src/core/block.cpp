@@ -76,6 +76,7 @@ namespace Core
                 pindexBest->GetBlockTime() < GetUnifiedTimestamp() - 24 * 60 * 60);
     }
     
+    
     bool CBlock::Rewrite(CBlockIndex* pindex)
     {
         if(GetHash() != pindex->GetBlockHash())
@@ -85,12 +86,6 @@ namespace Core
         CAutoFile fileout = CAutoFile(OpenBlockFile(pindex->nFile, pindex->nBlockPos, "w"), SER_DISK, DATABASE_VERSION);
         if (!fileout)
             return error("CBlock::Rewrite() : AppendBlockFile failed");
-
-        // Write index header
-        unsigned char pchMessageStart[4];
-        Net::GetMessageStart(pchMessageStart);
-        unsigned int nSize = fileout.GetSerializeSize(*this);
-        fileout << FLATDATA(pchMessageStart) << nSize;
 
         // Write block
         fileout << *this;
@@ -964,10 +959,9 @@ namespace Core
                 {
                     CBlock blockRead;
                     if(!blockRead.ReadFromDisk(pindex))
-                        if(!blockRead.ReadFromDisk(pindex->nFile, pindex->nBlockPos))
-                            return error("ProcessBlock() : Failed to Read new block overwrite");
+                        return error("ProcessBlock() : Failed to Read new block rewrite");
                     
-                    printf("ProcessBlock() : Read New Block Overwrite");
+                    printf("ProcessBlock() : Read New Block Rewrite");
                     blockRead.print();
                 }
                 
