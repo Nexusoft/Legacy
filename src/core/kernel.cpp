@@ -548,10 +548,6 @@ namespace Core
     {
         /* Lock Accepting Trust Keys to Mutex. */
         LOCK(cs);
-        
-        /* Verify the Stake Kernel. */
-        if(!fInit && !cBlock.VerifyStake())
-            return error("CTrustPool::Connect() : Invalid Proof of Stake");
             
         /* Extract the Key from the Script Signature. */
         vector< std::vector<unsigned char> > vKeys;
@@ -654,6 +650,10 @@ namespace Core
                 if(itTrue == mapTrustKeys[cKey].hashPrevBlocks.end())
                     return error("CTrustPool::Connect() : Trying to connect a trust key not accepted.");
             }
+            
+            /* Verify the Stake Kernel. */
+            if(!fInit && !cBlock.VerifyStake())
+                return error("CTrustPool::Connect() : Invalid Proof of Stake");
             
             /* Dump the Trust Key to Console if not Initializing. */
             if(!fInit && GetArg("-verbose", 0) >= 2)
