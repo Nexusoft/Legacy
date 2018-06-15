@@ -307,7 +307,11 @@ namespace Core
         else
         {
             if(!IsInitialBlockDownload() && GetBoolArg("-softban", true) && IsProofOfStake() && !cTrustPool.IsValid(*this))
-                return error("\x1b[31m SOFTBAN: Not Connecting %s\x1b[0m \n", hash.ToString().substr(0, 20).c_str());
+            {
+                error("\x1b[31m SOFTBAN: Not Connecting %s\x1b[0m \n", hash.ToString().substr(0, 20).c_str());
+                
+                return true;
+            }
             
             CBlockIndex* pfork = pindexBest;
             CBlockIndex* plonger = pindexNew;
