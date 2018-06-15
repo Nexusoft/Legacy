@@ -538,7 +538,6 @@ namespace Core
 
             
         /* Find Previous Block. */
-        pindexNew->phashBlock = &hash;
         map<uint1024, CBlockIndex*>::iterator miPrev = mapBlockIndex.find(hashPrevBlock);
         if (miPrev != mapBlockIndex.end())
             pindexNew->pprev = (*miPrev).second;
@@ -594,7 +593,8 @@ namespace Core
         }
 
         /* Add to the MapBlockIndex */
-        mapBlockIndex[hash] = pindexNew;
+        map<uint1024, CBlockIndex*>::iterator mi = mapBlockIndex.insert(make_pair(hash, pindexNew)).first;
+        pindexNew->phashBlock = &((*mi).first);
 
         /* Write the new Block to Disk. */
         LLD::CIndexDB indexdb("r+");
