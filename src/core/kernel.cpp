@@ -573,7 +573,8 @@ namespace Core
                 (*itFalse).second = true;
             else //Accept key if genesis not found
             {
-                Accept(cBlock, fInit);
+                if(!Accept(cBlock, fInit))
+                    return error("CTrustPool::Connect() : Failed to Accept Genesis Key");
                 
                 return Connect(cBlock, fInit);
             }
@@ -632,11 +633,7 @@ namespace Core
                 return error("CTrustPool::Connect() : Invalid Genesis Transaction.");
             
             /* Don't allow Blocks Created Before Minimum Interval. */
-            uint1024 back = mapTrustKeys[cKey].Back();
-            if(back == 0)
-                return error("CTrustPool::Connect() : No back of vector connected.");
-            
-            if((cBlock.nHeight - mapBlockIndex[back]->nHeight) < TRUST_KEY_MIN_INTERVAL)
+            if((cBlock.nHeight - mapBlockIndex[mapTrustKeys[cKey].Back()]->nHeight) < TRUST_KEY_MIN_INTERVAL)
                 return error("CTrustPool::Connect() : Trust Block Created Before Minimum Trust Key Interval.");
             
             std::vector< std::pair<uint1024, bool> >::iterator itFalse = std::find(mapTrustKeys[cKey].hashPrevBlocks.begin(), mapTrustKeys[cKey].hashPrevBlocks.end(), std::make_pair(cBlock.GetHash(), false) );
@@ -648,12 +645,13 @@ namespace Core
                 std::vector< std::pair<uint1024, bool> >::iterator itTrue = std::find(mapTrustKeys[cKey].hashPrevBlocks.begin(), mapTrustKeys[cKey].hashPrevBlocks.end(), std::make_pair(cBlock.GetHash(), true) );
                 
                 if(itTrue == mapTrustKeys[cKey].hashPrevBlocks.end())
-                    return error("CTrustPool::Connect() : Trying to connect a trust key not accepted.");
+                {
+                    if(!Accept(cBlock, fInit))
+                        return error("CTrustPool::Connect() : Failed to Accept Trust Key");
+                
+                    return Connect(cBlock, fInit);
+                }
             }
-            
-            /* Verify the Stake Kernel. */
-            if(!fInit && !cBlock.VerifyStake())
-                return error("CTrustPool::Connect() : Invalid Proof of Stake");
             
             /* Dump the Trust Key to Console if not Initializing. */
             if(!fInit && GetArg("-verbose", 0) >= 2)
@@ -666,6 +664,10 @@ namespace Core
             
             return true;
         }
+        
+        /* Verify the Stake Kernel. */
+        if(!fInit && !cBlock.VerifyStake())
+            return error("CTrustPool::Connect() : Invalid Proof of Stake");
         
         return error("CTrustPool::Connect() : Missing Trust or Genesis Transaction in Block.");
     }
