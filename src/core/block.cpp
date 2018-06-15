@@ -378,9 +378,6 @@ namespace Core
                 if (!block.ReadFromDisk(pindex))
                     return error("CBlock::SetBestChain() : ReadFromDisk for connect failed");
                 
-                if(GetArg("-verbose", 0) >= 2)
-                    block.print();
-                
                 if (!block.ConnectBlock(indexdb, pindex))
                 {
                     indexdb.TxnAbort();
