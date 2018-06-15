@@ -80,23 +80,6 @@ namespace Core
     bool CBlock::Rewrite(CBlockIndex* pindex)
     {
         // Open history file to append
-        CAutoFile fileout = CAutoFile(OpenBlockFile(pindex->nFile, pindex->nBlockPos, "w"), SER_DISK, DATABASE_VERSION);
-        if (!fileout)
-            return error("CBlock::Rewrite() : AppendBlockFile failed");
-
-        // Write block
-        fileout << *this;
-
-        // Flush stdio buffers and commit to disk before returning
-        fflush(fileout);
-#ifdef WIN32
-        _commit(_fileno(fileout));
-#else
-        fsync(fileno(fileout));
-#endif
-        
-        /*
-        // Open history file to append
         CAutoFile fileout = CAutoFile(AppendBlockFile(pindex->nFile), SER_DISK, DATABASE_VERSION);
         if (!fileout)
             return error("CBlock::WriteToDisk() : AppendBlockFile failed");
@@ -104,6 +87,7 @@ namespace Core
         // Write index header
         unsigned char pchMessageStart[4];
         Net::GetMessageStart(pchMessageStart);
+        
         unsigned int nSize = fileout.GetSerializeSize(*this);
         fileout << FLATDATA(pchMessageStart) << nSize;
 
@@ -143,7 +127,6 @@ namespace Core
         
         if (!indexdb.WriteBlockIndex(CDiskBlockIndex(pindex)))
             return error("Connect() : WriteBlockIndex for pindex failed");
-        */
         
         return true;
     }
@@ -966,10 +949,6 @@ namespace Core
                 /* Write the Valid Block to Chain. */
                 if(!pblock->Rewrite(pindex))
                     return error("ProcessBlock() : Failed to Resolve Mutated Block (rewrite)");
-                
-                LLD::CIndexDB indexdb("r+");
-                if(!indexdb.WriteBlockIndex(CDiskBlockIndex(pindex)))
-                    return error("ProcessBlock() : Failed to Resolve Mutated Block (index)");
                 
                 /* Change Invalid Flags to current block. */
                 mapInvalidBlocks[pblock->GetHash()] = pblock->SignatureHash();
