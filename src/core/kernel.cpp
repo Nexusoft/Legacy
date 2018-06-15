@@ -406,7 +406,7 @@ namespace Core
         {
             /* RULE: Average Block time of last six blocks not to go below 30 seconds */
             if(nTotalGenesis > 3 && nAverageTime < 30)
-                return error("\x1b[31m SOFTBAN: \u001b[37;1m 5 Genesis Average block time < 20 seconds %u", nAverageTime );
+                return error("\x1b[31m SOFTBAN: \u001b[37;1m 5 Genesis Average block time < 20 seconds %u \x1b[0m", nAverageTime );
         
             /* Check the coin age of each Input. */
             for(int nIndex = 1; nIndex < cBlock.vtx[0].vin.size(); nIndex++)
@@ -425,7 +425,7 @@ namespace Core
                 
                 /* RULE: No Genesis if coin age is less than 1 days old. */
                 if((cBlock.nTime - block.GetBlockTime()) < 24 * 60 * 60)
-                    return error("\x1b[31m SOFTBAN: \u001b[37;1m Genesis Input less than 24 hours Age");
+                    return error("\x1b[31m SOFTBAN: \u001b[37;1m Genesis Input less than 24 hours Age \x1b[0m");
             }
 
             /* Genesis Rules: Less than 1000 NXS in block. */
@@ -434,7 +434,7 @@ namespace Core
                 /* RULE: More than 2 conesuctive Genesis with < 1000 NXS */
                 if (pblock[0].vtx[0].GetValueOut() < 1000 * COIN &&
                     pblock[1].vtx[0].GetValueOut() < 1000 * COIN)
-                    return error("\x1b[31m SOFTBAN: \u001b[37;1m More than 2 Consecutive blocks < 1000 NXS");
+                    return error("\x1b[31m SOFTBAN: \u001b[37;1m More than 2 Consecutive blocks < 1000 NXS \x1b[0m");
             }
             
             bool fGenesis = true;
@@ -444,7 +444,7 @@ namespace Core
             
             /* RULE: If there are 6 consecutive genesis blocks. */
             if(fGenesis)
-                return error("\x1b[31m SOFTBAN: \u001b[37;1m At least 3 consecutive Genesis");
+                return error("\x1b[31m SOFTBAN: \u001b[37;1m At least 3 consecutive Genesis \x1b[0m");
         }
         
         /** Handle Adding Trust Transactions. **/
@@ -453,7 +453,7 @@ namespace Core
             
             /* RULE: Average Block time of last six blocks not to go below 30 seconds */
             if(nAverageTime < 20 && (cBlock.nTime - pblock[0].nTime) < 30)
-                return error("\x1b[31m SOFTBAN: \u001b[37;1m Trust Average block time < 30 seconds %u", nAverageTime);
+                return error("\x1b[31m SOFTBAN: \u001b[37;1m Trust Average block time < 30 seconds %u \x1b[0m", nAverageTime);
                 
                 
             /* Check the coin age of each Input. */
@@ -473,7 +473,7 @@ namespace Core
                 
                 /* RULE: Inputs need to have at least 100 confirmations */
                 if(cBlock.nHeight - block.nHeight < 100)
-                    return error("\x1b[31m SOFTBAN: \u001b[37;1m Trust Input less than 100 confirmations");
+                    return error("\x1b[31m SOFTBAN: \u001b[37;1m Trust Input less than 100 confirmations \x1b[0m");
             }
             
             /* Get the time since last block. */
@@ -486,11 +486,11 @@ namespace Core
                 /* RULE: More than 2 conesuctive Genesis with < 1000 NXS */
                 if (pblock[0].vtx[0].GetValueOut() < 1000 * COIN &&
                     pblock[1].vtx[0].GetValueOut() < 1000 * COIN)
-                    return error("\x1b[31m SOFTBAN: \u001b[37;1m More than 2 Consecutive Trust < 1000 NXS");
+                    return error("\x1b[31m SOFTBAN: \u001b[37;1m More than 2 Consecutive Trust < 1000 NXS \x1b[0m");
                     
                 /* RULE: Trust with < 1000 made within 12 hours of last */
                 if(nBlockAge < 8 * 60 * 60)
-                    return error("\x1b[31m SOFTBAN: \u001b[37;1m Less than 8 hours since last Trust made with < 1000 NXS");
+                    return error("\x1b[31m SOFTBAN: \u001b[37;1m Less than 8 hours since last Trust made with < 1000 NXS \x1b[0m");
             }
         }
         

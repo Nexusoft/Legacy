@@ -83,11 +83,21 @@ namespace Core
             return error("CBlock::Rewrite() : Index hash %s doesn't match block hash %s\n", pindex->GetBlockHash().ToString().substr(0, 20).c_str(), GetHash().ToString().substr(0, 20).c_str());
         
         // Open history file to append
-        CAutoFile fileout = CAutoFile(OpenBlockFile(pindex->nFile, pindex->nBlockPos, "w"), SER_DISK, DATABASE_VERSION);
+        CAutoFile fileout = CAutoFile(AppendBlockFile(pindex->nFile), SER_DISK, DATABASE_VERSION);
         if (!fileout)
-            return error("CBlock::Rewrite() : AppendBlockFile failed");
+            return error("CBlock::WriteToDisk() : AppendBlockFile failed");
+
+        // Write index header
+        unsigned char pchMessageStart[4];
+        Net::GetMessageStart(pchMessageStart);
+        unsigned int nSize = fileout.GetSerializeSize(*this);
+        fileout << FLATDATA(pchMessageStart) << nSize;
 
         // Write block
+        long fileOutPos = ftell(fileout);
+        if (fileOutPos < 0)
+            return error("CBlock::WriteToDisk() : ftell failed");
+        pindex->nBlockPos = fileOutPos;
         fileout << *this;
 
         // Flush stdio buffers and commit to disk before returning
@@ -97,6 +107,28 @@ namespace Core
 #else
         fsync(fileno(fileout));
 #endif
+        
+        //// issue here: it doesn't know the version
+        unsigned int nTxPos = pindex->nBlockPos + ::GetSerializeSize(CBlock(), SER_DISK, DATABASE_VERSION) - (2 * GetSizeOfCompactSize(0)) + GetSizeOfCompactSize(vtx.size());
+        
+        LLD::CIndexDB indexdb("r+");
+        for(auto tx : vtx)
+        {
+
+            CDiskTxPos posThisTx(pindex->nFile, pindex->nBlockPos, nTxPos);
+            nTxPos += ::GetSerializeSize(tx, SER_DISK, DATABASE_VERSION);
+            
+            CTxIndex txindex;
+            if (indexdb.ReadTxIndex(tx.GetHash(), txindex))
+                txindex.pos = posThisTx;
+            else
+                txindex = CTxIndex(posThisTx, tx.vout.size());
+
+            indexdb.UpdateTxIndex(tx.GetHash(), txindex);
+        }
+        
+        if (!indexdb.WriteBlockIndex(CDiskBlockIndex(pindex)))
+            return error("Connect() : WriteBlockIndex for pindex failed");
         
         return true;
     }
@@ -570,7 +602,7 @@ namespace Core
         indexdb.WriteBlockIndex(CDiskBlockIndex(pindexNew));
         
         bool fValid = true;
-        if(GetBoolArg("-softban", true) && IsProofOfStake() && !cTrustPool.IsValid(*this))
+        if(!IsInitialBlockDownload() && GetBoolArg("-softban", true) && IsProofOfStake() && !cTrustPool.IsValid(*this))
             fValid = false;
 
         /* Set the Best chain if Highest Trust. */
@@ -918,7 +950,7 @@ namespace Core
         {
             if(mapInvalidBlocks.count(hash) && mapInvalidBlocks[hash] != pblock->SignatureHash())
             {
-                printf("ProcessBlock() : Mutated Block Signatures Detected... Rewriting\n");
+                printf("\u001b[31;1m ProcessBlock() : Mutated Block Signatures Detected... Rewriting \x1b[0m \n");
                 
                 /* Get current block index. */
                 CBlockIndex* pindex = mapBlockIndex[hash];
@@ -926,12 +958,9 @@ namespace Core
                 /* Correct the mutated block time. */
                 pindex->nTime = pblock->nTime;
                 
-                /* Write the Proper Index to Chain. */
-                LLD::CIndexDB indexdb("r+");
-                indexdb.WriteBlockIndex(CDiskBlockIndex(pindex));
-                
                 /* Write the Valid Block to Chain. */
-                pblock->Rewrite(pindex);
+                if(!pblock->Rewrite(pindex))
+                    return error("ProcessBlock() : Failed to Resolve Mutated Block");
                 
                 /* Change Invalid Flags to current block. */
                 mapInvalidBlocks[pblock->GetHash()] = pblock->SignatureHash();
