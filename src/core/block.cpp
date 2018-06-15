@@ -79,9 +79,23 @@ namespace Core
     
     bool CBlock::Rewrite(CBlockIndex* pindex)
     {
-        if(GetHash() != pindex->GetBlockHash())
-            return error("CBlock::Rewrite() : Index hash %s doesn't match block hash %s\n", pindex->GetBlockHash().ToString().substr(0, 20).c_str(), GetHash().ToString().substr(0, 20).c_str());
+        // Open history file to append
+        CAutoFile fileout = CAutoFile(OpenBlockFile(pindex->nFile, pindex->nBlockPos, "w"), SER_DISK, DATABASE_VERSION);
+        if (!fileout)
+            return error("CBlock::Rewrite() : AppendBlockFile failed");
+
+        // Write block
+        fileout << *this;
+
+        // Flush stdio buffers and commit to disk before returning
+        fflush(fileout);
+#ifdef WIN32
+        _commit(_fileno(fileout));
+#else
+        fsync(fileno(fileout));
+#endif
         
+        /*
         // Open history file to append
         CAutoFile fileout = CAutoFile(AppendBlockFile(pindex->nFile), SER_DISK, DATABASE_VERSION);
         if (!fileout)
@@ -129,6 +143,7 @@ namespace Core
         
         if (!indexdb.WriteBlockIndex(CDiskBlockIndex(pindex)))
             return error("Connect() : WriteBlockIndex for pindex failed");
+        */
         
         return true;
     }
@@ -309,6 +324,9 @@ namespace Core
         }
         else
         {
+            if(!IsInitialBlockDownload() && GetBoolArg("-softban", true) && IsProofOfStake() && !cTrustPool.IsValid(*this))
+                return error("\x1b[31m SOFTBAN: Not Connecting %s\x1b[0m \n", hash.ToString().substr(0, 20).c_str());
+            
             CBlockIndex* pfork = pindexBest;
             CBlockIndex* plonger = pindexNew;
             while (pfork != plonger)
@@ -558,10 +576,10 @@ namespace Core
         {
             if(pindexNew->IsProofOfWork() && pindexPrev)
             {
-                /** Calculate the Reserves from the Previous Block in Channel's reserve and new Release. **/
+                /* Calculate the Reserves from the Previous Block in Channel's reserve and new Release. */
                 int64 nReserve  = pindexPrev->nReleasedReserve[nType] + GetReleasedReserve(pindexNew, pindexNew->GetChannel(), nType);
                 
-                /** Block Version 3 Check. Disable Reserves from going below 0. **/
+                /* Block Version 3 Check. Disable Reserves from going below 0. */
                 if(pindexNew->nVersion >= 3 && pindexNew->nCoinbaseRewards[nType] >= nReserve)
                     return error("AddToBlockIndex() : Coinbase Transaction too Large. Out of Reserve Limits");
                 
@@ -601,19 +619,11 @@ namespace Core
         LLD::CIndexDB indexdb("r+");
         indexdb.TxnBegin();
         indexdb.WriteBlockIndex(CDiskBlockIndex(pindexNew));
-        
-        bool fValid = true;
-        if(!IsInitialBlockDownload() && GetBoolArg("-softban", true) && IsProofOfStake() && !cTrustPool.IsValid(*this))
-            fValid = false;
 
         /* Set the Best chain if Highest Trust. */
-        if(fValid || IsInitialBlockDownload()) {
-            if (pindexNew->nChainTrust > nBestChainTrust)
-                if (!SetBestChain(indexdb, pindexNew))
-                    return false;
-        }
-        else
-            printf("\x1b[31m SOFTBAN: Not Connecting %s\x1b[0m \n", hash.ToString().substr(0, 20).c_str());
+        if (pindexNew->nChainTrust > nBestChainTrust)
+            if (!SetBestChain(indexdb, pindexNew))
+                return false;
             
         /** Commit the Transaction to the Database. **/
         if(!indexdb.TxnCommit())
@@ -624,12 +634,6 @@ namespace Core
             /* Relay the Block to Nexus Network. */
             if (!IsInitialBlockDownload())
             {
-                if(!fValid)
-                {
-                    printf("\x1b[31m SOFTBAN: Not Relaying %s\x1b[0m \n", hash.ToString().substr(0, 20).c_str()); 
-                    return true;
-                }
-                
                 LOCK(Net::cs_vNodes);
                 for(auto pnode : Net::vNodes)
                     pnode->PushInventory(Net::CInv(Net::MSG_BLOCK, hash));
@@ -961,7 +965,11 @@ namespace Core
                 
                 /* Write the Valid Block to Chain. */
                 if(!pblock->Rewrite(pindex))
-                    return error("ProcessBlock() : Failed to Resolve Mutated Block");
+                    return error("ProcessBlock() : Failed to Resolve Mutated Block (rewrite)");
+                
+                LLD::CIndexDB indexdb("r+");
+                if(!indexdb.WriteBlockIndex(CDiskBlockIndex(pindex)))
+                    return error("ProcessBlock() : Failed to Resolve Mutated Block (index)");
                 
                 /* Change Invalid Flags to current block. */
                 mapInvalidBlocks[pblock->GetHash()] = pblock->SignatureHash();
