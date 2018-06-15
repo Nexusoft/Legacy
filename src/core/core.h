@@ -1480,7 +1480,7 @@ namespace Core
 		}
 		
 		
-        bool Rewrite(CBlockIndex* pindex);
+        bool Reindex(CBlockIndex* pindex);
 
 
 		bool WriteToDisk(unsigned int& nFileRet, unsigned int& nBlockPosRet)

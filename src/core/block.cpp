@@ -77,7 +77,7 @@ namespace Core
     }
     
     
-    bool CBlock::Rewrite(CBlockIndex* pindex)
+    bool CBlock::Reindex(CBlockIndex* pindex)
     {
         // Open history file to append
         CAutoFile fileout = CAutoFile(AppendBlockFile(pindex->nFile), SER_DISK, DATABASE_VERSION);
@@ -947,7 +947,7 @@ namespace Core
                 pindex->nTime = pblock->nTime;
                 
                 /* Write the Valid Block to Chain. */
-                if(!pblock->Rewrite(pindex))
+                if(!pblock->Reindex(pindex))
                     return error("ProcessBlock() : Failed to Resolve Mutated Block (rewrite)");
                 
                 /* Change Invalid Flags to current block. */

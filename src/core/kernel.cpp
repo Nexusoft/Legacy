@@ -323,6 +323,8 @@ namespace Core
             dInterestRate = 0.005;
         
         /** Check each Trust Key to See if we Own it if there is no Key. **/
+        unsigned int nBestTrust = 0;
+        uint576 cBestKey;
         for(std::map<uint576, CTrustKey>::iterator i = mapTrustKeys.begin(); i != mapTrustKeys.end() && vchTrustKey.empty(); ++i)
         {
                 
@@ -337,24 +339,30 @@ namespace Core
                 /** Extract the Key from the Script Signature. **/
                 uint576 cKey;
                 cKey.SetBytes(i->second.vchPubKey);
-                    
-                /** Assigned Extracted Key to Trust Pool. **/
-                if(GetArg("-verbose", 2) >= 0)
-                    printf("CTrustPool::HasTrustKey() : New Trust Key Extracted %s\n", cKey.ToString().substr(0, 20).c_str());
                 
-                vchTrustKey = i->second.vchPubKey;
-                
-                /** Set the Interest Rate from Key. **/
-                dInterestRate = cTrustPool.InterestRate(cKey, nTime);
-                
-                return true;
+                if(cTrustPool.Find(cKey).Age(GetUnifiedTimestamp()) > nBestTrust)
+                {
+                    nBestTrust = cTrustPool.Find(cKey).Age(GetUnifiedTimestamp());
+                    cBestKey   = cKey;
+                }
             }
         }
         
-        //if(vchTrustKey.empty())
-        //	printf("CTrustPool::HasTrustKey() : No Trust Key's in Trust Pool for Current Wallet.\n");
+        /* If a Trust key was Found. */
+        if(nBestTrust > 0)
+        {
+            /* Assigned Extracted Key to Trust Pool. */
+            if(GetArg("-verbose", 2) >= 0)
+                printf("CTrustPool::HasTrustKey() : Existing Trust Key Extracted %s\n", cBestKey.ToString().substr(0, 20).c_str());
+            
+            /* Set the Interest Rate from Key. */
+            vchTrustKey = mapTrustKeys[cBestKey].vchPubKey;
+            dInterestRate = cTrustPool.InterestRate(cBestKey, nTime);
+            
+            return true;
+        }
         
-        return !(vchTrustKey.empty());
+        return error("CTrustPool::HasTrustKey() : No Active Trust Key");
     }
     
     bool CTrustPool::IsValid(CBlock cBlock)
