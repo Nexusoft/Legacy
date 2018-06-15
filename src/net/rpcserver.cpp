@@ -361,7 +361,7 @@ namespace Net
 		{
 			Object obj;
 			
-            if(it->second.Expired(Core::pindexBest->GetBlockHash(), Core::pindexBest->pprev->GetBlockHash()))
+            if(it->second.Expired(0, Core::pindexBest->pprev->GetBlockHash()))
 				continue;
 				
 			/** Check the Wallet and Trust Keys in Trust Pool to see if we own any keys. **/
@@ -2517,7 +2517,7 @@ namespace Net
 			Wallet::NexusAddress address;
 			address.SetPubKey(i->second.vchPubKey);
 			if(pwalletMain->HaveKey(address))
-                result.push_back(Pair(address.ToString(), i->second.Expired(Core::pindexBest->GetBlockHash(), Core::pindexBest->pprev->GetBlockHash()) ? "TRUE" : "FALSE"));
+                result.push_back(Pair(address.ToString(), i->second.Expired(0, Core::pindexBest->pprev->GetBlockHash()) ? "TRUE" : "FALSE"));
 			
 		}
 

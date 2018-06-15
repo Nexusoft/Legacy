@@ -72,8 +72,7 @@ namespace Core
             pindexLastBest = pindexBest;
             nLastUpdate = GetUnifiedTimestamp();
         }
-        return (GetUnifiedTimestamp() - nLastUpdate < 10 &&
-                pindexBest->GetBlockTime() < GetUnifiedTimestamp() - 24 * 60 * 60);
+        return (pindexBest->GetBlockTime() < GetUnifiedTimestamp() - 6 * 60 * 60);
     }
     
     
@@ -938,6 +937,9 @@ namespace Core
         {
             if(mapInvalidBlocks.count(hash) && mapInvalidBlocks[hash] != pblock->SignatureHash())
             {
+                if (!pblock->CheckBlock())
+                    return error("ProcessBlock() : CheckBlock FAILED");
+            
                 printf("\u001b[31;1m ProcessBlock() : Mutated Block Signatures Detected... Rewriting \x1b[0m \n");
                 
                 /* Get current block index. */

@@ -310,7 +310,7 @@ namespace Core
             }
             
             /** Handle Expired Trust Key already declared. **/
-            if(mapTrustKeys[cKey].Expired(hashBestChain, pindexBest->pprev->GetBlockHash()))
+            if(mapTrustKeys[cKey].Expired(0, pindexBest->pprev->GetBlockHash()))
             {
                 vchTrustKey.clear();
                 return error("CTrustPool::HasTrustKey() : Current Trust Key is Expired.");
@@ -323,8 +323,7 @@ namespace Core
             dInterestRate = 0.005;
         
         /** Check each Trust Key to See if we Own it if there is no Key. **/
-        unsigned int nBestTrust = 0;
-        uint576 cBestKey;
+        CTrustKey keyBestTrust;
         for(std::map<uint576, CTrustKey>::iterator i = mapTrustKeys.begin(); i != mapTrustKeys.end() && vchTrustKey.empty(); ++i)
         {
                 
@@ -333,31 +332,29 @@ namespace Core
             address.SetPubKey(i->second.vchPubKey);
             if(pwalletMain->HaveKey(address))
             {
-                if(i->second.Expired(hashBestChain, pindexBest->pprev->GetBlockHash()))
+                if(i->second.Expired(0, pindexBest->pprev->GetBlockHash()))
                     continue;
                 
-                /** Extract the Key from the Script Signature. **/
-                uint576 cKey;
-                cKey.SetBytes(i->second.vchPubKey);
-                
-                if(cTrustPool.Find(cKey).Age(GetUnifiedTimestamp()) > nBestTrust)
+                if(i->second.Age(nTime) > keyBestTrust.Age(nTime))
                 {
-                    nBestTrust = cTrustPool.Find(cKey).Age(GetUnifiedTimestamp());
-                    cBestKey   = cKey;
+                    keyBestTrust = i->second;
+                    
+                    if(GetArg("-verbose", 0) >= 1)
+                        printf("CTrustPool::HasTrustKey() : Trying Trust Key %s\n", keyBestTrust.GetHash().ToString().c_str());
                 }
             }
         }
         
         /* If a Trust key was Found. */
-        if(nBestTrust > 0)
+        if(!keyBestTrust.IsNull())
         {
             /* Assigned Extracted Key to Trust Pool. */
             if(GetArg("-verbose", 2) >= 0)
-                printf("CTrustPool::HasTrustKey() : Existing Trust Key Extracted %s\n", cBestKey.ToString().substr(0, 20).c_str());
+                printf("CTrustPool::HasTrustKey() : Selected Trust Key %s\n", keyBestTrust.GetHash().ToString().c_str());
             
             /* Set the Interest Rate from Key. */
-            vchTrustKey = mapTrustKeys[cBestKey].vchPubKey;
-            dInterestRate = cTrustPool.InterestRate(cBestKey, nTime);
+            vchTrustKey = keyBestTrust.vchPubKey;
+            dInterestRate = cTrustPool.InterestRate(keyBestTrust.GetKey(), nTime);
             
             return true;
         }
@@ -876,6 +873,9 @@ namespace Core
     /** Key is Expired if it is Invalid or Time between Network Best Block and Best Previous is Greater than Expiration Time. **/
     uint64 CTrustKey::Age(unsigned int nTime) const 
     { 
+        if(nGenesisTime == 0)
+            return 0;
+        
         /* Catch overflow attacks. */
         if(nGenesisTime > nTime)
             return 1;
@@ -964,7 +964,7 @@ namespace Core
             if(cTrustPool.Exists(cKey))
             {
                 nTrustAge = cTrustPool.Find(cKey).Age(pindexBest->GetBlockTime());
-                nBlockAge = cTrustPool.Find(cKey).BlockAge(hashBestChain, baseBlock.hashPrevBlock);
+                nBlockAge = cTrustPool.Find(cKey).BlockAge(0, baseBlock.hashPrevBlock);
                     
                 /* Trust Weight Reaches Maximum at 30 day Limit. */
                 nTrustWeight = min(17.5, (((16.5 * log(((2.0 * nTrustAge) / (60 * 60 * 24 * 28)) + 1.0)) / log(3))) + 1.0);

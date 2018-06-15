@@ -698,6 +698,17 @@ namespace Core
 			return strprintf("Hash = %s, Key = %s, Genesis = %s, Tx = %s, Time = %u, Age = %u", GetHash().ToString().c_str(), cKey.ToString().c_str(), hashGenesisBlock.ToString().c_str(), hashGenesisTx.ToString().c_str(), nGenesisTime, Age(GetUnifiedTimestamp()));
 		}
 		
+		uint576 GetKey()
+        {
+            if(IsNull())
+                return 0;
+            
+            uint576 cKey;
+            cKey.SetBytes(vchPubKey);
+            
+            return cKey;
+        }
+		
 		void Print()
 		{
 			printf("CTrustKey(%s)\n", ToString().c_str());
