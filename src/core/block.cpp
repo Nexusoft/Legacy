@@ -538,6 +538,7 @@ namespace Core
 
             
         /* Find Previous Block. */
+        pindexNew->phashBlock = &hash;
         map<uint1024, CBlockIndex*>::iterator miPrev = mapBlockIndex.find(hashPrevBlock);
         if (miPrev != mapBlockIndex.end())
             pindexNew->pprev = (*miPrev).second;
@@ -552,7 +553,7 @@ namespace Core
         pindexNew->nChannelHeight = (pindexPrev ? pindexPrev->nChannelHeight : 0) + 1;
         
         
-        /** Compute the Released Reserves. **/
+        /* Compute the Released Reserves. */
         for(int nType = 0; nType < 3; nType++)
         {
             if(pindexNew->IsProofOfWork() && pindexPrev)
@@ -574,7 +575,7 @@ namespace Core
                 
         }
                                                 
-        /** Add the Pending Checkpoint into the Blockchain. **/
+        /* Add the Pending Checkpoint into the Blockchain. */
         if(!pindexNew->pprev || HardenCheckpoint(pindexNew))
         {
             pindexNew->PendingCheckpoint = make_pair(pindexNew->nHeight, pindexNew->GetBlockHash());
