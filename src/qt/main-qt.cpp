@@ -191,25 +191,16 @@ int main(int argc, char *argv[])
         msgBox.setWindowTitle("Terms and Conditions");
         msgBox.setText("Please read and accept the terms and conditions:");
         msgBox.setInformativeText(
-            "MIT License Copyright (c) 2017 The Nexus Core Developers\n\n"
-
-            "Permission is hereby granted, free of charge, to any person obtaining a copy"
-            "of this software and associated documentation files (the \"Software\"), to deal"
-            "in the Software without restriction, including without limitation the rights"
-            "to use, copy, modify, merge, publish, distribute, sublicense, and/or sell"
-            "copies of the Software, and to permit persons to whom the Software is"
-            "furnished to do so, subject to the following conditions:\n\n"
-
-            "The above copyright notice and this permission notice shall be included in all"
-            "copies or substantial portions of the Software.\n\n"
-
-            "THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR"
-            "IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,"
-            "FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE"
-            "AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER"
-            "LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,"
-            "OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE"
-            "SOFTWARE.");
+        "THE NEXUS EMBASSY HAS NOT DEVELOPED OR CREATED THE SOFTWARE USED IN THIS WALLET."
+        "THE SOFTWARE WAS CREATED ON AN OPEN SOURCED BASIS BY MEMBERS OF THE COMMUNITY.  DUE TO THIS, "
+        "THE NEXUS EMBASSY DOES NOT SPECIFICALLY ENDORSE THIS WALLET AND PLEASE USE AT YOUR OWN RISK. "
+        "THE USE OF THIS WALLET, AS WELL AS ANY WALLET MAY RESULT IN THE LOSS OF YOUR TOKENS. "
+        "USE AT YOUR OWN RISK.\n\n"
+        "THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING "
+        "BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND "
+        "NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, "
+        "DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, "
+        "OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.");
 
         msgBox.setStandardButtons(QMessageBox::Cancel | QMessageBox::Ok);
         int ret = msgBox.exec();
