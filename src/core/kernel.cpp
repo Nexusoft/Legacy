@@ -318,10 +318,6 @@ namespace Core
             /* Set the Interest Rate for the GUI. */
             dInterestRate = cTrustPool.InterestRate(cKey, nTime);
             
-            /* Assigned Extracted Key to Trust Pool. */
-            if(GetArg("-verbose", 0) >= 0)
-                printf("CTrustPool::HasTrustKey() : Active Trust Key %s\n", HexStr(vchTrustKey.begin(), vchTrustKey.end()).c_str());
-            
             return true;
         }
         else
@@ -1036,6 +1032,10 @@ namespace Core
             /* Retry if coinstake wasn't created properly. */
             if(i != nTotalWeight)
                 continue;
+            
+            /* Assigned Extracted Key to Trust Pool. */
+            if(GetArg("-verbose", 0) >= 0)
+                printf("Stake Minter : Active Trust Key %s\n", HexStr(cTrustPool.vchTrustKey.begin(), cTrustPool.vchTrustKey.end()).c_str());
             
             if(GetArg("-verbose", 0) >= 2)
             {
