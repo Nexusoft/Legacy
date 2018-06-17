@@ -283,9 +283,6 @@ namespace Core
         
         nAverageAge /= (vin.size() - 1);
         
-        if(GetArg("-verbose", 0) >= 2)
-            printf("CTransaction::GetCoinstakeInterest() : Total Nexus to Stake %f Generating %f Nexus from Average Age of %u Seconds at %f %% Variable Interest\n", (double)nTotalCoins / COIN, (double)nInterest / COIN, (unsigned int)nAverageAge, nInterestRate * 100.0);
-        
         return true;
     }
     
@@ -302,22 +299,26 @@ namespace Core
             uint576 cKey;
             cKey.SetBytes(vchTrustKey);
             
-            /** Handle if the Trust Pool does not have current Assigned Trust Key. **/
+            /* Handle if the Trust Pool does not have current Assigned Trust Key. */
             if(!Exists(cKey))
             {
                 vchTrustKey.clear();
+                
                 return error("CTrustPool::HasTrustKey() : Current Trust Key not in Pool.");
             }
             
-            /** Handle Expired Trust Key already declared. **/
+            /* Handle Expired Trust Key already declared. */
             if(mapTrustKeys[cKey].Expired(0, pindexBest->pprev->GetBlockHash()))
             {
                 vchTrustKey.clear();
+                
                 return error("CTrustPool::HasTrustKey() : Current Trust Key is Expired.");
             }
             
-            /** Set the Interest Rate for the GUI. **/
+            /* Set the Interest Rate for the GUI. */
             dInterestRate = cTrustPool.InterestRate(cKey, nTime);
+            
+            return true;
         }
         else
             dInterestRate = 0.005;
@@ -327,7 +328,7 @@ namespace Core
         for(std::map<uint576, CTrustKey>::iterator i = mapTrustKeys.begin(); i != mapTrustKeys.end() && vchTrustKey.empty(); ++i)
         {
                 
-            /** Check the Wallet and Trust Keys in Trust Pool to see if we own any keys. **/
+            /* Check the Wallet and Trust Keys in Trust Pool to see if we own any keys. */
             Wallet::NexusAddress address;
             address.SetPubKey(i->second.vchPubKey);
             if(pwalletMain->HaveKey(address))
@@ -335,12 +336,12 @@ namespace Core
                 if(i->second.Expired(0, pindexBest->pprev->GetBlockHash()))
                     continue;
                 
-                if(i->second.Age(nTime) > keyBestTrust.Age(nTime))
+                if(i->second.Age(nTime) > keyBestTrust.Age(nTime) || keyBestTrust.IsNull())
                 {
                     keyBestTrust = i->second;
                     
                     if(GetArg("-verbose", 0) >= 1)
-                        printf("CTrustPool::HasTrustKey() : Trying Trust Key %s\n", keyBestTrust.GetHash().ToString().c_str());
+                        printf("CTrustPool::HasTrustKey() : Trying Trust Key %s\n", HexStr(keyBestTrust.vchPubKey.begin(), keyBestTrust.vchPubKey.end()).c_str());
                 }
             }
         }
@@ -349,8 +350,11 @@ namespace Core
         if(!keyBestTrust.IsNull())
         {
             /* Assigned Extracted Key to Trust Pool. */
-            if(GetArg("-verbose", 2) >= 0)
-                printf("CTrustPool::HasTrustKey() : Selected Trust Key %s\n", keyBestTrust.GetHash().ToString().c_str());
+            if(GetArg("-verbose", 0) >= 0) {
+                printf("CTrustPool::HasTrustKey() : Selected Trust Key %s\n", HexStr(keyBestTrust.vchPubKey.begin(), keyBestTrust.vchPubKey.end()).c_str());
+                
+                keyBestTrust.Print();
+            }
             
             /* Set the Interest Rate from Key. */
             vchTrustKey = keyBestTrust.vchPubKey;
@@ -359,7 +363,7 @@ namespace Core
             return true;
         }
         
-        return error("CTrustPool::HasTrustKey() : No Active Trust Key");
+        return false;
     }
     
     bool CTrustPool::IsValid(CBlock cBlock)
@@ -900,7 +904,7 @@ namespace Core
         
         /* Make sure there aren't timestamp overflows. */
         if(mapBlockIndex[hashBlockLast]->GetBlockTime() > mapBlockIndex[hashPrevBlock]->GetBlockTime())
-            return error("CTrustKey::BlockAge() : Last Trust Block Time %u > Last Block Time %u", (unsigned int) mapBlockIndex[hashBlockLast]->GetBlockTime(), (unsigned int) mapBlockIndex[hashPrevBlock]->GetBlockTime());
+            return BlockAge(hashBlockLast, hashPrevBlock); //recursively look back from last back if block times not satisfied
         
         /* Block Age is Time to Previous Block's Time. */
         return (uint64)(mapBlockIndex[hashPrevBlock]->GetBlockTime() - mapBlockIndex[hashBlockLast]->GetBlockTime());
@@ -964,7 +968,7 @@ namespace Core
             if(cTrustPool.Exists(cKey))
             {
                 nTrustAge = cTrustPool.Find(cKey).Age(pindexBest->GetBlockTime());
-                nBlockAge = cTrustPool.Find(cKey).BlockAge(0, baseBlock.hashPrevBlock);
+                nBlockAge = cTrustPool.Find(cKey).BlockAge(baseBlock.hashPrevBlock, baseBlock.hashPrevBlock);
                     
                 /* Trust Weight Reaches Maximum at 30 day Limit. */
                 nTrustWeight = min(17.5, (((16.5 * log(((2.0 * nTrustAge) / (60 * 60 * 24 * 28)) + 1.0)) / log(3))) + 1.0);
@@ -1029,8 +1033,15 @@ namespace Core
             if(i != nTotalWeight)
                 continue;
             
+            /* Assigned Extracted Key to Trust Pool. */
+            if(GetArg("-verbose", 0) >= 0)
+                printf("Stake Minter : Active Trust Key %s\n", HexStr(cTrustPool.vchTrustKey.begin(), cTrustPool.vchTrustKey.end()).c_str());
+            
             if(GetArg("-verbose", 0) >= 2)
+            {
                 printf("Stake Minter : Created New Block %s\n", block[0].GetHash().ToString().substr(0, 20).c_str());
+                printf("Stake Minter : Total Nexus to Stake %f at %f %% Variable Interest\n", (double)block[0].vtx[0].GetValueOut() / COIN, cTrustPool.InterestRate(cKey, pindexBest->GetBlockTime()) * 100.0);
+            }
                 
                 
             /* Set the Reporting Variables for the Qt. */
