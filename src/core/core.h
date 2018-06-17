@@ -774,7 +774,21 @@ namespace Core
 
 		// Denial-of-service detection:
 		mutable int nDoS;
-		bool DoS(int nDoSIn, bool fIn) const { nDoS += nDoSIn; return fIn; }
+		bool DoS(int nDoSIn, bool fIn) const 
+		{ 
+            nDoS += nDoSIn; 
+            
+            return fIn; 
+        }
+        
+        // logging for core validation errors
+        mutable std::string strValidationError;
+		bool Invalid(std::string strMessage, bool fIn) const 
+		{ 
+            strValidationError = strMessage;
+            
+            return fIn;
+        }
 
 		CTransaction()
 		{
@@ -799,6 +813,7 @@ namespace Core
 			vout.clear();
 			nLockTime = 0;
 			nDoS = 0;  // Denial-of-service prevention
+			strValidationError = "";
 		}
 
 		bool IsNull() const
@@ -1317,7 +1332,21 @@ namespace Core
 
 		// Denial-of-service detection:
 		mutable int nDoS;
-		bool DoS(int nDoSIn, bool fIn) const { nDoS += nDoSIn; return fIn; }
+		bool DoS(int nDoSIn, bool fIn) const 
+		{ 
+            nDoS += nDoSIn; 
+            
+            return fIn; 
+        }
+        
+        // logging for core validation errors
+        mutable std::string strValidationError;
+		bool Invalid(std::string strMessage, bool fIn) const 
+		{ 
+            strValidationError = strMessage; 
+            
+            return fIn;
+        }
 
 		CBlock()
 		{
@@ -1375,6 +1404,8 @@ namespace Core
 			vchBlockSig.clear();
 			vMerkleTree.clear();
 			nDoS = 0;
+            
+            strValidationError = "";
 		}
 		
 		void SetChannel(unsigned int nNewChannel)

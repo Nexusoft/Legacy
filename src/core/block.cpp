@@ -239,7 +239,7 @@ namespace Core
                 nValueOut += nTxValueOut;
                 
                 if (!tx.ConnectInputs(indexdb, mapInputs, mapQueuedChanges, posThisTx, pindex, true, false))
-                    return error("ConnectBlock() : Failed to Connect Inputs...");
+                    return Invalid(tx.strValidationError, error("ConnectBlock() : Failed to Connect Inputs..."));
             }
 
             nIterator++;
@@ -859,12 +859,12 @@ namespace Core
 
         /** Check that the nBits match the current Difficulty. **/
         if (nBits != GetNextTargetRequired(pindexPrev, GetChannel(), !IsInitialBlockDownload()))
-            return DoS(100, error("AcceptBlock() : incorrect proof-of-work/proof-of-stake"));
+            return Invalid("bits:mismatch", error("AcceptBlock() : incorrect proof-of-work/proof-of-stake"));
 
             
         /** Check That Block Timestamp is not before previous block. **/
         if (GetBlockTime() <= pindexPrev->GetBlockTime())
-            return error("AcceptBlock() : block's timestamp too early Block: %" PRId64 " Prev: %" PRId64 "", GetBlockTime(), pindexPrev->GetBlockTime());
+            return Invalid("timestamp:early", error("AcceptBlock() : block's timestamp too early Block: %" PRId64 " Prev: %" PRId64 "", GetBlockTime(), pindexPrev->GetBlockTime()));
         
         
         /* Check that Block is Descendant of Hardened Checkpoints. */
@@ -883,16 +883,16 @@ namespace Core
                 nMiningReward += vtx[0].vout[nIndex].nValue;
                     
             /* Check that the Mining Reward Matches the Coinbase Calculations. */
-            if (round_coin_digits(nMiningReward, 3) != round_coin_digits(GetCoinbaseReward(pindexPrev, GetChannel(), 0), 3))
-                return error("AcceptBlock() : miner reward mismatch %" PRId64 " : %" PRId64 "", round_coin_digits(nMiningReward, 3), round_coin_digits(GetCoinbaseReward(pindexPrev, GetChannel(), 0), 3));
+            if (round_coin_digits(nMiningReward, 5) != round_coin_digits(GetCoinbaseReward(pindexPrev, GetChannel(), 0), 5))
+                return Invalid("reward:mismatch", error("AcceptBlock() : miner reward mismatch %" PRId64 " : %" PRId64 "", round_coin_digits(nMiningReward, 5), round_coin_digits(GetCoinbaseReward(pindexPrev, GetChannel(), 0), 5)));
                     
             /* Check that the Exchange Reward Matches the Coinbase Calculations. */
-            if (round_coin_digits(vtx[0].vout[nSize - 2].nValue, 3) != round_coin_digits(GetCoinbaseReward(pindexPrev, GetChannel(), 1), 3))
-                return error("AcceptBlock() : exchange reward mismatch %" PRId64 " : %" PRId64 "", round_coin_digits(vtx[0].vout[nSize - 2].nValue, 3), round_coin_digits(GetCoinbaseReward(pindexPrev, GetChannel(), 1), 3));
+            if (round_coin_digits(vtx[0].vout[nSize - 2].nValue, 5) != round_coin_digits(GetCoinbaseReward(pindexPrev, GetChannel(), 1), 5))
+                return Invalid("reward:mismatch", error("AcceptBlock() : ambassador reward mismatch %" PRId64 " : %" PRId64 "", round_coin_digits(vtx[0].vout[nSize - 2].nValue, 5), round_coin_digits(GetCoinbaseReward(pindexPrev, GetChannel(), 1), 5)));
                         
             /* Check that the Developer Reward Matches the Coinbase Calculations. */
-            if (round_coin_digits(vtx[0].vout[nSize - 1].nValue, 3) != round_coin_digits(GetCoinbaseReward(pindexPrev, GetChannel(), 2), 3))
-                return error("AcceptBlock() : developer reward mismatch %" PRId64 " : %" PRId64 "", round_coin_digits(vtx[0].vout[nSize - 1].nValue, 3), round_coin_digits(GetCoinbaseReward(pindexPrev, GetChannel(), 2), 3));
+            if (round_coin_digits(vtx[0].vout[nSize - 1].nValue, 5) != round_coin_digits(GetCoinbaseReward(pindexPrev, GetChannel(), 2), 5))
+                return Invalid("reward:mismatch", error("AcceptBlock() : developer reward mismatch %" PRId64 " : %" PRId64 "", round_coin_digits(vtx[0].vout[nSize - 1].nValue, 5), round_coin_digits(GetCoinbaseReward(pindexPrev, GetChannel(), 2), 5)));
                     
         }
         
@@ -994,34 +994,17 @@ namespace Core
         
         if (!pblock->AcceptBlock())
         {
-            if(pblock->IsProofOfWork() && pblock->nHeight > 0 && pblock->nVersion >= 3)
+            
+            /* Check validation error message. */
+            if(pblock->strValidationError != "")
             {
-                printf("ProcessBlock() : Checking Invalid Proof of Work Block\n");
+                std::vector<Net::CInv> vInv;
                 
-                /* Get previous block. */
-                CBlockIndex* pindexPrev = mapBlockIndex[pblock->hashPrevBlock];
-
-                /* Add up the Miner Rewards from Coinbase Tx Outputs. */
-                unsigned int nSize = pblock->vtx[0].vout.size();
-                
-                int64 nMiningReward = 0;
-                for(int nIndex = 0; nIndex < nSize - 2; nIndex++)
-                    nMiningReward += pblock->vtx[0].vout[nIndex].nValue;
-                        
-                /* Check that time sensitive rules are not violated. */
-                if (nMiningReward != GetCoinbaseReward(pindexPrev, pblock->GetChannel(), 0)
-                    || pblock->vtx[0].vout[nSize - 2].nValue != GetCoinbaseReward(pindexPrev, pblock->GetChannel(), 1)
-                    || pblock->vtx[0].vout[nSize - 1].nValue != GetCoinbaseReward(pindexPrev, pblock->GetChannel(), 2)
-                    || pblock->nBits != GetNextTargetRequired(pindexPrev, pblock->GetChannel(), false))
+                /* Check last two blocks for invalidity. */
+                if(pblock->strValidationError == "reward:mismatch")
                 {
-                    
-                    printf("ProcessBlock() : Flagged Invalid Block nHeight=%u, nHash=%s\n", pblock->nHeight, pblock->GetHash().ToString().c_str());
-                    
-                    mapInvalidBlocks[pblock->GetHash()] = pblock->SignatureHash();
-                    std::vector<Net::CInv> vInv = { Net::CInv(Net::MSG_BLOCK, pblock->GetHash()) };
-                    
                     const CBlockIndex* pindexFirst = pindexBest;
-                    for(int nIndex = 5; nIndex > 0; nIndex--)
+                    for(int index = 0; index < 2; index++)
                     {
                         const CBlockIndex* pindexLast = GetLastChannelIndex(pindexFirst->pprev, pblock->GetChannel());
                         if(!pindexLast->pprev)
@@ -1029,28 +1012,134 @@ namespace Core
                         
                         CBlock block;
                         if(!block.ReadFromDisk(mapBlockIndex[pindexLast->GetBlockHash()]))
-                        {
-                            printf("ProcessBlock() : Failed To Read from Disk %s\n", pindexLast->GetBlockHash().ToString().c_str());
-                            
-                            break;
-                        }
+                            return error("ProcessBlock() : (bits:mismatch) failed To Read from Disk %s\n", pindexLast->GetBlockHash().ToString().c_str());
                         
+                        /* Add to Map Invalid Blocks. */
                         mapInvalidBlocks[pindexLast->GetBlockHash()] = block.SignatureHash();
                         
-                        printf("ProcessBlock() : Flagged Invalid Block nHeight=%u, nHash=%s\n", block.nHeight, block.GetHash().ToString().c_str());
-                            
-                        pindexFirst = pindexLast;
-                        
+                        /* Push to Inventory */
                         vInv.push_back(Net::CInv(Net::MSG_BLOCK, block.GetHash()));
+                        
+                        /* Iterate Backwards */
+                        pindexFirst = pindexLast;
                     }
+                }
+                
+                /* Check the genesis for invalidity. */
+                else if(pblock->strValidationError == "interest:mismatch")
+                {
+                    /* Extract the Trust Key from the Block. */
+                    vector< std::vector<unsigned char> > vKeys;
+                    Wallet::TransactionType keyType;
+                    if (!Wallet::Solver(pblock->vtx[0].vout[0].scriptPubKey, keyType, vKeys))
+                        return error("ProcessBlock() : (interest:mismatch) failed To Solve Trust Key Script.");
+
+                    /* Ensure the Key is Public Key. No Pay Hash or Script Hash for Trust Keys. */
+                    if (keyType != Wallet::TX_PUBKEY)
+                        return error("ProcessBlock() : (interest:mismatch) trust Key must be of Public Key Type Created from Keypool.");
+                        
+                    /* Set the Public Key Integer Key from Bytes. */
+                    uint576 cKey;
+                    cKey.SetBytes(vKeys[0]);
                     
-                    printf("ProcessBlock() : Asking Nodes for Blocks %s from stop 000000\n", pindexFirst->GetBlockHash().ToString().c_str());
+                    /* Check the Trust Pool for Trust Key */
+                    if(!cTrustPool.mapTrustKeys.count(cKey))
+                        return error("ProcessBlock() : (interest:mismatch) trust key does not exist");
+        
+                    /* Read the Block from the Disk. */
+                    CBlock block;
+                    if(!block.ReadFromDisk(mapBlockIndex[cTrustPool.mapTrustKeys[cKey].hashGenesisBlock], true))
+                        return error("ProcessBlock() : (interest:mismatch) could not Read Genesis from Disk");
                     
+                    /* Add to Map Invalid Blocks. */
+                    mapInvalidBlocks[block.GetHash()] = block.SignatureHash();
+                    
+                    /* Push to Inventory */
+                    vInv.push_back(Net::CInv(Net::MSG_BLOCK, block.GetHash()));
+                }
+                
+                /* Check the last 5 blocks for invalidity. */
+                else if(pblock->strValidationError == "bits:mismatch")
+                {
+                    const CBlockIndex* pindexFirst = pindexBest;
+                    for(int index = 0; index < 5; index++)
+                    {
+                        const CBlockIndex* pindexLast = GetLastChannelIndex(pindexFirst->pprev, pblock->GetChannel());
+                        if(!pindexLast->pprev)
+                            break;
+                        
+                        CBlock block;
+                        if(!block.ReadFromDisk(mapBlockIndex[pindexLast->GetBlockHash()]))
+                            return error("ProcessBlock() : (bits:mismatch) failed To Read from Disk %s\n", pindexLast->GetBlockHash().ToString().c_str());
+                        
+                        /* Add to Map Invalid Blocks. */
+                        mapInvalidBlocks[block.GetHash()] = block.SignatureHash();
+                        
+                        /* Push to Inventory */
+                        vInv.push_back(Net::CInv(Net::MSG_BLOCK, block.GetHash()));
+                        
+                        /* Iterate Backwards */
+                        pindexFirst = pindexLast;
+                    }
+                }
+                
+                /* Check the last trust block. */
+                else if(pblock->strValidationError == "threshold:invalid")
+                {
+                    /* Extract the Trust Key from Block. */
+                    vector< std::vector<unsigned char> > vKeys;
+                    Wallet::TransactionType keyType;
+                    if (!Wallet::Solver(pblock->vtx[0].vout[0].scriptPubKey, keyType, vKeys))
+                        return error("ProcessBlock() : (threshold:invalid) failed To Solve Trust Key Script.");
+
+                    /* Ensure the Key is Public Key. No Pay Hash or Script Hash for Trust Keys. */
+                    if (keyType != Wallet::TX_PUBKEY)
+                        return error("ProcessBlock() : (threshold:invalid) trust Key must be of Public Key Type Created from Keypool.");
+                        
+                    /* Set the Public Key Integer Key from Bytes. */
+                    uint576 cKey;
+                    cKey.SetBytes(vKeys[0]);
+                    
+                    /* Check the Trust Pool for Trust Key */
+                    if(!cTrustPool.mapTrustKeys.count(cKey))
+                        return error("ProcessBlock() : (threshold:invalid) trust key does not exist");
+        
+                    /* Read the Block from the Disk. */
+                    CBlock block;
+                    if(!block.ReadFromDisk(mapBlockIndex[cTrustPool.mapTrustKeys[cKey].Back()], true))
+                        return error("ProcessBlock() : (threshold:invalid) could not read back from disk");
+                    
+                    /* Add to Map Invalid Blocks. */
+                    mapInvalidBlocks[block.GetHash()] = block.SignatureHash();
+                    
+                    /* Push to Inventory */
+                    vInv.push_back(Net::CInv(Net::MSG_BLOCK, block.GetHash()));
+                }
+                
+                /* Check the previous block. */
+                else if(pblock->strValidationError == "timestamp:early")
+                {
+                    CBlock block;
+                    if(!block.ReadFromDisk(mapBlockIndex[pblock->hashPrevBlock]))
+                        return error("ProcessBlock() : (previous block) failed to read from disk");
+                    
+                    /* Add to Map Invalid Blocks. */
+                    mapInvalidBlocks[block.GetHash()] = block.SignatureHash();
+                    
+                    /* Push to Inventory */
+                    vInv.push_back(Net::CInv(Net::MSG_BLOCK, block.GetHash()));
+                }
+                
+                /* If invalid blocks were flagged and found. */
+                if(vInv.size() > 0)
+                {
+                    for(auto inv : vInv)
+                        printf("ProcessBlock() : Flagged Invalid Block nHash=%s\n", inv.hash.ToString().c_str());
+                        
+                    //ask your neighborhood nodes for the list of possible invalid blocks
                     LOCK(Net::cs_vNodes);
                     for(auto pnode : Net::vNodes)
                         pnode->PushMessage("getdata", vInv);
-                    
-                    return error("ProcessBlock() : Found Invalid Block");
                 }
             }
             
