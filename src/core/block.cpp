@@ -883,16 +883,16 @@ namespace Core
                 nMiningReward += vtx[0].vout[nIndex].nValue;
                     
             /* Check that the Mining Reward Matches the Coinbase Calculations. */
-            if (round_coin_digits(nMiningReward, 5) != round_coin_digits(GetCoinbaseReward(pindexPrev, GetChannel(), 0), 5))
-                return Invalid("reward:mismatch", error("AcceptBlock() : miner reward mismatch %" PRId64 " : %" PRId64 "", round_coin_digits(nMiningReward, 5), round_coin_digits(GetCoinbaseReward(pindexPrev, GetChannel(), 0), 5)));
+            if (round_coin_digits(nMiningReward, 6) != round_coin_digits(GetCoinbaseReward(pindexPrev, GetChannel(), 0), 6))
+                return Invalid("reward:mismatch", error("AcceptBlock() : miner reward mismatch %" PRId64 " : %" PRId64 "", round_coin_digits(nMiningReward, 6), round_coin_digits(GetCoinbaseReward(pindexPrev, GetChannel(), 0), 6)));
                     
             /* Check that the Exchange Reward Matches the Coinbase Calculations. */
-            if (round_coin_digits(vtx[0].vout[nSize - 2].nValue, 5) != round_coin_digits(GetCoinbaseReward(pindexPrev, GetChannel(), 1), 5))
-                return Invalid("reward:mismatch", error("AcceptBlock() : ambassador reward mismatch %" PRId64 " : %" PRId64 "", round_coin_digits(vtx[0].vout[nSize - 2].nValue, 5), round_coin_digits(GetCoinbaseReward(pindexPrev, GetChannel(), 1), 5)));
+            if (round_coin_digits(vtx[0].vout[nSize - 2].nValue, 6) != round_coin_digits(GetCoinbaseReward(pindexPrev, GetChannel(), 1), 6))
+                return Invalid("reward:mismatch", error("AcceptBlock() : ambassador reward mismatch %" PRId64 " : %" PRId64 "", round_coin_digits(vtx[0].vout[nSize - 2].nValue, 6), round_coin_digits(GetCoinbaseReward(pindexPrev, GetChannel(), 1), 6)));
                         
             /* Check that the Developer Reward Matches the Coinbase Calculations. */
-            if (round_coin_digits(vtx[0].vout[nSize - 1].nValue, 5) != round_coin_digits(GetCoinbaseReward(pindexPrev, GetChannel(), 2), 5))
-                return Invalid("reward:mismatch", error("AcceptBlock() : developer reward mismatch %" PRId64 " : %" PRId64 "", round_coin_digits(vtx[0].vout[nSize - 1].nValue, 5), round_coin_digits(GetCoinbaseReward(pindexPrev, GetChannel(), 2), 5)));
+            if (round_coin_digits(vtx[0].vout[nSize - 1].nValue, 6) != round_coin_digits(GetCoinbaseReward(pindexPrev, GetChannel(), 2), 6))
+                return Invalid("reward:mismatch", error("AcceptBlock() : developer reward mismatch %" PRId64 " : %" PRId64 "", round_coin_digits(vtx[0].vout[nSize - 1].nValue, 6), round_coin_digits(GetCoinbaseReward(pindexPrev, GetChannel(), 2), 6)));
                     
         }
         
@@ -1133,8 +1133,10 @@ namespace Core
                 /* If invalid blocks were flagged and found. */
                 if(vInv.size() > 0)
                 {
+                    printf("\x1b[31m checking block signatures from invalid state: %s\x1b[0m\n", pblock->strValidationError.c_str());
+                    
                     for(auto inv : vInv)
-                        printf("ProcessBlock() : Flagged Invalid Block nHash=%s\n", inv.hash.ToString().c_str());
+                        printf("Flagged Invalid Block nHash=%s\n", inv.hash.ToString().c_str());
                         
                     //ask your neighborhood nodes for the list of possible invalid blocks
                     LOCK(Net::cs_vNodes);
