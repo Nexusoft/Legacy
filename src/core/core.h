@@ -813,7 +813,8 @@ namespace Core
 			vout.clear();
 			nLockTime = 0;
 			nDoS = 0;  // Denial-of-service prevention
-			strValidationError = "";
+			
+			strValidationError = std::string("");
 		}
 
 		bool IsNull() const
@@ -1405,7 +1406,7 @@ namespace Core
 			vMerkleTree.clear();
 			nDoS = 0;
             
-            strValidationError = "";
+            strValidationError = std::string("");
 		}
 		
 		void SetChannel(unsigned int nNewChannel)
