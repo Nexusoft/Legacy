@@ -1,5 +1,5 @@
 #include "index.h"
-#include "core.h"
+#include "../core/core.h"
 
 /** Lower Level Database Name Space. **/
 namespace LLD
