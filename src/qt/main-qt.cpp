@@ -181,8 +181,9 @@ int main(int argc, char *argv[])
 
     // Terms and Conditions
     QDir dir;
-    QString termsPath = dir.currentPath();
-    termsPath.append("/Terms Accepted");
+    QString termsPath;
+    termsPath.append(GetDefaultDataDir().string().c_str());
+    termsPath.append("/.license");
     QFile file(termsPath);
 
     if (!file.exists())
@@ -213,12 +214,15 @@ int main(int argc, char *argv[])
             }
             case QMessageBox::Ok:
             {
-                QString filename="Terms Accepted";
-                QFile file(filename);
                 if (file.open(QIODevice::ReadWrite))
                 {
 
                 }
+		#if defined(WIN32)
+                LPCWSTR licenseFile = (const wchar_t*) termsPath.utf16();
+                int attr = GetFileAttributes(licenseFile);
+                SetFileAttributes(licenseFile, attr | FILE_ATTRIBUTE_HIDDEN);
+                #endif
             }
             default:
             // should never be reached
