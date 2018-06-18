@@ -308,7 +308,7 @@ namespace Core
             }
             
             /* Handle Expired Trust Key already declared. */
-            if(mapTrustKeys[cKey].Expired(0, pindexBest->pprev->GetBlockHash()))
+            if(mapTrustKeys[cKey].Expired(0, pindexBest->GetBlockHash()))
             {
                 vchTrustKey.clear();
                 
@@ -333,15 +333,15 @@ namespace Core
             address.SetPubKey(i->second.vchPubKey);
             if(pwalletMain->HaveKey(address))
             {
-                if(i->second.Expired(0, pindexBest->pprev->GetBlockHash()))
+                if(i->second.Expired(0, pindexBest->GetBlockHash()))
                     continue;
                 
                 if(i->second.Age(nTime) > keyBestTrust.Age(nTime) || keyBestTrust.IsNull())
                 {
                     keyBestTrust = i->second;
                     
-                    if(GetArg("-verbose", 0) >= 1)
-                        printf("CTrustPool::HasTrustKey() : Trying Trust Key %s\n", HexStr(keyBestTrust.vchPubKey.begin(), keyBestTrust.vchPubKey.end()).c_str());
+                    if(GetArg("-verbose", 0) >= 0)
+                        printf("CTrustPool::HasTrustKey() : Checking Trust Key %s\n", HexStr(keyBestTrust.vchPubKey.begin(), keyBestTrust.vchPubKey.end()).c_str());
                 }
             }
         }
@@ -892,8 +892,8 @@ namespace Core
     uint64 CTrustKey::BlockAge(uint1024 hashThisBlock, uint1024 hashPrevBlock) const
     {
         /* Genesis Transaction Block Age is Time to Genesis Time. */
-        if(hashPrevBlocks.size() == 1 || !mapBlockIndex.count(hashPrevBlock))
-            return 0;
+        if(!mapBlockIndex.count(hashPrevBlock))
+            return error("CTrustKey::BlockAge() : %s not in Map Block Index", hashPrevBlock.ToString().c_str());
         
         /* Catch overflow attacks. Should be caught in verify stake but double check here. */
         if(nGenesisTime > mapBlockIndex[hashPrevBlock]->GetBlockTime())
@@ -1049,7 +1049,7 @@ namespace Core
             dBlockWeight = nBlockWeight;
             
             
-            if(GetArg("-verbose", 0) >= 0)			
+            if(GetArg("-verbose", 0) >= 0)
                 printf("Stake Minter : Staking at Total Weight %u | Trust Weight %f | Block Weight %f | Coin Age %" PRIu64 " | Trust Age %" PRIu64 "| Block Age %" PRIu64 "\n", nTotalWeight, nTrustWeight, nBlockWeight, nCoinAge, nTrustAge, nBlockAge);
             
             bool fFound = false;
