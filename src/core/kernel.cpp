@@ -1034,7 +1034,7 @@ namespace Core
                 continue;
             
             /* Assigned Extracted Key to Trust Pool. */
-            if(GetArg("-verbose", 0) >= 0)
+            if(GetArg("-verbose", 0) >= 0 && cTrustPool.Exists(cKey))
                 printf("Stake Minter : Active Trust Key %s\n", HexStr(cTrustPool.vchTrustKey.begin(), cTrustPool.vchTrustKey.end()).c_str());
             
             if(GetArg("-verbose", 0) >= 2)
