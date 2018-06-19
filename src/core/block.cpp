@@ -308,7 +308,7 @@ namespace Core
         {
             if(!IsInitialBlockDownload() && GetBoolArg("-softban", true) && IsProofOfStake() && !cTrustPool.IsValid(*this))
             {
-                error("\x1b[31m SOFTBAN: Not Connecting %s\x1b[0m \n", hash.ToString().substr(0, 20).c_str());
+                error("\x1b[31m SOFTBAN: Not Connecting %s\x1b[0m", hash.ToString().substr(0, 20).c_str());
                 
                 return true;
             }
