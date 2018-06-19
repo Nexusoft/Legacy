@@ -366,11 +366,12 @@ namespace Net
 				
 			/** Check the Wallet and Trust Keys in Trust Pool to see if we own any keys. **/
 			Wallet::NexusAddress address;
-			address.SetPubKey(it.second.vchPubKey);
+			Core::CTrustKey second = it.second;
+			address.SetPubKey(second.vchPubKey);
 
 			obj.push_back(Pair("address", address.ToString()));
 			obj.push_back(Pair("interest rate", 100.0 * Core::cTrustPool.InterestRate(it.first, GetUnifiedTimestamp())));
-			obj.push_back(Pair("trust key", it.second.ToString()));
+			obj.push_back(Pair("trust key", second.ToString()));
 			
 			nTotalActive ++;
 
