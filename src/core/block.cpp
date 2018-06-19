@@ -936,36 +936,7 @@ namespace Core
         uint1024 hash = pblock->GetHash();
         if (mapBlockIndex.count(hash))
         {
-            if(mapInvalidBlocks.count(hash) && mapInvalidBlocks[hash] != pblock->SignatureHash())
-            {
-                if (!pblock->CheckBlock())
-                    return error("ProcessBlock() : CheckBlock FAILED");
-            
-                printf("\u001b[31;1m ProcessBlock() : Mutated Block Signatures Detected... Rewriting \x1b[0m \n");
-                
-                /* Get current block index. */
-                CBlockIndex* pindex = mapBlockIndex[hash];
-                
-                /* Correct the mutated block time. */
-                pindex->nTime = pblock->nTime;
-                
-                /* Write the Valid Block to Chain. */
-                if(!pblock->Reindex(pindex))
-                    return error("ProcessBlock() : Failed to Resolve Mutated Block (rewrite)");
-                
-                /* Change Invalid Flags to current block. */
-                mapInvalidBlocks[pblock->GetHash()] = pblock->SignatureHash();
-                
-                if(GetArg("-verbose", 0) >= 2)
-                    printf("ProcessBlock() : ACCEPTED (Resolved Mutated Block)\n");
-                
-                if(pfrom)
-                    pfrom->PushGetBlocks(pindexBest, 0);
-                
-                return true;
-            }
-            else
-                return error("ProcessBlock() : already have block %d %s", mapBlockIndex[hash]->nHeight, hash.ToString().substr(0,20).c_str());
+            return error("ProcessBlock() : already have block %d %s", mapBlockIndex[hash]->nHeight, hash.ToString().substr(0,20).c_str());
         }
         
         if (mapOrphanBlocks.count(hash))
@@ -991,72 +962,8 @@ namespace Core
             return true;
         }
         
-        
         if (!pblock->AcceptBlock())
-        {
-            if(pblock->IsProofOfWork() && pblock->nHeight > 0 && pblock->nVersion >= 3)
-            {
-                printf("ProcessBlock() : Checking Invalid Proof of Work Block\n");
-                
-                /* Get previous block. */
-                CBlockIndex* pindexPrev = mapBlockIndex[pblock->hashPrevBlock];
-
-                /* Add up the Miner Rewards from Coinbase Tx Outputs. */
-                unsigned int nSize = pblock->vtx[0].vout.size();
-                
-                int64 nMiningReward = 0;
-                for(int nIndex = 0; nIndex < nSize - 2; nIndex++)
-                    nMiningReward += pblock->vtx[0].vout[nIndex].nValue;
-                        
-                /* Check that time sensitive rules are not violated. */
-                if (nMiningReward != GetCoinbaseReward(pindexPrev, pblock->GetChannel(), 0)
-                    || pblock->vtx[0].vout[nSize - 2].nValue != GetCoinbaseReward(pindexPrev, pblock->GetChannel(), 1)
-                    || pblock->vtx[0].vout[nSize - 1].nValue != GetCoinbaseReward(pindexPrev, pblock->GetChannel(), 2)
-                    || pblock->nBits != GetNextTargetRequired(pindexPrev, pblock->GetChannel(), false))
-                {
-                    
-                    printf("ProcessBlock() : Flagged Invalid Block nHeight=%u, nHash=%s\n", pblock->nHeight, pblock->GetHash().ToString().c_str());
-                    
-                    mapInvalidBlocks[pblock->GetHash()] = pblock->SignatureHash();
-                    std::vector<Net::CInv> vInv = { Net::CInv(Net::MSG_BLOCK, pblock->GetHash()) };
-                    
-                    const CBlockIndex* pindexFirst = pindexBest;
-                    for(int nIndex = 5; nIndex > 0; nIndex--)
-                    {
-                        const CBlockIndex* pindexLast = GetLastChannelIndex(pindexFirst->pprev, pblock->GetChannel());
-                        if(!pindexLast->pprev)
-                            break;
-                        
-                        CBlock block;
-                        if(!block.ReadFromDisk(mapBlockIndex[pindexLast->GetBlockHash()]))
-                        {
-                            printf("ProcessBlock() : Failed To Read from Disk %s\n", pindexLast->GetBlockHash().ToString().c_str());
-                            
-                            break;
-                        }
-                        
-                        mapInvalidBlocks[pindexLast->GetBlockHash()] = block.SignatureHash();
-                        
-                        printf("ProcessBlock() : Flagged Invalid Block nHeight=%u, nHash=%s\n", block.nHeight, block.GetHash().ToString().c_str());
-                            
-                        pindexFirst = pindexLast;
-                        
-                        vInv.push_back(Net::CInv(Net::MSG_BLOCK, block.GetHash()));
-                    }
-                    
-                    printf("ProcessBlock() : Asking Nodes for Blocks %s from stop 000000\n", pindexFirst->GetBlockHash().ToString().c_str());
-                    
-                    LOCK(Net::cs_vNodes);
-                    for(auto pnode : Net::vNodes)
-                        pnode->PushMessage("getdata", vInv);
-                    
-                    return error("ProcessBlock() : Found Invalid Block");
-                }
-            }
-            
             return error("ProcessBlock() : AcceptBlock FAILED");
-        }
-
 
         // Recursively process any orphan blocks that depended on this one
         vector<uint1024> vWorkQueue;

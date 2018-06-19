@@ -308,7 +308,7 @@ namespace Core
             }
             
             /* Handle Expired Trust Key already declared. */
-            if(mapTrustKeys[cKey].Expired(0, pindexBest->pprev->GetBlockHash()))
+            if(mapTrustKeys[cKey].Expired(0, pindexBest->GetBlockHash()))
             {
                 vchTrustKey.clear();
                 
@@ -333,7 +333,7 @@ namespace Core
             address.SetPubKey(i->second.vchPubKey);
             if(pwalletMain->HaveKey(address))
             {
-                if(i->second.Expired(0, pindexBest->pprev->GetBlockHash()))
+                if(i->second.Expired(0, pindexBest->GetBlockHash()))
                     continue;
                 
                 if(i->second.Age(nTime) > keyBestTrust.Age(nTime) || keyBestTrust.IsNull())
@@ -892,7 +892,7 @@ namespace Core
     uint64 CTrustKey::BlockAge(uint1024 hashThisBlock, uint1024 hashPrevBlock) const
     {
         /* Genesis Transaction Block Age is Time to Genesis Time. */
-        if(hashPrevBlocks.size() == 1 || !mapBlockIndex.count(hashPrevBlock))
+        if(!mapBlockIndex.count(hashPrevBlock))
             return 0;
         
         /* Catch overflow attacks. Should be caught in verify stake but double check here. */
