@@ -110,7 +110,7 @@ namespace Net
 		}
 		entry.push_back(Pair("txid", wtx.GetHash().GetHex()));
 		entry.push_back(Pair("time", (boost::int64_t)wtx.GetTxTime()));
-		BOOST_FOREACH(const PAIRTYPE(string,string)& item, wtx.mapValue)
+		for(auto& item : wtx.mapValue)
 			entry.push_back(Pair(item.first, item.second));
 	}
 
@@ -142,15 +142,15 @@ namespace Net
 			result.push_back(Pair("nextblockhash", blockindex->pnext->GetBlockHash().GetHex()));
 
 		Array txinfo;
-		BOOST_FOREACH (const Core::CTransaction& tx, block.vtx)
+		for (const auto& tx : block.vtx)
 		{
 			if (fPrintTransactionDetail)
 			{
 				txinfo.push_back(tx.ToStringShort());
 				txinfo.push_back(DateTimeStrFormat(tx.nTime));
-				BOOST_FOREACH(const Core::CTxIn& txin, tx.vin)
+				for(auto& txin : tx.vin)
 					txinfo.push_back(txin.ToStringShort());
-				BOOST_FOREACH(const Core::CTxOut& txout, tx.vout)
+				for(auto& txout : tx.vout)
 					txinfo.push_back(txout.ToStringShort());
 			}
 			else
@@ -170,14 +170,13 @@ namespace Net
 	{
 		string strRet;
 		set<rpcfn_type> setDone;
-		for (map<string, const CRPCCommand*>::const_iterator mi = mapCommands.begin(); mi != mapCommands.end(); ++mi)
+		for (const auto& mi : mapCommands)
 		{
-			const CRPCCommand *pcmd = mi->second;
-			string strMethod = mi->first;
+			const CRPCCommand *pcmd = mi.second;
+			string strMethod = mi.first;
 			// We already filter duplicates, but these deprecated screw up the sort order
 			if (strMethod == "getamountreceived" ||
 				strMethod == "getallreceived" ||
-				strMethod == "getblocknumber" || // deprecated
 				(strMethod.find("label") != string::npos))
 				continue;
 			if (strCommand != "" && strMethod != strCommand)
@@ -224,8 +223,8 @@ namespace Net
 	std::vector<std::string> CRPCTable::getMapCommandsKeyVector() const
 	{
 		std::vector<std::string> rpcTableKeys; // a standard vector of strings...
-		for(map<string, const CRPCCommand*>::const_iterator it = this->mapCommands.begin(); it!= this->mapCommands.end(); ++it) {
-			rpcTableKeys.push_back(it->first);
+		for(const auto& it : mapCommands) {
+			rpcTableKeys.push_back(it.first);
 		}
 		return rpcTableKeys;
 	}
@@ -237,8 +236,9 @@ namespace Net
 		// 		"returns a Vector of the keys for the RPC");
 		// std::stringstream result;
 		// std::copy(tableRPC.getMapCommandsKeyVector().begin(), tableRPC.getMapCommandsKeyVector().end(), std::ostream_iterator<string>(result, ", "));
+		// Array type is json_spirit.
 		Array ret;
-		BOOST_FOREACH(const std::string it, tableRPC.getMapCommandsKeyVector())
+		for(const auto it : tableRPC.getMapCommandsKeyVector())
 		{
 			ret.push_back(it);
 		}
@@ -286,7 +286,7 @@ namespace Net
 		if(nTotal == 0)
 		throw runtime_error("getnetworkhashps\n"
 							"No Blocks produced on Hashing Channel.");
-
+		// if the above doeesn't throw we assume it isn't 0... but what if we have another value here... null or undefined. then we have some bugs from dividing by those.
 		nAverageTime       /= nTotal;
 		nAverageDifficulty /= nTotal;
 		/* TODO END **/
@@ -357,20 +357,21 @@ namespace Net
 		unsigned int nTotalActive = 0;
 		Array trustkeys;	
 		Object ret;
-		for(std::map<uint576, Core::CTrustKey>::iterator it = Core::cTrustPool.mapTrustKeys.begin(); it != Core::cTrustPool.mapTrustKeys.end(); ++it)
+		for(const auto& it : Core::cTrustPool.mapTrustKeys)
 		{
 			Object obj;
 			
-            if(it->second.Expired(0, Core::pindexBest->pprev->GetBlockHash()))
+            if(it.second.Expired(0, Core::pindexBest->pprev->GetBlockHash()))
 				continue;
 				
 			/** Check the Wallet and Trust Keys in Trust Pool to see if we own any keys. **/
 			Wallet::NexusAddress address;
-			address.SetPubKey(it->second.vchPubKey);
+			Core::CTrustKey second = it.second;
+			address.SetPubKey(second.vchPubKey);
 
 			obj.push_back(Pair("address", address.ToString()));
-			obj.push_back(Pair("interest rate", 100.0 * Core::cTrustPool.InterestRate(it->first, GetUnifiedTimestamp())));
-			obj.push_back(Pair("trust key", it->second.ToString()));
+			obj.push_back(Pair("interest rate", 100.0 * Core::cTrustPool.InterestRate(it.first, GetUnifiedTimestamp())));
+			obj.push_back(Pair("trust key", second.ToString()));
 			
 			nTotalActive ++;
 
@@ -379,7 +380,6 @@ namespace Net
 		
 		ret.push_back(Pair("keys", trustkeys));
 		ret.push_back(Pair("total active", (int) nTotalActive));
-		ret.push_back(Pair("total expired", (int) (Core::cTrustPool.mapTrustKeys.size() - nTotalActive)));
 		
 		return ret;
 	}
@@ -394,19 +394,6 @@ namespace Net
 
 		return (int)Core::nBestHeight;
 	}
-
-
-	// deprecated
-	Value getblocknumber(const Array& params, bool fHelp)
-	{
-		if (fHelp || params.size() != 0)
-			throw runtime_error(
-				"getblocknumber\n"
-				"Deprecated.  Use getblockcount.");
-
-		return (int)Core::nBestHeight;
-	}
-
 
 	Value getconnectioncount(const Array& params, bool fHelp)
 	{
@@ -425,7 +412,7 @@ namespace Net
 
 		LOCK(cs_vNodes);
 		vstats.reserve(vNodes.size());
-		BOOST_FOREACH(CNode* pnode, vNodes) {
+		for(CNode* pnode : vNodes) {
 			CNodeStats stats;
 			pnode->copyStats(stats);
 			vstats.push_back(stats);
@@ -444,7 +431,7 @@ namespace Net
 
 		Array ret;
 
-		BOOST_FOREACH(const CNodeStats& stats, vstats) {
+		for(auto& stats : vstats) {
 			Object obj;
 
 			obj.push_back(Pair("addr", stats.addrName));
@@ -588,6 +575,7 @@ namespace Net
 		unsigned int nPrimeTimeConstant = 2480;
 		int nTotal = 0;
 		const Core::CBlockIndex* pindex = Core::GetLastChannelIndex(Core::pindexBest, 1);
+		// in the following we might want to create a function on these to say hasPrev?
 		for(; (nTotal < 1440 && pindex->pprev); nTotal ++) {
 			
 			nPrimeAverageTime += (pindex->GetBlockTime() - Core::GetLastChannelIndex(pindex->pprev, 1)->GetBlockTime());
@@ -641,8 +629,7 @@ namespace Net
         {
             obj.push_back(Pair("totalConnections", LLP::MINING_LLP->TotalConnections()));
         }
-        
-        
+
 		return obj;
 	}
 
@@ -690,12 +677,10 @@ namespace Net
 		{
 			Wallet::CScript scriptPubKey;
 			scriptPubKey.SetNexusAddress(account.vchPubKey);
-			for (map<uint512, Wallet::CWalletTx>::iterator it = pwalletMain->mapWallet.begin();
-				 it != pwalletMain->mapWallet.end() && !account.vchPubKey.empty();
-				 ++it)
+			for (auto& it : pwalletMain->mapWallet)
 			{
-				const Wallet::CWalletTx& wtx = (*it).second;
-				BOOST_FOREACH(const Core::CTxOut& txout, wtx.vout)
+				const Wallet::CWalletTx& wtx = it.second;
+				for(auto& txout : wtx.vout)
 					if (txout.scriptPubKey == scriptPubKey)
 						bKeyUsed = true;
 			}
@@ -774,8 +759,9 @@ namespace Net
 		if (!address.IsValid())
 			throw JSONRPCError(-5, "Invalid Nexus address");
 
-		string strAccount;
-		map<Wallet::NexusAddress, string>::iterator mi = pwalletMain->mapAddressBook.find(address);
+		// We should handle this differently. initialize the variable.
+		string strAccount = "No-Account-Set";
+		const auto mi = pwalletMain->mapAddressBook.find(address);
 		if (mi != pwalletMain->mapAddressBook.end() && !(*mi).second.empty())
 			strAccount = (*mi).second;
 		return strAccount;
@@ -793,12 +779,10 @@ namespace Net
 
 		// Find all addresses that have the given account
 		Array ret;
-		BOOST_FOREACH(const PAIRTYPE(Wallet::NexusAddress, string)& item, pwalletMain->mapAddressBook)
+		for(const auto& item : pwalletMain->mapAddressBook)
 		{
-			const Wallet::NexusAddress& address = item.first;
-			const string& strName = item.second;
-			if (strName == strAccount)
-				ret.push_back(address.ToString());
+			if (item.second == strAccount)
+				ret.push_back(item.first.ToString());
 		}
 		return ret;
 	}
@@ -942,13 +926,13 @@ namespace Net
 
 		// Tally
 		int64 nAmount = 0;
-		for (map<uint512, Wallet::CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
+		for (const auto& it : pwalletMain->mapWallet)
 		{
-			const Wallet::CWalletTx& wtx = (*it).second;
+			const Wallet::CWalletTx& wtx = it.second;
 			if (wtx.IsCoinBase() || wtx.IsCoinStake() || !wtx.IsFinal())
 				continue;
 
-			BOOST_FOREACH(const Core::CTxOut& txout, wtx.vout)
+			for(const auto& txout: wtx.vout)
 				if (txout.scriptPubKey == scriptPubKey)
 					if (wtx.GetDepthInMainChain() >= nMinDepth)
 						nAmount += txout.nValue;
@@ -960,7 +944,7 @@ namespace Net
 
 	void GetAccountAddresses(string strAccount, set<Wallet::NexusAddress>& setAddress)
 	{
-		BOOST_FOREACH(const PAIRTYPE(Wallet::NexusAddress, string)& item, pwalletMain->mapAddressBook)
+		for(const auto& item : pwalletMain->mapAddressBook)
 		{
 			const Wallet::NexusAddress& address = item.first;
 			const string& strName = item.second;
@@ -989,13 +973,13 @@ namespace Net
 
 		// Tally
 		int64 nAmount = 0;
-		for (map<uint512, Wallet::CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
+		for (const auto& it : pwalletMain->mapWallet)
 		{
-			const Wallet::CWalletTx& wtx = (*it).second;
+			const Wallet::CWalletTx& wtx = it.second;
 			if (wtx.IsCoinBase() || wtx.IsCoinStake() || !wtx.IsFinal())
 				continue;
 
-			BOOST_FOREACH(const Core::CTxOut& txout, wtx.vout)
+			for(const auto& txout : wtx.vout)
 			{
 				Wallet::NexusAddress address;
 				if (ExtractAddress(txout.scriptPubKey, address) && pwalletMain->HaveKey(address) && setAddress.count(address))
@@ -1019,10 +1003,12 @@ namespace Net
 				"Get balances of top addresses in the Network.");
 	
 		int nCount = params[0].get_int();
+		// flip_map swaps the key and value in all pairs.
 		multimap<uint64, uint256> richList = flip_map(Core::mapAddressTransactions);
 		
 		/** Dump the Address and Values. **/
 		Object entry;
+		//TODO: Discuss why we are reverse iterating, also why we flip the multimap?
 		for(multimap<uint64, uint256>::const_reverse_iterator it = richList.rbegin(); it != richList.rend() && nCount > 0; ++it)
 		{
 			Wallet::NexusAddress cAddress(it->second);
@@ -1061,7 +1047,7 @@ namespace Net
 		std::vector<std::pair<bool, uint512> > vTransactions = Core::mapRichList[cAddress.GetHash256()];
         
         Array entry;
-        for(auto tx : vTransactions)
+        for(const auto tx : vTransactions)
         {
             if(fCoinbase && tx.first)
                 continue;
@@ -1111,7 +1097,7 @@ namespace Net
             
             if(Core::mapRichList.count(cAddress.GetHash256()))
             {
-                for(auto tx : Core::mapRichList[cAddress.GetHash256()])
+                for(const auto tx : Core::mapRichList[cAddress.GetHash256()])
                 {
                     if(!fCoinbase && tx.first)
                         continue;
@@ -1123,10 +1109,10 @@ namespace Net
         else
         {
             /* List the transactions stored in the memory map. */
-            for (auto it : Core::mapRichList)
+            for (const auto it : Core::mapRichList)
             {
                 bool fHasCoinbase = false;
-                for(auto tx : it.second)
+                for(const auto tx : it.second)
                 {
                     if(!fCoinbase && tx.first)
                     {
@@ -1169,7 +1155,6 @@ namespace Net
 		/** Dump the Address and Values. **/
 		Object entry;
 		entry.push_back(Pair(strAddress, (double)Core::mapAddressTransactions[cAddress.GetHash256()] / COIN));
-
 		
 		return entry;
 	}
@@ -1217,7 +1202,7 @@ namespace Net
 		entry.push_back(Pair("amount", ValueFromAmount(cTransaction.GetValueOut())));
 		
 		Array txoutputs;
-		BOOST_FOREACH(const Core::CTxOut& txout, cTransaction.vout)
+		for(const auto& txout : cTransaction.vout)
 		{
 			Wallet::NexusAddress cAddress;
 			if(!Wallet::ExtractAddress(txout.scriptPubKey, cAddress))
@@ -1231,7 +1216,7 @@ namespace Net
 		if(!cTransaction.IsCoinBase())
 		{
 			Array txinputs;
-			BOOST_FOREACH(const Core::CTxIn& txin, cTransaction.vin)
+			for(const auto& txin : cTransaction.vin)
 			{
                 if(txin.IsStakeSig())
                     continue;
@@ -1274,9 +1259,9 @@ namespace Net
 		int64 nBalance = 0;
 
 		// Tally wallet transactions
-		for (map<uint512, Wallet::CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
+		for (const auto& it : pwalletMain->mapWallet)
 		{
-			const Wallet::CWalletTx& wtx = (*it).second;
+			const Wallet::CWalletTx& wtx = it.second;
 			if (!wtx.IsFinal())
 				continue;
 
@@ -1322,9 +1307,9 @@ namespace Net
 			// (GetBalance() sums up all unspent TxOuts)
 			// getbalance and getbalance '*' should always return the same number.
 			int64 nBalance = 0;
-			for (map<uint512, Wallet::CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
+			for (const auto& it : pwalletMain->mapWallet)
 			{
-				const Wallet::CWalletTx& wtx = (*it).second;
+				const Wallet::CWalletTx& wtx = it.second;
 				if (!wtx.IsFinal())
 					continue;
 
@@ -1336,11 +1321,13 @@ namespace Net
 				wtx.GetAmounts(allGeneratedImmature, allGeneratedMature, listReceived, listSent, allFee, strSentAccount);
 				if (wtx.GetDepthInMainChain() >= nMinDepth)
 				{
-					BOOST_FOREACH(const PAIRTYPE(Wallet::NexusAddress,int64)& r, listReceived)
+					for(const auto& r : listReceived)
 						nBalance += r.second;
 				}
-				BOOST_FOREACH(const PAIRTYPE(Wallet::NexusAddress,int64)& r, listSent)
+				// Should this hide in the if above? ^
+				for(const auto& r : listSent)
 					nBalance -= r.second;
+
 				nBalance -= allFee;
 				nBalance += allGeneratedMature;
 			}
@@ -1365,9 +1352,10 @@ namespace Net
 		string strFrom = AccountFromValue(params[0]);
 		string strTo = AccountFromValue(params[1]);
 		int64 nAmount = AmountFromValue(params[2]);
-		if (params.size() > 3)
+		if (params.size() > 3) {
 			// unused parameter, used to be nMinDepth, keep type-checking it though
 			(void)params[3].get_int();
+		}
 		string strComment;
 		if (params.size() > 4)
 			strComment = params[4].get_str();
@@ -1452,6 +1440,7 @@ namespace Net
 
 	Value sendmany(const Array& params, bool fHelp)
 	{
+		// TODO: Figure out if we should do some input checking to make sure we don't break max send rule.
 		if (pwalletMain->IsCrypted() && (fHelp || params.size() < 2 || params.size() > 4))
 			throw runtime_error(
 				"sendmany <fromaccount> {address:amount,...} [minconf=1] [comment]\n"
@@ -1477,7 +1466,7 @@ namespace Net
 		vector<pair<Wallet::CScript, int64> > vecSend;
 
 		int64 totalAmount = 0;
-		BOOST_FOREACH(const Pair& s, sendTo)
+		for(const auto& s : sendTo)
 		{
 			Wallet::NexusAddress address(s.name_);
 			if (!address.IsValid())
@@ -1547,8 +1536,10 @@ namespace Net
 			throw runtime_error(
 				strprintf("not enough keys supplied "
 						  "(got %d keys, but need at least %d to redeem)", keys.size(), nRequired));
+
 		std::vector<Wallet::CKey> pubkeys;
 		pubkeys.resize(keys.size());
+
 		for (unsigned int i = 0; i < keys.size(); i++)
 		{
 			const std::string& ks = keys[i].get_str();
@@ -1622,9 +1613,9 @@ namespace Net
 
 		// Tally
 		map<Wallet::NexusAddress, tallyitem> mapTally;
-		for (map<uint512, Wallet::CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
+		for (const auto& it : pwalletMain->mapWallet)
 		{
-			const Wallet::CWalletTx& wtx = (*it).second;
+			const Wallet::CWalletTx& wtx = it.second;
 
 			if (wtx.IsCoinBase() || wtx.IsCoinStake() || !wtx.IsFinal())
 				continue;
@@ -1633,7 +1624,7 @@ namespace Net
 			if (nDepth < nMinDepth)
 				continue;
 
-			BOOST_FOREACH(const Core::CTxOut& txout, wtx.vout)
+			for(const auto& txout : wtx.vout)
 			{
 				Wallet::NexusAddress address;
 				if (!ExtractAddress(txout.scriptPubKey, address) || !pwalletMain->HaveKey(address) || !address.IsValid())
@@ -1648,11 +1639,11 @@ namespace Net
 		// Reply
 		Array ret;
 		map<string, tallyitem> mapAccountTally;
-		BOOST_FOREACH(const PAIRTYPE(Wallet::NexusAddress, string)& item, pwalletMain->mapAddressBook)
+		for(const auto& item : pwalletMain->mapAddressBook)
 		{
 			const Wallet::NexusAddress& address = item.first;
 			const string& strAccount = item.second;
-			map<Wallet::NexusAddress, tallyitem>::iterator it = mapTally.find(address);
+			const auto it = mapTally.find(address);
 			if (it == mapTally.end() && !fIncludeEmpty)
 				continue;
 
@@ -1683,12 +1674,12 @@ namespace Net
 
 		if (fByAccounts)
 		{
-			for (map<string, tallyitem>::iterator it = mapAccountTally.begin(); it != mapAccountTally.end(); ++it)
+			for (const auto& it : mapAccountTally)
 			{
-				int64 nAmount = (*it).second.nAmount;
-				int nConf = (*it).second.nConf;
+				int64 nAmount = it.second.nAmount;
+				int nConf = it.second.nConf;
 				Object obj;
-				obj.push_back(Pair("account",       (*it).first));
+				obj.push_back(Pair("account",       it.first));
 				obj.push_back(Pair("amount",        ValueFromAmount(nAmount)));
 				obj.push_back(Pair("confirmations", (nConf == std::numeric_limits<int>::max() ? 0 : nConf)));
 				ret.push_back(obj);
@@ -1768,7 +1759,7 @@ namespace Net
 		// Sent
 		if ((!listSent.empty() || nFee != 0) && (fAllAccounts || strAccount == strSentAccount))
 		{
-			BOOST_FOREACH(const PAIRTYPE(Wallet::NexusAddress, int64)& s, listSent)
+			for(const auto& s : listSent)
 			{
 				Object entry;
 				entry.push_back(Pair("account", strSentAccount));
@@ -1785,7 +1776,7 @@ namespace Net
 		// Received
 		if (listReceived.size() > 0 && wtx.GetDepthInMainChain() >= nMinDepth)
 		{
-			BOOST_FOREACH(const PAIRTYPE(Wallet::NexusAddress, int64)& r, listReceived)
+			for(const auto& r : listReceived)
 			{
 				string account;
 				if (pwalletMain->mapAddressBook.count(r.first))
@@ -1804,7 +1795,7 @@ namespace Net
 			}
 		}
 	}
-
+	
 	void AcentryToJSON(const Wallet::CAccountingEntry& acentry, const string& strAccount, Array& ret)
 	{
 		bool fAllAccounts = (strAccount == string("*"));
@@ -1854,14 +1845,16 @@ namespace Net
 
 		// Note: maintaining indices in the database of (account,time) --> txid and (account, time) --> acentry
 		// would make this much faster for applications that do this a lot.
-		for (map<uint512, Wallet::CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
+		for (auto& it : pwalletMain->mapWallet)
 		{
-			Wallet::CWalletTx* wtx = &((*it).second);
+			Wallet::CWalletTx* wtx = &(it.second);
 			txByTime.insert(make_pair(wtx->GetTxTime(), TxPair(wtx, (Wallet::CAccountingEntry*)0)));
 		}
+
 		list<Wallet::CAccountingEntry> acentries;
 		walletdb.ListAccountCreditDebit(strAccount, acentries);
-		BOOST_FOREACH(Wallet::CAccountingEntry& entry, acentries)
+
+		for(auto& entry : acentries)
 		{
 			txByTime.insert(make_pair(entry.nTime, TxPair((Wallet::CWalletTx*)0, &entry)));
 		}
@@ -1897,7 +1890,7 @@ namespace Net
 		return ret;
 	}
 
-
+	// TODO: Look here for inspiration for the new rpc command getaddressbook
 	Value listaccounts(const Array& params, bool fHelp)
 	{
 		if (fHelp || params.size() > 1)
@@ -1910,40 +1903,48 @@ namespace Net
 			nMinDepth = params[0].get_int();
 
 		map<string, int64> mapAccountBalances;
-		BOOST_FOREACH(const PAIRTYPE(Wallet::NexusAddress, string)& entry, pwalletMain->mapAddressBook) {
+		// TODO: Figure out if there was a reason we are only returning the accounts for addresses that are mine?
+		for(const auto& entry : pwalletMain->mapAddressBook) {
 			if (pwalletMain->HaveKey(entry.first)) // This address belongs to me
 				mapAccountBalances[entry.second] = 0;
 		}
 
-		for (map<uint512, Wallet::CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
+		for (const auto& it : pwalletMain->mapWallet)
 		{
-			const Wallet::CWalletTx& wtx = (*it).second;
+			const Wallet::CWalletTx& wtx = it.second;
 			int64 nGeneratedImmature, nGeneratedMature, nFee;
 			string strSentAccount;
 			list<pair<Wallet::NexusAddress, int64> > listReceived;
 			list<pair<Wallet::NexusAddress, int64> > listSent;
 			wtx.GetAmounts(nGeneratedImmature, nGeneratedMature, listReceived, listSent, nFee, strSentAccount);
 			mapAccountBalances[strSentAccount] -= nFee;
-			BOOST_FOREACH(const PAIRTYPE(Wallet::NexusAddress, int64)& s, listSent)
+			for(const auto& s : listSent) 
+			{
 				mapAccountBalances[strSentAccount] -= s.second;
+			}
 			if (wtx.GetDepthInMainChain() >= nMinDepth)
 			{
 				mapAccountBalances[""] += nGeneratedMature;
-				BOOST_FOREACH(const PAIRTYPE(Wallet::NexusAddress, int64)& r, listReceived)
+				for(const auto& r : listReceived) 
+				{
 					if (pwalletMain->mapAddressBook.count(r.first))
 						mapAccountBalances[pwalletMain->mapAddressBook[r.first]] += r.second;
 					else
 						mapAccountBalances[""] += r.second;
+				}
 			}
 		}
 
 		list<Wallet::CAccountingEntry> acentries;
 		Wallet::CWalletDB(pwalletMain->strWalletFile).ListAccountCreditDebit("*", acentries);
-		BOOST_FOREACH(const Wallet::CAccountingEntry& entry, acentries)
+		for(const auto& entry : acentries)
+		{
 			mapAccountBalances[entry.strAccount] += entry.nCreditDebit;
+		}
 
 		Object ret;
-		BOOST_FOREACH(const PAIRTYPE(string, int64)& accountBalance, mapAccountBalances) {
+		for(const auto& accountBalance : mapAccountBalances) 
+		{
 			ret.push_back(Pair(accountBalance.first, ValueFromAmount(accountBalance.second)));
 		}
 		return ret;
@@ -2133,9 +2134,9 @@ namespace Net
 		string strDest = params[0].get_str();
 		BackupWallet(*pwalletMain, strDest);
 
-		return Value::null;
+		// Changed from Null... i figure we can at least tell them it was successful.
+		return true;
 	}
-
 
 	Value keypoolrefill(const Array& params, bool fHelp)
 	{
@@ -2175,6 +2176,7 @@ namespace Net
 		{
 			nWalletUnlockTime = nMyWakeTime;
 
+			//Dangerous infinite looping.
 			do
 			{
 				if (nWalletUnlockTime==0)
@@ -2281,7 +2283,8 @@ namespace Net
 		if (!pwalletMain->ChangeWalletPassphrase(strOldWalletPass, strNewWalletPass))
 			throw JSONRPCError(-14, "Error: The wallet passphrase entered was incorrect.");
 
-		return Value::null;
+		// Changed from null, the true will tell them hey you succeeded in changing your password!
+		return true;
 	}
 
 
@@ -2379,9 +2382,11 @@ namespace Net
 				Wallet::ExtractAddresses(subscript, whichType, addresses, nRequired);
 				ret.push_back(Pair("script", Wallet::GetTxnOutputType(whichType)));
 				Array a;
-				BOOST_FOREACH(const Wallet::NexusAddress& addr, addresses)
+				for(const auto& addr : addresses)
 					a.push_back(addr.ToString());
+
 				ret.push_back(Pair("addresses", a));
+
 				if (whichType == Wallet::TX_MULTISIG)
 					ret.push_back(Pair("sigsrequired", nRequired));
 			}
@@ -2476,6 +2481,30 @@ namespace Net
 		return result;
 	}
 
+	/* List the trust keys this wallet.dat file contains. */
+	Value listtrustkeys(const Array& params, bool fHelp)
+	{
+		if (fHelp || params.size() > 0)
+			throw runtime_error(
+				"listtrustkeys\n"
+				"List all the Trust Keys this Node owns.\n");
+
+		
+		/** Check each Trust Key to See if we Own it if there is no Key. **/
+		Object result;
+		for(const auto& i : Core::cTrustPool.mapTrustKeys)
+		{
+				
+			/** Check the Wallet and Trust Keys in Trust Pool to see if we own any keys. **/
+			Wallet::NexusAddress address;
+			address.SetPubKey(i.second.vchPubKey);
+			if(pwalletMain->HaveKey(address))
+				result.push_back(Pair(address.ToString(), i.second.Expired(0, Core::pindexBest->GetBlockHash()) ? "TRUE" : "FALSE"));
+			
+		}
+
+		return result;
+	}
 
 	// Nexus: check wallet integrity
 	Value checkwallet(const Array& params, bool fHelp)
@@ -2499,31 +2528,6 @@ namespace Net
 		return result;
 	}
 
-	/* List the trust keys this wallet.dat file contains. */
-	Value listtrustkeys(const Array& params, bool fHelp)
-	{
-		if (fHelp || params.size() > 0)
-			throw runtime_error(
-				"listtrustkeys\n"
-				"List all the Trust Keys this Node owns.\n");
-
-		
-		/** Check each Trust Key to See if we Own it if there is no Key. **/
-		Object result;
-		for(std::map<uint576, Core::CTrustKey>::iterator i = Core::cTrustPool.mapTrustKeys.begin(); i != Core::cTrustPool.mapTrustKeys.end(); ++i)
-		{
-				
-			/** Check the Wallet and Trust Keys in Trust Pool to see if we own any keys. **/
-			Wallet::NexusAddress address;
-			address.SetPubKey(i->second.vchPubKey);
-			if(pwalletMain->HaveKey(address))
-                result.push_back(Pair(address.ToString(), i->second.Expired(0, Core::pindexBest->pprev->GetBlockHash()) ? "TRUE" : "FALSE"));
-			
-		}
-
-		return result;
-	}
-
 	// Nexus: repair wallet
 	Value repairwallet(const Array& params, bool fHelp)
 	{
@@ -2534,7 +2538,7 @@ namespace Net
 
 		int nMismatchSpent;
 		int64 nBalanceInQuestion;
-		pwalletMain->FixSpentCoins(nMismatchSpent, nBalanceInQuestion);
+		pwalletMain->FixSpentCoins(nMismatchSpent, nBalanceInQuestion, false);
 		Object result;
 		if (nMismatchSpent == 0)
 			result.push_back(Pair("wallet check passed", true));
@@ -2566,7 +2570,8 @@ namespace Net
 		{
 			key.MakeNewKey(false);
 			nCount++;
-		} while (nCount < 10000 && strPrefix != HexStr(key.GetPubKey()).substr(0, strPrefix.size()));
+		}
+		while (nCount < 10000 && strPrefix != HexStr(key.GetPubKey()).substr(0, strPrefix.size()));
 
 		if (strPrefix != HexStr(key.GetPubKey()).substr(0, strPrefix.size()))
 			return Value::null;
@@ -2613,7 +2618,7 @@ namespace Net
 		pwalletMain->AvailableCoins((unsigned int)GetUnifiedTimestamp(), vecOutputs, false);
 		
 		int64 nCredit = 0;
-		BOOST_FOREACH(const Wallet::COutput& out, vecOutputs)
+		for(const auto& out : vecOutputs)
 		{
 			if(setAddresses.size())
 			{
@@ -2668,7 +2673,7 @@ namespace Net
 		if (params.size() > 2)
 		{
 			Array inputs = params[2].get_array();
-			BOOST_FOREACH(Value& input, inputs)
+			for(const auto& input : inputs)
 			{
 				Wallet::NexusAddress address(input.get_str());
 				if (!address.IsValid())
@@ -2684,7 +2689,7 @@ namespace Net
 		Array results;
 		vector<Wallet::COutput> vecOutputs;
 		pwalletMain->AvailableCoins((unsigned int)GetUnifiedTimestamp(), vecOutputs, false);
-		BOOST_FOREACH(const Wallet::COutput& out, vecOutputs)
+		for(const auto& out : vecOutputs)
 		{
 			if (out.nDepth < nMinDepth || out.nDepth > nMaxDepth)
 				continue;
@@ -2721,8 +2726,6 @@ namespace Net
 		return results;
 	}
 	
-	
-	
 	Value getrawmempool(const Array& params, bool fHelp)
 	{
 		if (fHelp || params.size() != 0)
@@ -2734,7 +2737,7 @@ namespace Net
 		Core::mempool.queryHashes(vtxid);
 
 		Array a;
-		BOOST_FOREACH(const uint512& hash, vtxid)
+		for(const auto& hash : vtxid)
 			a.push_back(hash.ToString());
 
 		return a;
@@ -2744,6 +2747,7 @@ namespace Net
 	//
 	// Call Table
 	//
+	// Notes: took:         { "getblocknumber",         &getblocknumber,         true  }, out of slot 4 in the table.
 
 	static const CRPCCommand vRPCCommands[] =
 	{ //  name                      function                 safe mode?
@@ -2751,7 +2755,7 @@ namespace Net
         { "help",                   &help,                   true  },
         { "stop",                   &stop,                   true  },
         { "getblockcount",          &getblockcount,          true  },
-        { "getblocknumber",         &getblocknumber,         true  },
+
         { "getconnectioncount",     &getconnectioncount,     true  },
         { "getpeerinfo",            &getpeerinfo,            true  },
         { "getdifficulty",          &getdifficulty,          true  },
@@ -2816,6 +2820,7 @@ namespace Net
         { "getrawmempool",          &getrawmempool,          false }
     };
 
+	// TODO: Ask if we can make this into a for each. Bitcoin Code server.cpp line 270.
 	CRPCTable::CRPCTable()
 	{
 		unsigned int vcidx;
@@ -2853,7 +2858,7 @@ namespace Net
 		  << "Content-Length: " << strMsg.size() << "\r\n"
 		  << "Connection: close\r\n"
 		  << "Accept: application/json\r\n";
-		BOOST_FOREACH(const PAIRTYPE(string, string)& item, mapRequestHeaders)
+		for(const auto& item : mapRequestHeaders)
 			s << item.first << ": " << item.second << "\r\n";
 		s << "\r\n" << strMsg;
 
@@ -3032,9 +3037,10 @@ namespace Net
 		if (strAddress == asio::ip::address_v4::loopback().to_string())
 			return true;
 		const vector<string>& vAllow = mapMultiArgs["-rpcallowip"];
-		BOOST_FOREACH(string strAllow, vAllow)
+		for(string strAllow : vAllow) {
 			if (WildcardMatch(strAddress, strAllow))
 				return true;
+		}
 		return false;
 	}
 
@@ -3183,7 +3189,8 @@ namespace Net
 			SSL_CTX_set_cipher_list(context.native_handle(), strCiphers.c_str());
 		}
 
-		loop() {
+		loop() 
+		{
 			// Accept connection
 			SSLStream sslStream(io_service, context);
 			SSLIOStreamDevice d(sslStream, fUseSSL);
@@ -3390,8 +3397,9 @@ namespace Net
 	Array RPCConvertValues(const std::string &strMethod, const std::vector<std::string> &strParams)
 	{
 		Array params;
-		BOOST_FOREACH(const std::string &param, strParams)
+		for(const std::string &param : strParams) {
 			params.push_back(param);
+		}
 
 		int n = params.size();
 
