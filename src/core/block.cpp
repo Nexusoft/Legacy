@@ -954,7 +954,7 @@ namespace Core
                     return error("ProcessBlock() : Failed to Resolve Mutated Block (rewrite)");
                 
                 /* Change Invalid Flags to current block. */
-                mapInvalidBlocks[pblock->GetHash()] = pblock->SignatureHash();
+                mapInvalidBlocks.erase(hash);
                 
                 if(GetArg("-verbose", 0) >= 2)
                     printf("ProcessBlock() : ACCEPTED (Resolved Mutated Block)\n");
