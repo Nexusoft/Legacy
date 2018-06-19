@@ -1003,7 +1003,7 @@ namespace Core
                 /* Check last two blocks for invalidity. */
                 if(pblock->strValidationError == "reward:mismatch")
                 {
-                    const CBlockIndex* pindexFirst = pindexBest;
+                    const CBlockIndex* pindexFirst = mapBlockIndex[pblock->hashPrevBlock];
                     for(int index = 0; index < 2; index++)
                     {
                         const CBlockIndex* pindexLast = GetLastChannelIndex(pindexFirst->pprev, pblock->GetChannel());
@@ -1061,7 +1061,7 @@ namespace Core
                 /* Check the last 5 blocks for invalidity. */
                 else if(pblock->strValidationError == "bits:mismatch")
                 {
-                    const CBlockIndex* pindexFirst = pindexBest;
+                    const CBlockIndex* pindexFirst = mapBlockIndex[pblock->hashPrevBlock];
                     for(int index = 0; index < 5; index++)
                     {
                         const CBlockIndex* pindexLast = GetLastChannelIndex(pindexFirst->pprev, pblock->GetChannel());
