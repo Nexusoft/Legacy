@@ -340,7 +340,7 @@ namespace Core
                 {
                     keyBestTrust = i->second;
                     
-                    if(GetArg("-verbose", 0) >= 1)
+                    if(GetArg("-verbose", 0) >= 0)
                         printf("CTrustPool::HasTrustKey() : Trying Trust Key %s\n", HexStr(keyBestTrust.vchPubKey.begin(), keyBestTrust.vchPubKey.end()).c_str());
                 }
             }
@@ -968,7 +968,7 @@ namespace Core
             if(cTrustPool.Exists(cKey))
             {
                 nTrustAge = cTrustPool.Find(cKey).Age(pindexBest->GetBlockTime());
-                nBlockAge = cTrustPool.Find(cKey).BlockAge(baseBlock.hashPrevBlock, baseBlock.hashPrevBlock);
+                nBlockAge = cTrustPool.Find(cKey).BlockAge(0, pindexBest->GetBlockHash());
                     
                 /* Trust Weight Reaches Maximum at 30 day Limit. */
                 nTrustWeight = min(17.5, (((16.5 * log(((2.0 * nTrustAge) / (60 * 60 * 24 * 28)) + 1.0)) / log(3))) + 1.0);

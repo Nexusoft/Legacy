@@ -254,7 +254,7 @@ namespace LLD
                                 if(!ExtractAddress(tx.vout[txin.prevout.n].scriptPubKey, cAddress))
                                     continue;
                                 
-                                if(Core::mapAddressTransactions.count(cAddress.GetHash256()) < tx.vout[txin.prevout.n].nValue)
+                                if(Core::mapAddressTransactions.count(cAddress.GetHash256()) && Core::mapAddressTransactions[cAddress.GetHash256()] < tx.vout[txin.prevout.n].nValue)
                                     Core::mapAddressTransactions[cAddress.GetHash256()] = 0;
                                 else
                                     Core::mapAddressTransactions[cAddress.GetHash256()] -= tx.vout[txin.prevout.n].nValue;
