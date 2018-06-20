@@ -658,15 +658,16 @@ bool AppInit2(int argc, char* argv[])
         ThreadSafeMessageBox(_("Error: CreateThread(StartNode) failed"), _("Nexus"), wxOK | wxMODAL);
 	
     #ifndef QT_GUI
-        if(GetBoolArg("-stake", false))
-        {
+    if(GetBoolArg("-stake", false))
+    {
+    #else
+    if(GetBoolArg("-stake", true))
+    {
     #endif
-		CreateThread(Core::StakeMinter, NULL);
-		
-    #ifndef QT_GUI
-            printf("%%%%%%%%%%%%%%%%% Daemon Staking Thread Initialized...\n");
-        }
-    #endif
+        CreateThread(Core::StakeMinter, NULL);
+
+        printf("%%%%%%%%%%%%%%%%% Staking Thread Initialized...\n");
+    }
 	
     if (fServer)
         CreateThread(Net::ThreadRPCServer, NULL);
