@@ -461,10 +461,7 @@ namespace Core
                     else
                         mapRichList[cAddress.GetHash256()].push_back(std::make_pair(vtx[nTx].IsCoinBase(), vtx[nTx].GetHash()));
                     
-                    if(mapAddressTransactions.count(cAddress.GetHash256()))
-                        mapAddressTransactions[cAddress.GetHash256()] += vtx[nTx].vout[nOut].nValue;
-                    else
-                        mapAddressTransactions[cAddress.GetHash256()] = vtx[nTx].vout[nOut].nValue;
+                    mapAddressTransactions[cAddress.GetHash256()] += vtx[nTx].vout[nOut].nValue;
                             
                     if(GetArg("-verbose", 0) >= 2)
                         printf("%s Credited %f Nexus | Balance : %f Nexus\n", cAddress.ToString().c_str(), (double)vtx[nTx].vout[nOut].nValue / COIN, (double)mapAddressTransactions[cAddress.GetHash256()] / COIN);
@@ -498,10 +495,7 @@ namespace Core
                         else
                             mapRichList[cAddress.GetHash256()].push_back(std::make_pair(vtx[nTx].IsCoinBase(), tx.GetHash()));
                         
-                        if(Core::mapAddressTransactions.count(cAddress.GetHash256()) < tx.vout[txin.prevout.n].nValue)
-                            mapAddressTransactions[cAddress.GetHash256()] = 0;
-                        else
-                            mapAddressTransactions[cAddress.GetHash256()] -= tx.vout[txin.prevout.n].nValue;
+                        mapAddressTransactions[cAddress.GetHash256()] = std::max((uint64)0, mapAddressTransactions[cAddress.GetHash256()] - tx.vout[txin.prevout.n].nValue);
                         
                         if(GetArg("-verbose", 0) >= 2)
                             printf("%s Debited %f Nexus | Balance : %f Nexus\n", cAddress.ToString().c_str(), (double)tx.vout[txin.prevout.n].nValue / COIN, (double)mapAddressTransactions[cAddress.GetHash256()] / COIN);
