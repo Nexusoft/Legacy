@@ -166,6 +166,55 @@ namespace Core
             if (!indexdb.WriteBlockIndex(blockindexPrev))
                 return error("DisconnectBlock() : WriteBlockIndex failed");
         }
+        
+        
+        if(GetBoolArg("-richlist", false))
+        {
+            for(auto tx : vtx)
+            {
+                for(auto out : tx.vout)
+                {	
+                    Wallet::NexusAddress addr;
+                    if(!Wallet::ExtractAddress(out.scriptPubKey, addr))
+                        continue;
+                    
+                    mapAddressTransactions[addr.GetHash256()] -= out.nValue;
+                            
+                    if(GetArg("-verbose", 0) >= 2)
+                        printf("%s Debited %f Nexus | Balance : %f Nexus\n", addr.ToString().c_str(), (double)out.nValue / COIN, (double)mapAddressTransactions[addr.GetHash256()] / COIN);
+                }
+                        
+                if(!tx.IsCoinBase())
+                {
+                    for(auto in : tx.vin)
+                    {
+                        if(in.prevout.IsNull())
+                            continue;
+                        
+                        if(in.IsStakeSig())
+                            continue;
+                            
+                        CTransaction txIn;
+                        CTxIndex txind;
+                                
+                        if(!indexdb.ReadTxIndex(in.prevout.hash, txind))
+                            continue;
+                                    
+                        if(!txIn.ReadFromDisk(txind.pos))
+                            continue;
+                                
+                        Wallet::NexusAddress addr;
+                        if(!Wallet::ExtractAddress(txIn.vout[in.prevout.n].scriptPubKey, addr))
+                            continue;
+                        
+                        mapAddressTransactions[addr.GetHash256()] += txIn.vout[in.prevout.n].nValue;
+                        
+                        if(GetArg("-verbose", 0) >= 2)
+                            printf("%s Credited %f Nexus | Balance : %f Nexus\n", addr.ToString().c_str(), (double)txIn.vout[in.prevout.n].nValue / COIN, (double)mapAddressTransactions[addr.GetHash256()] / COIN);
+                    }
+                }
+            }
+        }
 
         // Nexus: clean up wallet after disconnecting coinstake
         BOOST_FOREACH(CTransaction& tx, vtx)
@@ -188,12 +237,63 @@ namespace Core
             CTxIndex txindexOld;
             if (indexdb.ReadTxIndex(tx.GetHash(), txindexOld))
             {
-                BOOST_FOREACH(CDiskTxPos &pos, txindexOld.vSpent)
+                BOOST_FOREACH(CDiskTxPos &pos, txindexOld.vSpent) {
                     if (pos.IsNull()){
                         
                         return error("ConnectBlock() : Transaction Disk Index is Null %s", tx.GetHash().ToString().c_str());
                     }
+                }
+            }
+        }
+        
+        if(GetBoolArg("-richlist", false))
+        {
+            for(auto tx : vtx)
+            {
+                for(auto out : tx.vout)
+                {	
+                    Wallet::NexusAddress addr;
+                    if(!Wallet::ExtractAddress(out.scriptPubKey, addr))
+                        continue;
+                    
+                    mapAddressTransactions[addr.GetHash256()] += out.nValue;
+                            
+                    if(GetArg("-verbose", 0) >= 2)
+                        printf("%s Credited %f Nexus | Balance : %f Nexus\n", addr.ToString().c_str(), (double)out.nValue / COIN, (double)mapAddressTransactions[addr.GetHash256()] / COIN);
+                }
                         
+                if(!tx.IsCoinBase())
+                {
+                    for(auto in : tx.vin)
+                    {
+                        if(in.prevout.IsNull())
+                            continue;
+                        
+                        if(in.IsStakeSig())
+                            continue;
+                            
+                        CTransaction txIn;
+                        CTxIndex txind;
+                                
+                        if(!indexdb.ReadTxIndex(in.prevout.hash, txind))
+                            continue;
+                                    
+                        if(!txIn.ReadFromDisk(txind.pos))
+                            continue;
+                                
+                        Wallet::NexusAddress addr;
+                        if(!Wallet::ExtractAddress(txIn.vout[in.prevout.n].scriptPubKey, addr))
+                            continue;
+                        
+                        if(mapAddressTransactions.count(addr.GetHash256()) && mapAddressTransactions[addr.GetHash256()] < tx.vout[in.prevout.n].nValue)
+                            mapAddressTransactions[addr.GetHash256()] = 0;
+                        else
+                            mapAddressTransactions[addr.GetHash256()] -= tx.vout[in.prevout.n].nValue;
+                        
+                        if(GetArg("-verbose", 0) >= 2)
+                            printf("%s Debited %f Nexus | Balance : %f Nexus\n", addr.ToString().c_str(), (double)txIn.vout[in.prevout.n].nValue / COIN, (double)mapAddressTransactions[addr.GetHash256()] / COIN);
+                    }
+                }
             }
         }
 
@@ -444,72 +544,6 @@ namespace Core
         
         if(GetArg("-verbose", 0) >= 0)
             printf("SetBestChain: new best=%s  height=%d  trust=%" PRIu64 "  moneysupply=%s\n", hashBestChain.ToString().substr(0,20).c_str(), nBestHeight, nBestChainTrust, FormatMoney(pindexBest->nMoneySupply).c_str());
-        
-        /** Grab the transactions for the block and set the address balances. **/
-        if(GetBoolArg("-richlist", false))
-        {
-            for(int nTx = 0; nTx < vtx.size(); nTx++)
-            {
-                for(int nOut = 0; nOut < vtx[nTx].vout.size(); nOut++)
-                {	
-                    Wallet::NexusAddress cAddress;
-                    if(!Wallet::ExtractAddress(vtx[nTx].vout[nOut].scriptPubKey, cAddress))
-                        continue;
-                    
-                    if(!Core::mapRichList.count(cAddress.GetHash256()))
-                        mapRichList[cAddress.GetHash256()] = { std::make_pair(vtx[nTx].IsCoinBase(), vtx[nTx].GetHash()) };
-                    else
-                        mapRichList[cAddress.GetHash256()].push_back(std::make_pair(vtx[nTx].IsCoinBase(), vtx[nTx].GetHash()));
-                    
-                    if(mapAddressTransactions.count(cAddress.GetHash256()))
-                        mapAddressTransactions[cAddress.GetHash256()] += vtx[nTx].vout[nOut].nValue;
-                    else
-                        mapAddressTransactions[cAddress.GetHash256()] = vtx[nTx].vout[nOut].nValue;
-                            
-                    if(GetArg("-verbose", 0) >= 2)
-                        printf("%s Credited %f Nexus | Balance : %f Nexus\n", cAddress.ToString().c_str(), (double)vtx[nTx].vout[nOut].nValue / COIN, (double)mapAddressTransactions[cAddress.GetHash256()] / COIN);
-                }
-                        
-                if(!vtx[nTx].IsCoinBase())
-                {
-                    BOOST_FOREACH(const CTxIn& txin, vtx[nTx].vin)
-                    {
-                        if(txin.prevout.IsNull())
-                            continue;
-                        
-                        if(txin.IsStakeSig())
-                            continue;
-                            
-                        CTransaction tx;
-                        CTxIndex txind;
-                                
-                        if(!indexdb.ReadTxIndex(txin.prevout.hash, txind))
-                            continue;
-                                    
-                        if(!tx.ReadFromDisk(txind.pos))
-                            continue;
-                                
-                        Wallet::NexusAddress cAddress;
-                        if(!Wallet::ExtractAddress(tx.vout[txin.prevout.n].scriptPubKey, cAddress))
-                            continue;
-                        
-                        if(!Core::mapRichList.count(cAddress.GetHash256()))
-                            mapRichList[cAddress.GetHash256()] = { std::make_pair(vtx[nTx].IsCoinBase(), tx.GetHash()) };
-                        else
-                            mapRichList[cAddress.GetHash256()].push_back(std::make_pair(vtx[nTx].IsCoinBase(), tx.GetHash()));
-                        
-                        if(Core::mapAddressTransactions.count(cAddress.GetHash256()) < tx.vout[txin.prevout.n].nValue)
-                            mapAddressTransactions[cAddress.GetHash256()] = 0;
-                        else
-                            mapAddressTransactions[cAddress.GetHash256()] -= tx.vout[txin.prevout.n].nValue;
-                        
-                        if(GetArg("-verbose", 0) >= 2)
-                            printf("%s Debited %f Nexus | Balance : %f Nexus\n", cAddress.ToString().c_str(), (double)tx.vout[txin.prevout.n].nValue / COIN, (double)mapAddressTransactions[cAddress.GetHash256()] / COIN);
-                    }
-                }
-            }
-        }
-
         
         std::string strCmd = GetArg("-blocknotify", "");
         if (!fIsInitialDownload && !strCmd.empty())
