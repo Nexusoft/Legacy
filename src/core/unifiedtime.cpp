@@ -43,6 +43,7 @@ static const std::vector<std::string> DNS_SeedNodes =
 	"node1.nxs.efficienthash.com",
 	"node1.henryskinner.net",
 	"node1.nexplorer.io",
+	"node1.positivism.trade",
 	"node2.nexusearth.com",
 	"node2.mercuryminer.com",
 	"node2.nexusminingpool.com",
