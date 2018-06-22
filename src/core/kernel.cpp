@@ -883,6 +883,8 @@ namespace Core
         
         /* Find the block previous to pindexNew. */
         uint1024 hashBlockLast = Back(hashThisBlock);
+        if(!mapBlockIndex.count(hashBlockLast))
+            return 0; 
         
         /* Make sure there aren't timestamp overflows. */
         if(mapBlockIndex[hashBlockLast]->GetBlockTime() > mapBlockIndex[hashPrevBlock]->GetBlockTime())
