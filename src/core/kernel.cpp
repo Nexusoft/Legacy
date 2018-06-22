@@ -588,10 +588,6 @@ namespace Core
             if(!cTrustKey.CheckGenesis(cBlock))
                 return error("CTrustPool::check() : Invalid Genesis Transaction.");
             
-            /* Dump the Trust Key To Console if not Initializing. */
-            if(!fInit && GetArg("-verbose", 0) >= 2)
-                mapTrustKeys[cKey].Print();
-            
             /* Only Debug when Not Initializing. */
             if(GetArg("-verbose", 0) >= 1 && !fInit) {
                 printf("CTrustPool::Connect() : New Genesis Coinstake Transaction From Block %u\n", cBlock.nHeight);
@@ -653,15 +649,15 @@ namespace Core
                     return Connect(cBlock, fInit);
                 }
             }
-            
-            /* Dump the Trust Key to Console if not Initializing. */
-            if(!fInit && GetArg("-verbose", 0) >= 2)
-                mapTrustKeys[cKey].Print();
         }
         
         /* Verify the Stake Kernel. */
         if(!fInit && !cBlock.VerifyStake())
             return error("CTrustPool::Connect() : Invalid Proof of Stake");
+        
+        /* Dump the Trust Key to Console if not Initializing. */
+        if(!fInit && GetArg("-verbose", 0) >= 2)
+            mapTrustKeys[cKey].Print();
         
         /* Only Debug when Not Initializing. */
         if(!fInit && GetArg("-verbose", 0) >= 1)
