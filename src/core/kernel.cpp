@@ -811,33 +811,33 @@ namespace Core
         Block must have been received and be part of the main chain. **/
     bool CTrustKey::CheckGenesis(CBlock cBlock) const
     {
-        /** Invalid if Null. **/
+        /* Invalid if Null. */
         if(IsNull())
             return false;
             
-        /** Trust Keys must be created from only Proof of Stake Blocks. **/
+        /* Trust Keys must be created from only Proof of Stake Blocks. */
         if(!cBlock.IsProofOfStake())
             return error("CTrustKey::CheckGenesis() : Genesis Key Invalid for non Proof of Stake blocks.");
             
-        /** Trust Key Timestamp must be the same as Genesis Key Block Timestamp. **/		
+        /* Trust Key Timestamp must be the same as Genesis Key Block Timestamp. */
         if(nGenesisTime != cBlock.nTime)
             return error("CTrustKey::CheckGenesis() : Time Mismatch for Trust key to Genesis Trust Block");
             
-        /** Genesis Key Transaction must match Trust Key Genesis Hash. **/
+        /* Genesis Key Transaction must match Trust Key Genesis Hash. */
         if(cBlock.vtx[0].GetHash() != hashGenesisTx)
             return error("CTrustKey::CheckGenesis() : Genesis Key Hash Mismatch to Genesis Transaction Hash");
             
-        /** Extract the Key from the Script Signature. **/
+        /* Extract the Key from the Script Signature. **/
         vector< std::vector<unsigned char> > vKeys;
         Wallet::TransactionType keyType;
         if (!Wallet::Solver(cBlock.vtx[0].vout[0].scriptPubKey, keyType, vKeys))
             return error("CTrustKey::IsInvalid() : Failed To Solve Trust Key Script.");
 
-        /** Ensure the Key is Public Key. No Pay Hash or Script Hash for Trust Keys. **/
+        /* Ensure the Key is Public Key. No Pay Hash or Script Hash for Trust Keys. */
         if (keyType != Wallet::TX_PUBKEY)
             return error("CTrustKey::CheckGenesis() : Trust Key must be of Public Key Type Created from Keypool.");
         
-        /** Set the Public Key. **/
+        /* Set the Public Key. */
         if(vKeys[0] != vchPubKey)
             return error("CTrustKey::CheckGenesis() : Trust Key Public Key and Genesis Trust Block Public Key Mismatch\n");
         
