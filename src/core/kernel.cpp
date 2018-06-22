@@ -407,10 +407,6 @@ namespace Core
         }
         nAverageTime /= 5;
         
-        /* RULE: If there are 6 consecutive genesis blocks. */
-        if(pblock[0].IsProofOfStake() && pblock[1].IsProofOfStake() && pblock[1].IsProofOfStake())
-            return error("\x1b[31m SOFTBAN: \u001b[37;1m At least 3 consecutive Proof of Stake \x1b[0m");
-        
         /* Create an LLD instance for Tx Lookups. */
         LLD::CIndexDB indexdb("cr");
             
