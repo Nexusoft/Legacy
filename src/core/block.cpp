@@ -306,12 +306,6 @@ namespace Core
         }
         else
         {
-            if(!IsInitialBlockDownload() && GetBoolArg("-softban", true) && IsProofOfStake() && !cTrustPool.IsValid(*this))
-            {
-                error("\x1b[31m SOFTBAN: Not Connecting %s\x1b[0m", hash.ToString().substr(0, 20).c_str());
-                
-                return true;
-            }
             
             CBlockIndex* pfork = pindexBest;
             CBlockIndex* plonger = pindexNew;
@@ -338,6 +332,25 @@ namespace Core
             for (CBlockIndex* pindex = pindexNew; pindex != pfork; pindex = pindex->pprev)
                 vConnect.push_back(pindex);
             reverse(vConnect.begin(), vConnect.end());
+            
+            
+            /* Check back 2 blocks for softbans. */
+            if(!IsInitialBlockDownload() && GetBoolArg("-softban", true))
+            {
+                for(auto pindex : vConnect)
+                {
+                    CBlock block;
+                    if (!block.ReadFromDisk(pindex))
+                        return error("CBlock::SetBestChain() : ReadFromDisk for softban checks failed");
+                
+                    if(IsProofOfStake() && !cTrustPool.IsValid(block))
+                    {
+                        error("\x1b[31m SOFTBAN: Not Connecting %s\x1b[0m", hash.ToString().substr(0, 20).c_str());
+                
+                        return true;
+                    }
+                }
+            }
 
             
             /** Debug output if there is a fork. **/

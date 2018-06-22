@@ -407,6 +407,10 @@ namespace Core
         }
         nAverageTime /= 5;
         
+        /* RULE: If there are 6 consecutive genesis blocks. */
+        if(pblock[0].IsProofOfStake() && pblock[1].IsProofOfStake() && pblock[1].IsProofOfStake())
+            return error("\x1b[31m SOFTBAN: \u001b[37;1m At least 3 consecutive Genesis \x1b[0m");
+        
         /* Create an LLD instance for Tx Lookups. */
         LLD::CIndexDB indexdb("cr");
             
@@ -445,15 +449,6 @@ namespace Core
                     pblock[1].vtx[0].GetValueOut() < 1000 * COIN)
                     return error("\x1b[31m SOFTBAN: \u001b[37;1m More than 2 Consecutive blocks < 1000 NXS \x1b[0m");
             }
-            
-            bool fGenesis = true;
-            for(int i = 0; i < 3; i++)
-                if(!pblock[i].vtx[0].IsGenesis())
-                    fGenesis = false;
-            
-            /* RULE: If there are 6 consecutive genesis blocks. */
-            if(fGenesis)
-                return error("\x1b[31m SOFTBAN: \u001b[37;1m At least 3 consecutive Genesis \x1b[0m");
         }
         
         /** Handle Adding Trust Transactions. **/
@@ -600,10 +595,7 @@ namespace Core
             /* Only Debug when Not Initializing. */
             if(GetArg("-verbose", 0) >= 1 && !fInit) {
                 printf("CTrustPool::Connect() : New Genesis Coinstake Transaction From Block %u\n", cBlock.nHeight);
-                printf("CTrustPool::ACCEPTED %s\n", cKey.ToString().substr(0, 20).c_str());
             }
-            
-            return true;
         }
         
         /* Handle Adding Trust Transactions. */
@@ -665,20 +657,17 @@ namespace Core
             /* Dump the Trust Key to Console if not Initializing. */
             if(!fInit && GetArg("-verbose", 0) >= 2)
                 mapTrustKeys[cKey].Print();
-            
-            /* Only Debug when Not Initializing. */
-            if(!fInit && GetArg("-verbose", 0) >= 1) {
-                printf("CTrustPool::ACCEPTED %s\n", cKey.ToString().substr(0, 20).c_str());
-            }
-            
-            return true;
         }
         
         /* Verify the Stake Kernel. */
         if(!fInit && !cBlock.VerifyStake())
             return error("CTrustPool::Connect() : Invalid Proof of Stake");
         
-        return error("CTrustPool::Connect() : Missing Trust or Genesis Transaction in Block.");
+        /* Only Debug when Not Initializing. */
+        if(!fInit && GetArg("-verbose", 0) >= 1)
+            printf("CTrustPool::ACCEPTED %s\n", cKey.ToString().substr(0, 20).c_str());
+        
+        return true;
     }
         
         
