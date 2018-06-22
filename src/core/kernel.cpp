@@ -376,7 +376,7 @@ namespace Core
         
         /* Verify the Stake Efficiency Threshold. */
         if(!cBlock.VerifyStake())
-            return error("CTrustPool::Connect() : Invalid Proof of Stake");
+            return error("CTrustPool::IsValid() : Invalid Proof of Stake");
             
         /* Set the Public Key Integer Key from Bytes. */
         uint576 cKey;
