@@ -155,7 +155,7 @@ namespace Core
         double nThreshold = ((nTime - vtx[0].nTime) * 100.0) / nNonce;
         double nRequired  = ((50.0 - nTrustWeight - nBlockWeight) * MAX_STAKE_WEIGHT) / std::min((int64)MAX_STAKE_WEIGHT, vtx[0].vout[0].nValue);
         if(nThreshold < nRequired)
-            return error("CBlock::VerifyStake() : Coinstake / nNonce threshold too low %f Required %f. Energy efficiency limits Reached Coin Age %" PRIu64 " | Trust Age %" PRIu64 " | Block Age %" PRIu64, nThreshold, nRequired, nCoinAge, nTrustAge, nBlockAge);
+            return error("CBlock::VerifyStake() : Coinstake / nNonce threshold too low %f Required %f. Energy efficiency limits Reached", nThreshold, nRequired);
             
             
         /** H] Check the Block Hash with Weighted Hash to Target. **/
