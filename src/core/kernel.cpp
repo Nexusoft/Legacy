@@ -141,13 +141,6 @@ namespace Core
         }
         else
         {
-            /* Check that Transaction is not Genesis when Trust Key is Established. */
-            if(GetHash() != cTrustPool.Find(cKey).hashGenesisBlock)
-                return error("CBlock::VerifyStake() : Duplicate Genesis not Allowed");
-                
-            /* Check that Genesis has no Transactions. */
-            if(vtx.size() != 1)
-                return error("CBlock::VerifyStake() : Cannot Include Transactions with Genesis Transaction");
                 
             /** Calculate the Average Coinstake Age. **/
             LLD::CIndexDB indexdb("r");
@@ -380,6 +373,10 @@ namespace Core
         /* Ensure the Key is Public Key. No Pay Hash or Script Hash for Trust Keys. */
         if (keyType != Wallet::TX_PUBKEY)
             return error("CTrustPool::IsValid() : Trust Key must be of Public Key Type Created from Keypool.");
+        
+        /* Verify the Stake Efficiency Threshold. */
+        if(!cBlock.VerifyStake())
+            return error("CTrustPool::Connect() : Invalid Proof of Stake");
             
         /* Set the Public Key Integer Key from Bytes. */
         uint576 cKey;
@@ -529,6 +526,10 @@ namespace Core
         /* Check that the Coinbase / CoinstakeTimstamp is after Previous Block. */
         if (mapBlockIndex[cBlock.hashPrevBlock]->GetBlockTime() > cBlock.vtx[0].nTime)
             return error("CTrustPool::check()  : Coinstake Timestamp too Early.");
+                
+        /* Check that Genesis has no Transactions. */
+        if(cBlock.vtx.size() != 1)
+            return error("CBlock::check() : Cannot Include Transactions with Genesis Transaction");
             
         /** Extract the Key from the Script Signature. **/
         vector< std::vector<unsigned char> > vKeys;
@@ -579,7 +580,11 @@ namespace Core
                 return Connect(cBlock, fInit);
             }
             
-            /** Create the Trust Key from Genesis Transaction Block. **/			
+            /* Check that Transaction is not Genesis when Trust Key is Established. */
+            if(cBlock.GetHash() != cTrustPool.Find(cKey).hashGenesisBlock)
+                return error("CBlock::Connect() : Duplicate Genesis not Allowed");
+            
+            /* Create the Trust Key from Genesis Transaction Block. */
             CTrustKey cTrustKey(vKeys[0], cBlock.GetHash(), cBlock.vtx[0].GetHash(), cBlock.nTime);
             if(!cTrustKey.CheckGenesis(cBlock))
                 return error("CTrustPool::check() : Invalid Genesis Transaction.");
@@ -646,10 +651,6 @@ namespace Core
                 }
             }
         }
-        
-        /* Verify the Stake Kernel. */
-        if(!fInit && !cBlock.VerifyStake())
-            return error("CTrustPool::Connect() : Invalid Proof of Stake");
         
         /* Dump the Trust Key to Console if not Initializing. */
         if(!fInit && GetArg("-verbose", 0) >= 2)
