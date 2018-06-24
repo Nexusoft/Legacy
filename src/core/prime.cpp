@@ -26,7 +26,7 @@ namespace Core
 		Difficulty is represented as so V.X
 		V is the whole number, or Cluster Size, X is a proportion
 		of Fermat Remainder from last Composite Number [0 - 1] **/
-	double GetPrimeDifficulty(CBigNum prime, int checks)
+	double GetPrimeDifficulty(const CBigNum& prime, int checks)
 	{
 		if(!PrimeCheck(prime, checks))
 			return 0.0; ///difficulty of a composite number
@@ -56,7 +56,7 @@ namespace Core
 	}
 
 	/** Gets the unsigned int representative of a decimal prime difficulty **/
-	unsigned int GetPrimeBits(CBigNum prime)
+	unsigned int GetPrimeBits(const CBigNum& prime)
 	{
 		return SetBits(GetPrimeDifficulty(prime, 1));
 	}
@@ -64,7 +64,7 @@ namespace Core
 	/** Breaks the remainder of last composite in Prime Cluster into an integer. 
 		Larger numbers are more rare to find, so a proportion can be determined 
 		to give decimal difficulty between whole number increases. **/
-	unsigned int GetFractionalDifficulty(CBigNum composite)
+	unsigned int GetFractionalDifficulty(const CBigNum& composite)
 	{
 		/** Break the remainder of Fermat test to calculate fractional difficulty [Thanks Sunny] **/
 		return ((composite - FermatTest(composite, 2) << 24) / composite).getuint();
@@ -72,7 +72,7 @@ namespace Core
 
 	/** Determines if given number is Prime. Accuracy can be determined by "checks". 
 		The default checks the Nexus Network uses is 2 **/
-	bool PrimeCheck(CBigNum test, int checks)
+	bool PrimeCheck(const CBigNum& test, int checks)
 	{
 		/** Check A: Small Prime Divisor Tests */
 		CBigNum primes[11] = { 2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31 };
@@ -95,20 +95,20 @@ namespace Core
 
 	/** Simple Modular Exponential Equation a^(n - 1) % n == 1 or notated in Modular Arithmetic a^(n - 1) = 1 [mod n]. 
 		a = Base or 2... 2 + checks, n is the Prime Test. Used after Miller-Rabin and Divisor tests to verify primality. **/
-	CBigNum FermatTest(CBigNum n, CBigNum a)
+	CBigNum FermatTest(const CBigNum& n, const CBigNum& a)
 	{
 		CAutoBN_CTX pctx;
 		CBigNum e = n - 1;
 		CBigNum r;
-		BN_mod_exp(&r, &a, &e, &n, pctx);
+		BN_mod_exp(r.getBN(), a.getBN(), e.getBN(), n.getBN(), pctx);
 		
 		return r;
 	}
 
 	/** Miller-Rabin Primality Test from the OpenSSL BN Library. **/
-	bool Miller_Rabin(CBigNum n, int checks)
+	bool Miller_Rabin(const CBigNum& n, int checks)
 	{
-		return (BN_is_prime(&n, checks, NULL, NULL, NULL) == 1);
+		return (BN_is_prime_ex(n.getBN(), checks, nullptr, nullptr) == 1);
 	}
 
 }
