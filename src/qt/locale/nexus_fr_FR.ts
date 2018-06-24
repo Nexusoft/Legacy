@@ -182,22 +182,22 @@ Ce produit inclut des logiciels développés par OpenSSL Project pour utilisatio
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="61"/>
         <source>Enter passphrase</source>
-        <translation>Entrez la phrase de passe</translation>
+        <translation>Entrez votre mot de passe</translation>
     </message>
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="47"/>
         <source>Unlock for Mint Only?</source>
-        <translation>Débloquer pour la Mint seulement?</translation>
+        <translation>Déverrouiller pour le staking uniquement?</translation>
     </message>
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="75"/>
         <source>New passphrase</source>
-        <translation>Nouvelle phrase de passe</translation>
+        <translation>Nouveau mot de passe</translation>
     </message>
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="89"/>
         <source>Repeat new passphrase</source>
-        <translation>Répétez la phrase de passe</translation>
+        <translation>Répétez votre mot de passe</translation>
     </message>
     <message>
         <location filename="../dialogs/askpassphrasedialog.cpp" line="53"/>
