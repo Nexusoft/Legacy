@@ -11,6 +11,7 @@
 #include "net/rpcserver.h"
 #include "main.h"
 #include "LLP/coreserver.h"
+#include "LLP/miningserver.h"
 #include "LLD/keychain.h"
 #include "core/unifiedtime.h"
 #include "util/util.h"
@@ -31,6 +32,11 @@ using namespace boost;
 
 Wallet::CWallet* pwalletMain;
 LLP::Server<LLP::CoreLLP>* LLP_SERVER;
+
+namespace LLP 
+{
+    LLP::Server<LLP::MiningLLP>* MINING_LLP;
+}
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -241,6 +247,7 @@ bool AppInit2(int argc, char* argv[])
                     "  -printtodebugger \t  "   + _("Send trace/debug info to debugger") + "\n" +
         #endif
                     "  -llpallowip=<ip> \t  "   + _("Allow mining from specified IP address or range (192.168.6.* for example") + "\n" +
+                    "  -banned=<ip>     \t  "   + _("Manually Ban Addresses from Config File") + "\n" +
                     "  -mining 			\t  "   + _("Allow mining (default: 0)") + "\n" +
                     "  -rpcuser=<user>  \t  "   + _("Username for JSON-RPC connections") + "\n" +
                     "  -rpcpassword=<pw>\t  "   + _("Password for JSON-RPC connections") + "\n" +
@@ -341,7 +348,10 @@ bool AppInit2(int argc, char* argv[])
 	printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
 	printf("Nexus version %s (%s)\n", FormatFullVersion().c_str(), CLIENT_DATE.c_str());
 	printf("Default data directory %s\n", GetDefaultDataDir().string().c_str());
-
+    
+    for(auto node : mapMultiArgs["-banned"])
+        printf("PERMANENT BAN %s\n", node.c_str());
+    
     #ifdef USE_LLD
         InitMessage(_("Initializing LLD Keychains..."));
         LLD::RegisterKeychain("blkindex", "blkindex");
@@ -623,12 +633,21 @@ bool AppInit2(int argc, char* argv[])
             Sleep(1000);
     }
 
-	/** Start sending Unified Samples. **/
+	/* Initialize the Core LLP if it is enabled. */
 	if(GetBoolArg("-unified", false)) {
 		InitMessage(_("Initializing Core LLP..."));
 		printf("Initializing Core LLP...\n");
 		LLP_SERVER = new LLP::Server<LLP::CoreLLP>(fLispNet ? LISPNET_CORE_LLP_PORT : fTestNet ? TESTNET_CORE_LLP_PORT : NEXUS_CORE_LLP_PORT, 5, true, 2, 5, 5);
 	}
+	
+	
+	/* Initialize the Mining LLP if it is enabled. */
+	if(GetBoolArg("-mining", false)) {
+        InitMessage(_("Initializing Mining LLP..."));
+        printf("%%%%%%%%%% Initializing Mining LLP...");
+        
+        LLP::MINING_LLP = new LLP::Server<LLP::MiningLLP>(fLispNet ? LISPNET_MINING_LLP_PORT : fTestNet ? TESTNET_MINING_LLP_PORT : NEXUS_MINING_LLP_PORT, GetArg("-mining_threads", 10), true, GetArg("-mining_cscore", 5), GetArg("-mining_rscore", 50), GetArg("-mining_timout", 60));
+    }
 	
     if (!Core::CheckDiskSpace())
         return false;
@@ -639,19 +658,16 @@ bool AppInit2(int argc, char* argv[])
         ThreadSafeMessageBox(_("Error: CreateThread(StartNode) failed"), _("Nexus"), wxOK | wxMODAL);
 	
     #ifndef QT_GUI
-        if(GetBoolArg("-stake", false))
-        {
+    if(GetBoolArg("-stake", false))
+    {
+    #else
+    if(GetBoolArg("-stake", true))
+    {
     #endif
-		CreateThread(Core::StakeMinter, NULL);
-		
-    #ifndef QT_GUI
-            printf("%%%%%%%%%%%%%%%%% Daemon Staking Thread Initialized...\n");
-        }
-    #endif
+        CreateThread(Core::StakeMinter, NULL);
 
-	
-	if(GetBoolArg("-mining", false))
-		Core::StartMiningLLP();
+        printf("%%%%%%%%%%%%%%%%% Staking Thread Initialized...\n");
+    }
 	
     if (fServer)
         CreateThread(Net::ThreadRPCServer, NULL);

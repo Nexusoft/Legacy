@@ -181,7 +181,7 @@ NexusGUI::NexusGUI(QWidget *parent):
     progressBarLabel = new QLabel();
     progressBarLabel->setVisible(false);
     progressBar = new QProgressBar();
-	progressBar->setStyleSheet("QProgressBar { border: 2px solid grey; border-radius: 5px; } QProgressBar::chunk { background-color: #084B8A; width: 20px; }");
+	progressBar->setStyleSheet("QProgressBar { border: 2px solid grey; border-radius: 5px; } QProgressBar::chunk { background-color: #0288D9; width: 20px; }");
     progressBar->setAlignment(Qt::AlignCenter);
     progressBar->setVisible(false);
 

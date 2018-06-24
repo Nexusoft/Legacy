@@ -213,22 +213,22 @@ namespace LLD
 			if(!SectorKeys)
 				return error("Get() : Sector Keys not Registered for Name %s\n", strKeychainRegistry.c_str());
 			
-			if(SectorKeys->HasKey(vKey))
-			{	
-                /* Check that the key is not pending in a transaction for Erase. */
-                if(pTransaction && pTransaction->mapEraseData.count(vKey))
-                    return false;
+            /* Check that the key is not pending in a transaction for Erase. */
+            if(pTransaction && pTransaction->mapEraseData.count(vKey))
+                return false;
+            
+            /* Check if the new data is set in a transaction to ensure that the database knows what is in volatile memory. */
+            if(pTransaction && pTransaction->mapTransactions.count(vKey))
+            {
+                vData = pTransaction->mapTransactions[vKey];
                 
-                /* Check if the new data is set in a transaction to ensure that the database knows what is in volatile memory. */
-                if(pTransaction && pTransaction->mapTransactions.count(vKey))
-                {
-                    vData = pTransaction->mapTransactions[vKey];
-                    
-                    if(GetArg("-verbose", 0) >= 4)
-                        printf("SECTOR GET:%s\n", HexStr(vData.begin(), vData.end()).c_str());
-                    
-                    return true;
-                }
+                if(GetArg("-verbose", 0) >= 3)
+                    printf("SECTOR GET:%s\n", HexStr(vData.begin(), vData.end()).c_str());
+                
+                return true;
+            }
+			else if(SectorKeys->HasKey(vKey))
+			{
                 
 				/** Read the Sector Key from Keychain. **/
 				SectorKey cKey;
@@ -412,6 +412,8 @@ namespace LLD
 		bool TxnCommit()
 		{
 			MUTEX_LOCK(SECTOR_MUTEX);
+            
+            //TODO: Commit Transaction to Journal Here before writing to Keychain
 			
 			if(GetArg("-verbose", 0) >= 4)
 				printf("TransactionCommit() : Commiting Transactin to Datachain.\n");

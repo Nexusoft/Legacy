@@ -147,6 +147,7 @@ namespace Core
 	
 	/** The "Block Chain" or index of the chain linking each block to its previous block. **/
 	extern std::map<uint1024, CBlockIndex*> mapBlockIndex;
+    extern std::map<uint1024, uint1024>   mapInvalidBlocks;
 	
 	extern std::map<uint1024, uint1024> mapProofOfStake;
 	extern std::map<uint512, CDataStream*> mapOrphanTransactions;
@@ -191,8 +192,8 @@ namespace Core
 	/** Small function to ensure the global supply remains within reasonable bounds **/
 	inline bool MoneyRange(int64 nValue) { return (nValue >= 0 && nValue <= MAX_TXOUT_AMOUNT); }
 	
-		
-		
+	
+	//extern LLP::Server<LLP::MiningLLP>* MINING_LLP;
 		
 		
 	
@@ -254,7 +255,6 @@ namespace Core
 	
 	
 	/** MINING.CPP **/
-	void StartMiningLLP();
 	void StartStaking(Wallet::CWallet *pwallet);
 	CBlock CreateNewBlock(Wallet::CReserveKey& reservekey, Wallet::CWallet* pwallet, unsigned int nChannel, unsigned int nID = 1, LLP::Coinbase* pCoinbase = NULL);
 	void AddTransactions(std::vector<CTransaction>& vtx, CBlockIndex* pindexPrev);
@@ -608,7 +608,7 @@ namespace Core
 	{
 	public:
 	
-		/** The Public Key associated with Trust Key. **/
+		/* The Public Key associated with Trust Key. */
 		std::vector<unsigned char> vchPubKey;
 		
 		unsigned int nVersion;
@@ -616,8 +616,8 @@ namespace Core
 		uint512   hashGenesisTx;
 		unsigned int nGenesisTime;
 		
-		/** Previous Blocks Vector to store list of blocks of this Trust Key. **/
-		mutable std::vector<uint1024> hashPrevBlocks;
+		/* Previous Blocks Vector to store list of blocks of this Trust Key. */
+		mutable std::vector< std::pair<uint1024, bool> > hashPrevBlocks;
 		
 		CTrustKey() { SetNull(); }
 		CTrustKey(std::vector<unsigned char> vchPubKeyIn, uint1024 hashBlockIn, uint512 hashTxIn, unsigned int nTimeIn)
@@ -643,7 +643,7 @@ namespace Core
 		)
 		
 		
-		/** Set the Data structure to Null. **/
+		/* Set the Data structure to Null. */
 		void SetNull() 
 		{ 
 			nVersion             = 1;
@@ -654,18 +654,40 @@ namespace Core
 			vchPubKey.clear();
 		}
 		
-		/** Hash of a Trust Key to Verify the Key's Root. **/
+		/* Hash of a Trust Key to Verify the Key's Root. */
 		uint512 GetHash() const { return SK512(vchPubKey, BEGIN(hashGenesisBlock), END(nGenesisTime)); }
 		
-		/** Determine how old the Trust Key is From Timestamp. **/
+		/* Determine how old the Trust Key is From Timestamp. */
 		uint64 Age(unsigned int nTime) const;
 		
-		/** Time Since last Trust Block. **/
-		uint64 BlockAge(unsigned int nTime) const;
+		/* Time Since last Trust Block. */
+        uint64 BlockAge(uint1024 hashThisBlock, uint1024 hashPrevBlock) const;
+        
+        /* Get the Back of the Vector Connected block. */
+        uint1024 Back(uint1024 hashThisBlock = 0) const
+        {
+            bool fFound = false;
+            for(auto prev = hashPrevBlocks.rbegin() ; prev != hashPrevBlocks.rend() ; prev ++){
+                if(hashThisBlock != 0){
+                    if((*prev).first == hashThisBlock){
+                        fFound = true;
+                        
+                        continue;
+                    }
+                    
+                    if(!fFound)
+                        continue;
+                }
+                if((*prev).second)
+                    return (*prev).first;
+            }
+            
+            return hashGenesisBlock;
+        }
 		
-		/** Flag to Determine if Class is Empty and Null. **/
+		/* Flag to Determine if Class is Empty and Null. */
 		bool IsNull()  const { return (hashGenesisBlock == 0 || hashGenesisTx == 0 || nGenesisTime == 0 || vchPubKey.empty()); }
-		bool Expired(unsigned int nTime) const;
+		bool Expired(uint1024 hashThisBlock, uint1024 hashPrevBlock) const;
 		bool CheckGenesis(CBlock cBlock) const;
 		
 		std::string ToString()
@@ -673,8 +695,19 @@ namespace Core
 			uint576 cKey;
 			cKey.SetBytes(vchPubKey);
 			
-			return strprintf("Hash = %s, Key = %s, Genesis = %s, Tx = %s, Time = %u, Age = %" PRIu64 ", BlockAge = %" PRIu64 ", Expired = %s", GetHash().ToString().c_str(), cKey.ToString().c_str(), hashGenesisBlock.ToString().c_str(), hashGenesisTx.ToString().c_str(), nGenesisTime, Age(GetUnifiedTimestamp()), BlockAge(GetUnifiedTimestamp()), Expired(GetUnifiedTimestamp()) ? "TRUE" : "FALSE");
+			return strprintf("Hash = %s, Key = %s, Genesis = %s, Tx = %s, Time = %u, Age = %u", GetHash().ToString().c_str(), cKey.ToString().c_str(), hashGenesisBlock.ToString().c_str(), hashGenesisTx.ToString().c_str(), nGenesisTime, Age(GetUnifiedTimestamp()));
 		}
+		
+		uint576 GetKey()
+        {
+            if(IsNull())
+                return 0;
+            
+            uint576 cKey;
+            cKey.SetBytes(vchPubKey);
+            
+            return cKey;
+        }
 		
 		void Print()
 		{
@@ -698,12 +731,22 @@ namespace Core
 		/* Helper Function to Find Trust Key. */
 		bool HasTrustKey(unsigned int nTime);
 		
+        bool IsValid(CBlock cBlock);
 		bool Check(CBlock cBlock);
 		bool Accept(CBlock cBlock, bool fInit = false);
-		bool Remove(CBlock cBlock);
+        bool Connect(CBlock cBlock, bool fInit = false);
+        bool Disconnect(CBlock cBlock, bool fInit = false);
 		
 		bool Exists(uint576 cKey)    const { return mapTrustKeys.count(cKey); }
-		bool IsGenesis(uint576 cKey) const { return mapTrustKeys[cKey].hashPrevBlocks.empty(); }
+		bool IsGenesis(uint576 cKey, uint1024 hashBlock) const 
+		{ 
+            return mapTrustKeys[cKey].hashGenesisBlock == hashBlock; 
+        }
+        
+        bool IsGenesis(uint576 cKey) const 
+        {
+            return mapTrustKeys[cKey].hashPrevBlocks.size() == 1;
+        }
 		
 		double InterestRate(uint576 cKey, unsigned int nTime) const;
 		
@@ -1446,6 +1489,9 @@ namespace Core
 			}
 			return hash;
 		}
+		
+		
+        bool Reindex(CBlockIndex* pindex);
 
 
 		bool WriteToDisk(unsigned int& nFileRet, unsigned int& nBlockPosRet)

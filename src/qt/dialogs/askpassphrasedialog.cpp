@@ -172,6 +172,20 @@ void AskPassphraseDialog::accept()
         }
         else
         {
+            if(mode == UnlockOrMint)
+            {
+                if(ui->mintOnly->isChecked())
+                {
+                    QMessageBox::information(this, tr("Wallet Unlocked"),
+                                         tr("Wallet successfully unlocked for block minting only."));
+                }
+                else
+                {
+                    QMessageBox::information(this, tr("Wallet Unlocked"),
+                                         tr("Wallet successfully unlocked."));
+                }
+            }
+
             QDialog::accept(); // Success
         }
         break;
@@ -192,7 +206,7 @@ void AskPassphraseDialog::accept()
             if(model->changePassphrase(oldpass, newpass1))
             {
                 QMessageBox::information(this, tr("Wallet encrypted"),
-                                     tr("Wallet passphrase was succesfully changed."));
+                                     tr("Wallet passphrase was successfully changed."));
                 QDialog::accept(); // Success
             }
             else

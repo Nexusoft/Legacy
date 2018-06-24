@@ -43,6 +43,7 @@ static const std::vector<std::string> DNS_SeedNodes =
 	"node1.nxs.efficienthash.com",
 	"node1.henryskinner.net",
 	"node1.nexplorer.io",
+	"node1.positivism.trade",
 	"node2.nexusearth.com",
 	"node2.mercuryminer.com",
 	"node2.nexusminingpool.com",
@@ -152,6 +153,10 @@ int64 GetLocalTimestamp(){ return time(NULL); }
 
 /** Gets the UNIX Timestamp from the Nexus Network **/
 int64 GetUnifiedTimestamp(){ return GetLocalTimestamp() + UNIFIED_AVERAGE_OFFSET; }
+
+
+/** Gets the Local Unversal time converted. **/
+int64 UniversalTime(int64 nTimestamp) { return nTimestamp - UNIFIED_AVERAGE_OFFSET; }
 
 
 /** Called from Thread Time Regulator.

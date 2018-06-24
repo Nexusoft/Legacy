@@ -80,8 +80,9 @@ namespace Net
 	void CNode::PushGetBlocks(Core::CBlockIndex* pindexBegin, uint1024 hashEnd)
 	{
 		// Filter out duplicate requests
-		if (pindexBegin == pindexLastGetBlocksBegin && hashEnd == hashLastGetBlocksEnd)
-			return;
+		//if (pindexBegin == pindexLastGetBlocksBegin && hashEnd == hashLastGetBlocksEnd)
+		//	return;
+        
 		pindexLastGetBlocksBegin = pindexBegin;
 		hashLastGetBlocksEnd = hashEnd;
 
@@ -414,6 +415,14 @@ namespace Net
 
 	bool CNode::IsBanned(CNetAddr ip)
 	{
+        
+        /* Check the Banned List. */
+        const std::vector<std::string>& vBanned = mapMultiArgs["-banned"];
+        for(auto node : vBanned)
+            if(ip.ToStringIP() == node)
+                return true;
+        
+            
 		bool fResult = false;
 		{
 			LOCK(cs_setBanned);
@@ -439,7 +448,7 @@ namespace Net
 		nMisbehavior += howmuch;
 		if (nMisbehavior >= GetArg("-banscore", 100))
 		{
-			int64 banTime = GetUnifiedTimestamp() + GetArg("-bantime", 60*60*24);  // Default 24-hour ban
+			int64 banTime = GetUnifiedTimestamp() + GetArg("-bantime", 60 * 60 * 24);  // Default 24-hour ban
 			{
 				LOCK(cs_setBanned);
 				if (setBanned[addr] < banTime)

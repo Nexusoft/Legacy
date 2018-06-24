@@ -73,6 +73,9 @@ namespace LLD
 			
 			mapTransactions[vKey] = vData;
 			mapOriginalData[vKey] = vOriginalData;
+            
+            if(mapEraseData.count(vKey))
+                mapEraseData.erase(vKey);
 			
 			return true;
 		}
@@ -91,6 +94,23 @@ namespace LLD
 			
 			return true;
 		}	
+		
+		//TODO: Add Journal Flush to Disk Here
+		//OF the following serialization format
+		/* ------> Start Header
+         * unsigned int nTotalRecords;
+         * 
+         * ------> Start Records
+         * unsigned short nKeyLength;
+         * std::vector<unsigned char> vKey;
+         * 
+         * unsigned short nDataLength
+         * std::vector<unsigned char> vData;
+         * 
+         * unsigned short nOriginalLength
+         * std::vector<unsigned char> vOriginalData;
+         * ------> Next Record in Sequence
+         */
 	};
 }
 

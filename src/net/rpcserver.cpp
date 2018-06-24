@@ -16,6 +16,7 @@
 #include "net.h"
 
 #include "../LLD/index.h"
+#include "../LLP/miningserver.h"
 
 #undef printf
 #include <boost/asio.hpp>
@@ -360,7 +361,7 @@ namespace Net
 		{
 			Object obj;
 			
-			if(it->second.Expired(GetUnifiedTimestamp()))
+            if(it->second.Expired(0, Core::pindexBest->pprev->GetBlockHash()))
 				continue;
 				
 			/** Check the Wallet and Trust Keys in Trust Pool to see if we own any keys. **/
@@ -373,7 +374,7 @@ namespace Net
 			
 			nTotalActive ++;
 
-			trustkeys.push_back( obj);
+			trustkeys.push_back(obj);
 		}
 		
 		ret.push_back(Pair("keys", trustkeys));
@@ -615,6 +616,7 @@ namespace Net
 		nHashAverageTime /= nHTotal;
 
 		uint64 nHashRate = (nTimeConstant / nHashAverageTime) * nHashAverageDifficulty;
+        
 
 		Object obj;
 		obj.push_back(Pair("blocks",        (int)Core::nBestHeight));
@@ -634,6 +636,13 @@ namespace Net
 		obj.push_back(Pair("pooledtx",      		(boost::uint64_t)Core::mempool.size()));	
 		obj.push_back(Pair("primesPerSecond", 		(boost::uint64_t)nPrimePS));
 		obj.push_back(Pair("hashPerSecond", 		(boost::uint64_t)nHashRate));
+        
+        if(GetBoolArg("-mining", false))
+        {
+            obj.push_back(Pair("totalConnections", LLP::MINING_LLP->TotalConnections()));
+        }
+        
+        
 		return obj;
 	}
 
@@ -1153,6 +1162,9 @@ namespace Net
 	
 		string strAddress = params[0].get_str();
 		Wallet::NexusAddress cAddress(strAddress);
+		
+		if (!cAddress.IsValid())
+			throw JSONRPCError(-5, "Invalid Nexus address");
 		
 		/** Dump the Address and Values. **/
 		Object entry;
@@ -2505,7 +2517,7 @@ namespace Net
 			Wallet::NexusAddress address;
 			address.SetPubKey(i->second.vchPubKey);
 			if(pwalletMain->HaveKey(address))
-				result.push_back(Pair(address.ToString(), i->second.Expired(Core::pindexBest->GetBlockTime()) ? "TRUE" : "FALSE"));
+                result.push_back(Pair(address.ToString(), i->second.Expired(0, Core::pindexBest->pprev->GetBlockHash()) ? "TRUE" : "FALSE"));
 			
 		}
 
@@ -2661,8 +2673,10 @@ namespace Net
 				Wallet::NexusAddress address(input.get_str());
 				if (!address.IsValid())
 					throw JSONRPCError(-5, string("Invalid Nexus address: ")+input.get_str());
+                
 				if (setAddress.count(address))
 					throw JSONRPCError(-8, string("Invalid parameter, duplicated address: ")+input.get_str());
+                
 			   setAddress.insert(address);
 			}
 		}
@@ -2675,7 +2689,7 @@ namespace Net
 			if (out.nDepth < nMinDepth || out.nDepth > nMaxDepth)
 				continue;
 
-			if(setAddress.size())
+			if(!setAddress.empty())
 			{
 				Wallet::NexusAddress address;
 				if(!ExtractAddress(out.tx->vout[out.i].scriptPubKey, address))
@@ -2700,6 +2714,7 @@ namespace Net
 			entry.push_back(Pair("scriptPubKey", HexStr(pk.begin(), pk.end())));
 			entry.push_back(Pair("amount",ValueFromAmount(nValue)));
 			entry.push_back(Pair("confirmations",out.nDepth));
+            
 			results.push_back(entry);
 		}
 

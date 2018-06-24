@@ -25,6 +25,7 @@ namespace LLD
 		bool ReadDiskTx(Core::COutPoint outpoint, Core::CTransaction& tx, Core::CTxIndex& txindex);
 		bool ReadDiskTx(Core::COutPoint outpoint, Core::CTransaction& tx);
 		bool WriteBlockIndex(const Core::CDiskBlockIndex& blockindex);
+        bool ReadBlockIndex(const uint1024 hashBlock, Core::CBlockIndex* pindexNew);
 		bool ReadHashBestChain(uint1024& hashBestChain);
 		bool WriteHashBestChain(uint1024 hashBestChain);
 		bool LoadBlockIndex();
@@ -50,6 +51,7 @@ namespace LLD
 		bool ReadDiskTx(Core::COutPoint outpoint, Core::CTransaction& tx, Core::CTxIndex& txindex);
 		bool ReadDiskTx(Core::COutPoint outpoint, Core::CTransaction& tx);
 		bool WriteBlockIndex(const Core::CDiskBlockIndex& blockindex);
+        bool ReadBlockIndex(const uint1024 hashBlock, Core::CBlockIndex* pindexNew);
 		bool ReadHashBestChain(uint1024& hashBestChain);
 		bool WriteHashBestChain(uint1024 hashBestChain);
 		bool LoadBlockIndex();

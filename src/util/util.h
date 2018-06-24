@@ -223,6 +223,9 @@ void LogStackTrace();
 /** Gets the UNIX Timestamp from the Nexus Network **/
 extern int64 GetUnifiedTimestamp();
 
+/** Gets the local UNIX Timestamp converted. **/
+extern int64 UniversalTime(int64 nTimestamp);
+
 
 extern std::map<std::string, std::string> mapArgs;
 extern std::map<std::string, std::vector<std::string> > mapMultiArgs;
@@ -587,6 +590,19 @@ inline bool IsSwitchChar(char c)
     return c == '-';
 #endif
 }
+
+
+inline int64 round_coin_digits(int64 nValue, int digits)
+{
+    double dValue = ((double)nValue / COIN);
+    int    nWhole = (int) dValue;
+    
+    int nDigits = pow(10, digits);
+    double newValue  = (((int)((dValue - nWhole) * nDigits)) / (double)nDigits);
+    
+    return (int64)(newValue * COIN) + (nWhole * COIN);
+}
+
 
 /**
  * Return string argument or default value
