@@ -296,7 +296,7 @@ namespace Core
         }
         else
         {
-            if(!IsInitialBlockDownload() && GetBoolArg("-softban", true) && !cTrustPool.IsValid(*this))
+            if(!IsInitialBlockDownload() && IsProofOfStake() && GetBoolArg("-softban", true) && !cTrustPool.IsValid(*this))
             {
                 error("\x1b[31m SOFTBAN: Invalid nPoS %s\x1b[0m", hash.ToString().substr(0, 20).c_str());
                         
