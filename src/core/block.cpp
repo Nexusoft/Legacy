@@ -62,17 +62,7 @@ namespace Core
     
     bool IsInitialBlockDownload()
     {
-        if (pindexBest == NULL)
-            return true;
-            
-        static int64 nLastUpdate;
-        static CBlockIndex* pindexLastBest;
-        if (pindexBest != pindexLastBest)
-        {
-            pindexLastBest = pindexBest;
-            nLastUpdate = GetUnifiedTimestamp();
-        }
-        return (pindexBest->GetBlockTime() < GetUnifiedTimestamp() - 6 * 60 * 60);
+        return (pindexBest->GetBlockTime() < GetUnifiedTimestamp() - 30 * 60);
     }
     
     
@@ -862,7 +852,7 @@ namespace Core
         
         
         /* Check that Block is Descendant of Hardened Checkpoints. */
-        if(pindexPrev && !IsDescendant(pindexPrev))
+        if(!IsInitialBlockDownload() && pindexPrev && !IsDescendant(pindexPrev))
             return error("AcceptBlock() : Not a descendant of Last Checkpoint");
             
             
