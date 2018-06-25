@@ -499,7 +499,7 @@ namespace LLP
                 NEW_BLOCK.UpdateTime();
                 
                 if(GetArg("-verbose", 0) >= 3)
-                    printf("%%%%%%%%%%% Mining LLP: Created new Block %s\n", NEW_BLOCK.hashMerkleRoot.ToString().substr(0, 20).c_str());
+                    printf("%%%%%%%%%% Mining LLP: Created new Block %s\n", NEW_BLOCK.hashMerkleRoot.ToString().substr(0, 20).c_str());
                 
 				/* Store the new block in the memory map of recent blocks being worked on. */
 				MAP_BLOCKS[NEW_BLOCK.hashMerkleRoot] = NEW_BLOCK;
