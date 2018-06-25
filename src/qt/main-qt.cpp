@@ -179,10 +179,21 @@ int main(int argc, char *argv[])
     Q_INIT_RESOURCE(nexus);
     QApplication app(argc, argv);
 
+    // Command-line options take precedence:
+    ParseParameters(argc, argv);
+
+    // ... then nexus.conf:
+    if (!boost::filesystem::is_directory(GetDataDir(false)))
+    {
+        fprintf(stderr, "Error: Specified directory does not exist\n");
+        return 1;
+    }
+    ReadConfigFile(mapArgs, mapMultiArgs);
+
     // Terms and Conditions
     QDir dir;
     QString termsPath;
-    termsPath.append(GetDefaultDataDir().string().c_str());
+    termsPath.append(GetDataDir(false).string().c_str());
     termsPath.append("/.license");
     QFile file(termsPath);
 
@@ -248,17 +259,6 @@ int main(int argc, char *argv[])
         splash.setAutoFillBackground(true);
         splashref = &splash;
     }
-
-    // Command-line options take precedence:
-    ParseParameters(argc, argv);
-
-    // ... then nexus.conf:
-    if (!boost::filesystem::is_directory(GetDataDir(false)))
-    {
-        fprintf(stderr, "Error: Specified directory does not exist\n");
-        return 1;
-    }
-    ReadConfigFile(mapArgs, mapMultiArgs);
 
     // Application identification (must be set before OptionsModel is initialized,
     // as it is used to locate QSettings)
