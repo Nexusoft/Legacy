@@ -296,10 +296,10 @@ namespace Core
         }
         else
         {
-            if(!IsInitialBlockDownload() && GetBoolArg("-softban", true) && IsProofOfStake() && !cTrustPool.IsValid(*this))
+            if(!IsInitialBlockDownload() && GetBoolArg("-softban", true) && !cTrustPool.IsValid(*this))
             {
-                error("\x1b[31m SOFTBAN: Not Connecting %s\x1b[0m", hash.ToString().substr(0, 20).c_str());
-                
+                error("\x1b[31m SOFTBAN: Invalid nPoS %s\x1b[0m", hash.ToString().substr(0, 20).c_str());
+                        
                 return true;
             }
             
@@ -317,27 +317,27 @@ namespace Core
             }
 
             
-            /** List of what to Disconnect. **/
+            /* List of what to Disconnect. */
             vector<CBlockIndex*> vDisconnect;
             for (CBlockIndex* pindex = pindexBest; pindex != pfork; pindex = pindex->pprev)
                 vDisconnect.push_back(pindex);
 
             
-            /** List of what to Connect. **/
+            /* List of what to Connect. */
             vector<CBlockIndex*> vConnect;
             for (CBlockIndex* pindex = pindexNew; pindex != pfork; pindex = pindex->pprev)
                 vConnect.push_back(pindex);
             reverse(vConnect.begin(), vConnect.end());
 
             
-            /** Debug output if there is a fork. **/
+            /* Debug output if there is a fork. */
             if(vDisconnect.size() > 0 && GetArg("-verbose", 0) >= 1)
             {
                 printf("REORGANIZE: Disconnect %i blocks; %s..%s\n", vDisconnect.size(), pfork->GetBlockHash().ToString().substr(0,20).c_str(), pindexBest->GetBlockHash().ToString().substr(0,20).c_str());
                 printf("REORGANIZE: Connect %i blocks; %s..%s\n", vConnect.size(), pfork->GetBlockHash().ToString().substr(0,20).c_str(), pindexNew->GetBlockHash().ToString().substr(0,20).c_str());
             }
             
-            /** Disconnect the Shorter Branch. **/
+            /* Disconnect the Shorter Branch. */
             vector<CTransaction> vResurrect;
             BOOST_FOREACH(CBlockIndex* pindex, vDisconnect)
             {
@@ -378,7 +378,7 @@ namespace Core
                 if(pindex->pprev && IsNewTimespan(pindex))
                     HardenCheckpoint(pindex);
                 
-                /** Add Transaction to Current Trust Keys **/
+                /* Add Transaction to Current Trust Keys */
                 if(block.IsProofOfStake() && !cTrustPool.Connect(block))
                     return error("CBlock::SetBestChain() : Failed To Accept Trust Key Block.");
 
@@ -388,18 +388,18 @@ namespace Core
                         vDelete.push_back(tx);
             }
             
-            /** Write the Best Chain to the Index Database LLD. **/
+            /* Write the Best Chain to the Index Database LLD. */
             if (!indexdb.WriteHashBestChain(pindexNew->GetBlockHash()))
                 return error("CBlock::SetBestChain() : WriteHashBestChain failed");
 
             
-            /** Disconnect Shorter Branch in Memory. **/
+            /* Disconnect Shorter Branch in Memory. */
             BOOST_FOREACH(CBlockIndex* pindex, vDisconnect)
                 if (pindex->pprev)
                     pindex->pprev->pnext = NULL;
 
 
-            /** Conenct the Longer Branch in Memory. **/
+            /* Conenct the Longer Branch in Memory. */
             BOOST_FOREACH(CBlockIndex* pindex, vConnect)
                 if (pindex->pprev)
                     pindex->pprev->pnext = pindex;

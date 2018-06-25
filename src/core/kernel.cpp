@@ -141,13 +141,6 @@ namespace Core
         }
         else
         {
-            /* Check that Transaction is not Genesis when Trust Key is Established. */
-            if(GetHash() != cTrustPool.Find(cKey).hashGenesisBlock)
-                return error("CBlock::VerifyStake() : Duplicate Genesis not Allowed");
-                
-            /* Check that Genesis has no Transactions. */
-            if(vtx.size() != 1)
-                return error("CBlock::VerifyStake() : Cannot Include Transactions with Genesis Transaction");
                 
             /** Calculate the Average Coinstake Age. **/
             LLD::CIndexDB indexdb("r");
@@ -162,7 +155,7 @@ namespace Core
         double nThreshold = ((nTime - vtx[0].nTime) * 100.0) / nNonce;
         double nRequired  = ((50.0 - nTrustWeight - nBlockWeight) * MAX_STAKE_WEIGHT) / std::min((int64)MAX_STAKE_WEIGHT, vtx[0].vout[0].nValue);
         if(nThreshold < nRequired)
-            return error("CBlock::VerifyStake() : Coinstake / nNonce threshold too low %f Required %f. Energy efficiency limits Reached Coin Age %" PRIu64 " | Trust Age %" PRIu64 " | Block Age %" PRIu64, nThreshold, nRequired, nCoinAge, nTrustAge, nBlockAge);
+            return error("CBlock::VerifyStake() : Coinstake / nNonce threshold too low %f Required %f. Energy efficiency limits Reached", nThreshold, nRequired);
             
             
         /** H] Check the Block Hash with Weighted Hash to Target. **/
@@ -380,6 +373,10 @@ namespace Core
         /* Ensure the Key is Public Key. No Pay Hash or Script Hash for Trust Keys. */
         if (keyType != Wallet::TX_PUBKEY)
             return error("CTrustPool::IsValid() : Trust Key must be of Public Key Type Created from Keypool.");
+        
+        /* Verify the Stake Efficiency Threshold. */
+        if(!cBlock.VerifyStake())
+            return error("CTrustPool::IsValid() : Invalid Proof of Stake");
             
         /* Set the Public Key Integer Key from Bytes. */
         uint576 cKey;
@@ -425,12 +422,20 @@ namespace Core
                 
                 /* Ignore Outputs that are not in the Main Chain. */
                 if (!txPrev.ReadFromDisk(indexdb, cBlock.vtx[0].vin[nIndex].prevout, txindex))
-                    return error("GetCoinstakeAge() : Invalid Previous Transaction");
+                    return error("CTrustPool::IsValid() : Invalid Previous Transaction");
 
                 /* Read the Previous Transaction's Block from Disk. */
                 CBlock block;
                 if (!block.ReadFromDisk(txindex.pos.nFile, txindex.pos.nBlockPos, false))
-                    return error("GetCoinstakeAge() : Failed To Read Block from Disk");
+                    return error("CTrustPool::IsValid() : Failed To Read Block from Disk");
+                
+                /* Check that Transaction is not Genesis when Trust Key is Established. */
+                if(cBlock.GetHash() != cTrustPool.Find(cKey).hashGenesisBlock)
+                    return error("CTrustPool::IsValid() : Duplicate Genesis not Allowed");
+                
+                /* Check that Genesis has no Transactions. */
+                if(cBlock.vtx.size() != 1)
+                    return error("CTrustPool::IsValid() : Cannot Include Transactions with Genesis Transaction");
                 
                 /* RULE: No Genesis if coin age is less than 1 days old. */
                 if((cBlock.nTime - block.GetBlockTime()) < 24 * 60 * 60)
@@ -445,15 +450,6 @@ namespace Core
                     pblock[1].vtx[0].GetValueOut() < 1000 * COIN)
                     return error("\x1b[31m SOFTBAN: \u001b[37;1m More than 2 Consecutive blocks < 1000 NXS \x1b[0m");
             }
-            
-            bool fGenesis = true;
-            for(int i = 0; i < 3; i++)
-                if(!pblock[i].vtx[0].IsGenesis())
-                    fGenesis = false;
-            
-            /* RULE: If there are 6 consecutive genesis blocks. */
-            if(fGenesis)
-                return error("\x1b[31m SOFTBAN: \u001b[37;1m At least 3 consecutive Genesis \x1b[0m");
         }
         
         /** Handle Adding Trust Transactions. **/
@@ -539,7 +535,7 @@ namespace Core
         if (mapBlockIndex[cBlock.hashPrevBlock]->GetBlockTime() > cBlock.vtx[0].nTime)
             return error("CTrustPool::check()  : Coinstake Timestamp too Early.");
             
-        /** Extract the Key from the Script Signature. **/
+        /* Extract the Key from the Script Signature. */
         vector< std::vector<unsigned char> > vKeys;
         Wallet::TransactionType keyType;
         if (!Wallet::Solver(cBlock.vtx[0].vout[0].scriptPubKey, keyType, vKeys))
@@ -588,22 +584,15 @@ namespace Core
                 return Connect(cBlock, fInit);
             }
             
-            /** Create the Trust Key from Genesis Transaction Block. **/			
+            /* Create the Trust Key from Genesis Transaction Block. */
             CTrustKey cTrustKey(vKeys[0], cBlock.GetHash(), cBlock.vtx[0].GetHash(), cBlock.nTime);
             if(!cTrustKey.CheckGenesis(cBlock))
                 return error("CTrustPool::check() : Invalid Genesis Transaction.");
             
-            /* Dump the Trust Key To Console if not Initializing. */
-            if(!fInit && GetArg("-verbose", 0) >= 2)
-                mapTrustKeys[cKey].Print();
-            
             /* Only Debug when Not Initializing. */
             if(GetArg("-verbose", 0) >= 1 && !fInit) {
                 printf("CTrustPool::Connect() : New Genesis Coinstake Transaction From Block %u\n", cBlock.nHeight);
-                printf("CTrustPool::ACCEPTED %s\n", cKey.ToString().substr(0, 20).c_str());
             }
-            
-            return true;
         }
         
         /* Handle Adding Trust Transactions. */
@@ -661,24 +650,17 @@ namespace Core
                     return Connect(cBlock, fInit);
                 }
             }
-            
-            /* Dump the Trust Key to Console if not Initializing. */
-            if(!fInit && GetArg("-verbose", 0) >= 2)
-                mapTrustKeys[cKey].Print();
-            
-            /* Only Debug when Not Initializing. */
-            if(!fInit && GetArg("-verbose", 0) >= 1) {
-                printf("CTrustPool::ACCEPTED %s\n", cKey.ToString().substr(0, 20).c_str());
-            }
-            
-            return true;
         }
         
-        /* Verify the Stake Kernel. */
-        if(!fInit && !cBlock.VerifyStake())
-            return error("CTrustPool::Connect() : Invalid Proof of Stake");
+        /* Dump the Trust Key to Console if not Initializing. */
+        if(!fInit && GetArg("-verbose", 0) >= 2)
+            mapTrustKeys[cKey].Print();
         
-        return error("CTrustPool::Connect() : Missing Trust or Genesis Transaction in Block.");
+        /* Only Debug when Not Initializing. */
+        if(!fInit && GetArg("-verbose", 0) >= 1)
+            printf("CTrustPool::ACCEPTED %s\n", cKey.ToString().substr(0, 20).c_str());
+        
+        return true;
     }
         
         
@@ -829,33 +811,33 @@ namespace Core
         Block must have been received and be part of the main chain. **/
     bool CTrustKey::CheckGenesis(CBlock cBlock) const
     {
-        /** Invalid if Null. **/
+        /* Invalid if Null. */
         if(IsNull())
             return false;
             
-        /** Trust Keys must be created from only Proof of Stake Blocks. **/
+        /* Trust Keys must be created from only Proof of Stake Blocks. */
         if(!cBlock.IsProofOfStake())
             return error("CTrustKey::CheckGenesis() : Genesis Key Invalid for non Proof of Stake blocks.");
             
-        /** Trust Key Timestamp must be the same as Genesis Key Block Timestamp. **/		
+        /* Trust Key Timestamp must be the same as Genesis Key Block Timestamp. */
         if(nGenesisTime != cBlock.nTime)
             return error("CTrustKey::CheckGenesis() : Time Mismatch for Trust key to Genesis Trust Block");
             
-        /** Genesis Key Transaction must match Trust Key Genesis Hash. **/
+        /* Genesis Key Transaction must match Trust Key Genesis Hash. */
         if(cBlock.vtx[0].GetHash() != hashGenesisTx)
             return error("CTrustKey::CheckGenesis() : Genesis Key Hash Mismatch to Genesis Transaction Hash");
             
-        /** Extract the Key from the Script Signature. **/
+        /* Extract the Key from the Script Signature. **/
         vector< std::vector<unsigned char> > vKeys;
         Wallet::TransactionType keyType;
         if (!Wallet::Solver(cBlock.vtx[0].vout[0].scriptPubKey, keyType, vKeys))
             return error("CTrustKey::IsInvalid() : Failed To Solve Trust Key Script.");
 
-        /** Ensure the Key is Public Key. No Pay Hash or Script Hash for Trust Keys. **/
+        /* Ensure the Key is Public Key. No Pay Hash or Script Hash for Trust Keys. */
         if (keyType != Wallet::TX_PUBKEY)
             return error("CTrustKey::CheckGenesis() : Trust Key must be of Public Key Type Created from Keypool.");
         
-        /** Set the Public Key. **/
+        /* Set the Public Key. */
         if(vKeys[0] != vchPubKey)
             return error("CTrustKey::CheckGenesis() : Trust Key Public Key and Genesis Trust Block Public Key Mismatch\n");
         
@@ -901,6 +883,8 @@ namespace Core
         
         /* Find the block previous to pindexNew. */
         uint1024 hashBlockLast = Back(hashThisBlock);
+        if(!mapBlockIndex.count(hashBlockLast))
+            return 0; 
         
         /* Make sure there aren't timestamp overflows. */
         if(mapBlockIndex[hashBlockLast]->GetBlockTime() > mapBlockIndex[hashPrevBlock]->GetBlockTime())
