@@ -583,21 +583,25 @@ namespace Net
 				"getmininginfo\n"
 				"Returns an object containing mining-related information.");
 
-		double nPrimeAverageDifficulty = 0.0;
-		unsigned int nPrimeAverageTime = 0;
-		unsigned int nPrimeTimeConstant = 2480;
-		int nTotal = 0;
-		const Core::CBlockIndex* pindex = Core::GetLastChannelIndex(Core::pindexBest, 1);
-		for(; (nTotal < 1440 && pindex->pprev); nTotal ++) {
-			
-			nPrimeAverageTime += (pindex->GetBlockTime() - Core::GetLastChannelIndex(pindex->pprev, 1)->GetBlockTime());
-			nPrimeAverageDifficulty += (Core::GetDifficulty(pindex->nBits, 1));
-			
-			pindex = Core::GetLastChannelIndex(pindex->pprev, 1);
-		}
-		nPrimeAverageDifficulty /= nTotal;
-		nPrimeAverageTime /= nTotal;
-		uint64 nPrimePS = (nPrimeTimeConstant / nPrimeAverageTime) * std::pow(50.0, (nPrimeAverageDifficulty - 3.0));
+        uint64 nPrimePS = 0;
+        if(!Core::pindexBest || Core::pindexBest->GetBlockHash() != Core::hashGenesisBlock)
+        {
+            double nPrimeAverageDifficulty = 0.0;
+            unsigned int nPrimeAverageTime = 0;
+            unsigned int nPrimeTimeConstant = 2480;
+            int nTotal = 0;
+            const Core::CBlockIndex* pindex = Core::GetLastChannelIndex(Core::pindexBest, 1);
+            for(; (nTotal < 1440 && pindex->pprev); nTotal ++) {
+                
+                nPrimeAverageTime += (pindex->GetBlockTime() - Core::GetLastChannelIndex(pindex->pprev, 1)->GetBlockTime());
+                nPrimeAverageDifficulty += (Core::GetDifficulty(pindex->nBits, 1));
+                
+                pindex = Core::GetLastChannelIndex(pindex->pprev, 1);
+            }
+            nPrimeAverageDifficulty /= nTotal;
+            nPrimeAverageTime /= nTotal;
+            nPrimePS = (nPrimeTimeConstant / nPrimeAverageTime) * std::pow(50.0, (nPrimeAverageDifficulty - 3.0));
+        }
 
 		// Hash
 		int nHTotal = 0;

@@ -80,8 +80,8 @@ namespace Net
 	void CNode::PushGetBlocks(Core::CBlockIndex* pindexBegin, uint1024 hashEnd)
 	{
 		// Filter out duplicate requests
-		//if (pindexBegin == pindexLastGetBlocksBegin && hashEnd == hashLastGetBlocksEnd)
-		//	return;
+		if (pindexBegin == pindexLastGetBlocksBegin && hashEnd == hashLastGetBlocksEnd)
+			return;
         
 		pindexLastGetBlocksBegin = pindexBegin;
 		hashLastGetBlocksEnd = hashEnd;
