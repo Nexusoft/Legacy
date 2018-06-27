@@ -62,6 +62,8 @@ namespace Core
     
     bool IsInitialBlockDownload()
     {
+        if(!pindexBest)
+            return true;
         return (pindexBest->GetBlockTime() < GetUnifiedTimestamp() - 30 * 60);
     }
     
