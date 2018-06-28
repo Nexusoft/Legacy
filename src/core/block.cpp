@@ -378,7 +378,7 @@ namespace Core
                 }
                 
                 /* Harden a pending checkpoint if this is the case. */
-                if(pindex->pprev && IsNewTimespan(pindex))
+                if(pindex->pprev && IsNewTimespan(pindex->pprev))
                     HardenCheckpoint(pindex);
                 
                 /* Add Transaction to Current Trust Keys */
