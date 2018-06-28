@@ -381,9 +381,9 @@ namespace Core
 
 		else if (strCommand == "getblocks")
 		{
-            //rate limit getblocks requests per node to every 5 seconds
-            if(GetUnifiedTimestamp() - pfrom->nLastGetBlocks < 5)
-                return pfrom->Misbehaving(2);
+            //rate limit getblocks requests per node to every 2 seconds
+            if(GetUnifiedTimestamp() - pfrom->nLastGetBlocks < 2)
+                return pfrom->Misbehaving(5);
                 
             pfrom->nLastGetBlocks = GetUnifiedTimestamp();
             
@@ -448,9 +448,9 @@ namespace Core
 
 		else if (strCommand == "getheaders")
 		{
-            //rate limit getheaders requests per node to every 5 seconds
-            if(GetUnifiedTimestamp() - pfrom->nLastGetBlocks < 5)
-                return pfrom->Misbehaving(2);
+            //rate limit getheaders requests per node to every 2 seconds
+            if(GetUnifiedTimestamp() - pfrom->nLastGetBlocks < 2)
+                return pfrom->Misbehaving(5);
                 
             pfrom->nLastGetBlocks = GetUnifiedTimestamp();
             
