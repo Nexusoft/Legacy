@@ -65,7 +65,7 @@ namespace Core
     {
         if(!pindexBest)
             return true;
-        return (pindexBest->GetBlockTime() < GetUnifiedTimestamp() - 30 * 60);
+        return (pindexBest->GetBlockTime() < GetUnifiedTimestamp() - 20 * 60);
     }
     
     
@@ -564,7 +564,7 @@ namespace Core
         }
                                                 
         /* Add the Pending Checkpoint into the Blockchain. */
-        if(!pindexNew->pprev || HardenCheckpoint(pindexNew))
+        if(!pindexNew->pprev || IsNewTimespan(pindexNew))
         {
             pindexNew->PendingCheckpoint = make_pair(pindexNew->nHeight, pindexNew->GetBlockHash());
             
