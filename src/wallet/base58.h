@@ -31,8 +31,7 @@ namespace Wallet
         reverse_copy(pbegin, pend, vchTmp.begin());
 
         // Convert little endian data to bignum
-        CBigNum bn;
-        bn.setvch(vchTmp);
+        CBigNum bn(vchTmp);
 
         // Convert bignum to std::string
         std::string str;
@@ -43,7 +42,7 @@ namespace Wallet
         CBigNum rem;
         while (bn > bn0)
         {
-            if (!BN_div(&dv, &rem, &bn, &bn58, pctx))
+            if (!BN_div(dv.getBN(), rem.getBN(), bn.getBN(), bn58.getBN(), pctx))
                 throw bignum_error("EncodeBase58 : BN_div failed");
             bn = dv;
             unsigned int c = rem.getulong();
@@ -90,7 +89,7 @@ namespace Wallet
                 break;
             }
             bnChar.setulong(p1 - pszBase58);
-            if (!BN_mul(&bn, &bn, &bn58, pctx))
+            if (!BN_mul(bn.getBN(), bn.getBN(), bn58.getBN(), pctx))
                 throw bignum_error("DecodeBase58 : BN_mul failed");
             bn += bnChar;
         }

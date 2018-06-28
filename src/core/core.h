@@ -280,12 +280,12 @@ namespace Core
 	
 	/** PRIME.CPP **/
 	unsigned int SetBits(double nDiff);
-	double GetPrimeDifficulty(CBigNum prime, int checks);
-	unsigned int GetPrimeBits(CBigNum prime);
-	unsigned int GetFractionalDifficulty(CBigNum composite);
-	bool PrimeCheck(CBigNum test, int checks);
-	CBigNum FermatTest(CBigNum n, CBigNum a);
-	bool Miller_Rabin(CBigNum n, int checks);
+	double GetPrimeDifficulty(const CBigNum& prime, int checks);
+	unsigned int GetPrimeBits(const CBigNum& prime);
+	unsigned int GetFractionalDifficulty(const CBigNum& composite);
+	bool PrimeCheck(const CBigNum& test, int checks);
+	CBigNum FermatTest(const CBigNum& n, const CBigNum& a);
+	bool Miller_Rabin(const CBigNum& n, int checks);
 
 
 	/** TRANSACTION.CPP **/

@@ -794,17 +794,17 @@ namespace Wallet
                             break;
 
                         case OP_MUL:
-                            if (!BN_mul(&bn, &bn1, &bn2, pctx))
+                            if (!BN_mul(bn.getBN(), bn1.getBN(), bn2.getBN(), pctx))
                                 return false;
                             break;
 
                         case OP_DIV:
-                            if (!BN_div(&bn, NULL, &bn1, &bn2, pctx))
+                            if (!BN_div(bn.getBN(), NULL, bn1.getBN(), bn2.getBN(), pctx))
                                 return false;
                             break;
 
                         case OP_MOD:
-                            if (!BN_mod(&bn, &bn1, &bn2, pctx))
+                            if (!BN_mod(bn.getBN(), bn1.getBN(), bn2.getBN(), pctx))
                                 return false;
                             break;
 
