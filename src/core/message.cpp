@@ -383,7 +383,7 @@ namespace Core
 		{
             //rate limit getblocks requests per node to every 5 seconds
             if(GetUnifiedTimestamp() - pfrom->nLastGetBlocks < 5)
-                return true;
+                return Misbehaving(2);
                 
             pfrom->nLastGetBlocks = GetUnifiedTimestamp();
             
@@ -393,18 +393,18 @@ namespace Core
             
             //skip over duplicat hash stops
             if(hashStop != 0 && pfrom->hashLastGetBlocksEnd == hashStop)
-                return true;
+                return Misbehaving(5);
             
             pfrom->hashLastGetBlocksEnd = hashStop;
 
 			// Find the last block the caller has in the main chain
 			CBlockIndex* pindex = locator.GetBlockIndex();
             if(!pindex)
-                return true;
+                return Misbehaving(5);
             
             //skip over duplicate requests for this node
             if(pindex == pfrom->pindexLastGetBlocksBegin)
-                return true;
+                return Misbehaving(5);
             
             pfrom->pindexLastGetBlocksBegin = pindex;
 
@@ -450,7 +450,7 @@ namespace Core
 		{
             //rate limit getheaders requests per node to every 5 seconds
             if(GetUnifiedTimestamp() - pfrom->nLastGetBlocks < 5)
-                return true;
+                return Misbehaving(2);
                 
             pfrom->nLastGetBlocks = GetUnifiedTimestamp();
             
@@ -460,7 +460,7 @@ namespace Core
             
             //skip over duplicate hash stops
             if(hashStop != 0 && pfrom->hashLastGetBlocksEnd == hashStop)
-                return true;
+                return Misbehaving(5);
             
             pfrom->hashLastGetBlocksEnd = hashStop;
 
