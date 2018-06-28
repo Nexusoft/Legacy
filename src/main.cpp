@@ -666,7 +666,7 @@ bool AppInit2(int argc, char* argv[])
     #endif
         CreateThread(Core::StakeMinter, NULL);
 
-        printf("%%%%%%%%%%%%%%%%% Staking Thread Initialized...\n");
+        printf("%%%%%%%%%%%%%%%% Staking Thread Initialized...\n");
     }
 	
     if (fServer)
