@@ -110,7 +110,7 @@ namespace LLP
 				RESPONSE.LENGTH = 4;
 				RESPONSE.DATA   = int2bytes(nOffset);
 				
-				if(GetArg("-verbose", 0) >= 3)
+				if(GetArg("-verbose", 0) >= 4)
                     printf("***** Core LLP: Sent Offset %i | %hhu.%hhu.%hhu.%hhu | Unified %" PRId64 "\n", nOffset, ADDRESS[0], ADDRESS[1], ADDRESS[2], ADDRESS[3], GetUnifiedTimestamp());
 				
 				this->WritePacket(RESPONSE);
@@ -124,7 +124,7 @@ namespace LLP
 				RESPONSE.LENGTH = 4;
 				RESPONSE.DATA = uint2bytes((unsigned int)GetUnifiedTimestamp());
 				
-				if(GetArg("-verbose", 0) >= 3)
+				if(GetArg("-verbose", 0) >= 4)
                     printf("***** Core LLP: Sent Time Sample %" PRId64 " to %hhu.%hhu.%hhu.%hhu\n", GetUnifiedTimestamp(), ADDRESS[0], ADDRESS[1], ADDRESS[2], ADDRESS[3]);
 				
 				this->WritePacket(RESPONSE);
