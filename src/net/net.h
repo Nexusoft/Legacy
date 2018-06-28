@@ -48,7 +48,6 @@ extern boost::array<int, THREAD_MAX> vnThreadsRunning;
 namespace Net
 {
 	
-	class CRequestTracker;
 	class CNode;
 	//extern int nBestHeight;
 	
@@ -70,24 +69,6 @@ namespace Net
 	{
 		MSG_TX = 1,
 		MSG_BLOCK,
-	};
-
-	class CRequestTracker
-	{
-	public:
-		void (*fn)(void*, CDataStream&);
-		void* param1;
-
-		explicit CRequestTracker(void (*fnIn)(void*, CDataStream&)=NULL, void* param1In=NULL)
-		{
-			fn = fnIn;
-			param1 = param1In;
-		}
-
-		bool IsNull()
-		{
-			return fn == NULL;
-		}
 	};
 
 	extern bool fClient;
@@ -166,12 +147,12 @@ namespace Net
 
 	public:
 		int64 nReleaseTime;
-		std::map<uint512, CRequestTracker> mapRequests;
-		CCriticalSection cs_mapRequests;
 		uint1024 hashContinue;
 		Core::CBlockIndex* pindexLastGetBlocksBegin;
 		uint1024 hashLastGetBlocksEnd;
 		int nStartingHeight;
+        
+        unsigned int nLastGetBlocks;
 
 		// flood relay
 		std::vector<CAddress> vAddrToSend;
@@ -211,6 +192,7 @@ namespace Net
 			pindexLastGetBlocksBegin = 0;
 			hashLastGetBlocksEnd = 0;
 			nStartingHeight = -1;
+            nLastGetBlocks  = 0;
 			fGetAddr = false;
 			nMisbehavior = 0;
 			hashCheckpointKnown = 0;
@@ -540,51 +522,6 @@ namespace Net
 				AbortMessage();
 				throw;
 			}
-		}
-
-
-		void PushRequest(const char* pszCommand,
-						 void (*fn)(void*, CDataStream&), void* param1)
-		{
-			uint512 hashReply;
-			RAND_bytes((unsigned char*)&hashReply, sizeof(hashReply));
-
-			{
-				LOCK(cs_mapRequests);
-				mapRequests[hashReply] = CRequestTracker(fn, param1);
-			}
-
-			PushMessage(pszCommand, hashReply);
-		}
-
-		template<typename T1>
-		void PushRequest(const char* pszCommand, const T1& a1,
-						 void (*fn)(void*, CDataStream&), void* param1)
-		{
-			uint512 hashReply;
-			RAND_bytes((unsigned char*)&hashReply, sizeof(hashReply));
-
-			{
-				LOCK(cs_mapRequests);
-				mapRequests[hashReply] = CRequestTracker(fn, param1);
-			}
-
-			PushMessage(pszCommand, hashReply, a1);
-		}
-
-		template<typename T1, typename T2>
-		void PushRequest(const char* pszCommand, const T1& a1, const T2& a2,
-						 void (*fn)(void*, CDataStream&), void* param1)
-		{
-			uint512 hashReply;
-			RAND_bytes((unsigned char*)&hashReply, sizeof(hashReply));
-
-			{
-				LOCK(cs_mapRequests);
-				mapRequests[hashReply] = CRequestTracker(fn, param1);
-			}
-
-			PushMessage(pszCommand, hashReply, a1, a2);
 		}
 
 

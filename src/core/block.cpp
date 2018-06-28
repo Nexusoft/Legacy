@@ -11,6 +11,7 @@
 
 #include "../wallet/db.h"
 #include "../util/ui_interface.h"
+#include "../net/net.h"
 
 #include "../LLD/index.h"
 
@@ -943,7 +944,7 @@ namespace Core
             mapOrphanBlocksByPrev.insert(make_pair(pblock2->hashPrevBlock, pblock2));
             
             if(pfrom)
-                pfrom->PushGetBlocks(pindexBest, 0);
+                pfrom->AskFor(Net::CInv(Net::MSG_BLOCK, pblock->hashPrevBlock));
             
             return true;
         }

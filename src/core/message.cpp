@@ -193,7 +193,7 @@ namespace Core
 
 			// Ask the first 8 connected nodes for block updates
 			static int nAskedForBlocks = 0;
-			if (!pfrom->fClient && (nAskedForBlocks < 8))
+			if (!pfrom->fClient && (nAskedForBlocks < 1))
 			{
 				nAskedForBlocks++;
 				pfrom->PushGetBlocks(pindexBest, uint1024(0));
@@ -288,20 +288,12 @@ namespace Core
 		{
 			vector<Net::CInv> vInv;
 			vRecv >> vInv;
-			if (vInv.size() > 50000)
+			if (vInv.size() > 2000)
 			{
 				pfrom->Misbehaving(20);
 				return error("message inv size() = %d", vInv.size());
 			}
 
-			// find last block in inv vector
-			unsigned int nLastBlock = (unsigned int)(-1);
-			for (unsigned int nInv = 0; nInv < vInv.size(); nInv++) {
-				if (vInv[vInv.size() - 1 - nInv].type == Net::MSG_BLOCK) {
-					nLastBlock = vInv.size() - 1 - nInv;
-					break;
-				}
-			}
 			LLD::CIndexDB indexdb("r");
 			for (unsigned int nInv = 0; nInv < vInv.size(); nInv++)
 			{
@@ -317,17 +309,6 @@ namespace Core
 
 				if (!fAlreadyHave)
 					pfrom->AskFor(inv);
-				//else if (inv.type == Net::MSG_BLOCK && mapOrphanBlocks.count(inv.hash)) {
-				//	pfrom->PushGetBlocks(pindexBest, GetOrphanRoot(mapOrphanBlocks[inv.hash]));
-				else if (nInv == nLastBlock) {
-					// In case we are on a very long side-chain, it is possible that we already have
-					// the last block in an inv bundle sent in response to getblocks. Try to detect
-					// this situation and push another getblocks to continue.
-					std::vector<Net::CInv> vGetData(1,inv);
-					pfrom->PushGetBlocks(mapBlockIndex[inv.hash], uint1024(0));
-					if(GetArg("-verbose", 0) >= 3)
-						printf("force request: %s\n", inv.ToString().c_str());
-				}
 
 				// Track requests for our stuff
 				Inventory(inv.hash);
@@ -339,13 +320,13 @@ namespace Core
 		{
 			vector<Net::CInv> vInv;
 			vRecv >> vInv;
-			if (vInv.size() > 50000)
+			if (vInv.size() > 2000)
 			{
 				pfrom->Misbehaving(20);
 				return error("message getdata size() = %d", vInv.size());
 			}
 
-			BOOST_FOREACH(const Net::CInv& inv, vInv)
+			for(const auto inv : vInv)
 			{
 				if (fShutdown)
 					return true;
@@ -400,12 +381,32 @@ namespace Core
 
 		else if (strCommand == "getblocks")
 		{
+            //rate limit getblocks requests per node to every 5 seconds
+            if(GetUnifiedTimestamp() - pfrom->nLastGetBlocks < 5)
+                return true;
+                
+            pfrom->nLastGetBlocks = GetUnifiedTimestamp();
+            
 			CBlockLocator locator;
 			uint1024 hashStop;
 			vRecv >> locator >> hashStop;
+            
+            //skip over duplicat hash stops
+            if(hashStop != 0 && pfrom->hashLastGetBlocksEnd == hashStop)
+                return true;
+            
+            pfrom->hashLastGetBlocksEnd = hashStop;
 
 			// Find the last block the caller has in the main chain
 			CBlockIndex* pindex = locator.GetBlockIndex();
+            if(!pindex)
+                return true;
+            
+            //skip over duplicate requests for this node
+            if(pindex == pfrom->pindexLastGetBlocksBegin)
+                return true;
+            
+            pfrom->pindexLastGetBlocksBegin = pindex;
 
 			// Send the rest of the chain
 			if (pindex)
@@ -429,11 +430,9 @@ namespace Core
 						pfrom->PushInventory(Net::CInv(Net::MSG_BLOCK, hashBestChain));
 					break;
 				}
+				
 				pfrom->PushInventory(Net::CInv(Net::MSG_BLOCK, pindex->GetBlockHash()));
-				CBlock block;
-				block.ReadFromDisk(pindex, true);
-				nBytes += block.GetSerializeSize(SER_NETWORK, PROTOCOL_VERSION);
-				if (--nLimit <= 0 || nBytes >= Net::SendBufferSize()/2)
+				if (--nLimit <= 0)
 				{
 					// When this block is requested, we'll send an inv that'll make them
 					// getblocks the next batch of inventory.
@@ -449,9 +448,21 @@ namespace Core
 
 		else if (strCommand == "getheaders")
 		{
+            //rate limit getheaders requests per node to every 5 seconds
+            if(GetUnifiedTimestamp() - pfrom->nLastGetBlocks < 5)
+                return true;
+                
+            pfrom->nLastGetBlocks = GetUnifiedTimestamp();
+            
 			CBlockLocator locator;
 			uint1024 hashStop;
 			vRecv >> locator >> hashStop;
+            
+            //skip over duplicate hash stops
+            if(hashStop != 0 && pfrom->hashLastGetBlocksEnd == hashStop)
+                return true;
+            
+            pfrom->hashLastGetBlocksEnd = hashStop;
 
 			CBlockIndex* pindex = NULL;
 			if (locator.IsNull())
@@ -471,7 +482,7 @@ namespace Core
 			}
 
 			vector<CBlock> vHeaders;
-			int nLimit = 2000;
+			int nLimit = 1000;
 			
 			if(GetArg("-verbose", 0) >= 3)
 				printf("getheaders %d to %s\n", (pindex ? pindex->nHeight : -1), hashStop.ToString().substr(0,20).c_str());
@@ -482,6 +493,7 @@ namespace Core
 				if (--nLimit <= 0 || pindex->GetBlockHash() == hashStop)
 					break;
 			}
+			
 			pfrom->PushMessage("headers", vHeaders);
 		}
 

@@ -1980,7 +1980,7 @@ namespace Core
 				if (mi != mapBlockIndex.end())
 				{
 					CBlockIndex* pindex = (*mi).second;
-					if (pindex->IsInMainChain())
+					if (pindex && pindex->IsInMainChain())
 						return nDistance;
 				}
 				nDistance += nStep;
@@ -1999,7 +1999,7 @@ namespace Core
 				if (mi != mapBlockIndex.end())
 				{
 					CBlockIndex* pindex = (*mi).second;
-					if (pindex->IsInMainChain())
+					if (pindex && pindex->IsInMainChain())
 						return pindex;
 				}
 			}
@@ -2015,7 +2015,7 @@ namespace Core
 				if (mi != mapBlockIndex.end())
 				{
 					CBlockIndex* pindex = (*mi).second;
-					if (pindex->IsInMainChain())
+					if (pindex && pindex->IsInMainChain())
 						return hash;
 				}
 			}
@@ -2027,6 +2027,7 @@ namespace Core
 			CBlockIndex* pindex = GetBlockIndex();
 			if (!pindex)
 				return 0;
+            
 			return pindex->nHeight;
 		}
 	};
