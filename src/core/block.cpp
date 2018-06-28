@@ -564,7 +564,7 @@ namespace Core
         }
                                                 
         /* Add the Pending Checkpoint into the Blockchain. */
-        if(!pindexNew->pprev || IsNewTimespan(pindexNew))
+        if(!pindexNew->pprev || IsNewTimespan(pindexNew->pprev))
         {
             pindexNew->PendingCheckpoint = make_pair(pindexNew->nHeight, pindexNew->GetBlockHash());
             

@@ -97,7 +97,7 @@ namespace Core
 		RandAddSeedPerfmon();
 		if(GetArg("-verbose", 0) >= 3) {
 			printf("%s ", DateTimeStrFormat(GetUnifiedTimestamp()).c_str());
-			printf("received: %s (%d bytes)\n", strCommand.c_str(), vRecv.size());
+			printf("received: %s (%d bytes) (%s)\n", strCommand.c_str(), vRecv.size(), pfrom ? pfrom->addr.ToStringIP().c_str() : "N/A");
 		}
 		if (mapArgs.count("-dropmessagestest") && GetRand(atoi(mapArgs["-dropmessagestest"])) == 0)
 		{
