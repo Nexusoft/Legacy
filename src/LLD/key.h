@@ -217,7 +217,7 @@ namespace LLD
                     
                     /** Debug Output of Sector Key Information. **/
 					if(GetArg("-verbose", 0) >= 5)
-						printf("KeyDB::Load() : Skiping Sector State: %u Length: %u\n", cKey.nState, cKey.nLength);
+						printf("KeyDB::Load() : Skipping Sector State: %u Length: %u\n", cKey.nState, cKey.nLength);
                 }
 			}
 			
