@@ -767,6 +767,13 @@ namespace Core
 			if (pto->nVersion == 0)
 				return true;
 
+			/* Block Checkups every minute. */
+			if (GetUnifiedTimestamp() - pto->nLastPing > 30) {
+				pto->PushMessage("ping", 0);
+                
+                pto->nLastPing = GetUnifiedTimestamp();
+            }
+
 			// Resend wallet transactions that haven't gotten in a block yet
 			ResendWalletTransactions();
 

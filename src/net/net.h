@@ -122,6 +122,7 @@ namespace Net
 		CCriticalSection cs_vRecv;
 		int64 nLastSend;
 		int64 nLastRecv;
+        int64 nLastPing;
 		int64 nLastSendEmpty;
 		int64 nTimeConnected;
 		int nHeaderStart;
@@ -172,6 +173,7 @@ namespace Net
 			hSocket = hSocketIn;
 			nLastSend = 0;
 			nLastRecv = 0;
+            nLastPing = 0;
 			nLastSendEmpty = GetUnifiedTimestamp();
 			nTimeConnected = GetUnifiedTimestamp();
 			nHeaderStart = -1;
