@@ -777,7 +777,7 @@ namespace Core
 				return true;
 
 			/* Block Checkups every minute. */
-			if (GetUnifiedTimestamp() - pto->nLastPing > 30 && GetUnifiedTimestamp() - pto->nLastRecv > 30) {
+			if (GetUnifiedTimestamp() - pto->nLastPing > 30 && (GetUnifiedTimestamp() - pto->nLastRecv > 30 || GetUnifiedTimestamp() - pto->nLastSend > 30)) {
                 uint64 nNonce = GetRandInt(1000);
 				pto->PushMessage("ping", nNonce);
                 
