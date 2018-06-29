@@ -387,8 +387,11 @@ namespace Core
             pfrom->nLastGetBlocks = GetUnifiedTimestamp();
             
             //give DoS score if consecutive requests under 
-            if(pfrom->nConsecutiveMisbehaviors > 5)
+            if(pfrom->nConsecutiveMisbehaviors > 5){
+                pfrom->nConsecutiveMisbehaviors = 0;
+                
                 return pfrom->Misbehaving(10, "getblocks within 1 seconds more than 5 times");
+            }
             
 			CBlockLocator locator;
 			uint1024 hashStop;
@@ -460,8 +463,11 @@ namespace Core
             pfrom->nLastGetBlocks = GetUnifiedTimestamp();
             
             //give DoS score if consecutive requests under 
-            if(pfrom->nConsecutiveMisbehaviors > 5)
+            if(pfrom->nConsecutiveMisbehaviors > 5) {
+                pfrom-nConsecutiveMisbehaviors = 0;
+                
                 return pfrom->Misbehaving(10, "getheaders within 1 seconds more than 5 times");
+            }
             
 			CBlockLocator locator;
 			uint1024 hashStop;
