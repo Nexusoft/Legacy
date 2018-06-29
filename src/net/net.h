@@ -277,7 +277,7 @@ namespace Net
 		{
 			// We're using mapAskFor as a priority queue,
 			// the key is the earliest time the request can be sent
-			int64& nRequestTime = mapAlreadyAskedFor[inv];
+			int64 nRequestTime = mapAlreadyAskedFor[inv];
             
             if(GetArg("-verbose", 0) >= 3)
                 printf("askfor %s   %" PRI64d "\n", inv.ToString().c_str(), nRequestTime);
