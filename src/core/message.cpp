@@ -615,8 +615,17 @@ namespace Core
 			   
 			pfrom->PushMessage("pong", nonce);
 		}
+		
+		else if(strCommand == "pong")
+        {
+            uint64 nonce = 0;
+            vRecv >> nonce;
+            
+            if(GetArg("-verbose", 0) >= 3)
+                printf("received pong from %s\n", pfrom->addr.ToStringIP().c_str());
+        }
 
-		else
+		else 
 		{
 			// Ignore unknown commands for extensibility
 		}
@@ -624,7 +633,7 @@ namespace Core
 
 		// Update the last seen time for this node's address
 		if (pfrom->fNetworkNode)
-			if (strCommand == "version" || strCommand == "addr" || strCommand == "inv" || strCommand == "getdata" || strCommand == "ping")
+			if (strCommand == "version" || strCommand == "addr" || strCommand == "inv" || strCommand == "getdata" || strCommand == "ping" || strCommand == "pong")
 				AddressCurrentlyConnected(pfrom->addr);
 
 
@@ -769,7 +778,8 @@ namespace Core
 
 			/* Block Checkups every minute. */
 			if (GetUnifiedTimestamp() - pto->nLastPing > 30 && GetUnifiedTimestamp() - pto->nLastRecv > 30) {
-				pto->PushMessage("ping", 0);
+                uint64 nNonce = GetRandInt(1000);
+				pto->PushMessage("ping", nNonce);
                 
                 pto->nLastPing = GetUnifiedTimestamp();
             }
