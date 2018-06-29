@@ -464,7 +464,7 @@ namespace Core
             
             //give DoS score if consecutive requests under 
             if(pfrom->nConsecutiveMisbehaviors > 5) {
-                pfrom-nConsecutiveMisbehaviors = 0;
+                pfrom->nConsecutiveMisbehaviors = 0;
                 
                 return pfrom->Misbehaving(10, "getheaders within 1 seconds more than 5 times");
             }
