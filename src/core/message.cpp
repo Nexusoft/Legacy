@@ -114,7 +114,7 @@ namespace Core
 			// Each connection can only send one version message
 			if (pfrom->nVersion != 0)
 			{
-				pfrom->Misbehaving(1);
+				pfrom->Misbehaving(1, "duplicate version messages");
 				return false;
 			}
 
@@ -212,7 +212,7 @@ namespace Core
 		else if (pfrom->nVersion == 0)
 		{
 			// Must have a version message before anything else
-			pfrom->Misbehaving(1);
+			pfrom->Misbehaving(1, "no version message");
 			return false;
 		}
 
@@ -233,8 +233,7 @@ namespace Core
 				return true;
 			if (vAddr.size() > 1000)
 			{
-				pfrom->Misbehaving(20);
-				return error("message addr size() = %d", vAddr.size());
+				pfrom->Misbehaving(20, strprintf("message addr size() = %d", vAddr.size()));
 			}
 
 			// Store the new addresses
@@ -290,8 +289,7 @@ namespace Core
 			vRecv >> vInv;
 			if (vInv.size() > 2000)
 			{
-				pfrom->Misbehaving(20);
-				return error("message inv size() = %d", vInv.size());
+				pfrom->Misbehaving(20, strprintf("message inv size() = %d", vInv.size()));
 			}
 
 			LLD::CIndexDB indexdb("r");
@@ -322,8 +320,7 @@ namespace Core
 			vRecv >> vInv;
 			if (vInv.size() > 2000)
 			{
-				pfrom->Misbehaving(20);
-				return error("message getdata size() = %d", vInv.size());
+				pfrom->Misbehaving(20, strprintf("message getdata size() = %d", vInv.size()));
 			}
 
 			for(const auto inv : vInv)
@@ -383,7 +380,7 @@ namespace Core
 		{
             //rate limit getblocks requests per node to every 2 seconds
             if(GetUnifiedTimestamp() - pfrom->nLastGetBlocks < 2)
-                return pfrom->Misbehaving(5);
+                return pfrom->Misbehaving(5, "getblocks within 2 seconds");
                 
             pfrom->nLastGetBlocks = GetUnifiedTimestamp();
             
@@ -393,18 +390,18 @@ namespace Core
             
             //skip over duplicat hash stops
             if(hashStop != 0 && pfrom->hashLastGetBlocksEnd == hashStop)
-                return pfrom->Misbehaving(5);
+                return pfrom->Misbehaving(2, strprintf("same getblocks stop %s", hashStop.ToString().substr(0, 20).c_str()));
             
             pfrom->hashLastGetBlocksEnd = hashStop;
 
 			// Find the last block the caller has in the main chain
 			CBlockIndex* pindex = locator.GetBlockIndex();
             if(!pindex)
-                return pfrom->Misbehaving(5);
+                return pfrom->Misbehaving(5, "getblocks no index");
             
             //skip over duplicate requests for this node
             if(pindex == pfrom->pindexLastGetBlocksBegin)
-                return pfrom->Misbehaving(5);
+                return pfrom->Misbehaving(2, strprintf("same getblocks begin %s", pindex->GetBlockHash().ToString().substr(0, 20).c_str()));
             
             pfrom->pindexLastGetBlocksBegin = pindex;
 
@@ -450,7 +447,7 @@ namespace Core
 		{
             //rate limit getheaders requests per node to every 2 seconds
             if(GetUnifiedTimestamp() - pfrom->nLastGetBlocks < 2)
-                return pfrom->Misbehaving(5);
+                return pfrom->Misbehaving(5, "getheaders less than 2 seconds apart");
                 
             pfrom->nLastGetBlocks = GetUnifiedTimestamp();
             
@@ -460,7 +457,7 @@ namespace Core
             
             //skip over duplicate hash stops
             if(hashStop != 0 && pfrom->hashLastGetBlocksEnd == hashStop)
-                return pfrom->Misbehaving(5);
+                return pfrom->Misbehaving(2, strprintf("getheaders duplicate hashStop %s", hashStop.ToString().substr(0, 20).c_str()));
             
             pfrom->hashLastGetBlocksEnd = hashStop;
 

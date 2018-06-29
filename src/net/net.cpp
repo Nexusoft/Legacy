@@ -437,8 +437,11 @@ namespace Net
 		return fResult;
 	}
 
-	bool CNode::Misbehaving(int howmuch)
+	bool CNode::Misbehaving(int howmuch, std::string strMessage)
 	{
+        if(strMessage != "")
+            printf("\x1b[31m WARNING: %s \x1b[0m\n", strMessage.c_str());
+        
 		if (addr.IsLocal())
 		{
 			printf("Warning: local node %s misbehaving\n", addr.ToString().c_str());
