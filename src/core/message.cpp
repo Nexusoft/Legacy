@@ -767,17 +767,6 @@ namespace Core
 			if (pto->nVersion == 0)
 				return true;
 
-			/* Block Checkups every minute. */
-			static int64 nLastBlockCheckup;
-			if (GetUnifiedTimestamp() - nLastBlockCheckup > 60) {
-				pto->PushMessage("getblocks", Core::CBlockLocator(pindexBest), uint1024(0));
-				
-				if(GetArg("-verbose", 0) >= 2)
-					printf("+++++ Requesting Block Update at Unified Timestamp %u\n", (unsigned int) GetUnifiedTimestamp());
-				
-				nLastBlockCheckup = GetUnifiedTimestamp();
-			}
-
 			// Resend wallet transactions that haven't gotten in a block yet
 			ResendWalletTransactions();
 
