@@ -393,7 +393,7 @@ namespace Core
             if(!pindex[i])
                 return error("CTrustPool::IsValid() : Can't Find last Channel Index");
             
-            if(!pblock[i].ReadFromDisk(pindex[i], true))
+            if(!pblock[i].ReadFromDisk(pindex[i]->nFile, pindex[i]->nBlockPos, true))
                 return error("CTrustPool::IsValid() : Can't Read Block from Disk");
                 
             if(i > 0)
@@ -423,6 +423,11 @@ namespace Core
                 /* Ignore Outputs that are not in the Main Chain. */
                 if (!txPrev.ReadFromDisk(indexdb, cBlock.vtx[0].vin[nIndex].prevout, txindex))
                     return error("CTrustPool::IsValid() : Invalid Previous Transaction");
+
+                /* Read the Previous Transaction's Block from Disk. */
+                CBlock block;
+                if (!block.ReadFromDisk(txindex.pos.nFile, txindex.pos.nBlockPos, false))
+                    return error("CTrustPool::IsValid() : Failed To Read Block from Disk");
                 
                 /* Check that Transaction is not Genesis when Trust Key is Established. */
                 if(cBlock.GetHash() != cTrustPool.Find(cKey).hashGenesisBlock)
@@ -433,7 +438,7 @@ namespace Core
                     return error("CTrustPool::IsValid() : Cannot Include Transactions with Genesis Transaction");
                 
                 /* RULE: No Genesis if coin age is less than 1 days old. */
-                if((cBlock.nTime - txPrev.nTime) < 24 * 60 * 60)
+                if((cBlock.nTime - block.GetBlockTime()) < 24 * 60 * 60)
                     return error("\x1b[31m SOFTBAN: \u001b[37;1m Genesis Input less than 24 hours Age \x1b[0m");
             }
 
@@ -461,11 +466,15 @@ namespace Core
             {
                 CTransaction txPrev;
                 CTxIndex txindex;
+                
+                /* Ignore Outputs that are not in the Main Chain. */
+                if (!txPrev.ReadFromDisk(indexdb, cBlock.vtx[0].vin[nIndex].prevout, txindex))
+                    return error("GetCoinstakeAge() : Invalid Previous Transaction");
 
                 /* Read the Previous Transaction's Block from Disk. */
                 CBlock block;
-                if (!block.ReadFromDisk(mapBlockIndex[cBlock.vtx[0].vin[nIndex].prevout.hash], false))
-                    return error("CTrustPool::IsValid() : Failed To Read Block from Disk");
+                if (!block.ReadFromDisk(txindex.pos.nFile, txindex.pos.nBlockPos, false))
+                    return error("GetCoinstakeAge() : Failed To Read Block from Disk");
                 
                 /* RULE: Inputs need to have at least 100 confirmations */
                 if(cBlock.nHeight - block.nHeight < 100)
