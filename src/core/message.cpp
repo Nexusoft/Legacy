@@ -390,18 +390,18 @@ namespace Core
             
             //skip over duplicat hash stops
             if(hashStop != 0 && pfrom->hashLastGetBlocksEnd == hashStop)
-                return pfrom->Misbehaving(2, strprintf("same getblocks stop %s", hashStop.ToString().substr(0, 20).c_str()));
+                return true;
             
             pfrom->hashLastGetBlocksEnd = hashStop;
 
 			// Find the last block the caller has in the main chain
 			CBlockIndex* pindex = locator.GetBlockIndex();
             if(!pindex)
-                return pfrom->Misbehaving(5, "getblocks no index");
+                return true;
             
             //skip over duplicate requests for this node
             if(pindex == pfrom->pindexLastGetBlocksBegin)
-                return pfrom->Misbehaving(2, strprintf("same getblocks begin %s", pindex->GetBlockHash().ToString().substr(0, 20).c_str()));
+                return true;
             
             pfrom->pindexLastGetBlocksBegin = pindex;
 
@@ -457,7 +457,7 @@ namespace Core
             
             //skip over duplicate hash stops
             if(hashStop != 0 && pfrom->hashLastGetBlocksEnd == hashStop)
-                return pfrom->Misbehaving(2, strprintf("getheaders duplicate hashStop %s", hashStop.ToString().substr(0, 20).c_str()));
+                return true;
             
             pfrom->hashLastGetBlocksEnd = hashStop;
 
