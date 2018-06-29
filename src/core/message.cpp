@@ -378,11 +378,17 @@ namespace Core
 
 		else if (strCommand == "getblocks")
 		{
-            //rate limit getblocks requests per node to every 2 seconds
-            if(GetUnifiedTimestamp() - pfrom->nLastGetBlocks < 2)
-                return pfrom->Misbehaving(5, "getblocks within 2 seconds");
-                
+            //rate limit getblocks requests per node to every 1 second
+            if(GetUnifiedTimestamp() - pfrom->nLastGetBlocks < 1)
+                pfrom->nConsecutiveMisbehaviors ++;
+            else
+                pfrom->nConsecutiveMisbehaviors = 0;
+            
             pfrom->nLastGetBlocks = GetUnifiedTimestamp();
+            
+            //give DoS score if consecutive requests under 
+            if(pfrom->nConsecutiveMisbehaviors > 5)
+                return pfrom->Misbehaving(10, "getblocks within 1 seconds more than 5 times");
             
 			CBlockLocator locator;
 			uint1024 hashStop;

@@ -154,6 +154,7 @@ namespace Net
 		int nStartingHeight;
         
         unsigned int nLastGetBlocks;
+        unsigned int nConsecutiveMisbehaviors;
 
 		// flood relay
 		std::vector<CAddress> vAddrToSend;
@@ -195,6 +196,7 @@ namespace Net
 			hashLastGetBlocksEnd = 0;
 			nStartingHeight = -1;
             nLastGetBlocks  = 0;
+            nConsecutiveMisbehaviors = 0;
 			fGetAddr = false;
 			nMisbehavior = 0;
 			hashCheckpointKnown = 0;
