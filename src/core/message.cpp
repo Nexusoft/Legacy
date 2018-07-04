@@ -1,9 +1,9 @@
 /*******************************************************************************************
- 
+
 			Hash(BEGIN(Satoshi[2010]), END(W.J.[2012])) == Videlicet[2014] ++
-   
+
  [Learn and Create] Viz. http://www.opensource.org/licenses/mit-license.php
-  
+
 *******************************************************************************************/
 
 #include "../main.h"
@@ -24,7 +24,7 @@ using namespace boost;
 namespace Core
 {
 
-	string strMintMessage = _("Info: Minting suspended due to locked wallet."); 
+	string strMintMessage = _("Info: Minting suspended due to locked wallet.");
 	string strMintWarning;
 
 	string GetWarnings(string strFor)
@@ -50,7 +50,7 @@ namespace Core
 			return strStatusBar;
 		else if (strFor == "rpc")
 			return strRPC;
-			
+
 		assert(!"GetWarnings() : invalid parameter");
 		return "error";
 	}
@@ -127,7 +127,7 @@ namespace Core
 			{
 				if(GetArg("-verbose", 0) >= 1)
 					printf("partner %s using obsolete version %i; disconnecting\n", pfrom->addr.ToString().c_str(), pfrom->nVersion);
-				
+
 				pfrom->fDisconnect = true;
 				return false;
 			}
@@ -146,7 +146,7 @@ namespace Core
 			{
 				if(GetArg("-verbose", 0) >= 1)
 					printf("connected to self at %s, disconnecting\n", pfrom->addr.ToString().c_str());
-				
+
 				pfrom->fDisconnect = true;
 				return true;
 			}
@@ -200,7 +200,7 @@ namespace Core
 			}
 
 			pfrom->fSuccessfullyConnected = true;
-			
+
 			if(GetArg("-verbose", 0) >= 1)
 				printf("version message: version %d, blocks=%d\n", pfrom->nVersion, pfrom->nStartingHeight);
 
@@ -327,7 +327,7 @@ namespace Core
 			{
 				if (fShutdown)
 					return true;
-					
+
 				if(GetArg("-verbose", 0) >= 3)
 					printf("received getdata for: %s\n", inv.ToString().c_str());
 
@@ -340,7 +340,7 @@ namespace Core
 						CBlock block;
 						if(!block.ReadFromDisk((*mi).second))
 							return error("ProcessMessage() : Could not read Block.");
-						
+
 						pfrom->PushMessage("block", block);
 
 						// Trigger them to send a getblocks request for the next batch of inventory
@@ -350,7 +350,7 @@ namespace Core
 							// and we want it right after the last block so they don't
 							// wait for other stuff first.
 							// Nexus: send latest proof-of-work block to allow the
-							// download node to accept as orphan (proof-of-stake 
+							// download node to accept as orphan (proof-of-stake
 							// block might be rejected by stake connection check)
 							vector<Net::CInv> vInv;
 							vInv.push_back(Net::CInv(Net::MSG_BLOCK, GetLastBlockIndex(pindexBest, false)->GetBlockHash()));
@@ -383,60 +383,48 @@ namespace Core
                 pfrom->nConsecutiveMisbehaviors ++;
             else
                 pfrom->nConsecutiveMisbehaviors = 0;
-            
+
             pfrom->nLastGetBlocks = GetUnifiedTimestamp();
-            
-            //give DoS score if consecutive requests under 
+
+            //give DoS score if consecutive requests under
             if(pfrom->nConsecutiveMisbehaviors > 5){
                 pfrom->nConsecutiveMisbehaviors = 0;
-                
+
                 return pfrom->Misbehaving(10, "getblocks within 1 seconds more than 5 times");
             }
-            
+
 			CBlockLocator locator;
 			uint1024 hashStop;
 			vRecv >> locator >> hashStop;
-            
-            //skip over duplicat hash stops
-            if(hashStop != 0 && pfrom->hashLastGetBlocksEnd == hashStop)
-                return true;
-            
-            pfrom->hashLastGetBlocksEnd = hashStop;
 
 			// Find the last block the caller has in the main chain
 			CBlockIndex* pindex = locator.GetBlockIndex();
             if(!pindex)
                 return true;
-            
-            //skip over duplicate requests for this node
-            if(pindex == pfrom->pindexLastGetBlocksBegin)
-                return true;
-            
-            pfrom->pindexLastGetBlocksBegin = pindex;
 
 			// Send the rest of the chain
 			if (pindex)
 				pindex = pindex->pnext;
 			int nLimit = 1000 + locator.GetDistanceBack();
 			unsigned int nBytes = 0;
-			
+
 			if(GetArg("-verbose", 0) >= 3)
 				printf("getblocks %d to %s limit %d\n", (pindex ? pindex->nHeight : -1), hashStop.ToString().substr(0,20).c_str(), nLimit);
-			
+
 			for (; pindex; pindex = pindex->pnext)
 			{
 				if (pindex->GetBlockHash() == hashStop)
 				{
 					if(GetArg("-verbose", 0) >= 3)
 						printf("  getblocks stopping at %d %s (%u bytes)\n", pindex->nHeight, pindex->GetBlockHash().ToString().substr(0,20).c_str(), nBytes);
-					
+
 					// Nexus: tell downloading node about the latest block if it's
 					// without risk being rejected due to stake connection check
 					if (hashStop != hashBestChain)
 						pfrom->PushInventory(Net::CInv(Net::MSG_BLOCK, hashBestChain));
 					break;
 				}
-				
+
 				pfrom->PushInventory(Net::CInv(Net::MSG_BLOCK, pindex->GetBlockHash()));
 				if (--nLimit <= 0)
 				{
@@ -444,7 +432,7 @@ namespace Core
 					// getblocks the next batch of inventory.
 					if(GetArg("-verbose", 0) >= 3)
 						printf("  getblocks stopping at limit %d %s (%u bytes)\n", pindex->nHeight, pindex->GetBlockHash().ToString().substr(0,20).c_str(), nBytes);
-					
+
 					pfrom->hashContinue = pindex->GetBlockHash();
 					break;
 				}
@@ -459,24 +447,24 @@ namespace Core
                 pfrom->nConsecutiveMisbehaviors ++;
             else
                 pfrom->nConsecutiveMisbehaviors = 0;
-            
+
             pfrom->nLastGetBlocks = GetUnifiedTimestamp();
-            
-            //give DoS score if consecutive requests under 
+
+            //give DoS score if consecutive requests under
             if(pfrom->nConsecutiveMisbehaviors > 5) {
                 pfrom->nConsecutiveMisbehaviors = 0;
-                
+
                 return pfrom->Misbehaving(10, "getheaders within 1 seconds more than 5 times");
             }
-            
+
 			CBlockLocator locator;
 			uint1024 hashStop;
 			vRecv >> locator >> hashStop;
-            
+
             //skip over duplicate hash stops
             if(hashStop != 0 && pfrom->hashLastGetBlocksEnd == hashStop)
                 return true;
-            
+
             pfrom->hashLastGetBlocksEnd = hashStop;
 
 			CBlockIndex* pindex = NULL;
@@ -498,17 +486,17 @@ namespace Core
 
 			vector<CBlock> vHeaders;
 			int nLimit = 1000;
-			
+
 			if(GetArg("-verbose", 0) >= 3)
 				printf("getheaders %d to %s\n", (pindex ? pindex->nHeight : -1), hashStop.ToString().substr(0,20).c_str());
-			
+
 			for (; pindex; pindex = pindex->pnext)
 			{
 				vHeaders.push_back(pindex->GetBlockHeader());
 				if (--nLimit <= 0 || pindex->GetBlockHash() == hashStop)
 					break;
 			}
-			
+
 			pfrom->PushMessage("headers", vHeaders);
 		}
 
@@ -552,7 +540,7 @@ namespace Core
 						{
 							if(GetArg("-verbose", 1) >= 0)
 								printf("   accepted orphan tx %s\n", inv.hash.ToString().substr(0,10).c_str());
-							
+
 							SyncWithWallets(tx, NULL, true);
 							RelayMessage(inv, vMsg);
 							Net::mapAlreadyAskedFor.erase(inv);
@@ -563,7 +551,7 @@ namespace Core
 						{
 							// invalid orphan
 							vEraseQueue.push_back(inv.hash.getuint512());
-							
+
 							if(GetArg("-verbose", 0) >= 0)
 								printf("   removed invalid orphan tx %s\n", inv.hash.ToString().substr(0,10).c_str());
 						}
@@ -593,7 +581,7 @@ namespace Core
 
 			if(GetArg("-verbose", 0) >= 3)
 				printf("received block %s\n", block.GetHash().ToString().substr(0,20).c_str());
-			
+
 			if(GetArg("-verbose", 0) >= 1)
 				block.print();
 
@@ -618,7 +606,7 @@ namespace Core
 		{
 			uint64 nonce = 0;
 			vRecv >> nonce;
-			
+
 			/** Echo the message back with the nonce. This allows for two useful features:
 
 			1) A remote node can quickly check if the connection is operational
@@ -630,20 +618,20 @@ namespace Core
 			   it, if the remote node sends a ping once per second and this node takes 5
 			   seconds to respond to each, the 5th ping the remote sends would appear to
 			   return very quickly. **/
-			   
+
 			pfrom->PushMessage("pong", nonce);
 		}
-		
+
 		else if(strCommand == "pong")
         {
             uint64 nonce = 0;
             vRecv >> nonce;
-            
+
             if(GetArg("-verbose", 0) >= 3)
                 printf("received pong from %s\n", pfrom->addr.ToStringIP().c_str());
         }
 
-		else 
+		else
 		{
 			// Ignore unknown commands for extensibility
 		}
@@ -798,7 +786,7 @@ namespace Core
 			if (GetUnifiedTimestamp() - pto->nLastPing > 30 && (GetUnifiedTimestamp() - pto->nLastRecv > 30 || GetUnifiedTimestamp() - pto->nLastSend > 30)) {
                 uint64 nNonce = GetRandInt(1000);
 				pto->PushMessage("ping", nNonce);
-                
+
                 pto->nLastPing = GetUnifiedTimestamp();
             }
 
@@ -927,7 +915,7 @@ namespace Core
 				{
 					if(GetArg("-verbose", 0) >= 3)
 						printf("sending getdata: %s\n", inv.ToString().c_str());
-					
+
 					vGetData.push_back(inv);
 					if (vGetData.size() >= 1000)
 					{
@@ -946,7 +934,3 @@ namespace Core
 	}
 
 }
-
-
-
-
