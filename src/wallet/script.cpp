@@ -53,11 +53,11 @@ namespace Wallet
                 // Can be negative zero
                 if (i == vch.size() - 1 && vch[i] == 0x80)
                     return false;
-                    
+
                 return true;
             }
         }
-        
+
         return false;
     }
 
@@ -289,7 +289,7 @@ namespace Wallet
 
                 if (fExec && 0 <= opcode && opcode <= OP_PUSHDATA4)
                     stack.push_back(vchPushValue);
-                    
+
                 else if (fExec || (OP_IF <= opcode && opcode <= OP_ENDIF))
                 switch (opcode)
                 {
@@ -877,7 +877,7 @@ namespace Wallet
 
                         uint256 hash256 = SK256(vch);
                         memcpy(&vchHash[0], &hash256, sizeof(hash256));
-                        
+
                         popstack(stack);
                         stack.push_back(vchHash);
                     }
@@ -1033,7 +1033,7 @@ namespace Wallet
             printf("ERROR: SignatureHash() : nIn=%d out of range\n", nIn);
             return 1;
         }
-        
+
         Core::CTransaction txTmp(txTo);
 
         // In case concatenating two scripts ends up with two codeseparators,
@@ -1454,7 +1454,7 @@ namespace Wallet
             CScript subscript;
             if (!keystore.GetCScript(uint256(vSolutions[0]), subscript))
                 return false;
-                
+
             return IsMine(keystore, subscript);
         }
         case TX_MULTISIG:
@@ -1540,7 +1540,7 @@ namespace Wallet
         stackCopy = stack;
         if (!EvalScript(stack, scriptPubKey, txTo, nIn, nHashType))
             return false;
-            
+
         if (stack.empty())
             return false;
 
@@ -1559,10 +1559,10 @@ namespace Wallet
 
             if (!EvalScript(stackCopy, pubKey2, txTo, nIn, nHashType))
                 return false;
-                
+
             if (stackCopy.empty())
                 return false;
-                
+
             return CastToBool(stackCopy.back());
         }
 
@@ -1647,7 +1647,7 @@ namespace Wallet
                 else
                     n += 20;
             }
-            
+
             lastOpcode = opcode;
         }
         return n;

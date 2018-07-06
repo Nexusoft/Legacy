@@ -1,9 +1,9 @@
 /*******************************************************************************************
- 
-			Hash(BEGIN(Satoshi[2010]), END(Sunny[2012])) == Videlicet[2014] ++
-   
+
+            Hash(BEGIN(Satoshi[2010]), END(Sunny[2012])) == Videlicet[2014] ++
+
  [Learn and Create] Viz. http://www.opensource.org/licenses/mit-license.php
-  
+
 *******************************************************************************************/
 
 #include "core.h"
@@ -13,103 +13,103 @@ using namespace std;
 namespace Core
 {
 
-	/** Convert Double to unsigned int Representative. Used for encoding / decoding prime difficulty from nBits. **/
-	unsigned int SetBits(double nDiff)
-	{
-		unsigned int nBits = 10000000;
-		nBits *= nDiff;
-		
-		return nBits;
-	}
+    /** Convert Double to unsigned int Representative. Used for encoding / decoding prime difficulty from nBits. **/
+    unsigned int SetBits(double nDiff)
+    {
+        unsigned int nBits = 10000000;
+        nBits *= nDiff;
 
-	/** Determines the difficulty of the Given Prime Number.
-		Difficulty is represented as so V.X
-		V is the whole number, or Cluster Size, X is a proportion
-		of Fermat Remainder from last Composite Number [0 - 1] **/
-	double GetPrimeDifficulty(const CBigNum& prime, int checks)
-	{
-		if(!PrimeCheck(prime, checks))
-			return 0.0; ///difficulty of a composite number
-			
-		CBigNum lastPrime = prime;
-		CBigNum next = prime + 2;
-		unsigned int clusterSize = 1;
-		
-		///largest prime gap in cluster can be + 12
-		///this was determined by previously found clusters up to 17 primes
-		for( ; next <= lastPrime + 12; next += 2)
-		{
-			if(PrimeCheck(next, checks))
-			{
-				lastPrime = next;
-				++clusterSize;
-			}
-		}
-		
-		///calculate the rarity of cluster from proportion of fermat remainder of last prime + 2
-		///keep fractional remainder in bounds of [0, 1]
-		double fractionalRemainder = 1000000.0 / GetFractionalDifficulty(next);
-		if(fractionalRemainder > 1.0 || fractionalRemainder < 0.0)
-			fractionalRemainder = 0.0;
-		
-		return (clusterSize + fractionalRemainder);
-	}
+        return nBits;
+    }
 
-	/** Gets the unsigned int representative of a decimal prime difficulty **/
-	unsigned int GetPrimeBits(const CBigNum& prime)
-	{
-		return SetBits(GetPrimeDifficulty(prime, 1));
-	}
+    /** Determines the difficulty of the Given Prime Number.
+        Difficulty is represented as so V.X
+        V is the whole number, or Cluster Size, X is a proportion
+        of Fermat Remainder from last Composite Number [0 - 1] **/
+    double GetPrimeDifficulty(const CBigNum& prime, int checks)
+    {
+        if(!PrimeCheck(prime, checks))
+            return 0.0; ///difficulty of a composite number
 
-	/** Breaks the remainder of last composite in Prime Cluster into an integer. 
-		Larger numbers are more rare to find, so a proportion can be determined 
-		to give decimal difficulty between whole number increases. **/
-	unsigned int GetFractionalDifficulty(const CBigNum& composite)
-	{
-		/** Break the remainder of Fermat test to calculate fractional difficulty [Thanks Sunny] **/
-		return ((composite - FermatTest(composite, 2) << 24) / composite).getuint();
-	}
+        CBigNum lastPrime = prime;
+        CBigNum next = prime + 2;
+        unsigned int clusterSize = 1;
 
-	/** Determines if given number is Prime. Accuracy can be determined by "checks". 
-		The default checks the Nexus Network uses is 2 **/
-	bool PrimeCheck(const CBigNum& test, int checks)
-	{
-		/** Check A: Small Prime Divisor Tests */
-		CBigNum primes[11] = { 2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31 };
-		for(int index = 0; index < 11; index++)
-			if(test % primes[index] == 0)
-				return false;
+        ///largest prime gap in cluster can be + 12
+        ///this was determined by previously found clusters up to 17 primes
+        for( ; next <= lastPrime + 12; next += 2)
+        {
+            if(PrimeCheck(next, checks))
+            {
+                lastPrime = next;
+                ++clusterSize;
+            }
+        }
 
-		/** Check B: Miller-Rabin Tests */
-		bool millerRabin = Miller_Rabin(test, checks);
-		if(!millerRabin)
-			return false;
-			
-		/** Check C: Fermat Tests */
-		for(CBigNum n = 2; n < 2 + checks; n++)
-			if(FermatTest(test, n) != 1)
-				return false;
-		
-		return true;
-	}
+        ///calculate the rarity of cluster from proportion of fermat remainder of last prime + 2
+        ///keep fractional remainder in bounds of [0, 1]
+        double fractionalRemainder = 1000000.0 / GetFractionalDifficulty(next);
+        if(fractionalRemainder > 1.0 || fractionalRemainder < 0.0)
+            fractionalRemainder = 0.0;
 
-	/** Simple Modular Exponential Equation a^(n - 1) % n == 1 or notated in Modular Arithmetic a^(n - 1) = 1 [mod n]. 
-		a = Base or 2... 2 + checks, n is the Prime Test. Used after Miller-Rabin and Divisor tests to verify primality. **/
-	CBigNum FermatTest(const CBigNum& n, const CBigNum& a)
-	{
-		CAutoBN_CTX pctx;
-		CBigNum e = n - 1;
-		CBigNum r;
-		BN_mod_exp(r.getBN(), a.getBN(), e.getBN(), n.getBN(), pctx);
-		
-		return r;
-	}
+        return (clusterSize + fractionalRemainder);
+    }
 
-	/** Miller-Rabin Primality Test from the OpenSSL BN Library. **/
-	bool Miller_Rabin(const CBigNum& n, int checks)
-	{
-		return (BN_is_prime_ex(n.getBN(), checks, nullptr, nullptr) == 1);
-	}
+    /** Gets the unsigned int representative of a decimal prime difficulty **/
+    unsigned int GetPrimeBits(const CBigNum& prime)
+    {
+        return SetBits(GetPrimeDifficulty(prime, 1));
+    }
+
+    /** Breaks the remainder of last composite in Prime Cluster into an integer.
+        Larger numbers are more rare to find, so a proportion can be determined
+        to give decimal difficulty between whole number increases. **/
+    unsigned int GetFractionalDifficulty(const CBigNum& composite)
+    {
+        /** Break the remainder of Fermat test to calculate fractional difficulty [Thanks Sunny] **/
+        return ((composite - FermatTest(composite, 2) << 24) / composite).getuint();
+    }
+
+    /** Determines if given number is Prime. Accuracy can be determined by "checks".
+        The default checks the Nexus Network uses is 2 **/
+    bool PrimeCheck(const CBigNum& test, int checks)
+    {
+        /** Check A: Small Prime Divisor Tests */
+        CBigNum primes[11] = { 2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31 };
+        for(int index = 0; index < 11; index++)
+            if(test % primes[index] == 0)
+                return false;
+
+        /** Check B: Miller-Rabin Tests */
+        bool millerRabin = Miller_Rabin(test, checks);
+        if(!millerRabin)
+            return false;
+
+        /** Check C: Fermat Tests */
+        for(CBigNum n = 2; n < 2 + checks; n++)
+            if(FermatTest(test, n) != 1)
+                return false;
+
+        return true;
+    }
+
+    /** Simple Modular Exponential Equation a^(n - 1) % n == 1 or notated in Modular Arithmetic a^(n - 1) = 1 [mod n].
+        a = Base or 2... 2 + checks, n is the Prime Test. Used after Miller-Rabin and Divisor tests to verify primality. **/
+    CBigNum FermatTest(const CBigNum& n, const CBigNum& a)
+    {
+        CAutoBN_CTX pctx;
+        CBigNum e = n - 1;
+        CBigNum r;
+        BN_mod_exp(r.getBN(), a.getBN(), e.getBN(), n.getBN(), pctx);
+
+        return r;
+    }
+
+    /** Miller-Rabin Primality Test from the OpenSSL BN Library. **/
+    bool Miller_Rabin(const CBigNum& n, int checks)
+    {
+        return (BN_is_prime_ex(n.getBN(), checks, nullptr, nullptr) == 1);
+    }
 
 }
 

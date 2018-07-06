@@ -1,9 +1,9 @@
 /*******************************************************************************************
- 
-			Hash(BEGIN(Satoshi[2010]), END(W.J.[2012])) == Videlicet[2014] ++
-   
+
+            Hash(BEGIN(Satoshi[2010]), END(W.J.[2012])) == Videlicet[2014] ++
+
  [Learn and Create] Viz. http://www.opensource.org/licenses/mit-license.php
-  
+
 *******************************************************************************************/
 
 #include "sendcoinsdialog.h"
@@ -105,11 +105,11 @@ void SendCoinsDialog::on_sendButton_clicked()
     QStringList formatted;
     foreach(const SendCoinsRecipient &rcp, recipients)
     {
-		#if QT_VERSION < QT_VERSION_CHECK(5,0,0)
-		 formatted.append(tr("<b>%1</b> to %2 (%3)").arg(NexusUnits::formatWithUnit(NexusUnits::Nexus, rcp.amount), Qt::escape(rcp.label), rcp.address));
-		#else
-		 formatted.append(tr("<b>%1</b> to %2 (%3)").arg(NexusUnits::formatWithUnit(NexusUnits::Nexus, rcp.amount), QString(rcp.label).toHtmlEscaped(), rcp.address));
-		#endif
+        #if QT_VERSION < QT_VERSION_CHECK(5,0,0)
+         formatted.append(tr("<b>%1</b> to %2 (%3)").arg(NexusUnits::formatWithUnit(NexusUnits::Nexus, rcp.amount), Qt::escape(rcp.label), rcp.address));
+        #else
+         formatted.append(tr("<b>%1</b> to %2 (%3)").arg(NexusUnits::formatWithUnit(NexusUnits::Nexus, rcp.amount), QString(rcp.label).toHtmlEscaped(), rcp.address));
+        #endif
     }
 
     fNewRecipientAllowed = false;
@@ -299,12 +299,12 @@ void SendCoinsDialog::setBalance(qint64 balance, qint64 stake, qint64 unconfirme
 {
     Q_UNUSED(stake);
     Q_UNUSED(unconfirmedBalance);
-	Q_UNUSED(immatureBalance);
-	
+    Q_UNUSED(immatureBalance);
+
     if(!model || !model->getOptionsModel())
         return;
 
     int unit = model->getOptionsModel()->getDisplayUnit();
     ui->labelBalance->setText(NexusUnits::formatWithUnit(unit, balance));
-	
+
 }

@@ -1,9 +1,9 @@
 /*******************************************************************************************
- 
-			Hash(BEGIN(Satoshi[2010]), END(W.J.[2012])) == Videlicet[2014] ++
-   
+
+            Hash(BEGIN(Satoshi[2010]), END(W.J.[2012])) == Videlicet[2014] ++
+
  [Learn and Create] Viz. http://www.opensource.org/licenses/mit-license.php
-  
+
 *******************************************************************************************/
 
 #include <string>
@@ -108,50 +108,50 @@ void MessagePage::on_signMessage_clicked()
         QMessageBox::critical(this, tr("Error signing"), tr("Sign failed"),
                               QMessageBox::Abort, QMessageBox::Abort);
     }
-	
-	ui->signFrom->setStyleSheet("background-color: #F7F7F7");
+
+    ui->signFrom->setStyleSheet("background-color: #F7F7F7");
     ui->signature->setText(QString::fromStdString(EncodeBase64(&vchSig[0], vchSig.size())));
     ui->signature->setFont(GUIUtil::NexusAddressFont());
 }
 
 void MessagePage::on_verifyMessage_clicked()
 {
-	std::string strSign     = ui->signature->toPlainText().toStdString();
+    std::string strSign     = ui->signature->toPlainText().toStdString();
 
-	bool fInvalid = false;
-	std::vector<unsigned char> vchSig = DecodeBase64(strSign.c_str(), &fInvalid);
+    bool fInvalid = false;
+    std::vector<unsigned char> vchSig = DecodeBase64(strSign.c_str(), &fInvalid);
 
-	if (fInvalid)
-	{
-	    QMessageBox::critical(this, tr("Error verifying"), tr("Malformed Base64 Encoding"),
+    if (fInvalid)
+    {
+        QMessageBox::critical(this, tr("Error verifying"), tr("Malformed Base64 Encoding"),
                             QMessageBox::Abort, QMessageBox::Abort);
-							
-		ui->signFrom->setStyleSheet("background-color: #F20F26");
+
+        ui->signFrom->setStyleSheet("background-color: #F20F26");
         return;
-	}
+    }
 
     CDataStream ss(SER_GETHASH, 0);
     ss << Core::strMessageMagic;
     ss << ui->message->document()->toPlainText().toStdString();
 
-	Wallet::CKey key;
-	if (!key.SetCompactSignature(SK256(ss.begin(), ss.end()), vchSig))
-	{
-	    QMessageBox::critical(this, tr("Error verifying"), tr("Invalid Signature"),
+    Wallet::CKey key;
+    if (!key.SetCompactSignature(SK256(ss.begin(), ss.end()), vchSig))
+    {
+        QMessageBox::critical(this, tr("Error verifying"), tr("Invalid Signature"),
                             QMessageBox::Abort, QMessageBox::Abort);
-		
-		ui->signFrom->setStyleSheet("background-color: #F20F26");
-        return;
-	}
-	
-	Wallet::NexusAddress addressCheck(ui->signFrom->text().toStdString());
-	Wallet::NexusAddress address(key.GetPubKey());
-	if(!address.IsValid() || !(address == addressCheck))
-	{
-		ui->signFrom->setStyleSheet("background-color: #F20F26");
-        return;
-	}
 
-	ui->signFrom->setStyleSheet("background-color: #0CF03A");
-	ui->signFrom->setFont(GUIUtil::NexusAddressFont());
+        ui->signFrom->setStyleSheet("background-color: #F20F26");
+        return;
+    }
+
+    Wallet::NexusAddress addressCheck(ui->signFrom->text().toStdString());
+    Wallet::NexusAddress address(key.GetPubKey());
+    if(!address.IsValid() || !(address == addressCheck))
+    {
+        ui->signFrom->setStyleSheet("background-color: #F20F26");
+        return;
+    }
+
+    ui->signFrom->setStyleSheet("background-color: #0CF03A");
+    ui->signFrom->setFont(GUIUtil::NexusAddressFont());
 }

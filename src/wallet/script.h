@@ -17,10 +17,10 @@
 #include <boost/foreach.hpp>
 
 namespace Core { class CTransaction; }
-namespace Wallet 
+namespace Wallet
 {
     class CKeyStore;
-    
+
     /** Signature hash types/flags */
     enum
     {
@@ -567,7 +567,7 @@ namespace Wallet
     bool SignSignature(const CKeyStore& keystore, const Core::CTransaction& txFrom, Core::CTransaction& txTo, unsigned int nIn, int nHashType=SIGHASH_ALL);
     bool VerifySignature(const Core::CTransaction& txFrom, const Core::CTransaction& txTo, unsigned int nIn, int nHashType);
     bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const Core::CTransaction& txTo, unsigned int nIn, int nHashType);
-    
+
     CScript CombineSignatures(CScript scriptPubKey, const Core::CTransaction& txTo, unsigned int nIn, const CScript& scriptSig1, const CScript& scriptSig2);
 }
 

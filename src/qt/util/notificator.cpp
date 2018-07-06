@@ -1,9 +1,9 @@
 /*******************************************************************************************
- 
-			Hash(BEGIN(Satoshi[2010]), END(W.J.[2012])) == Videlicet[2014] ++
-   
+
+            Hash(BEGIN(Satoshi[2010]), END(W.J.[2012])) == Videlicet[2014] ++
+
  [Learn and Create] Viz. http://www.opensource.org/licenses/mit-license.php
-  
+
 *******************************************************************************************/
 
 #include "notificator.h"
@@ -279,7 +279,7 @@ void Notificator::notifyGrowl(Class cls, const QString &title, const QString &te
     quotedText.replace("\\", "\\\\").replace("\"", "\\");
     QString growlApp(this->mode == Notificator::Growl13 ? "Growl" : "GrowlHelperApp");
 #if QT_VERSION < QT_VERSION_CHECK(5,0,0)
-	qt_mac_execute_apple_script(script.arg(notificationApp, quotedTitle, quotedText, notificationIcon, growlApp), 0);
+    qt_mac_execute_apple_script(script.arg(notificationApp, quotedTitle, quotedText, notificationIcon, growlApp), 0);
 #endif
 }
 #endif

@@ -153,10 +153,10 @@ namespace Wallet
         int64 GetUnconfirmedBalance() const;
         int64 GetStake() const;
         int64 GetNewMint() const;
-        
+
         void AvailableCoins(unsigned int nSpendTime, std::vector<COutput>& vCoins, bool fOnlyConfirmed) const;
         bool AvailableAddresses(unsigned int nSpendTime, std::map<NexusAddress, int64>& mapAddresses, bool fOnlyConfirmed = false) const;
-        
+
         bool CreateTransaction(const std::vector<std::pair<CScript, int64> >& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, int64& nFeeRet);
         bool CreateTransaction(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew, CReserveKey& reservekey, int64& nFeeRet);
         bool AddCoinstakeInputs(Core::CTransaction& txNew);
@@ -287,7 +287,7 @@ namespace Wallet
         void DisableTransaction(const Core::CTransaction &tx);
     };
 
-    
+
     /** A key allocated from the key pool. */
     class CReserveKey
     {
@@ -314,7 +314,7 @@ namespace Wallet
     };
 
 
-    /** A transaction with a bunch of additional info that only the owner cares about. 
+    /** A transaction with a bunch of additional info that only the owner cares about.
     * It includes any unrecorded transactions needed to link it back to the block chain.
     */
     class CWalletTx : public Core::CMerkleTx
@@ -517,7 +517,7 @@ namespace Wallet
             // GetBalance can assume transactions in mapWallet won't change
             if (fUseCache && fCreditCached)
                 return nCreditCached;
-                
+
             nCreditCached = pwallet->GetCredit(*this);
             fCreditCached = true;
             return nCreditCached;
@@ -562,7 +562,7 @@ namespace Wallet
         void GetAmounts(int64& nGeneratedImmature, int64& nGeneratedMature, std::list<std::pair<NexusAddress, int64> >& listReceived,
                         std::list<std::pair<NexusAddress, int64> >& listSent, int64& nFee, std::string& strSentAccount) const;
 
-        void GetAccountAmounts(const std::string& strAccount, int64& nGenerated, int64& nReceived, 
+        void GetAccountAmounts(const std::string& strAccount, int64& nGenerated, int64& nReceived,
                             int64& nSent, int64& nFee) const;
 
         bool IsFromMe() const
@@ -586,7 +586,7 @@ namespace Wallet
             std::vector<const Core::CMerkleTx*> vWorkQueue;
             vWorkQueue.reserve(vtxPrev.size()+1);
             vWorkQueue.push_back(this);
-            
+
             for (unsigned int i = 0; i < vWorkQueue.size(); i++)
             {
                 const CMerkleTx* ptx = vWorkQueue[i];
@@ -656,9 +656,9 @@ namespace Wallet
             READWRITE(strComment);
         )
     };
-    
-    
-    
+
+
+
     /** Class to determine the value and depth of a specific transaction.
         Used for the Available Coins Method located in Wallet.cpp mainly.
         To be used for further purpose in the future. **/

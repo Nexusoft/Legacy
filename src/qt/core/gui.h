@@ -1,9 +1,9 @@
 /*******************************************************************************************
- 
-			Hash(BEGIN(Satoshi[2010]), END(W.J.[2012])) == Videlicet[2014] ++
-   
+
+            Hash(BEGIN(Satoshi[2010]), END(W.J.[2012])) == Videlicet[2014] ++
+
  [Learn and Create] Viz. http://www.opensource.org/licenses/mit-license.php
-  
+
 *******************************************************************************************/
 
 #ifndef NEXUS_GUI_H
@@ -60,7 +60,7 @@ public:
         functionality.
     */
     void setWalletModel(WalletModel *walletModel);
-    
+
 protected:
     void changeEvent(QEvent *e);
     void closeEvent(QCloseEvent *event);
@@ -82,7 +82,7 @@ private:
 
     QLabel *labelEncryptionIcon;
     QLabel *labelConnectionsIcon;
-	QLabel *labelWeightIcon;
+    QLabel *labelWeightIcon;
     QLabel *labelBlocksIcon;
     QLabel *progressBarLabel;
     QProgressBar *progressBar;
@@ -100,8 +100,8 @@ private:
     QAction *toggleHideAction;
     QAction *exportAction;
     QAction *encryptWalletAction;
-	QAction *unlockWalletAction;
-	QAction *lockWalletAction;
+    QAction *unlockWalletAction;
+    QAction *lockWalletAction;
     QAction *backupWalletAction;
     QAction *changePassphraseAction;
     QAction *aboutQtAction;
@@ -133,7 +133,7 @@ public slots:
        @see WalletModel::EncryptionStatus
     */
     void setEncryptionStatus(int status);
-	void setWeight(double trustWeight, double blockWeight, double interestRate);
+    void setWeight(double trustWeight, double blockWeight, double interestRate);
 
     /** Notify the user of an error in the network or transaction handling code. */
     void error(const QString &title, const QString &message, bool modal);
@@ -184,9 +184,9 @@ private slots:
     void changePassphrase();
     /** Ask for pass phrase to unlock wallet temporarily */
     void tempUnlockWallet();
-	/** Ask for pass phrase to unlock wallet perminantly */
+    /** Ask for pass phrase to unlock wallet perminantly */
     void unlockWallet();
-	/** Lock Wallet after Unlocked Manually */
+    /** Lock Wallet after Unlocked Manually */
     void lockWallet();
 
     /** Show window if hidden, unminimize when minimized */

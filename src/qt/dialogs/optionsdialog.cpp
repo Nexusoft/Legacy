@@ -1,9 +1,9 @@
 /*******************************************************************************************
- 
-			Hash(BEGIN(Satoshi[2010]), END(W.J.[2012])) == Videlicet[2014] ++
-   
+
+            Hash(BEGIN(Satoshi[2010]), END(W.J.[2012])) == Videlicet[2014] ++
+
  [Learn and Create] Viz. http://www.opensource.org/licenses/mit-license.php
-  
+
 *******************************************************************************************/
 
 #include "optionsdialog.h"
@@ -123,7 +123,7 @@ OptionsDialog::OptionsDialog(QWidget *parent):
 
     setLayout(layout);
     setWindowTitle(tr("Options"));
-	setStyleSheet("selection-background-color: #084B8A; background-color: #F7F7F7");
+    setStyleSheet("selection-background-color: #084B8A; background-color: #F7F7F7");
 
     /* Widget-to-option mapper */
     mapper = new MonitoredDataMapper(this);

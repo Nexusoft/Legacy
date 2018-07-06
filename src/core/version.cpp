@@ -1,6 +1,6 @@
 /*******************************************************************************************
 
-			Hash(BEGIN(Satoshi[2010]), END(Sunny[2012])) == Videlicet[2014] ++
+            Hash(BEGIN(Satoshi[2010]), END(Sunny[2012])) == Videlicet[2014] ++
 
  [Learn and Create] Viz. http://www.opensource.org/licenses/mit-license.php
 
@@ -13,7 +13,7 @@
 const std::string CLIENT_NAME("Nexus");
 
 /* The database type used (Berklee DB or Lower Level Database) */
-const std::string CLIENT_VERSION("0.2.4.5 [RC5]");
+const std::string CLIENT_VERSION("0.2.4.6");
 
 #if defined USE_LLD
     const std::string CLIENT_DATABASE("[LLD]");

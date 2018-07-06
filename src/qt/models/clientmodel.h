@@ -1,9 +1,9 @@
 /*******************************************************************************************
- 
-			Hash(BEGIN(Satoshi[2010]), END(W.J.[2012])) == Videlicet[2014] ++
-   
+
+            Hash(BEGIN(Satoshi[2010]), END(W.J.[2012])) == Videlicet[2014] ++
+
  [Learn and Create] Viz. http://www.opensource.org/licenses/mit-license.php
-  
+
 *******************************************************************************************/
 
 #ifndef CLIENTMODEL_H
@@ -37,35 +37,35 @@ public:
 
     //! Return true if client connected to testnet
     bool isTestNet() const;
-	
-	
+
+
     //! Return true if core is doing initial block download
     bool inInitialBlockDownload() const;
-	
-	double getTrustWeight() const;
-	double getBlockWeight() const;
-	double getInterestRate() const;
-	
-	/** Return the Total Coin supply from the Block Chain. **/
-	unsigned int GetCoinSupply() const;
-	unsigned int GetIdealSupply() const;
-	
-	double GetPrimeDifficulty() const;
-	double GetHashDifficulty() const;
-	
-	unsigned int GetPrimeReserves() const;
-	unsigned int GetHashReserves() const;
-	
-	double GetPrimeReward() const;
-	double GetHashReward() const;
-	
-	unsigned int GetPrimeHeight() const;
-	unsigned int GetHashHeight() const;
-	
+
+    double getTrustWeight() const;
+    double getBlockWeight() const;
+    double getInterestRate() const;
+
+    /** Return the Total Coin supply from the Block Chain. **/
+    unsigned int GetCoinSupply() const;
+    unsigned int GetIdealSupply() const;
+
+    double GetPrimeDifficulty() const;
+    double GetHashDifficulty() const;
+
+    unsigned int GetPrimeReserves() const;
+    unsigned int GetHashReserves() const;
+
+    double GetPrimeReward() const;
+    double GetHashReward() const;
+
+    unsigned int GetPrimeHeight() const;
+    unsigned int GetHashHeight() const;
+
     //! Return conservative estimate of total number of blocks, or 0 if unknown
     int getNumBlocksOfPeers() const;
-	
-	
+
+
     //! Return warnings to be displayed in status bar
     QString getStatusBarWarnings() const;
 

@@ -357,7 +357,7 @@ namespace Wallet
     {
     public:
         void SetSecret(const CSecret& vchSecret, bool fCompressed)
-        { 
+        {
             assert(vchSecret.size() == 72);
             SetData(128 + (fTestNet ? NexusAddress::PUBKEY_ADDRESS_TEST : NexusAddress::PUBKEY_ADDRESS), &vchSecret[0], vchSecret.size());
             if (fCompressed)
