@@ -66,7 +66,7 @@ namespace Wallet
 
         bool SignCompact(uint256 hash, std::vector<unsigned char>& vchSig);
         bool SetCompactSignature(uint256 hash, const std::vector<unsigned char>& vchSig);
-        
+
         bool Sign(uint1024 hash, std::vector<unsigned char>& vchSig, int nBits);
         bool Verify(uint1024 hash, const std::vector<unsigned char>& vchSig, int nBits);
         bool IsValid();

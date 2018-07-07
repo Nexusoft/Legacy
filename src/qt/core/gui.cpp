@@ -1,9 +1,9 @@
 /*******************************************************************************************
- 
-			Hash(BEGIN(Satoshi[2010]), END(W.J.[2012])) == Videlicet[2014] ++
-   
+
+            Hash(BEGIN(Satoshi[2010]), END(W.J.[2012])) == Videlicet[2014] ++
+
  [Learn and Create] Viz. http://www.opensource.org/licenses/mit-license.php
-  
+
 *******************************************************************************************/
 
 
@@ -85,8 +85,8 @@ NexusGUI::NexusGUI(QWidget *parent):
     clientModel(0),
     walletModel(0),
     encryptWalletAction(0),
-	unlockWalletAction(0),
-	lockWalletAction(0),
+    unlockWalletAction(0),
+    lockWalletAction(0),
     changePassphraseAction(0),
     aboutQtAction(0),
     trayIcon(0),
@@ -102,10 +102,10 @@ NexusGUI::NexusGUI(QWidget *parent):
     QApplication::setAttribute(Qt::AA_DontShowIconsInMenus);
 #endif
 
-	/** Set the Styles of the Qt **/
-	setStyleSheet("selection-background-color: #084B8A; background-color: #F7F7F7");
-	setAutoFillBackground(true);
-	
+    /** Set the Styles of the Qt **/
+    setStyleSheet("selection-background-color: #084B8A; background-color: #F7F7F7");
+    setAutoFillBackground(true);
+
     // Accept D&D of URIs
     setAcceptDrops(true);
 
@@ -126,7 +126,7 @@ NexusGUI::NexusGUI(QWidget *parent):
 
     transactionsPage = new QWidget(this);
     QVBoxLayout *vbox = new QVBoxLayout();
-	
+
     transactionView = new TransactionView(this);
     vbox->addWidget(transactionView);
     transactionsPage->setLayout(vbox);
@@ -156,16 +156,16 @@ NexusGUI::NexusGUI(QWidget *parent):
     // Status bar notification icons
     QFrame *frameBlocks = new QFrame();
     frameBlocks->setContentsMargins(0,0,0,0);
-    frameBlocks->setMinimumWidth(56);
-    frameBlocks->setMaximumWidth(76);
-	
-	
+    frameBlocks->setMinimumWidth(68);
+    frameBlocks->setMaximumWidth(88);
+
+
     QHBoxLayout *frameBlocksLayout = new QHBoxLayout(frameBlocks);
     frameBlocksLayout->setContentsMargins(5,5,5,5);
     frameBlocksLayout->setSpacing(3);
     labelEncryptionIcon = new QLabel();
     labelConnectionsIcon = new QLabel();
-	labelWeightIcon = new QLabel();
+    labelWeightIcon = new QLabel();
     labelBlocksIcon = new QLabel();
     frameBlocksLayout->addStretch();
     frameBlocksLayout->addWidget(labelEncryptionIcon);
@@ -173,7 +173,7 @@ NexusGUI::NexusGUI(QWidget *parent):
     frameBlocksLayout->addWidget(labelConnectionsIcon);
     frameBlocksLayout->addStretch();
     frameBlocksLayout->addWidget(labelBlocksIcon);
-	frameBlocksLayout->addStretch();
+    frameBlocksLayout->addStretch();
     frameBlocksLayout->addWidget(labelWeightIcon);
     frameBlocksLayout->addStretch();
 
@@ -181,7 +181,7 @@ NexusGUI::NexusGUI(QWidget *parent):
     progressBarLabel = new QLabel();
     progressBarLabel->setVisible(false);
     progressBar = new QProgressBar();
-	progressBar->setStyleSheet("QProgressBar { border: 2px solid grey; border-radius: 5px; } QProgressBar::chunk { background-color: #0288D9; width: 20px; }");
+    progressBar->setStyleSheet("QProgressBar { border: 2px solid grey; border-radius: 5px; } QProgressBar::chunk { background-color: #0288D9; width: 20px; }");
     progressBar->setAlignment(Qt::AlignCenter);
     progressBar->setVisible(false);
 
@@ -284,12 +284,12 @@ void NexusGUI::createActions()
     encryptWalletAction = new QAction(QIcon(":/icons/lock_closed"), tr("&Encrypt Wallet"), this);
     encryptWalletAction->setToolTip(tr("Encrypt or decrypt wallet"));
     encryptWalletAction->setCheckable(true);
-	unlockWalletAction = new QAction(QIcon(":/icons/lock_open"), tr("&Unlock Wallet"), this);
+    unlockWalletAction = new QAction(QIcon(":/icons/lock_open"), tr("&Unlock Wallet"), this);
     unlockWalletAction->setToolTip(tr("Unlock Wallet for Minting or Transactions"));
-	unlockWalletAction->setCheckable(true);
-	lockWalletAction = new QAction(QIcon(":/icons/lock_closed"), tr("&Lock Wallet"), this);
+    unlockWalletAction->setCheckable(true);
+    lockWalletAction = new QAction(QIcon(":/icons/lock_closed"), tr("&Lock Wallet"), this);
     lockWalletAction->setToolTip(tr("Lock Wallet Manually"));
-	lockWalletAction->setCheckable(true);
+    lockWalletAction->setCheckable(true);
     backupWalletAction = new QAction(QIcon(":/icons/filesave"), tr("&Backup Wallet"), this);
     backupWalletAction->setToolTip(tr("Backup wallet to another location"));
     changePassphraseAction = new QAction(QIcon(":/icons/key"), tr("&Change Passphrase"), this);
@@ -303,8 +303,8 @@ void NexusGUI::createActions()
     connect(aboutQtAction, SIGNAL(triggered()), qApp, SLOT(aboutQt()));
     connect(toggleHideAction, SIGNAL(triggered()), this, SLOT(toggleHidden()));
     connect(encryptWalletAction, SIGNAL(triggered(bool)), this, SLOT(encryptWallet(bool)));
-	connect(lockWalletAction, SIGNAL(triggered()), this, SLOT(lockWallet()));
-	connect(unlockWalletAction, SIGNAL(triggered()), this, SLOT(unlockWallet()));
+    connect(lockWalletAction, SIGNAL(triggered()), this, SLOT(lockWallet()));
+    connect(unlockWalletAction, SIGNAL(triggered()), this, SLOT(unlockWallet()));
     connect(backupWalletAction, SIGNAL(triggered()), this, SLOT(backupWallet()));
     connect(changePassphraseAction, SIGNAL(triggered()), this, SLOT(changePassphrase()));
 }
@@ -317,11 +317,11 @@ void NexusGUI::createMenuBar()
 #else
     // Get the main window's menu bar on other platforms
     appMenuBar = menuBar();
-	
+
 #endif
 
-	//set the color of menu bar	
-	appMenuBar->setStyleSheet("background-color: #F7F7F7; selection-background-color: #084B8A;");
+    //set the color of menu bar
+    appMenuBar->setStyleSheet("background-color: #F7F7F7; selection-background-color: #084B8A;");
 
     // Configure the menus
     QMenu *file = appMenuBar->addMenu(tr("&File"));
@@ -335,8 +335,8 @@ void NexusGUI::createMenuBar()
 
     QMenu *settings = appMenuBar->addMenu(tr("&Settings"));
     settings->addAction(encryptWalletAction);
-	settings->addAction(lockWalletAction);
-	settings->addAction(unlockWalletAction);
+    settings->addAction(lockWalletAction);
+    settings->addAction(unlockWalletAction);
     settings->addAction(changePassphraseAction);
     settings->addSeparator();
     settings->addAction(optionsAction);
@@ -360,10 +360,7 @@ void NexusGUI::createToolBars()
 #ifdef FIRST_CLASS_MESSAGING
     toolbar->addAction(messageAction);
 #endif
-
-    QToolBar *toolbar2 = addToolBar(tr("Actions toolbar"));
-    toolbar2->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
-    toolbar2->addAction(exportAction);
+    toolbar->addAction(exportAction);
 }
 
 void NexusGUI::setClientModel(ClientModel *clientModel)
@@ -386,7 +383,7 @@ void NexusGUI::setClientModel(ClientModel *clientModel)
                 trayIcon->setIcon(QIcon(":/icons/toolbar_testnet"));
             }
         }
-        else 
+        else
         {
 
 #ifndef Q_WS_MAC
@@ -542,31 +539,31 @@ void NexusGUI::setNumConnections(int count)
 
 void NexusGUI::setWeight(double trustWeight, double blockWeight, double interestRate)
 {
-	double dPercent = (trustWeight + blockWeight) / 37.5;
-	
+    double dPercent = (trustWeight + blockWeight) / 37.5;
+
     QString icon;
-	if(dPercent < 0.2)
-		icon = ":/icons/transaction_1";
-	else if(dPercent < 0.4)
-		icon = ":/icons/transaction_2";
-	else if(dPercent < 0.6)
-		icon = ":/icons/transaction_3";
-	else if(dPercent < 0.8)
-		icon = ":/icons/transaction_4";
-	else
-		icon = ":/icons/transaction_5";
-		
-	if(dPercent == 0)
-	{
-		icon = ":/icons/transaction_0";
-		labelWeightIcon->setToolTip(tr("Staking Inactive...\nNo Coins to Stake"));
-	}
-	else
-	{
-		labelWeightIcon->setToolTip(tr("Interest Rate %1 %").arg(interestRate * 100.0, 0, 'f', 4) + QString("\n") + tr("Stake Weight %1 %").arg(dPercent * 100.0, 0, 'f', 2) + QString("\n") + tr("%1 % Trust Weight").arg((100.0 * trustWeight) / 17.5, 0, 'f', 2)+ QString(".\n") + tr("%1 % Block Weight").arg((100.0 * blockWeight) / 20.0, 0, 'f', 2));
-	}
-	
-	labelWeightIcon->setPixmap(QIcon(icon).pixmap(STATUSBAR_ICONSIZE, STATUSBAR_ICONSIZE));
+    if(dPercent < 0.2)
+        icon = ":/icons/transaction_1";
+    else if(dPercent < 0.4)
+        icon = ":/icons/transaction_2";
+    else if(dPercent < 0.6)
+        icon = ":/icons/transaction_3";
+    else if(dPercent < 0.8)
+        icon = ":/icons/transaction_4";
+    else
+        icon = ":/icons/transaction_5";
+
+    if(dPercent == 0)
+    {
+        icon = ":/icons/transaction_0";
+        labelWeightIcon->setToolTip(tr("Staking Inactive...\nNo Coins to Stake"));
+    }
+    else
+    {
+        labelWeightIcon->setToolTip(tr("Interest Rate %1 %").arg(interestRate * 100.0, 0, 'f', 4) + QString("\n") + tr("Stake Weight %1 %").arg(dPercent * 100.0, 0, 'f', 2) + QString("\n") + tr("%1 % Trust Weight").arg((100.0 * trustWeight) / 17.5, 0, 'f', 2)+ QString(".\n") + tr("%1 % Block Weight").arg((100.0 * blockWeight) / 20.0, 0, 'f', 2));
+    }
+
+    labelWeightIcon->setPixmap(QIcon(icon).pixmap(STATUSBAR_ICONSIZE, STATUSBAR_ICONSIZE));
 }
 
 void NexusGUI::setNumBlocks(int count)
@@ -579,9 +576,9 @@ void NexusGUI::setNumBlocks(int count)
 
         return;
     }
-	
-	// set trust and block weight on this signal for now...
-	setWeight(clientModel->getTrustWeight(), clientModel->getBlockWeight(), clientModel->getInterestRate());
+
+    // set trust and block weight on this signal for now...
+    setWeight(clientModel->getTrustWeight(), clientModel->getBlockWeight(), clientModel->getInterestRate());
 
     int nTotalBlocks = clientModel->getNumBlocksOfPeers();
     QString tooltip;
@@ -874,8 +871,8 @@ void NexusGUI::setEncryptionStatus(int status)
         labelEncryptionIcon->hide();
         encryptWalletAction->setChecked(false);
         changePassphraseAction->setVisible(false);
-		lockWalletAction->setVisible(false);
-		unlockWalletAction->setVisible(false);
+        lockWalletAction->setVisible(false);
+        unlockWalletAction->setVisible(false);
         encryptWalletAction->setVisible(true);
         break;
     case WalletModel::Unlocked:
@@ -883,9 +880,9 @@ void NexusGUI::setEncryptionStatus(int status)
         labelEncryptionIcon->setPixmap(QIcon(":/icons/lock_open").pixmap(STATUSBAR_ICONSIZE,STATUSBAR_ICONSIZE));
         labelEncryptionIcon->setToolTip(Wallet::fWalletUnlockMintOnly? tr("Wallet is <b>encrypted</b> and currently <b>unlocked for block minting only</b>") : tr("Wallet is <b>encrypted</b> and currently <b>unlocked</b>"));
         encryptWalletAction->setVisible(false);
-		lockWalletAction->setVisible(true);
-		//unlockWalletAction->setChecked(true);
-		unlockWalletAction->setVisible(false);
+        lockWalletAction->setVisible(true);
+        //unlockWalletAction->setChecked(true);
+        unlockWalletAction->setVisible(false);
         changePassphraseAction->setEnabled(true);
         encryptWalletAction->setEnabled(false); // TODO: decrypt currently not supported
         break;
@@ -894,10 +891,10 @@ void NexusGUI::setEncryptionStatus(int status)
         labelEncryptionIcon->setPixmap(QIcon(":/icons/lock_closed").pixmap(STATUSBAR_ICONSIZE,STATUSBAR_ICONSIZE));
         labelEncryptionIcon->setToolTip(tr("Wallet is <b>encrypted</b> and currently <b>locked</b>"));
         encryptWalletAction->setVisible(false);
-		lockWalletAction->setVisible(false);
-		//lockWalletAction->setChecked(true);
-		unlockWalletAction->setVisible(true);
-		unlockWalletAction->setChecked(false);
+        lockWalletAction->setVisible(false);
+        //lockWalletAction->setChecked(true);
+        unlockWalletAction->setVisible(true);
+        unlockWalletAction->setChecked(false);
         changePassphraseAction->setEnabled(true);
         encryptWalletAction->setEnabled(false); // TODO: decrypt currently not supported
         break;
@@ -920,9 +917,9 @@ void NexusGUI::backupWallet()
 {
     #if QT_VERSION < QT_VERSION_CHECK(5,0,0)
      QString saveDir = QDesktopServices::storageLocation(QDesktopServices::DocumentsLocation);
-	#else
+    #else
      QString saveDir = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
-	#endif
+    #endif
     QString filename = QFileDialog::getSaveFileName(this, tr("Backup Wallet"), saveDir, tr("Wallet Data (*.dat)"));
     if(!filename.isEmpty()) {
         if(!walletModel->backupWallet(filename)) {
@@ -945,7 +942,7 @@ void NexusGUI::lockWallet()
     // Unlock wallet when requested by wallet model
     if(walletModel->getEncryptionStatus() == WalletModel::Unlocked)
     {
-		Wallet::fWalletUnlockMintOnly = false;
+        Wallet::fWalletUnlockMintOnly = false;
         walletModel->setWalletLocked(true, "");
     }
 }

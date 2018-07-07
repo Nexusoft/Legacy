@@ -6,7 +6,7 @@
     <message>
         <location filename="../forms/aboutdialog.ui" line="14"/>
         <source>About Nexus</source>
-        <translation>در مورد بیتکویین 
+        <translation>در مورد بیتکویین
 </translation>
     </message>
     <message>
@@ -204,7 +204,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../dialogs/askpassphrasedialog.cpp" line="53"/>
         <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;10 or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation>وارد کنید..&amp;lt;br/&amp;gt عبارت عبور نو در پنجره   
+        <translation>وارد کنید..&amp;lt;br/&amp;gt عبارت عبور نو در پنجره
  10 یا بیشتر کاراکتورهای تصادفی استفاده کنید &amp;lt;b&amp;gt لطفا عبارت عبور</translation>
     </message>
     <message>

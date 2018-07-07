@@ -1,9 +1,9 @@
 /*******************************************************************************************
- 
-			Hash(BEGIN(Satoshi[2010]), END(Sunny[2012])) == Videlicet[2014] ++
-   
+
+            Hash(BEGIN(Satoshi[2010]), END(Sunny[2012])) == Videlicet[2014] ++
+
  [Learn and Create] Viz. http://www.opensource.org/licenses/mit-license.php
-  
+
 *******************************************************************************************/
 
 #ifndef NEXUS_BIGNUM_H
@@ -253,8 +253,8 @@ public:
             ((unsigned char*)&n)[i] = vch[j];
         return n;
     }
-	
-	void setuint512(uint512 n)
+
+    void setuint512(uint512 n)
     {
         unsigned char pch[sizeof(n) + 6];
         unsigned char* p = pch + 4;
@@ -296,8 +296,8 @@ public:
             ((unsigned char*)&n)[i] = vch[j];
         return n;
     }
-	
-	void setuint576(uint576 n)
+
+    void setuint576(uint576 n)
     {
         unsigned char pch[sizeof(n) + 6];
         unsigned char* p = pch + 4;
@@ -339,8 +339,8 @@ public:
             ((unsigned char*)&n)[i] = vch[j];
         return n;
     }
-	
-	void setuint1024(uint1024 n)
+
+    void setuint1024(uint1024 n)
     {
         unsigned char pch[sizeof(n) + 6];
         unsigned char* p = pch + 4;

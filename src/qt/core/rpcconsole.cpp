@@ -1,9 +1,9 @@
 /*******************************************************************************************
- 
-			Hash(BEGIN(Satoshi[2010]), END(W.J.[2012])) == Videlicet[2014] ++
-   
+
+            Hash(BEGIN(Satoshi[2010]), END(W.J.[2012])) == Videlicet[2014] ++
+
  [Learn and Create] Viz. http://www.opensource.org/licenses/mit-license.php
-  
+
 *******************************************************************************************/
 
 #include "rpcconsole.h"
@@ -341,45 +341,45 @@ void RPCConsole::setNumConnections(int count)
 
 void RPCConsole::SetCoinSupply(unsigned int nSupply, unsigned int nIdealSupply)
 {
-	//double nPercentage = (nSupply * 100.0) / nIdealSupply;
-	QString supply;
-	supply.sprintf("%u", nSupply);
+    //double nPercentage = (nSupply * 100.0) / nIdealSupply;
+    QString supply;
+    supply.sprintf("%u", nSupply);
 
-	ui->coinSupply->setText(supply);
+    ui->coinSupply->setText(supply);
 }
-	
+
 
 void RPCConsole::SetPrimeInfo(double nDiff, unsigned int nReserves, unsigned int nHeight, double nRewards)
 {
-	QString difficulty;
-	difficulty.sprintf("%f", nDiff);
-	
-	QString reserves;
-	reserves.sprintf("%u [%f Reward]", nReserves, nRewards);
-	
-	QString height;
-	height.sprintf("[%u]", nHeight);
-	
-	ui->primeHeight->setText("Height " + height);
-	ui->primeDifficulty->setText(difficulty);
-	ui->primeReserves->setText(reserves);
+    QString difficulty;
+    difficulty.sprintf("%f", nDiff);
+
+    QString reserves;
+    reserves.sprintf("%u [%f Reward]", nReserves, nRewards);
+
+    QString height;
+    height.sprintf("[%u]", nHeight);
+
+    ui->primeHeight->setText("Height " + height);
+    ui->primeDifficulty->setText(difficulty);
+    ui->primeReserves->setText(reserves);
 }
 
-	
+
 void RPCConsole::SetHashInfo(double nDiff, unsigned int nReserves, unsigned int nHeight, double nRewards)
 {
-	QString difficulty;
-	difficulty.sprintf("%f", nDiff);
-	
-	QString reserves;
-	reserves.sprintf("%u [%f Reward]", nReserves, nRewards);
-	
-	QString height;
-	height.sprintf("[%u]", nHeight);
-	
-	ui->hashingHeight->setText("Height " + height);
-	ui->hashingDifficulty->setText(difficulty);
-	ui->hashingReserves->setText(reserves);
+    QString difficulty;
+    difficulty.sprintf("%f", nDiff);
+
+    QString reserves;
+    reserves.sprintf("%u [%f Reward]", nReserves, nRewards);
+
+    QString height;
+    height.sprintf("[%u]", nHeight);
+
+    ui->hashingHeight->setText("Height " + height);
+    ui->hashingDifficulty->setText(difficulty);
+    ui->hashingReserves->setText(reserves);
 }
 
 
@@ -388,19 +388,19 @@ void RPCConsole::setNumBlocks(int count)
     ui->numberOfBlocks->setText(QString::number(count));
     if(clientModel)
     {
-		SetPrimeInfo(clientModel->GetPrimeDifficulty(), clientModel->GetPrimeReserves(), clientModel->GetPrimeHeight(), clientModel->GetPrimeReward());
-		SetHashInfo(clientModel->GetHashDifficulty(), clientModel->GetHashReserves(), clientModel->GetHashHeight(), clientModel->GetHashReward());
-		SetCoinSupply(clientModel->GetCoinSupply(), 0);
-	
+        SetPrimeInfo(clientModel->GetPrimeDifficulty(), clientModel->GetPrimeReserves(), clientModel->GetPrimeHeight(), clientModel->GetPrimeReward());
+        SetHashInfo(clientModel->GetHashDifficulty(), clientModel->GetHashReserves(), clientModel->GetHashHeight(), clientModel->GetHashReward());
+        SetCoinSupply(clientModel->GetCoinSupply(), 0);
+
         // If there is no current number available display N/A instead of 0, which can't ever be true
-		int estNumOfBlocks;
-		if(clientModel->getNumBlocksOfPeers() <= 0) {
-			estNumOfBlocks = 0;
-		} else if(clientModel->getNumBlocksOfPeers() > 0 && clientModel->getNumBlocksOfPeers() < count) {
-			estNumOfBlocks = count;
-		} else {
-			estNumOfBlocks = (clientModel->getNumBlocksOfPeers());
-		}
+        int estNumOfBlocks;
+        if(clientModel->getNumBlocksOfPeers() <= 0) {
+            estNumOfBlocks = 0;
+        } else if(clientModel->getNumBlocksOfPeers() > 0 && clientModel->getNumBlocksOfPeers() < count) {
+            estNumOfBlocks = count;
+        } else {
+            estNumOfBlocks = (clientModel->getNumBlocksOfPeers());
+        }
         ui->totalBlocks->setText(estNumOfBlocks == 0 ? tr("N/A") : QString::number(estNumOfBlocks));
         ui->lastBlockTime->setText(clientModel->getLastBlockDate().toString());
     }

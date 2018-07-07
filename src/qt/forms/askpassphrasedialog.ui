@@ -41,7 +41,7 @@
      <property name="fieldGrowthPolicy">
       <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
      </property>
-	  <item row="1" column="0">
+      <item row="1" column="0">
       <widget class="QLabel" name="mintOnlyLabel">
        <property name="text">
         <string>Unlock for Mint Only?</string>
@@ -101,7 +101,7 @@
       <widget class="QLabel" name="capsLabel">
        <property name="styleSheet">
         <string notr="true">#capsLabel {
-	font: bold;
+    font: bold;
 }</string>
        </property>
        <property name="text">

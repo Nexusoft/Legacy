@@ -1,9 +1,9 @@
 /*******************************************************************************************
- 
-			Hash(BEGIN(Satoshi[2010]), END(Sunny[2012])) == Videlicet[2014] ++
-   
+
+            Hash(BEGIN(Satoshi[2010]), END(Sunny[2012])) == Videlicet[2014] ++
+
  [Learn and Create] Viz. http://www.opensource.org/licenses/mit-license.php
-  
+
 *******************************************************************************************/
 
 #ifndef __cplusplus
@@ -38,113 +38,113 @@ extern bool fLispNet;
 
 namespace Net
 {
-	void GetMessageStart(unsigned char pchMessageStart[]);
+    void GetMessageStart(unsigned char pchMessageStart[]);
 
-	static inline unsigned short GetDefaultPort()
-	{
-		return fLispNet ? LISPNET_PORT : (fTestNet ? TESTNET_PORT : NEXUS_PORT);
-	}
+    static inline unsigned short GetDefaultPort()
+    {
+        return fLispNet ? LISPNET_PORT : (fTestNet ? TESTNET_PORT : NEXUS_PORT);
+    }
 
 
-	/** Message header.
-	 * (4) message start.
-	 * (12) command.
-	 * (4) size.
-	 * (4) checksum.
-	 */
-	class CMessageHeader
-	{
-		public:
-			CMessageHeader();
-			CMessageHeader(const char* pszCommand, unsigned int nMessageSizeIn);
+    /** Message header.
+     * (4) message start.
+     * (12) command.
+     * (4) size.
+     * (4) checksum.
+     */
+    class CMessageHeader
+    {
+        public:
+            CMessageHeader();
+            CMessageHeader(const char* pszCommand, unsigned int nMessageSizeIn);
 
-			std::string GetCommand() const;
-			bool IsValid() const;
+            std::string GetCommand() const;
+            bool IsValid() const;
 
-			IMPLEMENT_SERIALIZE
-				(
-				 READWRITE(FLATDATA(pchMessageStart));
-				 READWRITE(FLATDATA(pchCommand));
-				 READWRITE(nMessageSize);
-				 READWRITE(nChecksum);
-				)
+            IMPLEMENT_SERIALIZE
+                (
+                 READWRITE(FLATDATA(pchMessageStart));
+                 READWRITE(FLATDATA(pchCommand));
+                 READWRITE(nMessageSize);
+                 READWRITE(nChecksum);
+                )
 
-		// TODO: make private (improves encapsulation)
-		public:
-			enum { COMMAND_SIZE=12 };
-			unsigned char pchMessageStart[4];
-			char pchCommand[COMMAND_SIZE];
-			unsigned int nMessageSize;
-			unsigned int nChecksum;
-	};
+        // TODO: make private (improves encapsulation)
+        public:
+            enum { COMMAND_SIZE=12 };
+            unsigned char pchMessageStart[4];
+            char pchCommand[COMMAND_SIZE];
+            unsigned int nMessageSize;
+            unsigned int nChecksum;
+    };
 
-	/** nServices flags */
-	enum
-	{
-		NODE_NETWORK = (1 << 0),
-	};
+    /** nServices flags */
+    enum
+    {
+        NODE_NETWORK = (1 << 0),
+    };
 
-	/** A CService with information about it as peer */
-	class CAddress : public CService
-	{
-		public:
-			CAddress();
-			explicit CAddress(CService ipIn, uint64 nServicesIn = NODE_NETWORK);
+    /** A CService with information about it as peer */
+    class CAddress : public CService
+    {
+        public:
+            CAddress();
+            explicit CAddress(CService ipIn, uint64 nServicesIn = NODE_NETWORK);
 
-			void Init();
+            void Init();
 
-			IMPLEMENT_SERIALIZE
-				(
-				 CAddress* pthis = const_cast<CAddress*>(this);
-				 CService* pip = (CService*)pthis;
-				 if (fRead)
-					 pthis->Init();
-				 if (nType & SER_DISK)
-					 READWRITE(nVersion);
-				 if ((nType & SER_DISK) || (!(nType & SER_GETHASH)))
-					 READWRITE(nTime);
-				 READWRITE(nServices);
-				 READWRITE(*pip);
-				)
+            IMPLEMENT_SERIALIZE
+                (
+                 CAddress* pthis = const_cast<CAddress*>(this);
+                 CService* pip = (CService*)pthis;
+                 if (fRead)
+                     pthis->Init();
+                 if (nType & SER_DISK)
+                     READWRITE(nVersion);
+                 if ((nType & SER_DISK) || (!(nType & SER_GETHASH)))
+                     READWRITE(nTime);
+                 READWRITE(nServices);
+                 READWRITE(*pip);
+                )
 
-			void print() const;
+            void print() const;
 
-		// TODO: make private (improves encapsulation)
-		public:
-			uint64 nServices;
+        // TODO: make private (improves encapsulation)
+        public:
+            uint64 nServices;
 
-			// disk and network only
-			unsigned int nTime;
+            // disk and network only
+            unsigned int nTime;
 
-			// memory only
-			int64 nLastTry;
-	};
+            // memory only
+            int64 nLastTry;
+    };
 
-	/** inv message data */
-	class CInv
-	{
-		public:
-			CInv();
-			CInv(int typeIn, const uint1024& hashIn);
+    /** inv message data */
+    class CInv
+    {
+        public:
+            CInv();
+            CInv(int typeIn, const uint1024& hashIn);
 
-			IMPLEMENT_SERIALIZE
-			(
-				READWRITE(type);
-				READWRITE(hash);
-			)
+            IMPLEMENT_SERIALIZE
+            (
+                READWRITE(type);
+                READWRITE(hash);
+            )
 
-			friend bool operator<(const CInv& a, const CInv& b);
+            friend bool operator<(const CInv& a, const CInv& b);
 
-			bool IsKnownType() const;
-			const std::string& GetCommand() const;
-			std::string ToString() const;
-			void print() const;
+            bool IsKnownType() const;
+            const std::string& GetCommand() const;
+            std::string ToString() const;
+            void print() const;
 
-		// TODO: make private (improves encapsulation)
-		public:
-			int type;
-			uint1024 hash;
-	};
+        // TODO: make private (improves encapsulation)
+        public:
+            int type;
+            uint1024 hash;
+    };
 }
 
 #endif // __INCLUDED_PROTOCOL_H__

@@ -1,9 +1,9 @@
 /*******************************************************************************************
- 
-			Hash(BEGIN(Satoshi[2010]), END(W.J.[2012])) == Videlicet[2014] ++
-   
+
+            Hash(BEGIN(Satoshi[2010]), END(W.J.[2012])) == Videlicet[2014] ++
+
  [Learn and Create] Viz. http://www.opensource.org/licenses/mit-license.php
-  
+
 *******************************************************************************************/
 
 #include "clientmodel.h"
@@ -36,84 +36,84 @@ int ClientModel::getNumBlocks() const
 
 double ClientModel::getTrustWeight() const
 {
-	return Core::dTrustWeight;
+    return Core::dTrustWeight;
 }
 
 double ClientModel::getBlockWeight() const
 {
-	return Core::dBlockWeight;
+    return Core::dBlockWeight;
 }
 
 double ClientModel::getInterestRate() const
 {
-	return Core::dInterestRate;
+    return Core::dInterestRate;
 }
 
 unsigned int ClientModel::GetCoinSupply() const
 {
-	return Core::GetMoneySupply(Core::pindexBest) / 1000000;
+    return Core::GetMoneySupply(Core::pindexBest) / 1000000;
 }
 
 
 unsigned int ClientModel::GetIdealSupply() const
 {
-	return Core::CompoundSubsidy(Core::GetChainAge(Core::pindexBest->GetBlockTime())) / 1000000;
+    return Core::CompoundSubsidy(Core::GetChainAge(Core::pindexBest->GetBlockTime())) / 1000000;
 }
-	
-	
+
+
 double ClientModel::GetPrimeDifficulty() const
 {
-	return Core::GetDifficulty(Core::GetNextTargetRequired(Core::pindexBest, 1, false), 1);
+    return Core::GetDifficulty(Core::GetNextTargetRequired(Core::pindexBest, 1, false), 1);
 }
 
 
 double ClientModel::GetHashDifficulty() const
 {
-	return Core::GetDifficulty(Core::GetNextTargetRequired(Core::pindexBest, 2, false), 2);
+    return Core::GetDifficulty(Core::GetNextTargetRequired(Core::pindexBest, 2, false), 2);
 }
 
 
 double ClientModel::GetPrimeReward() const
 {
-	return Core::GetCoinbaseReward(Core::pindexBest, 1, 0) / 1000000.0;
+    return Core::GetCoinbaseReward(Core::pindexBest, 1, 0) / 1000000.0;
 }
-	
+
 double ClientModel::GetHashReward() const
 {
-	return Core::GetCoinbaseReward(Core::pindexBest, 2, 0) / 1000000.0;
+    return Core::GetCoinbaseReward(Core::pindexBest, 2, 0) / 1000000.0;
 }
-	
+
 unsigned int ClientModel::GetPrimeReserves() const
 {
-	const Core::CBlockIndex* pindexPrime = Core::GetLastChannelIndex(Core::pindexBest, 1);
-	int64 nPrimeReserve = 0;
-	for(int nIndex = 0; nIndex < 3; nIndex++)
-		nPrimeReserve += pindexPrime->nReleasedReserve[nIndex];
-		
-	return std::max((unsigned int)(nPrimeReserve / 1000000), 0u);
+    const Core::CBlockIndex* pindexPrime = Core::GetLastChannelIndex(Core::pindexBest, 1);
+    int64 nPrimeReserve = 0;
+    for(int nIndex = 0; nIndex < 3; nIndex++)
+        nPrimeReserve += pindexPrime->nReleasedReserve[nIndex];
+
+    return std::max((unsigned int)(nPrimeReserve / 1000000), 0u);
 }
 
 
 unsigned int ClientModel::GetHashReserves() const
 {
-	const Core::CBlockIndex* pindexHash = Core::GetLastChannelIndex(Core::pindexBest, 2);
-	int64 nHashReserve = 0;
-	for(int nIndex = 0; nIndex < 3; nIndex++)
-		nHashReserve += pindexHash->nReleasedReserve[nIndex];
-		
-	return std::max((unsigned int)(nHashReserve / 1000000), 0u);
+    const Core::CBlockIndex* pindexHash = Core::GetLastChannelIndex(Core::pindexBest, 2);
+    int64 nHashReserve = 0;
+    for(int nIndex = 0; nIndex < 3; nIndex++)
+        nHashReserve += pindexHash->nReleasedReserve[nIndex];
+
+    return std::max((unsigned int)(nHashReserve / 1000000), 0u);
 }
 
 
 unsigned int ClientModel::GetPrimeHeight() const
 {
-	return Core::GetLastChannelIndex(Core::pindexBest, 1)->nChannelHeight;
+    return Core::GetLastChannelIndex(Core::pindexBest, 1)->nChannelHeight;
 }
 
 
 unsigned int ClientModel::GetHashHeight() const
 {
-	return Core::GetLastChannelIndex(Core::pindexBest, 2)->nChannelHeight;
+    return Core::GetLastChannelIndex(Core::pindexBest, 2)->nChannelHeight;
 }
 
 
@@ -136,7 +136,7 @@ void ClientModel::update()
 
     if(cachedNumConnections != newNumConnections)
         emit numConnectionsChanged(newNumConnections);
-		
+
     if(cachedNumBlocks != newNumBlocks || cachedStatusBar != newStatusBar)
         emit numBlocksChanged(newNumBlocks);
 

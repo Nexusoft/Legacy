@@ -1,9 +1,9 @@
 /*******************************************************************************************
- 
-			Hash(BEGIN(Satoshi[2010]), END(W.J.[2012])) == Videlicet[2014] ++
-   
+
+            Hash(BEGIN(Satoshi[2010]), END(W.J.[2012])) == Videlicet[2014] ++
+
  [Learn and Create] Viz. http://www.opensource.org/licenses/mit-license.php
-  
+
 *******************************************************************************************/
 
 #ifndef OVERVIEWPAGE_H
@@ -49,7 +49,7 @@ private:
     qint64 currentBalance;
     qint64 currentStake;
     qint64 currentUnconfirmedBalance;
-	qint64 currentImmatureBalance;
+    qint64 currentImmatureBalance;
 
     TxViewDelegate *txdelegate;
 

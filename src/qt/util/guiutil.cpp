@@ -1,9 +1,9 @@
 /*******************************************************************************************
- 
-			Hash(BEGIN(Satoshi[2010]), END(W.J.[2012])) == Videlicet[2014] ++
-   
+
+            Hash(BEGIN(Satoshi[2010]), END(W.J.[2012])) == Videlicet[2014] ++
+
  [Learn and Create] Viz. http://www.opensource.org/licenses/mit-license.php
-  
+
 *******************************************************************************************/
 
 #include "guiutil.h"
@@ -72,12 +72,12 @@ bool parseNexusURI(const QUrl &uri, SendCoinsRecipient *out)
     SendCoinsRecipient rv;
     rv.address = uri.path();
     rv.amount = 0;
-	#if QT_VERSION < QT_VERSION_CHECK(5,0,0)
-	 QList<QPair<QString, QString> > items = uri.queryItems();
-	#else
-	 QUrlQuery query(uri);
+    #if QT_VERSION < QT_VERSION_CHECK(5,0,0)
+     QList<QPair<QString, QString> > items = uri.queryItems();
+    #else
+     QUrlQuery query(uri);
      QList<QPair<QString, QString> > items = query.queryItems();
-	#endif
+    #endif
     for (QList<QPair<QString, QString> >::iterator i = items.begin(); i != items.end(); i++)
     {
         bool fShouldReturnFalse = false;
@@ -130,11 +130,11 @@ bool parseNexusURI(QString uri, SendCoinsRecipient *out)
 
 QString HtmlEscape(const QString& str, bool fMultiLine)
 {
-	#if QT_VERSION < QT_VERSION_CHECK(5,0,0)
-	 QString escaped = Qt::escape(str);
-	#else
-	 QString escaped = QString(str).toHtmlEscaped();
-	#endif
+    #if QT_VERSION < QT_VERSION_CHECK(5,0,0)
+     QString escaped = Qt::escape(str);
+    #else
+     QString escaped = QString(str).toHtmlEscaped();
+    #endif
     if(fMultiLine)
     {
         escaped = escaped.replace("\n", "<br>\n");
@@ -170,18 +170,18 @@ QString getSaveFileName(QWidget *parent, const QString &caption,
     if(dir.isEmpty()) // Default to user documents location
     {
         #if QT_VERSION < QT_VERSION_CHECK(5,0,0)
-		 myDir = QDesktopServices::storageLocation(QDesktopServices::DocumentsLocation);
-		#else
-		 myDir = QStandardPaths::standardLocations(QStandardPaths::DocumentsLocation).first();
-		#endif
+         myDir = QDesktopServices::storageLocation(QDesktopServices::DocumentsLocation);
+        #else
+         myDir = QStandardPaths::standardLocations(QStandardPaths::DocumentsLocation).first();
+        #endif
     }
     else
     {
         myDir = dir;
     }
-	
-	QFileDialog dialog;
-	dialog.setStyleSheet("background-color: #F7F7F7; selection-background-color: #084B8A;");
+
+    QFileDialog dialog;
+    dialog.setStyleSheet("background-color: #F7F7F7; selection-background-color: #084B8A;");
     QString result = dialog.getSaveFileName(parent, caption, myDir, filter, &selectedFilter, QFileDialog::DontUseNativeDialog);
 
     /* Extract first suffix from filter pattern "Description (*.foo)" or "Description (*.foo *.bar ...) */

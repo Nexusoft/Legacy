@@ -1,9 +1,9 @@
 /*******************************************************************************************
- 
-			Hash(BEGIN(Satoshi[2010]), END(W.J.[2012])) == Videlicet[2014] ++
-   
+
+            Hash(BEGIN(Satoshi[2010]), END(W.J.[2012])) == Videlicet[2014] ++
+
  [Learn and Create] Viz. http://www.opensource.org/licenses/mit-license.php
-  
+
 *******************************************************************************************/
 
 #ifndef RPCCONSOLE_H
@@ -50,26 +50,26 @@ private slots:
 public slots:
     void clear();
     void message(int category, const QString &message, bool html = false);
-	
+
     /** Set number of connections shown in the UI */
     void setNumConnections(int count);
-	
+
     /** Set number of blocks shown in the UI */
     void setNumBlocks(int count);
-	
-	/** Set the Coin Supply Information. **/
-	void SetCoinSupply(unsigned int nSupply, unsigned int nIdealSupply);
-	
-	/** Set the Information Associated with the Prime Channel. **/
-	void SetPrimeInfo(double nDiff, unsigned int nReserves, unsigned int nHeight, double nRewards);
-	
-	/** Set the Information Associated with the Hashing Channel. **/
-	void SetHashInfo(double nDiff, unsigned int nReserves, unsigned int nHeight, double nRewards);
-	
-	
+
+    /** Set the Coin Supply Information. **/
+    void SetCoinSupply(unsigned int nSupply, unsigned int nIdealSupply);
+
+    /** Set the Information Associated with the Prime Channel. **/
+    void SetPrimeInfo(double nDiff, unsigned int nReserves, unsigned int nHeight, double nRewards);
+
+    /** Set the Information Associated with the Hashing Channel. **/
+    void SetHashInfo(double nDiff, unsigned int nReserves, unsigned int nHeight, double nRewards);
+
+
     /** Go forward or back in history */
     void browseHistory(int offset);
-	
+
     /** Scroll console view to end */
     void scrollToEnd();
 signals:

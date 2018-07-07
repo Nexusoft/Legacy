@@ -1,11 +1,11 @@
 /*******************************************************************************************
- 
-			Hash(BEGIN(Satoshi[2010]), END(W.J.[2012])) == Videlicet[2014] ++
-   
+
+            Hash(BEGIN(Satoshi[2010]), END(W.J.[2012])) == Videlicet[2014] ++
+
  [Learn and Create] Viz. http://www.opensource.org/licenses/mit-license.php
-  
+
 *******************************************************************************************/
- 
+
 #include "core/gui.h"
 #include "models/clientmodel.h"
 #include "models/walletmodel.h"
@@ -171,7 +171,7 @@ int main(int argc, char *argv[])
         }
     }
 #endif
-    
+
     // Internal string conversion is all UTF-8
 //    QTextCodec::setCodecForTr(QTextCodec::codecForName("UTF-8"));
 //    QTextCodec::setCodecForCStrings(QTextCodec::codecForTr());
@@ -211,10 +211,10 @@ int main(int argc, char *argv[])
         "to use, copy, modify, merge, publish, distribute, sublicense, and/or sell"
         "copies of the Software, and to permit persons to whom the Software is"
         "furnished to do so, subject to the following conditions:\n\n"
-            
+
         "The above copyright notice and this permission notice shall be included in all"
         "copies or substantial portions of the Software.\n\n"
-            
+
         "THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR"
         "IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,"
         "FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE"
@@ -238,7 +238,7 @@ int main(int argc, char *argv[])
                 {
 
                 }
-		#if defined(WIN32)
+        #if defined(WIN32)
                 LPCWSTR licenseFile = (const wchar_t*) termsPath.utf16();
                 int attr = GetFileAttributes(licenseFile);
                 SetFileAttributes(licenseFile, attr | FILE_ATTRIBUTE_HIDDEN);
@@ -249,9 +249,9 @@ int main(int argc, char *argv[])
                 break;
         }
     }
-    
-    
-    
+
+
+
     QSplashScreen splash(QPixmap(":/images/splash"), 0);
     if (GetBoolArg("-splash", true) && !GetBoolArg("-min"))
     {

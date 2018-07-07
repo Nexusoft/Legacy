@@ -1,9 +1,9 @@
 /*******************************************************************************************
- 
-			Hash(BEGIN(Satoshi[2010]), END(W.J.[2012])) == Videlicet[2014] ++
-   
+
+            Hash(BEGIN(Satoshi[2010]), END(W.J.[2012])) == Videlicet[2014] ++
+
  [Learn and Create] Viz. http://www.opensource.org/licenses/mit-license.php
-  
+
 *******************************************************************************************/
 
 #include "transactionrecord.h"
@@ -52,11 +52,11 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const Wallet::C
     {
         if (wtx.IsCoinStake()) // Nexus: coinstake transaction
         {
-			Wallet::NexusAddress address;
-			if (ExtractAddress(wtx.vout[0].scriptPubKey, address))
-			{
-				parts.append(TransactionRecord(hash, nTime, wtx.IsGenesis() ? TransactionRecord::StakeGenesis : TransactionRecord::StakeTrust, address.ToString(), -nDebit, wtx.GetValueOut()));
-			}
+            Wallet::NexusAddress address;
+            if (ExtractAddress(wtx.vout[0].scriptPubKey, address))
+            {
+                parts.append(TransactionRecord(hash, nTime, wtx.IsGenesis() ? TransactionRecord::StakeGenesis : TransactionRecord::StakeTrust, address.ToString(), -nDebit, wtx.GetValueOut()));
+            }
 
         }
         else if (nNet > 0 || wtx.IsCoinBase())
@@ -76,7 +76,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const Wallet::C
                     {
                         // Generated
                         sub.type = TransactionRecord::Generated;
-						sub.address = address.ToString();
+                        sub.address = address.ToString();
                     }
                     else if (ExtractAddress(txout.scriptPubKey, address) && wallet->HaveKey(address))
                     {

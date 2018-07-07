@@ -1,9 +1,9 @@
 /*******************************************************************************************
- 
-			Hash(BEGIN(Satoshi[2010]), END(W.J.[2012])) == Videlicet[2014] ++
-   
+
+            Hash(BEGIN(Satoshi[2010]), END(W.J.[2012])) == Videlicet[2014] ++
+
  [Learn and Create] Viz. http://www.opensource.org/licenses/mit-license.php
-  
+
 *******************************************************************************************/
 
 #include "walletmodel.h"
@@ -59,9 +59,9 @@ void WalletModel::update()
 {
     qint64 newBalance = getBalance();
     qint64 newUnconfirmedBalance = getUnconfirmedBalance();
-	qint64 newImmatureBalance    = getImmatureBalance();
-	qint64 newStakeBalance       = getStake();
-	
+    qint64 newImmatureBalance    = getImmatureBalance();
+    qint64 newStakeBalance       = getStake();
+
     int newNumTransactions = getNumTransactions();
     EncryptionStatus newEncryptionStatus = getEncryptionStatus();
 
@@ -75,8 +75,8 @@ void WalletModel::update()
         emit encryptionStatusChanged(newEncryptionStatus);
 
     cachedBalance = newBalance;
-	cachedStake   = newStakeBalance;
-	cachedImmatureBalance = newImmatureBalance;
+    cachedStake   = newStakeBalance;
+    cachedImmatureBalance = newImmatureBalance;
     cachedUnconfirmedBalance = newUnconfirmedBalance;
     cachedNumTransactions = newNumTransactions;
 }

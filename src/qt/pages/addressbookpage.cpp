@@ -1,9 +1,9 @@
 /*******************************************************************************************
- 
-			Hash(BEGIN(Satoshi[2010]), END(W.J.[2012])) == Videlicet[2014] ++
-   
+
+            Hash(BEGIN(Satoshi[2010]), END(W.J.[2012])) == Videlicet[2014] ++
+
  [Learn and Create] Viz. http://www.opensource.org/licenses/mit-license.php
-  
+
 *******************************************************************************************/
 
 #include "addressbookpage.h"
@@ -76,7 +76,7 @@ AddressBookPage::AddressBookPage(Mode mode, Tabs tab, QWidget *parent) :
     deleteAction = new QAction(tr("Delete"), this);
 
     contextMenu = new QMenu();
-	contextMenu->setStyleSheet("background-color: #F7F7F7; selection-background-color: #084B8A;");
+    contextMenu->setStyleSheet("background-color: #F7F7F7; selection-background-color: #084B8A;");
     contextMenu->addAction(copyAddressAction);
     contextMenu->addAction(copyLabelAction);
     contextMenu->addAction(editAction);
@@ -126,11 +126,11 @@ void AddressBookPage::setModel(AddressTableModel *model)
     // Set column widths
     ui->tableView->horizontalHeader()->resizeSection(
             AddressTableModel::Address, 400);
-			#if QT_VERSION < QT_VERSION_CHECK(5,0,0)
-			 ui->tableView->horizontalHeader()->setResizeMode(
-			#else
-			 ui->tableView->horizontalHeader()->setSectionResizeMode(
-			#endif
+            #if QT_VERSION < QT_VERSION_CHECK(5,0,0)
+             ui->tableView->horizontalHeader()->setResizeMode(
+            #else
+             ui->tableView->horizontalHeader()->setSectionResizeMode(
+            #endif
             AddressTableModel::Label, QHeaderView::Stretch);
 
     connect(ui->tableView->selectionModel(), SIGNAL(selectionChanged(QItemSelection,QItemSelection)),

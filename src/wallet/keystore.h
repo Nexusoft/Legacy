@@ -37,7 +37,7 @@ namespace Wallet
         virtual bool AddCScript(const CScript& redeemScript) =0;
         virtual bool HaveCScript(const uint256 &hash) const =0;
         virtual bool GetCScript(const uint256 &hash, CScript& redeemScriptOut) const =0;
-        
+
         virtual bool GetSecret(const NexusAddress &address, CSecret& vchSecret, bool &fCompressed) const
         {
             CKey key;

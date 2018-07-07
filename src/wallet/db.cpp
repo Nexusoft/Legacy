@@ -216,7 +216,7 @@ namespace Wallet
                     { // surround usage of db with extra {}
                         CDB db(strFile.c_str(), "r");
                         Db* pdbCopy = new Db(&dbenv, 0);
-        
+
                         int ret = pdbCopy->open(NULL,                 // Txn pointer
                                                 strFileRes.c_str(),   // Filename
                                                 "main",    // Logical db name
@@ -228,7 +228,7 @@ namespace Wallet
                             printf("Cannot create database file %s\n", strFileRes.c_str());
                             fSuccess = false;
                         }
-        
+
                         Dbc* pcursor = db.GetCursor();
                         if (pcursor)
                             while (fSuccess)
@@ -340,12 +340,12 @@ namespace Wallet
     {
         return Read(0, nOffset);
     }
-    
+
     bool CTimeDB::WriteTimeData(int nOffset)
     {
         return Write(0, nOffset);
     }
-    
+
 
 
     //
@@ -521,7 +521,7 @@ namespace Wallet
             printf("Loaded %i addresses\n", Net::addrman.size());
             return true;
         }
-        
+
         // Read pre-0.6 addr records
 
         vector<Net::CAddress> vAddr;

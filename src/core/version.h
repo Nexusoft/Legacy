@@ -1,9 +1,9 @@
 /*******************************************************************************************
- 
-			Hash(BEGIN(Satoshi[2010]), END(Sunny[2012])) == Videlicet[2014] ++
-   
+
+            Hash(BEGIN(Satoshi[2010]), END(Sunny[2012])) == Videlicet[2014] ++
+
  [Learn and Create] Viz. http://www.opensource.org/licenses/mit-license.php
-  
+
 *******************************************************************************************/
 
 #ifndef NEXUS_VERSION_H
@@ -27,7 +27,7 @@ extern const int DATABASE_VERSION;
 /** Used to determine the features available in the Nexus Network **/
 extern const int PROTOCOL_VERSION;
 
-/** Used to Lock-Out Nodes that are running a protocol version that is too old, 
+/** Used to Lock-Out Nodes that are running a protocol version that is too old,
     Or to allow certain new protocol changes without confusing Old Nodes. **/
 extern const int MIN_PROTO_VERSION;
 

@@ -1,9 +1,9 @@
 /*******************************************************************************************
- 
-			Hash(BEGIN(Satoshi[2010]), END(W.J.[2012])) == Videlicet[2014] ++
-   
+
+            Hash(BEGIN(Satoshi[2010]), END(W.J.[2012])) == Videlicet[2014] ++
+
  [Learn and Create] Viz. http://www.opensource.org/licenses/mit-license.php
-  
+
 *******************************************************************************************/
 
 #ifndef ASKPASSPHRASEDIALOG_H
@@ -31,7 +31,7 @@ public:
     enum Mode {
         Encrypt,          /**< Ask passphrase twice and encrypt */
         Unlock,           /**< Ask passphrase and unlock */
-		UnlockOrMint,     /**< Ask passphrase and unlock or mint only unlock */
+        UnlockOrMint,     /**< Ask passphrase and unlock or mint only unlock */
         ChangePass,       /**< Ask old passphrase + new passphrase twice */
         Decrypt           /**< Ask passphrase and decrypt wallet */
     };
