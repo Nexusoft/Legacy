@@ -944,7 +944,10 @@ namespace Core
             mapOrphanBlocksByPrev.insert(make_pair(pblock2->hashPrevBlock, pblock2));
 
             if(pfrom)
-                pfrom->AskFor(Net::CInv(Net::MSG_BLOCK, pblock->hashPrevBlock));
+                if (IsInitialBlockDownload())
+                    pfrom->PushGetBlocks(pindexBest, 0);
+                else
+                    pfrom->AskFor(Net::CInv(Net::MSG_BLOCK, pblock->hashPrevBlock));
 
             return true;
         }
