@@ -7,6 +7,10 @@ CONFIG += no_include_pwd optimize_full c++11
 greaterThan(QT_MAJOR_VERSION, 4) {
 	QT += uitools widgets
 }
+else {
+	QMAKE_CXXFLAGS+= -std=c++11
+}
+
 OBJECTS_DIR = build/obj
 MOC_DIR = build/moc
 UI_DIR = build/ui
@@ -229,7 +233,7 @@ QMAKE_DEL_FILE = rm -rf
 QMAKE_DISTCLEAN += build/moc build/obj build/ui
 macx:QMAKE_DISTCLEAN += nexus-qt.dmg dist
 build_pass:DebugBuild {
-	QMAKE_DISTCLEAN +=	object_script.nexus-qt.Debug
+	QMAKE_DISTCLEAN += object_script.nexus-qt.Debug
 	win32:QMAKE_DISTCLEAN += debug
 }
 build_pass:ReleaseBuild {
@@ -507,6 +511,6 @@ contains(ARCH_TEST, ARCH) {
 complete.target= complete
 win32:complete.commands= @echo '' && echo 'Finished Building nexus-qt.exe' && echo ''
 macx:complete.commands= { echo ' '; echo 'Finished building nexus-qt.app'; echo ' '; } 2> /dev/null
-!win32:!macx:complete.commands= { echo -e '\nFinished Building nexus-qt\n'; } 2> /dev/null
+!win32:!macx:complete.commands= @echo '' && echo 'Finished Building nexus-qt' && echo ''
 QMAKE_EXTRA_TARGETS+= complete
 POST_TARGETDEPS+= complete
