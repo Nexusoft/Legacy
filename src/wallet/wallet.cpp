@@ -176,7 +176,7 @@ namespace Wallet
         {
             CWalletDB* pwalletdb = pwalletdbIn ? pwalletdbIn : new CWalletDB(strWalletFile);
             pwalletdb->WriteMinVersion(nWalletVersion);
-            
+
             if (!pwalletdbIn)
                 delete pwalletdb;
         }
@@ -310,7 +310,7 @@ namespace Wallet
         uint512 hash = wtxIn.GetHash();
         {
             LOCK(cs_wallet);
-            
+
             // Inserts only if not already there, returns tx inserted or tx found
             pair<map<uint512, CWalletTx>::iterator, bool> ret = mapWallet.insert(make_pair(hash, wtxIn));
             CWalletTx& wtx = (*ret.first).second;
@@ -394,7 +394,7 @@ namespace Wallet
                 // Get merkle branch if transaction was found in a block
                 if (pblock)
                     wtx.SetMerkleBranch(pblock);
-                    
+
                 return AddToWallet(wtx);
             }
             else
@@ -436,7 +436,7 @@ namespace Wallet
     {
         if(txin.prevout.IsNull())
             return 0;
-                    
+
         {
             LOCK(cs_wallet);
             map<uint512, CWalletTx>::const_iterator mi = mapWallet.find(txin.prevout.hash);
@@ -565,7 +565,7 @@ namespace Wallet
 
     }
 
-    void CWalletTx::GetAccountAmounts(const string& strAccount, int64& nGenerated, int64& nReceived, 
+    void CWalletTx::GetAccountAmounts(const string& strAccount, int64& nGenerated, int64& nReceived,
                                     int64& nSent, int64& nFee) const
     {
         nGenerated = nReceived = nSent = nFee = 0;
@@ -640,7 +640,7 @@ namespace Wallet
                     }
                     else if (!Net::fClient && indexdb.ReadDiskTx(hash, tx))
                     {
-                    
+
                     }
                     else
                     {
@@ -854,14 +854,14 @@ namespace Wallet
                 const CWalletTx* pcoin = &(*it).second;
                 if (!pcoin->IsFinal() || !pcoin->IsConfirmed() || pcoin->nTime > GetUnifiedTimestamp())
                     continue;
-                
+
                 nTotal += pcoin->GetAvailableCredit();
             }
         }
 
         return nTotal;
     }
-    
+
 
     int64 CWallet::GetUnconfirmedBalance() const
     {
@@ -905,7 +905,7 @@ namespace Wallet
         }
         return nTotal;
     }
-    
+
     // populate vCoins with vector of spendable (age, (value, (transaction, output_number))) outputs
     void CWallet::AvailableCoins(unsigned int nSpendTime, vector<COutput>& vCoins, bool fOnlyConfirmed) const
     {
@@ -937,7 +937,7 @@ namespace Wallet
             }
         }
     }
-    
+
     /** Get the available addresses that have a balance associated with a wallet. **/
     bool CWallet::AvailableAddresses(unsigned int nSpendTime, map<NexusAddress, int64>& mapAddresses, bool fOnlyConfirmed) const
     {
@@ -961,12 +961,12 @@ namespace Wallet
                 {
                     if (pcoin->nTime > nSpendTime)
                         continue;  // ppcoin: timestamp must not exceed spend time
-                    
+
                     if (!(pcoin->IsSpent(i)) && IsMine(pcoin->vout[i]) && pcoin->vout[i].nValue > 0) {
                         NexusAddress cAddress;
                         if(!ExtractAddress(pcoin->vout[i].scriptPubKey, cAddress) || !cAddress.IsValid())
                             return false;
-                        
+
                         if(mapAddresses.count(cAddress))
                             mapAddresses[cAddress] = pcoin->vout[i].nValue;
                         else
@@ -976,7 +976,7 @@ namespace Wallet
                 }
             }
         }
-        
+
         return true;
     }
 
@@ -986,17 +986,17 @@ namespace Wallet
         /* Add Each Input to Transaction. */
         setCoinsRet.clear();
         vector<const CWalletTx*> vCoins;
-        
+
         nValueRet = 0;
-        
+
         {
         LOCK(cs_wallet);
-        
+
         vCoins.reserve(mapWallet.size());
         for (map<uint512, CWalletTx>::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
             vCoins.push_back(&(*it).second);
         }
-        
+
         random_shuffle(vCoins.begin(), vCoins.end(), GetRandInt);
         BOOST_FOREACH(const CWalletTx* pcoin, vCoins)
         {
@@ -1010,11 +1010,11 @@ namespace Wallet
             {
                 if (pcoin->IsSpent(i) || !IsMine(pcoin->vout[i]))
                     continue;
-                
+
                 int nDepth = pcoin->GetDepthInMainChain();
                 if (nDepth < (pcoin->IsFromMe() ? nConfMine : nConfTheirs))
                     continue;
-                
+
                 if (pcoin->nTime > nSpendTime)
                     continue;
 
@@ -1025,14 +1025,14 @@ namespace Wallet
                 nValueRet += pcoin->vout[i].nValue;
             }
         }
-        
+
         //// debug print
         if (GetBoolArg("-printselectcoin"))
         {
             printf("SelectCoins() selected: ");
             BOOST_FOREACH(PAIRTYPE(const CWalletTx*, unsigned int) pcoin, setCoinsRet)
                 pcoin.first->print();
-            
+
             printf("total %s\n", FormatMoney(nValueRet).c_str());
         }
 
@@ -1046,7 +1046,7 @@ namespace Wallet
 
         return true;
     }
-    
+
 
     bool CWallet::SelectCoins(int64 nTargetValue, unsigned int nSpendTime, set<pair<const CWalletTx*,unsigned int> >& setCoinsRet, int64& nValueRet) const
     {
@@ -1074,7 +1074,7 @@ namespace Wallet
 
         {
             LOCK2(Core::cs_main, cs_wallet);
-            
+
             // indexdb must be opened before the mapWallet lock
             LLD::CIndexDB indexdb("r");
             {
@@ -1095,7 +1095,7 @@ namespace Wallet
                     int64 nValueIn = 0;
                     if (!SelectCoins(nTotalValue, wtxNew.nTime, setCoins, nValueIn))
                         return false;
-                        
+
                     CScript scriptChange;
                     BOOST_FOREACH(PAIRTYPE(const CWalletTx*, unsigned int) pcoin, setCoins)
                     {
@@ -1105,7 +1105,7 @@ namespace Wallet
                     }
 
                     int64 nChange = nValueIn - nValue - nFeeRet;
-                    
+
                     // if sub-cent change is required, the fee must be raised to at least MIN_TX_FEE
                     // or until nChange becomes zero
                     // NOTE: this depends on the exact behaviour of GetMinFee
@@ -1137,7 +1137,7 @@ namespace Wallet
                             // Reserve a new key pair from key pool
                             vector<unsigned char> vchPubKey = reservekey.GetReservedKey();
                             // assert(mapKeys.count(vchPubKey));
-        
+
                             // Fill a vout to ourself
                             // TODO: pass in scriptChange instead of reservekey so
                             // change transaction isn't always pay-to-nexus-address
@@ -1476,10 +1476,10 @@ namespace Wallet
             setKeyPool.erase(setKeyPool.begin());
             if (!walletdb.ReadPool(nIndex, keypool))
                 throw runtime_error("ReserveKeyFromKeyPool() : read failed");
-                
+
             if (!HaveKey(SK256(keypool.vchPubKey)))
                 throw runtime_error("ReserveKeyFromKeyPool() : unknown key in key pool");
-                
+
             assert(!keypool.vchPubKey.empty());
             if (fDebug && GetBoolArg("-printkeypool"))
                 printf("keypool reserve %" PRI64d "\n", nIndex);
@@ -1578,7 +1578,7 @@ namespace Wallet
             Core::CTxIndex txindex;
             if(!indexdb.ReadTxIndex(pcoin->GetHash(), txindex))
                 continue;
-            
+
             /* Check all the outputs to make sure the flags are all set properly. */
             for (int n=0; n < pcoin->vout.size(); n++)
             {
@@ -1595,7 +1595,7 @@ namespace Wallet
                         pcoin->WriteToDisk();
                     }
                 }
-                
+
                 /* Handle the wallet missing a spend that was updated in the indexes. The index is updated on connect inputs. */
                 else if (IsMine(pcoin->vout[n]) && !pcoin->IsSpent(n) && (txindex.vSpent.size() > n && !txindex.vSpent[n].IsNull()))
                 {

@@ -25,7 +25,7 @@ namespace Wallet
 
         // Try to keep the keydata out of swap (and be a bit over-careful to keep the IV that we don't even use out of swap)
         // Note that this does nothing about suspend-to-disk (which will put all our key data on disk)
-        // Note as well that at no point in this program is any attempt made to prevent stealing of keys by reading the memory of the running process.  
+        // Note as well that at no point in this program is any attempt made to prevent stealing of keys by reading the memory of the running process.
         mlock(&chKey[0], sizeof chKey);
         mlock(&chIV[0], sizeof chIV);
 
@@ -52,7 +52,7 @@ namespace Wallet
 
         // Try to keep the keydata out of swap
         // Note that this does nothing about suspend-to-disk (which will put all our key data on disk)
-        // Note as well that at no point in this program is any attempt made to prevent stealing of keys by reading the memory of the running process.  
+        // Note as well that at no point in this program is any attempt made to prevent stealing of keys by reading the memory of the running process.
         mlock(&chKey[0], sizeof chKey);
         mlock(&chIV[0], sizeof chIV);
 
@@ -74,15 +74,17 @@ namespace Wallet
         int nCLen = nLen + AES_BLOCK_SIZE, nFLen = 0;
         vchCiphertext = std::vector<unsigned char> (nCLen);
 
-        EVP_CIPHER_CTX ctx;
+        EVP_CIPHER_CTX* ctx = EVP_CIPHER_CTX_new();
+        if (nullptr == ctx)
+            return false;
 
         bool fOk = true;
 
-        EVP_CIPHER_CTX_init(&ctx);
-        if (fOk) fOk = EVP_EncryptInit_ex(&ctx, EVP_aes_256_cbc(), NULL, chKey, chIV);
-        if (fOk) fOk = EVP_EncryptUpdate(&ctx, &vchCiphertext[0], &nCLen, &vchPlaintext[0], nLen);
-        if (fOk) fOk = EVP_EncryptFinal_ex(&ctx, (&vchCiphertext[0])+nCLen, &nFLen);
-        EVP_CIPHER_CTX_cleanup(&ctx);
+        EVP_CIPHER_CTX_init(ctx);
+        if (fOk) fOk = EVP_EncryptInit_ex(ctx, EVP_aes_256_cbc(), NULL, chKey, chIV);
+        if (fOk) fOk = EVP_EncryptUpdate(ctx, &vchCiphertext[0], &nCLen, &vchPlaintext[0], nLen);
+        if (fOk) fOk = EVP_EncryptFinal_ex(ctx, (&vchCiphertext[0])+nCLen, &nFLen);
+        EVP_CIPHER_CTX_free(ctx);
 
         if (!fOk) return false;
 
@@ -101,15 +103,17 @@ namespace Wallet
 
         vchPlaintext = CKeyingMaterial(nPLen);
 
-        EVP_CIPHER_CTX ctx;
+        EVP_CIPHER_CTX* ctx = EVP_CIPHER_CTX_new();
+        if (nullptr == ctx)
+            return false;
 
         bool fOk = true;
 
-        EVP_CIPHER_CTX_init(&ctx);
-        if (fOk) fOk = EVP_DecryptInit_ex(&ctx, EVP_aes_256_cbc(), NULL, chKey, chIV);
-        if (fOk) fOk = EVP_DecryptUpdate(&ctx, &vchPlaintext[0], &nPLen, &vchCiphertext[0], nLen);
-        if (fOk) fOk = EVP_DecryptFinal_ex(&ctx, (&vchPlaintext[0])+nPLen, &nFLen);
-        EVP_CIPHER_CTX_cleanup(&ctx);
+        EVP_CIPHER_CTX_init(ctx);
+        if (fOk) fOk = EVP_DecryptInit_ex(ctx, EVP_aes_256_cbc(), NULL, chKey, chIV);
+        if (fOk) fOk = EVP_DecryptUpdate(ctx, &vchPlaintext[0], &nPLen, &vchCiphertext[0], nLen);
+        if (fOk) fOk = EVP_DecryptFinal_ex(ctx, (&vchPlaintext[0])+nPLen, &nFLen);
+        EVP_CIPHER_CTX_free(ctx);
 
         if (!fOk) return false;
 

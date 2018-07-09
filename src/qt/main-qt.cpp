@@ -1,11 +1,11 @@
 /*******************************************************************************************
- 
-			Hash(BEGIN(Satoshi[2010]), END(W.J.[2012])) == Videlicet[2014] ++
-   
+
+            Hash(BEGIN(Satoshi[2010]), END(W.J.[2012])) == Videlicet[2014] ++
+
  [Learn and Create] Viz. http://www.opensource.org/licenses/mit-license.php
-  
+
 *******************************************************************************************/
- 
+
 #include "core/gui.h"
 #include "models/clientmodel.h"
 #include "models/walletmodel.h"
@@ -29,6 +29,9 @@
 #include <QLocale>
 #include <QTranslator>
 #include <QLibraryInfo>
+#include <QMessageBox>
+#include <QFile>
+#include <QDir>
 
 #include <boost/interprocess/ipc/message_queue.hpp>
 
@@ -168,21 +171,13 @@ int main(int argc, char *argv[])
         }
     }
 #endif
-    
+
     // Internal string conversion is all UTF-8
 //    QTextCodec::setCodecForTr(QTextCodec::codecForName("UTF-8"));
 //    QTextCodec::setCodecForCStrings(QTextCodec::codecForTr());
 
     Q_INIT_RESOURCE(nexus);
     QApplication app(argc, argv);
-    
-    QSplashScreen splash(QPixmap(":/images/splash"), 0);
-    if (GetBoolArg("-splash", true) && !GetBoolArg("-min"))
-    {
-        splash.show();
-        splash.setAutoFillBackground(true);
-        splashref = &splash;
-    }
 
     // Command-line options take precedence:
     ParseParameters(argc, argv);
@@ -194,6 +189,76 @@ int main(int argc, char *argv[])
         return 1;
     }
     ReadConfigFile(mapArgs, mapMultiArgs);
+
+    // Terms and Conditions
+    QDir dir;
+    QString termsPath;
+    termsPath.append(GetDataDir(false).string().c_str());
+    termsPath.append("/.license");
+    QFile file(termsPath);
+
+    if (!file.exists())
+    {
+        QMessageBox msgBox;
+        msgBox.setWindowTitle("Terms and Conditions");
+        msgBox.setText("Please read and accept the terms and conditions:");
+        msgBox.setInformativeText(
+        "MIT License\n\n"
+        "Copyright (c) 2014 - 2018 The Nexus Embassy\n\n"
+        "Permission is hereby granted, free of charge, to any person obtaining a copy"
+        "of this software and associated documentation files (the \"Software\"), to deal"
+        "in the Software without restriction, including without limitation the rights"
+        "to use, copy, modify, merge, publish, distribute, sublicense, and/or sell"
+        "copies of the Software, and to permit persons to whom the Software is"
+        "furnished to do so, subject to the following conditions:\n\n"
+
+        "The above copyright notice and this permission notice shall be included in all"
+        "copies or substantial portions of the Software.\n\n"
+
+        "THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR"
+        "IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,"
+        "FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE"
+        "AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER"
+        "LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,"
+        "OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE"
+        "SOFTWARE." );
+
+        msgBox.setStandardButtons(QMessageBox::Cancel | QMessageBox::Ok);
+        int ret = msgBox.exec();
+
+        switch (ret) {
+            case QMessageBox::Cancel:
+            {
+                //Exit
+                return 0;
+            }
+            case QMessageBox::Ok:
+            {
+                if (file.open(QIODevice::ReadWrite))
+                {
+
+                }
+        #if defined(WIN32)
+                LPCWSTR licenseFile = (const wchar_t*) termsPath.utf16();
+                int attr = GetFileAttributes(licenseFile);
+                SetFileAttributes(licenseFile, attr | FILE_ATTRIBUTE_HIDDEN);
+                #endif
+            }
+            default:
+            // should never be reached
+                break;
+        }
+    }
+
+
+
+    QSplashScreen splash(QPixmap(":/images/splash"), 0);
+    if (GetBoolArg("-splash", true) && !GetBoolArg("-min"))
+    {
+        splash.show();
+        splash.setAutoFillBackground(true);
+        splashref = &splash;
+    }
 
     // Application identification (must be set before OptionsModel is initialized,
     // as it is used to locate QSettings)

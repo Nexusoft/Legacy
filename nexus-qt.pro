@@ -3,10 +3,14 @@ TARGET = nexus-qt
 VERSION = 0.1.0.0
 INCLUDEPATH += src src/core src/hash src/json src/net src/qt src/util src/wallet src/LLD src/LLP
 DEFINES += QT_GUI BOOST_THREAD_USE_LIB BOOST_SPIRIT_THREADSAFE
-CONFIG += no_include_pwd optimize_full
+CONFIG += no_include_pwd optimize_full c++11
 greaterThan(QT_MAJOR_VERSION, 4) {
-	QT += uitools
+	QT += uitools widgets
 }
+else {
+	QMAKE_CXXFLAGS+= -std=c++11
+}
+
 OBJECTS_DIR = build/obj
 MOC_DIR = build/moc
 UI_DIR = build/ui
@@ -149,7 +153,7 @@ contains(RELEASE, 1) {
     #Static Configuration
     win32:CONFIG += STATIC
 	
-    win32:QMAKE_LFLAGS += -Wl,--dynamicbase -Wl,--nxcompat -static -m64 -std=c++11 -static-libgcc -static-libstdc++
+    win32:QMAKE_LFLAGS += -Wl,--dynamicbase -Wl,--nxcompat -static -static-libgcc -static-libstdc++
     !win32:!macx {
         # Linux: static link
         LIBS += -Wl,-Bstatic
@@ -215,7 +219,7 @@ contains(NEXUS_NEED_QT_PLUGINS, 1) {
 
 !macx:QMAKE_LFLAGS += -s
 QMAKE_CFLAGS += -s
-QMAKE_CXXFLAGS += -s -std=c++11 -D_FORTIFY_SOURCE=2 -fpermissive
+QMAKE_CXXFLAGS += -s -D_FORTIFY_SOURCE=2 -fpermissive
 QMAKE_CXXFLAGS_WARN_ON = -Wall -Wextra -Wformat -Wformat-security -Wno-invalid-offsetof -Wno-sign-compare -Wno-unused-parameter
 !macx {
     QMAKE_CXXFLAGS_WARN_ON += -fdiagnostics-show-option
@@ -229,7 +233,7 @@ QMAKE_DEL_FILE = rm -rf
 QMAKE_DISTCLEAN += build/moc build/obj build/ui
 macx:QMAKE_DISTCLEAN += nexus-qt.dmg dist
 build_pass:DebugBuild {
-	QMAKE_DISTCLEAN +=	object_script.nexus-qt.Debug
+	QMAKE_DISTCLEAN += object_script.nexus-qt.Debug
 	win32:QMAKE_DISTCLEAN += debug
 }
 build_pass:ReleaseBuild {
@@ -505,8 +509,8 @@ contains(ARCH_TEST, ARCH) {
 !build_pass:message("Finishing up... Type 'make' to start compiling when finished")
 #Ending makefile text
 complete.target= complete
-win32:complete.commands= { echo -e '\nFinished Building nexus-qt.exe\n'; } 2> /dev/null
+win32:complete.commands= @echo '' && echo 'Finished Building nexus-qt.exe' && echo ''
 macx:complete.commands= { echo ' '; echo 'Finished building nexus-qt.app'; echo ' '; } 2> /dev/null
-!win32:!macx:complete.commands= { echo -e '\nFinished Building nexus-qt\n'; } 2> /dev/null
+!win32:!macx:complete.commands= @echo '' && echo 'Finished Building nexus-qt' && echo ''
 QMAKE_EXTRA_TARGETS+= complete
 POST_TARGETDEPS+= complete

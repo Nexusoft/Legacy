@@ -283,7 +283,7 @@ CXXFLAGS+= -mthreads \
 	$(INCLUDEPATHS)
 
 #set -std=c++ for all but c compiling
-CFLAGS:= $(CXXFLGS)
+CFLAGS:= $(CXXFLAGS)
 CXXFLAGS+=-std=c++11
 
 #OS Specific Targets and instructions
@@ -363,7 +363,7 @@ CXXFLAGS+= -mmacosx-version-min=10.10 \
 	$(INCLUDEPATHS)
 
 #set -std=c++ for all but c compiling
-CFLAGS:= $(CXXFLGS)
+CFLAGS:= $(CXXFLAGS)
 CXXFLAGS+=-std=c++11
 
 #OS Specific Targets and instructions
@@ -488,7 +488,7 @@ CXXFLAGS+= -O3 \
 	$(INCLUDEPATHS)
 
 #set -std=c++ for all but c compiling
-CFLAGS:= $(CXXFLGS)
+CFLAGS:= $(CXXFLAGS)
 CXXFLAGS+=-std=c++11
 
 #OS Specific Targets and instructions

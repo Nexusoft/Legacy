@@ -1,9 +1,9 @@
 /*******************************************************************************************
- 
-			Hash(BEGIN(Satoshi[2010]), END(Sunny[2012])) == Videlicet[2014] ++
-   
+
+            Hash(BEGIN(Satoshi[2010]), END(Sunny[2012])) == Videlicet[2014] ++
+
  [Learn and Create] Viz. http://www.opensource.org/licenses/mit-license.php
-  
+
 *******************************************************************************************/
 
 #include "util.h"
@@ -212,8 +212,8 @@ static boost::mutex DEBUG_MUTEX;
 
 inline int OutputDebugStringF(const char* pszFormat, ...)
 {
-	DEBUG_MUTEX.lock();
-	
+    DEBUG_MUTEX.lock();
+
     int ret = 0;
     if (fPrintToConsole)
     {
@@ -294,7 +294,7 @@ inline int OutputDebugStringF(const char* pszFormat, ...)
     }
 #endif
 
-	DEBUG_MUTEX.unlock();
+    DEBUG_MUTEX.unlock();
     return ret;
 }
 
@@ -351,17 +351,17 @@ boost::mutex DEBUGGING_MUTEX;
 std::vector<std::pair<bool, std::string> > DEBUGGING_OUTPUT;
 void debug_server(string strOutput, bool fGeneric)
 {
-	/** Omit Generic Data on Initial Block Download. **/
-	if((!Core::IsInitialBlockDownload() && !fTestNet) || (Core::IsInitialBlockDownload() && !fGeneric && !fTestNet))
-	{
-		DEBUGGING_MUTEX.lock();
-		DEBUGGING_OUTPUT.push_back(make_pair(fGeneric, strOutput));
-		
-		
-		DEBUGGING_MUTEX.unlock();
-	}
-	
-	printf("%s", strOutput.c_str());
+    /** Omit Generic Data on Initial Block Download. **/
+    if((!Core::IsInitialBlockDownload() && !fTestNet) || (Core::IsInitialBlockDownload() && !fGeneric && !fTestNet))
+    {
+        DEBUGGING_MUTEX.lock();
+        DEBUGGING_OUTPUT.push_back(make_pair(fGeneric, strOutput));
+
+
+        DEBUGGING_MUTEX.unlock();
+    }
+
+    printf("%s", strOutput.c_str());
 }
 
 bool error(const char *format, ...)
@@ -376,7 +376,7 @@ bool error(const char *format, ...)
     {
         buffer[limit-1] = 0;
     }
-	
+
     printf("\x1b[31m ERROR: \x1b[0m %s\n", buffer);
     return false;
 }
@@ -530,7 +530,7 @@ std::vector<std::string> Split(const std::string& strInput, char strDelimiter)
    string::size_type nIndex = 0;
    string::size_type nFind  = strInput.find(strDelimiter);
 
-	std::vector<std::string> vData;
+    std::vector<std::string> vData;
    while (nFind != std::string::npos) {
       vData.push_back(strInput.substr(nIndex, nFind - nIndex));
       nIndex = ++ nFind;
@@ -539,55 +539,55 @@ std::vector<std::string> Split(const std::string& strInput, char strDelimiter)
       if (nFind == std::string::npos)
          vData.push_back(strInput.substr(nIndex, strInput.length()));
    }
-   
+
    return vData;
 }
 
 /** IP Filtering Definitions
-	IP's are Filtered By Ports.
-	Format is IP and PORT. **/
+    IP's are Filtered By Ports.
+    Format is IP and PORT. **/
 bool CheckPermissions(std::string strAddress, unsigned int nPort)
 {
-	/* Bypass localhost addresses first. */
-	if(strAddress == "127.0.0.1")
-		return true;
-	
-	/* Split the Address into String Vector. */
-	std::vector<std::string> vAddress = Split(strAddress, '.');
-	if(vAddress.size() != 4)
-		return error("Address size not at least 4 bytes.");
-	
-	/* Check against the commandline parameters. */
-	const std::vector<std::string>& vAllow = mapMultiArgs["-llpallowip"];
-	for(int nIndex = 0; nIndex < vAllow.size(); nIndex++)
-	{
-		/* Detect if the port for LLP filtering is a wildcard or not. */
-		bool fWildcardPort = (vAllow[nIndex].find(":") == std::string::npos);
-		
-		/* Scan out the data for the wildcard port. */
-		std::vector<std::string> vCheck = Split(vAllow[nIndex], ',');
-		
-		/* Skip invalid inputs. */
-		if(vCheck.size() != 4)
-			continue;
-		
-		/* Check the Wildcard port. */
-		if(!fWildcardPort) {
-			std::vector<std::string> strPort = Split(vCheck[3], ':');
-			vCheck[3] = strPort[0];
-			
-			unsigned int nPortCheck = boost::lexical_cast<unsigned int>(strPort[1]);
-			if(nPort != nPortCheck)
-				return error("Bad Port.");
-		}
-		
-		/* Check the components of IP address. */
-		for(int nByte = 0; nByte < 4; nByte++)
-			if(vCheck[nByte] != "*" && vCheck[nByte] != vAddress[nByte])
-				return error("Check %s - %s\n", vCheck[nByte].c_str(), vAddress[nByte].c_str());
-	}
-	
-	return true;;
+    /* Bypass localhost addresses first. */
+    if(strAddress == "127.0.0.1")
+        return true;
+
+    /* Split the Address into String Vector. */
+    std::vector<std::string> vAddress = Split(strAddress, '.');
+    if(vAddress.size() != 4)
+        return error("Address size not at least 4 bytes.");
+
+    /* Check against the commandline parameters. */
+    const std::vector<std::string>& vAllow = mapMultiArgs["-llpallowip"];
+    for(int nIndex = 0; nIndex < vAllow.size(); nIndex++)
+    {
+        /* Detect if the port for LLP filtering is a wildcard or not. */
+        bool fWildcardPort = (vAllow[nIndex].find(":") == std::string::npos);
+
+        /* Scan out the data for the wildcard port. */
+        std::vector<std::string> vCheck = Split(vAllow[nIndex], ',');
+
+        /* Skip invalid inputs. */
+        if(vCheck.size() != 4)
+            continue;
+
+        /* Check the Wildcard port. */
+        if(!fWildcardPort) {
+            std::vector<std::string> strPort = Split(vCheck[3], ':');
+            vCheck[3] = strPort[0];
+
+            unsigned int nPortCheck = boost::lexical_cast<unsigned int>(strPort[1]);
+            if(nPort != nPortCheck)
+                return error("Bad Port.");
+        }
+
+        /* Check the components of IP address. */
+        for(int nByte = 0; nByte < 4; nByte++)
+            if(vCheck[nByte] != "*" && vCheck[nByte] != vAddress[nByte])
+                return error("Check %s - %s\n", vCheck[nByte].c_str(), vAddress[nByte].c_str());
+    }
+
+    return true;;
 }
 
 static void InterpretNegativeSetting(string name, map<string, string>& mapSettingsRet)
@@ -993,7 +993,7 @@ bool copyDir(boost::filesystem::path const & source, boost::filesystem::path con
             ;
             return false;
         }
-		
+
         if(fs::exists(destination))
         {
             std::cerr << "Destination directory " << destination.string()
@@ -1015,7 +1015,7 @@ bool copyDir(boost::filesystem::path const & source, boost::filesystem::path con
         std::cerr << e.what() << '\n';
         return false;
     }
-	
+
     // Iterate through the source directory
     for(
         fs::directory_iterator file(source);
@@ -1040,14 +1040,14 @@ bool copyDir(boost::filesystem::path const & source, boost::filesystem::path con
             }
             else
             {
-				std::string filename = current.filename().string();
-				
-				if(filename == "coinshield.conf")
-					filename = "nexus.conf";
-					
+                std::string filename = current.filename().string();
+
+                if(filename == "coinshield.conf")
+                    filename = "nexus.conf";
+
                 fs::copy_file(current, destination / filename );
-				
-				std::cerr << "Copied File" << filename.c_str() << "\n";
+
+                std::cerr << "Copied File" << filename.c_str() << "\n";
             }
         }
         catch(fs::filesystem_error const & e)
@@ -1231,10 +1231,10 @@ std::string FormatSubVersion(const std::string& name, int nClientVersion, const 
 {
     std::ostringstream ss;
     ss << "";
-	ss << name << "[v" << CLIENT_BUILD << "]/";
+    ss << name << "[v" << CLIENT_BUILD << "]/";
     ss << " DB [" << FormatVersion(nClientVersion);
     ss << "] PROTOCOL [v" << FormatVersion(PROTOCOL_VERSION) << "]";
-    
+
     return ss.str();
 }
 
@@ -1480,7 +1480,7 @@ static void push_lock(void* c, const CLockLocation& locklocation, bool fTry)
 
 static void pop_lock()
 {
-    if (fDebug) 
+    if (fDebug)
     {
         const CLockLocation& locklocation = (*lockstack).rbegin()->second;
         printf("Unlocked: %s\n", locklocation.ToString().c_str());

@@ -1,9 +1,9 @@
 /*******************************************************************************************
- 
-			Hash(BEGIN(Satoshi[2010]), END(Sunny[2012])) == Videlicet[2014] ++
-   
+
+            Hash(BEGIN(Satoshi[2010]), END(Sunny[2012])) == Videlicet[2014] ++
+
  [Learn and Create] Viz. http://www.opensource.org/licenses/mit-license.php
-  
+
 *******************************************************************************************/
 
 #ifndef NEXUS_UTIL_H
@@ -57,7 +57,7 @@ static const int64 CENT = 10000;
 
 
 
-#define loop(...)			for(;;)
+#define loop(...)            for(;;)
 #define BEGIN(a)            ((char*)&(a))
 #define END(a)              ((char*)&((&(a))[1]))
 #define UBEGIN(a)           ((unsigned char*)&(a))
@@ -102,72 +102,72 @@ T* alignup(T* p)
 /** Parse an IP Address into a Byte Vector from Std::String. **/
 inline std::vector<unsigned char> parse_ip(std::string ip)
 {
-	std::vector<unsigned char> bytes(4, 0);
+    std::vector<unsigned char> bytes(4, 0);
     sscanf(ip.c_str(), "%hhu.%hhu.%hhu.%hhu", &bytes[0], &bytes[1], &bytes[2], &bytes[3]);
-	
-	return bytes;
+
+    return bytes;
 }
 
 
 /** Convert a 32 bit Unsigned Integer to Byte Vector using Bitwise Shifts. **/
 inline std::vector<unsigned char> uint2bytes(unsigned int UINT)
 {
-	std::vector<unsigned char> BYTES(4, 0);
-	BYTES[0] = UINT >> 24;
-	BYTES[1] = UINT >> 16;
-	BYTES[2] = UINT >> 8;
-	BYTES[3] = UINT;
-				
-	return BYTES;
+    std::vector<unsigned char> BYTES(4, 0);
+    BYTES[0] = UINT >> 24;
+    BYTES[1] = UINT >> 16;
+    BYTES[2] = UINT >> 8;
+    BYTES[3] = UINT;
+
+    return BYTES;
 }
 
 /** Create a sorted Multimap for rich lists. **/
-template <typename A, typename B> std::multimap<B, A> flip_map(std::map<A,B> & src) 
+template <typename A, typename B> std::multimap<B, A> flip_map(std::map<A,B> & src)
 {
-	std::multimap<B,A> dst;
-	for(typename std::map<A, B>::const_iterator it = src.begin(); it != src.end(); ++it)
-		dst.insert(std::pair<B, A>(it -> second, it -> first));
+    std::multimap<B,A> dst;
+    for(typename std::map<A, B>::const_iterator it = src.begin(); it != src.end(); ++it)
+        dst.insert(std::pair<B, A>(it -> second, it -> first));
 
     return dst;
 }
-			
-			
-/** Convert a byte stream into a signed integer 32 bit. **/	
+
+
+/** Convert a byte stream into a signed integer 32 bit. **/
 inline int bytes2int(std::vector<unsigned char> BYTES, int nOffset = 0) { return (BYTES[0 + nOffset] << 24) + (BYTES[1 + nOffset] << 16) + (BYTES[2 + nOffset] << 8) + BYTES[3 + nOffset]; }
-		
+
 
 /** Convert a 32 bit signed Integer to Byte Vector using Bitwise Shifts. **/
 inline std::vector<unsigned char> int2bytes(int INT)
 {
-	std::vector<unsigned char> BYTES(4, 0);
-	BYTES[0] = INT >> 24;
-	BYTES[1] = INT >> 16;
-	BYTES[2] = INT >> 8;
-	BYTES[3] = INT;
-				
-	return BYTES;
+    std::vector<unsigned char> BYTES(4, 0);
+    BYTES[0] = INT >> 24;
+    BYTES[1] = INT >> 16;
+    BYTES[2] = INT >> 8;
+    BYTES[3] = INT;
+
+    return BYTES;
 }
-			
-			
-/** Convert a byte stream into unsigned integer 32 bit. **/	
-inline unsigned int bytes2uint(std::vector<unsigned char> BYTES, int nOffset = 0) { return (BYTES[0 + nOffset] << 24) + (BYTES[1 + nOffset] << 16) + (BYTES[2 + nOffset] << 8) + BYTES[3 + nOffset]; }		
-			
-			
+
+
+/** Convert a byte stream into unsigned integer 32 bit. **/
+inline unsigned int bytes2uint(std::vector<unsigned char> BYTES, int nOffset = 0) { return (BYTES[0 + nOffset] << 24) + (BYTES[1 + nOffset] << 16) + (BYTES[2 + nOffset] << 8) + BYTES[3 + nOffset]; }
+
+
 /** Convert a 64 bit Unsigned Integer to Byte Vector using Bitwise Shifts. **/
 inline std::vector<unsigned char> uint2bytes64(uint64 UINT)
 {
-	std::vector<unsigned char> INTS[2];
-	INTS[0] = uint2bytes((unsigned int) UINT);
-	INTS[1] = uint2bytes((unsigned int) (UINT >> 32));
-				
-	std::vector<unsigned char> BYTES;
-	BYTES.insert(BYTES.end(), INTS[0].begin(), INTS[0].end());
-	BYTES.insert(BYTES.end(), INTS[1].begin(), INTS[1].end());
-				
-	return BYTES;
+    std::vector<unsigned char> INTS[2];
+    INTS[0] = uint2bytes((unsigned int) UINT);
+    INTS[1] = uint2bytes((unsigned int) (UINT >> 32));
+
+    std::vector<unsigned char> BYTES;
+    BYTES.insert(BYTES.end(), INTS[0].begin(), INTS[0].end());
+    BYTES.insert(BYTES.end(), INTS[1].begin(), INTS[1].end());
+
+    return BYTES;
 }
 
-			
+
 /** Convert a byte Vector into unsigned integer 64 bit. **/
 inline uint64 bytes2uint64(std::vector<unsigned char> BYTES, int nOffset = 0) { return (bytes2uint(BYTES, nOffset) | ((uint64)bytes2uint(BYTES, nOffset + 4) << 32)); }
 
@@ -175,16 +175,16 @@ inline uint64 bytes2uint64(std::vector<unsigned char> BYTES, int nOffset = 0) { 
 /** Convert Standard String into Byte Vector. **/
 inline std::vector<unsigned char> string2bytes(std::string STRING)
 {
-	std::vector<unsigned char> BYTES(STRING.begin(), STRING.end());
-	return BYTES;
+    std::vector<unsigned char> BYTES(STRING.begin(), STRING.end());
+    return BYTES;
 }
 
 
 /** Convert Byte Vector into Standard String. **/
 inline std::string bytes2string(std::vector<unsigned char> BYTES)
 {
-	std::string STRING(BYTES.begin(), BYTES.end());
-	return STRING;
+    std::string STRING(BYTES.begin(), BYTES.end());
+    return STRING;
 }
 
 
@@ -596,10 +596,10 @@ inline int64 round_coin_digits(int64 nValue, int digits)
 {
     double dValue = ((double)nValue / COIN);
     int    nWhole = (int) dValue;
-    
+
     int nDigits = pow(10, digits);
     double newValue  = (((int)((dValue - nWhole) * nDigits)) / (double)nDigits);
-    
+
     return (int64)(newValue * COIN) + (nWhole * COIN);
 }
 
@@ -665,7 +665,7 @@ bool SoftSetBoolArg(const std::string& strArg, bool fValue);
     }
 
 
-	
+
 /** Serialize Hash: Used to Serialize a CTransaction class in order to obtain the Tx Hash. Utilizes CDataStream to serialize the class. **/
 template<typename T>
 uint512 SerializeHash(const T& obj, int nType=SER_GETHASH, int nVersion=PROTOCOL_VERSION)
@@ -684,85 +684,85 @@ uint512 SerializeHash(const T& obj, int nType=SER_GETHASH, int nVersion=PROTOCOL
 template <typename type> class CAverage
 {
 private:
-	std::vector<type> vList;
-	
+    std::vector<type> vList;
+
 public:
-	CAverage(){}
-	
-	void Add(type value)
-	{
-		vList.push_back(value);
-	}
-	
-	type Average()
-	{
-		type average = 0;
-		for(int nIndex = 0; nIndex < vList.size(); nIndex++)
-			average += vList[nIndex];
-			
-		return round(average / (double)vList.size());
-	}
+    CAverage(){}
+
+    void Add(type value)
+    {
+        vList.push_back(value);
+    }
+
+    type Average()
+    {
+        type average = 0;
+        for(int nIndex = 0; nIndex < vList.size(); nIndex++)
+            average += vList[nIndex];
+
+        return round(average / (double)vList.size());
+    }
 };
 
 
 /** Filter designed to give the majority of set of values.
-	Keeps count of every addition of template paramter type, 
-	in order to give a reasonable majority of votes. **/
+    Keeps count of every addition of template paramter type,
+    in order to give a reasonable majority of votes. **/
 template <typename CType> class CMajority
 {
 private:
-	std::map<CType, int> mapList;
-	unsigned int nSamples;
-	
+    std::map<CType, int> mapList;
+    unsigned int nSamples;
+
 public:
-	CMajority() : nSamples(0) {}
-	
-	
-	/** Add another Element to the Majority Count. **/
-	void Add(CType value)
-	{
-		if(!mapList.count(value))
-			mapList[value] = 1;
-		else
-			mapList[value]++;
-			
-		nSamples++;
-	}
-	
-	
-	/** Return the total number of samples this container holds. **/
-	unsigned int Samples(){ return nSamples; }
-	
-	
-	/** Return the Element of Type that has the highest Majority. **/
-	CType Majority()
-	{
-		if(nSamples == 0)
-			return 0;
-			
-		/** Temporary Reference Variable to store the largest majority to then compare every element of the map to it. **/
-		std::pair<CType, int> nMajority;
-		
-		
-		for(typename std::map<CType, int>::iterator nIterator = mapList.begin(); nIterator != mapList.end(); ++nIterator)
-		{
-			/** Set the return to be the first element, to then compare the rest of the map to it. **/
-			if(nIterator == mapList.begin())
-			{
-				nMajority = std::make_pair(nIterator->first, nIterator->second);
-				continue;
-			}
-			
-			/** If a record has higher count, use that one. **/
-			if(nIterator->second > nMajority.second)
-			{
-				nMajority.first = nIterator->first;
-				nMajority.second = nIterator->second;
-			}
-		}
-		
-		return nMajority.first;
-	}
+    CMajority() : nSamples(0) {}
+
+
+    /** Add another Element to the Majority Count. **/
+    void Add(CType value)
+    {
+        if(!mapList.count(value))
+            mapList[value] = 1;
+        else
+            mapList[value]++;
+
+        nSamples++;
+    }
+
+
+    /** Return the total number of samples this container holds. **/
+    unsigned int Samples(){ return nSamples; }
+
+
+    /** Return the Element of Type that has the highest Majority. **/
+    CType Majority()
+    {
+        if(nSamples == 0)
+            return 0;
+
+        /** Temporary Reference Variable to store the largest majority to then compare every element of the map to it. **/
+        std::pair<CType, int> nMajority;
+
+
+        for(typename std::map<CType, int>::iterator nIterator = mapList.begin(); nIterator != mapList.end(); ++nIterator)
+        {
+            /** Set the return to be the first element, to then compare the rest of the map to it. **/
+            if(nIterator == mapList.begin())
+            {
+                nMajority = std::make_pair(nIterator->first, nIterator->second);
+                continue;
+            }
+
+            /** If a record has higher count, use that one. **/
+            if(nIterator->second > nMajority.second)
+            {
+                nMajority.first = nIterator->first;
+                nMajority.second = nIterator->second;
+            }
+        }
+
+        return nMajority.first;
+    }
 };
 
 

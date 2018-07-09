@@ -1,9 +1,9 @@
 /*******************************************************************************************
- 
-			Hash(BEGIN(Satoshi[2010]), END(W.J.[2012])) == Videlicet[2014] ++
-   
+
+            Hash(BEGIN(Satoshi[2010]), END(W.J.[2012])) == Videlicet[2014] ++
+
  [Learn and Create] Viz. http://www.opensource.org/licenses/mit-license.php
-  
+
 *******************************************************************************************/
 
 #include "wallet/db.h"
@@ -33,7 +33,7 @@ using namespace boost;
 Wallet::CWallet* pwalletMain;
 LLP::Server<LLP::CoreLLP>* LLP_SERVER;
 
-namespace LLP 
+namespace LLP
 {
     LLP::Server<LLP::MiningLLP>* MINING_LLP;
 }
@@ -248,7 +248,7 @@ bool AppInit2(int argc, char* argv[])
         #endif
                     "  -llpallowip=<ip> \t  "   + _("Allow mining from specified IP address or range (192.168.6.* for example") + "\n" +
                     "  -banned=<ip>     \t  "   + _("Manually Ban Addresses from Config File") + "\n" +
-                    "  -mining 			\t  "   + _("Allow mining (default: 0)") + "\n" +
+                    "  -mining             \t  "   + _("Allow mining (default: 0)") + "\n" +
                     "  -rpcuser=<user>  \t  "   + _("Username for JSON-RPC connections") + "\n" +
                     "  -rpcpassword=<pw>\t  "   + _("Password for JSON-RPC connections") + "\n" +
                     "  -rpcport=<port>  \t\t  " + _("Listen for JSON-RPC connections on <port> (default: 9325)") + "\n" +
@@ -345,30 +345,30 @@ bool AppInit2(int argc, char* argv[])
         }
     #endif
 
-	printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
-	printf("Nexus version %s (%s)\n", FormatFullVersion().c_str(), CLIENT_DATE.c_str());
-	printf("Default data directory %s\n", GetDefaultDataDir().string().c_str());
-    
+    printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
+    printf("Nexus version %s (%s)\n", FormatFullVersion().c_str(), CLIENT_DATE.c_str());
+    printf("Default data directory %s\n", GetDefaultDataDir().string().c_str());
+
     for(auto node : mapMultiArgs["-banned"])
         printf("PERMANENT BAN %s\n", node.c_str());
-    
+
     #ifdef USE_LLD
         InitMessage(_("Initializing LLD Keychains..."));
         LLD::RegisterKeychain("blkindex", "blkindex");
     #endif
 
-	InitMessage(_("Initializing Unified Time..."));
-	printf("Initializing Unified Time...\n");
-	InitializeUnifiedTime();
+    InitMessage(_("Initializing Unified Time..."));
+    printf("Initializing Unified Time...\n");
+    InitializeUnifiedTime();
 
-	if (!fDebug)
-		ShrinkDebugFile();
-	
+    if (!fDebug)
+        ShrinkDebugFile();
+
     /** Locks to the Local Database. This will keep another process from using the Nexus Databases. **/
     boost::filesystem::path pathLockFile = GetDataDir() / ".lock";
     FILE* file = fopen(pathLockFile.string().c_str(), "a");
     if (file) fclose(file);
-	
+
     static boost::interprocess::file_lock lock(pathLockFile.string().c_str());
     if (!lock.try_lock())
     {
@@ -377,16 +377,16 @@ bool AppInit2(int argc, char* argv[])
     }
     std::ostringstream strErrors;
 
-	
-	
-	/** Run the process as Daemon RPC/LLP Server if Flagged. **/
+
+
+    /** Run the process as Daemon RPC/LLP Server if Flagged. **/
     if (fDaemon)
         fprintf(stdout, "Nexus server starting\n");
-		
+
     int64 nStart;
 
-	
-	/** Load Peer Addresses from the Address Database. **/
+
+    /** Load Peer Addresses from the Address Database. **/
     InitMessage(_("Loading addresses..."));
     printf("Loading addresses...\n");
     nStart = GetTimeMillis();
@@ -394,18 +394,18 @@ bool AppInit2(int argc, char* argv[])
         strErrors << _("Error loading addr.dat") << "\n";
     printf(" addresses   %15" PRI64d "ms\n", GetTimeMillis() - nStart);
 
-	
-	
-	/** Load the Block Index Database. **/
+
+
+    /** Load the Block Index Database. **/
     InitMessage(_("Loading block index..."));
     printf("Loading block index...\n");
     nStart = GetTimeMillis();
     if (!Core::LoadBlockIndex())
         strErrors << _("Error loading blkindex.dat") << "\n";
 
-		
-		
-		
+
+
+
     /** Catch a Shutdown if requested thus far. [Initialization can take some time] **/
     if (fRequestShutdown)
     {
@@ -413,8 +413,8 @@ bool AppInit2(int argc, char* argv[])
         return false;
     }
     printf(" block index %15" PRI64d "ms\n", GetTimeMillis() - nStart);
-	
-	/** Load the Wallet Database. **/
+
+    /** Load the Wallet Database. **/
     InitMessage(_("Loading wallet..."));
     printf("Loading wallet...\n");
     nStart = GetTimeMillis();
@@ -472,11 +472,11 @@ bool AppInit2(int argc, char* argv[])
 
     Core::RegisterWallet(pwalletMain);
     Core::CBlockIndex *pindexRescan = Core::pindexBest;
-	
+
     if (GetBoolArg("-rescan"))
         pindexRescan = Core::pindexGenesisBlock;
-	 
-	 /* OMIT for Now
+
+     /* OMIT for Now
     else
     {
         Wallet::CWalletDB walletdb("wallet.dat");
@@ -485,7 +485,7 @@ bool AppInit2(int argc, char* argv[])
             pindexRescan = locator.GetBlockIndex();
     }
     */
-    
+
     if (Core::pindexBest != pindexRescan && Core::pindexBest && pindexRescan && Core::pindexBest->nHeight > pindexRescan->nHeight)
     {
         InitMessage(_("Rescanning..."));
@@ -494,7 +494,7 @@ bool AppInit2(int argc, char* argv[])
         pwalletMain->ScanForWalletTransactions(pindexRescan, true);
         printf(" rescan      %15" PRI64d "ms\n", GetTimeMillis() - nStart);
     }
-	
+
 
     InitMessage(_("Done loading"));
     printf("Done loading\n");
@@ -615,8 +615,8 @@ bool AppInit2(int argc, char* argv[])
             return false;
         }
     }
-    
-	
+
+
     //
     // Start the node
     //
@@ -624,8 +624,8 @@ bool AppInit2(int argc, char* argv[])
     /** Wait for Unified Time if First Start. **/
     if (GetBoolArg("-istimeseed",false)) {
         printf("WARNING: -istimeseed Was set, not waiting for unified time.\n");
-		
-		fTimeUnified = true;
+
+        fTimeUnified = true;
     }
     else {
         printf("Waiting for unified time...\n");
@@ -633,45 +633,46 @@ bool AppInit2(int argc, char* argv[])
             Sleep(1000);
     }
 
-	/* Initialize the Core LLP if it is enabled. */
-	if(GetBoolArg("-unified", false)) {
-		InitMessage(_("Initializing Core LLP..."));
-		printf("Initializing Core LLP...\n");
-		LLP_SERVER = new LLP::Server<LLP::CoreLLP>(fLispNet ? LISPNET_CORE_LLP_PORT : fTestNet ? TESTNET_CORE_LLP_PORT : NEXUS_CORE_LLP_PORT, 5, true, 2, 5, 5);
-	}
-	
-	
-	/* Initialize the Mining LLP if it is enabled. */
-	if(GetBoolArg("-mining", false)) {
+    /* Initialize the Core LLP if it is enabled. */
+    if(GetBoolArg("-unified", false)) {
+        InitMessage(_("Initializing Core LLP..."));
+        printf("Initializing Core LLP...\n");
+        LLP_SERVER = new LLP::Server<LLP::CoreLLP>(fLispNet ? LISPNET_CORE_LLP_PORT : fTestNet ? TESTNET_CORE_LLP_PORT : NEXUS_CORE_LLP_PORT, 5, true, 2, 5, 5);
+    }
+
+
+    /* Initialize the Mining LLP if it is enabled. */
+    if(GetBoolArg("-mining", false)) {
         InitMessage(_("Initializing Mining LLP..."));
         printf("%%%%%%%%%% Initializing Mining LLP...");
-        
+
         LLP::MINING_LLP = new LLP::Server<LLP::MiningLLP>(fLispNet ? LISPNET_MINING_LLP_PORT : fTestNet ? TESTNET_MINING_LLP_PORT : NEXUS_MINING_LLP_PORT, GetArg("-mining_threads", 10), true, GetArg("-mining_cscore", 5), GetArg("-mining_rscore", 50), GetArg("-mining_timout", 60));
     }
-	
+
     if (!Core::CheckDiskSpace())
         return false;
 
     RandAddSeedPerfmon();
-	
+
     if (!CreateThread(Net::StartNode, NULL))
         ThreadSafeMessageBox(_("Error: CreateThread(StartNode) failed"), _("Nexus"), wxOK | wxMODAL);
-	
+
     #ifndef QT_GUI
-        if(GetBoolArg("-stake", false))
-        {
+    if(GetBoolArg("-stake", false))
+    {
+    #else
+    if(GetBoolArg("-stake", true))
+    {
     #endif
-		CreateThread(Core::StakeMinter, NULL);
-		
-    #ifndef QT_GUI
-            printf("%%%%%%%%%%%%%%%%% Daemon Staking Thread Initialized...\n");
-        }
-    #endif
-	
+        CreateThread(Core::StakeMinter, NULL);
+
+        printf("%%%%%%%%%%%%%%%% Staking Thread Initialized...\n");
+    }
+
     if (fServer)
         CreateThread(Net::ThreadRPCServer, NULL);
 
-	//CreateThread(DebugThread, NULL);
+    //CreateThread(DebugThread, NULL);
     #ifdef QT_GUI
         if (GetStartOnSystemStartup())
             SetStartOnSystemStartup(true); // Remove startup links

@@ -1,9 +1,9 @@
 /*******************************************************************************************
- 
-			Hash(BEGIN(Satoshi[2010]), END(Sunny[2012])) == Videlicet[2014] ++
-   
+
+            Hash(BEGIN(Satoshi[2010]), END(Sunny[2012])) == Videlicet[2014] ++
+
  [Learn and Create] Viz. http://www.opensource.org/licenses/mit-license.php
-  
+
 *******************************************************************************************/
 
 #ifndef NEXUS_SERIALIZE_H
@@ -64,10 +64,10 @@ enum
     SER_NETWORK         = (1 << 0),
     SER_DISK            = (1 << 1),
     SER_GETHASH         = (1 << 2),
-	
-	// LLD actions
-	SER_LLD             = (1 << 3),
-	SER_LLD_KEY_HEADER  = (1 << 4),
+
+    // LLD actions
+    SER_LLD             = (1 << 3),
+    SER_LLD_KEY_HEADER  = (1 << 4),
 
     // modifiers
     SER_SKIPSIG         = (1 << 16),
@@ -845,7 +845,7 @@ public:
     }
 
 /** Fix for MaxOSX Compatability for XCode and Deployment 10.10. **/
-#if !defined(MAC_OSX) 
+#if !defined(MAC_OSX)
     void insert(iterator it, std::vector<char>::const_iterator first, std::vector<char>::const_iterator last)
     {
         if (it == vch.begin() + nReadPos && last - first <= nReadPos)

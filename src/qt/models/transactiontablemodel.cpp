@@ -1,9 +1,9 @@
 /*******************************************************************************************
- 
-			Hash(BEGIN(Satoshi[2010]), END(W.J.[2012])) == Videlicet[2014] ++
-   
+
+            Hash(BEGIN(Satoshi[2010]), END(W.J.[2012])) == Videlicet[2014] ++
+
  [Learn and Create] Viz. http://www.opensource.org/licenses/mit-license.php
-  
+
 *******************************************************************************************/
 
 #include "transactiontablemodel.h"
@@ -109,12 +109,12 @@ public:
             for(int update_idx = updated_sorted.size()-1; update_idx >= 0; --update_idx)
             {
                 const uint512 &hash = updated_sorted.at(update_idx);
-				
+
                 // Find transaction in wallet
                 std::map<uint512, Wallet::CWalletTx>::iterator mi = wallet->mapWallet.find(hash);
                 bool inWallet = mi != wallet->mapWallet.end();
-				
-				
+
+
                 // Find bounds of this transaction in model
                 QList<TransactionRecord>::iterator lower = qLowerBound(
                     cachedWallet.begin(), cachedWallet.end(), hash, TxLessThan());
@@ -279,7 +279,7 @@ int TransactionTableModel::columnCount(const QModelIndex &parent) const
 QString TransactionTableModel::formatTxStatus(const TransactionRecord *wtx) const
 {
     QString status;
-	
+
     if(wtx->type == TransactionRecord::Generated || wtx->type == TransactionRecord::StakeGenesis || wtx->type == TransactionRecord::StakeTrust)
     {
         switch(wtx->status.maturity)
@@ -298,27 +298,27 @@ QString TransactionTableModel::formatTxStatus(const TransactionRecord *wtx) cons
             break;
         }
     }
-	else
-	{
-	    switch(wtx->status.status)
-		{
-		case TransactionStatus::OpenUntilBlock:
-			status = tr("Open for %n block(s)","",wtx->status.open_for);
-			break;
-		case TransactionStatus::OpenUntilDate:
-			status = tr("Open until %1").arg(GUIUtil::dateTimeStr(wtx->status.open_for));
-			break;
-		case TransactionStatus::Offline:
-			status = tr("Offline (%1 confirmations)").arg(wtx->status.depth);
-			break;
-		case TransactionStatus::Unconfirmed:
-			status = tr("Unconfirmed (%1 of %2 confirmations)").arg(wtx->status.depth).arg(TransactionRecord::NumConfirmations);
-			break;
-		case TransactionStatus::HaveConfirmations:
-			status = tr("Confirmed (%1 confirmations)").arg(wtx->status.depth);
-			break;
-		}
-	}
+    else
+    {
+        switch(wtx->status.status)
+        {
+        case TransactionStatus::OpenUntilBlock:
+            status = tr("Open for %n block(s)","",wtx->status.open_for);
+            break;
+        case TransactionStatus::OpenUntilDate:
+            status = tr("Open until %1").arg(GUIUtil::dateTimeStr(wtx->status.open_for));
+            break;
+        case TransactionStatus::Offline:
+            status = tr("Offline (%1 confirmations)").arg(wtx->status.depth);
+            break;
+        case TransactionStatus::Unconfirmed:
+            status = tr("Unconfirmed (%1 of %2 confirmations)").arg(wtx->status.depth).arg(TransactionRecord::NumConfirmations);
+            break;
+        case TransactionStatus::HaveConfirmations:
+            status = tr("Confirmed (%1 confirmations)").arg(wtx->status.depth);
+            break;
+        }
+    }
 
     return status;
 }
@@ -370,7 +370,7 @@ QString TransactionTableModel::formatTxType(const TransactionRecord *wtx) const
         return tr("Mined");
     case TransactionRecord::StakeGenesis:
         return tr("Genesis");
-	case TransactionRecord::StakeTrust:
+    case TransactionRecord::StakeTrust:
         return tr("Trust");
     default:
         return QString();

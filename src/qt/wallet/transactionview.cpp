@@ -1,9 +1,9 @@
 /*******************************************************************************************
- 
-			Hash(BEGIN(Satoshi[2010]), END(W.J.[2012])) == Videlicet[2014] ++
-   
+
+            Hash(BEGIN(Satoshi[2010]), END(W.J.[2012])) == Videlicet[2014] ++
+
  [Learn and Create] Viz. http://www.opensource.org/licenses/mit-license.php
-  
+
 *******************************************************************************************/
 
 #include "transactionview.h"
@@ -84,7 +84,7 @@ TransactionView::TransactionView(QWidget *parent) :
     typeWidget->addItem(tr("To yourself"), TransactionFilterProxy::TYPE(TransactionRecord::SendToSelf));
     typeWidget->addItem(tr("Mined"), TransactionFilterProxy::TYPE(TransactionRecord::Generated));
     typeWidget->addItem(tr("Genesis"), TransactionFilterProxy::TYPE(TransactionRecord::StakeGenesis));
-	typeWidget->addItem(tr("Trust"), TransactionFilterProxy::TYPE(TransactionRecord::StakeTrust));
+    typeWidget->addItem(tr("Trust"), TransactionFilterProxy::TYPE(TransactionRecord::StakeTrust));
     typeWidget->addItem(tr("Other"), TransactionFilterProxy::TYPE(TransactionRecord::Other));
 
     hlayout->addWidget(typeWidget);
@@ -138,7 +138,7 @@ TransactionView::TransactionView(QWidget *parent) :
     QAction *showDetailsAction = new QAction(tr("Show details..."), this);
 
     contextMenu = new QMenu();
-	contextMenu->setStyleSheet("background-color: #F7F7F7; selection-background-color: #084B8A;");
+    contextMenu->setStyleSheet("background-color: #F7F7F7; selection-background-color: #084B8A;");
     contextMenu->addAction(copyAddressAction);
     contextMenu->addAction(copyLabelAction);
     contextMenu->addAction(copyAmountAction);
@@ -186,11 +186,11 @@ void TransactionView::setModel(WalletModel *model)
                 TransactionTableModel::Date, 120);
         transactionView->horizontalHeader()->resizeSection(
                 TransactionTableModel::Type, 120);
-				#if QT_VERSION < QT_VERSION_CHECK(5,0,0)
-				 transactionView->horizontalHeader()->setResizeMode(
-				#else
-				 transactionView->horizontalHeader()->setSectionResizeMode(
-				#endif
+                #if QT_VERSION < QT_VERSION_CHECK(5,0,0)
+                 transactionView->horizontalHeader()->setResizeMode(
+                #else
+                 transactionView->horizontalHeader()->setSectionResizeMode(
+                #endif
                 TransactionTableModel::ToAddress, QHeaderView::Stretch);
         transactionView->horizontalHeader()->resizeSection(
                 TransactionTableModel::Amount, 100);

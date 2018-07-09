@@ -1,9 +1,9 @@
 /*******************************************************************************************
- 
-			Hash(BEGIN(Satoshi[2010]), END(W.J.[2012])) == Videlicet[2014] ++
-   
+
+            Hash(BEGIN(Satoshi[2010]), END(W.J.[2012])) == Videlicet[2014] ++
+
  [Learn and Create] Viz. http://www.opensource.org/licenses/mit-license.php
-  
+
 *******************************************************************************************/
 
 #include "overviewpage.h"
@@ -53,11 +53,11 @@ public:
         bool confirmed = index.data(TransactionTableModel::ConfirmedRole).toBool();
         QVariant value = index.data(Qt::ForegroundRole);
         QColor foreground = option.palette.color(QPalette::Text);
-		#if QT_VERSION < QT_VERSION_CHECK(5,0,0)
-		 if(qVariantCanConvert<QColor>(value))
-		#else
-		 if(value.canConvert(QMetaType::QColor))
-		#endif
+        #if QT_VERSION < QT_VERSION_CHECK(5,0,0)
+         if(qVariantCanConvert<QColor>(value))
+        #else
+         if(value.canConvert(QMetaType::QColor))
+        #endif
         {
             foreground = qvariant_cast<QColor>(value);
         }
@@ -107,21 +107,21 @@ OverviewPage::OverviewPage(QWidget *parent) :
     currentBalance(-1),
     currentStake(0),
     currentUnconfirmedBalance(-1),
-	currentImmatureBalance(0),
+    currentImmatureBalance(0),
     txdelegate(new TxViewDelegate())
 {
     ui->setupUi(this);
 
     // Balance: <balance>
-	QFont* balancesHeaderFont = new QFont("Monospace");
+    QFont* balancesHeaderFont = new QFont("Monospace");
 //balancesHeaderFont->setItalic(true);
-	balancesHeaderFont->setPixelSize(11);
-	
-	QFont* balancesFont = new QFont("Monospace");
-	balancesFont->setBold(true);
-	balancesFont->setPixelSize(11);
-	
-	ui->labelBalanceHeader->setFont(*balancesHeaderFont);
+    balancesHeaderFont->setPixelSize(11);
+
+    QFont* balancesFont = new QFont("Monospace");
+    balancesFont->setBold(true);
+    balancesFont->setPixelSize(11);
+
+    ui->labelBalanceHeader->setFont(*balancesHeaderFont);
     ui->labelBalance->setFont(*balancesFont);
     ui->labelBalance->setToolTip(tr("Your current balance, pending balances, immature, and stake balances. Values of 0 ommited."));
     ui->labelBalance->setTextInteractionFlags(Qt::TextSelectableByMouse|Qt::TextSelectableByKeyboard);
@@ -150,31 +150,31 @@ void OverviewPage::setBalance(qint64 balance, qint64 stake, qint64 unconfirmedBa
     currentBalance = balance;
     currentStake = stake;
     currentUnconfirmedBalance = unconfirmedBalance;
-	currentImmatureBalance = immatureBalance;
-	
-	QString labelHeaderValue = "Balance:";
-	QString labelBalanceValue = NexusUnits::format(unit, balance);
-	
-	if(stake > 0)
-	{
-		labelHeaderValue += "\n\nStake:";
-		labelBalanceValue += "\n\n" + NexusUnits::format(unit, stake);
-	}
-	
-	if(unconfirmedBalance > 0)
-	{
-		labelHeaderValue += "\n\nUnconfirmed:";
-		labelBalanceValue += "\n\n" + NexusUnits::format(unit, unconfirmedBalance);
-	}
-	
-	if(immatureBalance > 0)
-	{
-		labelHeaderValue += "\n\nImmature:";
-		labelBalanceValue += "\n\n" + NexusUnits::format(unit, immatureBalance);
-	}
-	
-	ui->labelBalanceHeader->setText(labelHeaderValue + "\n");
-	ui->labelBalance->setText(labelBalanceValue + "\n");
+    currentImmatureBalance = immatureBalance;
+
+    QString labelHeaderValue = "Balance:";
+    QString labelBalanceValue = NexusUnits::format(unit, balance);
+
+    if(stake > 0)
+    {
+        labelHeaderValue += "\n\nStake:";
+        labelBalanceValue += "\n\n" + NexusUnits::format(unit, stake);
+    }
+
+    if(unconfirmedBalance > 0)
+    {
+        labelHeaderValue += "\n\nUnconfirmed:";
+        labelBalanceValue += "\n\n" + NexusUnits::format(unit, unconfirmedBalance);
+    }
+
+    if(immatureBalance > 0)
+    {
+        labelHeaderValue += "\n\nImmature:";
+        labelBalanceValue += "\n\n" + NexusUnits::format(unit, immatureBalance);
+    }
+
+    ui->labelBalanceHeader->setText(labelHeaderValue + "\n");
+    ui->labelBalance->setText(labelBalanceValue + "\n");
 }
 
 void OverviewPage::setNumTransactions(int count)

@@ -1,9 +1,9 @@
 /*******************************************************************************************
- 
-			Hash(BEGIN(Satoshi[2010]), END(W.J.[2012])) == Videlicet[2014] ++
-   
+
+            Hash(BEGIN(Satoshi[2010]), END(W.J.[2012])) == Videlicet[2014] ++
+
  [Learn and Create] Viz. http://www.opensource.org/licenses/mit-license.php
-  
+
 *******************************************************************************************/
 
 #include "transactiondesc.h"
@@ -241,7 +241,7 @@ QString TransactionDesc::toHTML(Wallet::CWallet *wallet, Wallet::CWalletTx &wtx)
         //
         // Debug view
         //
-		
+
         if (fDebug)
         {
             strHTML += "<hr><br>Debug information<br><br>";
