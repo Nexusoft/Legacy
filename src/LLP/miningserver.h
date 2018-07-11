@@ -322,7 +322,7 @@ namespace LLP
 
             if(Core::IsInitialBlockDownload() )
             {
-                printf("%%%%%%%%%% Mining LLP: Rejected Request...Downloadning BLockchain\n"); return false;
+                printf("%%%%%%%%%% Mining LLP: Rejected Request...Downloading BLockchain\n"); return false;
             }
 
             if( pwalletMain->IsLocked())
