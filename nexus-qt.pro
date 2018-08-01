@@ -468,10 +468,6 @@ macx:DEFINES += MAC_OSX MSG_NOSIGNAL=0 Q_WS_MAC
 macx:ICON = src/qt/res/icons/nexus.icns
 macx:RC_ICONS = src/qt/res/icons/nexus.icns
 
-#Linux build helper
-!macx:!win32:DEFINES += LINUX
-!macx:!win32:LIBS += -lrt
-
 #Build final Includes and Libraries
 INCLUDEPATH += $$BOOST_INCLUDE_PATH \
 	$$BDB_INCLUDE_PATH \
@@ -498,8 +494,9 @@ contains(ARCH_TEST, ARCH) {
 }
 
 #Fix for linux dynamic linking
+!macx:!win32:DEFINES += LINUX
 !macx:!win32:contains(RELEASE, 1) {
-	LIBS+=-Wl,-Bdynamic -ldl
+	LIBS+=-Wl,-Bdynamic -ldl -lrt
 }
 #Perform Translations
 !build_pass:system($$QMAKE_LRELEASE -silent $$TRANSLATIONS)
