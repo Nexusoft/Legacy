@@ -60,12 +60,21 @@ namespace Core
 
     int GetNumBlocksOfPeers() { return cPeerBlockCounts.Majority(); }
 
-
+    static unsigned int nLastBlockTime = 0;
+    static CBlockIndex* pindexLast;
+    
     bool IsInitialBlockDownload()
     {
         if(!pindexBest)
             return true;
-        return (pindexBest->GetBlockTime() < GetUnifiedTimestamp() - 20 * 60);
+        
+        if(pindexBest != pindexLast)
+        {
+            pindexLast = pindexBest;
+            nLastBlockTime = GetUnifiedTimestamp();
+        }
+        
+        return (pindexBest->GetBlockTime() < GetUnifiedTimestamp() - 20 * 60 || GetUnifiedTimestamp() - nLastBlockTime > 60);
     }
 
 
