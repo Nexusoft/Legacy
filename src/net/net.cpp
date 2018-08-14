@@ -1438,7 +1438,7 @@ namespace Net
         #endif
             
             
-    #ifdef TCP_MAXSEG
+    #if !defined(MAC_OSX) 
         int nMaxSeg = 1300;
         //socklen_t nSegSize = sizeof(nMaxSeg);
     #ifdef WIN32
