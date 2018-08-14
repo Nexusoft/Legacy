@@ -230,6 +230,7 @@ namespace Net
                     return false;
                 }
                 
+    #ifdef TCP_MAXSEG
                 int nMaxSeg = 1300;
                 //socklen_t nSegSize = sizeof(nMaxSeg);
     #ifdef WIN32
@@ -242,7 +243,8 @@ namespace Net
                     closesocket(hSocket);
                     return false;
                 }
-                
+    #endif
+    
                 if (nRet != 0)
                 {
                     printf("connect() failed after select(): %s\n",strerror(nRet));

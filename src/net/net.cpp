@@ -1437,6 +1437,8 @@ namespace Net
             setsockopt(hListenSocket, SOL_SOCKET, SO_REUSEADDR, (void*)&nOne, sizeof(int));
         #endif
             
+            
+    #ifdef TCP_MAXSEG
         int nMaxSeg = 1300;
         //socklen_t nSegSize = sizeof(nMaxSeg);
     #ifdef WIN32
@@ -1450,6 +1452,7 @@ namespace Net
                 
                 return false;
             }
+    #endif
 
         #ifdef WIN32
             // Set to nonblocking, incoming connections will also inherit this
