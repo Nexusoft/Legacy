@@ -62,19 +62,19 @@ namespace Core
 
     static unsigned int nLastBlockTime = 0;
     static CBlockIndex* pindexLast = 0;
-    
+
     bool IsInitialBlockDownload()
     {
         if(!pindexBest)
             return true;
-        
+
         if(pindexBest != pindexLast)
         {
             pindexLast = pindexBest;
             nLastBlockTime = GetUnifiedTimestamp();
         }
-        
-        return (pindexBest->GetBlockTime() < GetUnifiedTimestamp() - 20 * 60 && GetUnifiedTimestamp() - nLastBlockTime < 60);
+
+        return (pindexBest->GetBlockTime() < GetUnifiedTimestamp() - 20 * 60 && GetUnifiedTimestamp() - nLastBlockTime < 600);
     }
 
 
