@@ -2901,7 +2901,7 @@ namespace Net
         else if (nStatus == 400) cStatus = "Bad Request";
         else if (nStatus == 403) cStatus = "Forbidden";
         else if (nStatus == 404) cStatus = "Not Found";
-        else if (nStatus == 500) cStatus = "Internal Server Error";
+        else if (nStatus == 500) cStatus = strMsg.c_str();
         else cStatus = "";
         return strprintf(
                 "HTTP/1.1 %d %s\r\n"

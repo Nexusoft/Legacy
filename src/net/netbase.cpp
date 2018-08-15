@@ -229,22 +229,18 @@ namespace Net
                     closesocket(hSocket);
                     return false;
                 }
-                
-    #if !defined(MAC_OSX)
+
+    #if !defined(MAC_OSX) && !defined(WIN32)
                 int nMaxSeg = 1300;
                 //socklen_t nSegSize = sizeof(nMaxSeg);
-    #ifdef WIN32
-                if(setsockopt(hSocket, SOL_SOCKET, TCP_MAXSEG,(char *)(&nMaxSeg), &nSegSize) == SOCKET_ERROR)
-    #else
                 if(setsockopt(hSocket, SOL_SOCKET, TCP_MAXSEG, &nMaxSeg, sizeof(nMaxSeg)) == SOCKET_ERROR)
-    #endif
                 {
                     printf("setsockopt() for connection failed: %i\n", WSAGetLastError());
                     closesocket(hSocket);
                     return false;
                 }
     #endif
-    
+
                 if (nRet != 0)
                 {
                     printf("connect() failed after select(): %s\n",strerror(nRet));

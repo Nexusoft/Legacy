@@ -1436,20 +1436,16 @@ namespace Net
             // the program was closed and restarted.  Not an issue on windows.
             setsockopt(hListenSocket, SOL_SOCKET, SO_REUSEADDR, (void*)&nOne, sizeof(int));
         #endif
-            
-            
-    #if !defined(MAC_OSX) 
+
+
+    #if !defined(MAC_OSX) && !defined(WIN32)
         int nMaxSeg = 1300;
         //socklen_t nSegSize = sizeof(nMaxSeg);
-    #ifdef WIN32
-            if(setsockopt(hListenSocket, SOL_SOCKET, TCP_MAXSEG,(char *)(&nMaxSeg), &nSegSize) == SOCKET_ERROR)
-    #else
             if(setsockopt(hListenSocket, SOL_SOCKET, TCP_MAXSEG, &nMaxSeg, sizeof(nMaxSeg)) == SOCKET_ERROR)
-    #endif
             {
                 printf("setsockopt() for connection failed: %i\n", WSAGetLastError());
                 closesocket(hListenSocket);
-                
+
                 return false;
             }
     #endif
