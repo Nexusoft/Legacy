@@ -790,6 +790,15 @@ namespace Core
                 pto->nLastPing = GetUnifiedTimestamp();
             }
 
+            //help with synchronizing
+            if(GetUnifiedTimestamp() - pto->nLastGetBlocks > 30 && IsInitialBlockDownload())
+            {
+                pto->nLastGetBlocks = GetUnifiedTimestamp();
+                pto->PushGetBlocks(pindexBest, uint1024(0));
+
+                printf("##### No blocks in thirty seconds, requesting getblocks from %s...\n", hashBestChain.ToString().substr(0, 20).c_str());
+            }
+
             // Resend wallet transactions that haven't gotten in a block yet
             ResendWalletTransactions();
 
