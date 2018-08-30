@@ -143,6 +143,7 @@ namespace Core
 
     /** Repair Mode. **/
     extern bool fRepairMode;
+    extern int nBestHeightSeen;
 
     /** Map to keep track of the addresses and their corresponding Transactions. **/
     extern std::map<uint256, uint64> mapAddressTransactions;

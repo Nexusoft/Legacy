@@ -74,7 +74,7 @@ namespace Core
             nLastBlockTime = GetUnifiedTimestamp();
         }
 
-        return (pindexBest->GetBlockTime() < GetUnifiedTimestamp() - 20 * 60 && GetUnifiedTimestamp() - nLastBlockTime < 60);
+        return (pindexBest->GetBlockTime() < GetUnifiedTimestamp() - 5 * 60 && GetUnifiedTimestamp() - nLastBlockTime < 5 * 60);
     }
 
 
@@ -834,6 +834,9 @@ namespace Core
 
     bool CBlock::AcceptBlock()
     {
+        if(!fRepairMode)
+            print();
+
         /** Check for Duplicate Block. **/
         uint1024 hash = GetHash();
         if (mapBlockIndex.count(hash))
@@ -864,7 +867,7 @@ namespace Core
 
 
         /* Check that Block is Descendant of Hardened Checkpoints. */
-        if(!IsInitialBlockDownload() && pindexPrev && !IsDescendant(pindexPrev))
+        if(!fRepairMode && !IsInitialBlockDownload() && pindexPrev && !IsDescendant(pindexPrev))
             return error("AcceptBlock() : Not a descendant of Last Checkpoint");
 
 
@@ -938,6 +941,7 @@ namespace Core
                     return error("ProcessBlock() : CheckBlock FAILED");
 
                 printf("\u001b[31;1m ProcessBlock() : Mutated Block Signatures Detected... Rewriting \x1b[0m \n");
+                pblock->print();
 
                 /* Get current block index. */
                 CBlockIndex* pindex = mapBlockIndex[hash];

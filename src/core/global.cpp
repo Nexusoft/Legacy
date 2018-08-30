@@ -238,6 +238,7 @@ namespace Core
     double dInterestRate = 0.005;
 
     bool fRepairMode = false;
+    int nBestHeightSeen = 0;
 
 
     uint64 nLastBlockTx = 0;
