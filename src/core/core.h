@@ -141,6 +141,9 @@ namespace Core
     /** Standard Library Global Externals **/
     extern std::map<uint1024, CBlock*> mapOrphanBlocks;
 
+    /** Repair Mode. **/
+    extern bool fRepairMode;
+
     /** Map to keep track of the addresses and their corresponding Transactions. **/
     extern std::map<uint256, uint64> mapAddressTransactions;
     extern std::map<uint256, std::vector<std::pair<bool, uint512> > > mapRichList;

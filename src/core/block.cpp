@@ -992,8 +992,11 @@ namespace Core
         {
 
             /* Check validation error message only if appending to head of the chain. */
-            if(pblock->strValidationError != "" && pblock->hashPrevBlock == hashBestChain)
+            if(pblock->strValidationError != "")
             {
+                printf("\u001b[31;1m ProcessBlock() : Validation Error... Entering Repair-Mode \x1b[0m \n");
+                fRepairMode = true;
+
                 std::vector<Net::CInv> vInv;
 
                 /* Check last two blocks for invalidity. */
@@ -1143,9 +1146,6 @@ namespace Core
 
             return true;
         }
-
-        if (!pblock->AcceptBlock())
-            return error("ProcessBlock() : AcceptBlock FAILED");
 
         // Recursively process any orphan blocks that depended on this one
         vector<uint1024> vWorkQueue;
