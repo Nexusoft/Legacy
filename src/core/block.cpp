@@ -1021,7 +1021,7 @@ namespace Core
             /* Check validation error message only if appending to head of the chain. */
             if(pblock->strValidationError != "")
             {
-                printf("\u001b[31;1m ProcessBlock() : Validation Error... Entering Repair-Mode \x1b[0m \n");
+                printf("\u001b[31;1m ProcessBlock() : Validation Error %s... Entering Repair-Mode \x1b[0m \n", pblock->strValidationError.c_str());
                 fRepairMode = true;
 
                 std::vector<Net::CInv> vInv;

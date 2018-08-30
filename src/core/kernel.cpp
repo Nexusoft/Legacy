@@ -696,7 +696,10 @@ namespace Core
                 return error("CTrustPool::Disconnect() : Key %s Doesn't Exist in Trust Pool\n", cKey.ToString().substr(0, 20).c_str());
 
             /** Remove the Trust Key from the Trust Pool. **/
-            mapTrustKeys.erase(cKey);
+            std::vector< std::pair<uint1024, bool> >::iterator itFalse = std::find(mapTrustKeys[cKey].hashPrevBlocks.begin(), mapTrustKeys[cKey].hashPrevBlocks.end(), std::make_pair(cBlock.GetHash(), true) );
+
+            if(itFalse != mapTrustKeys[cKey].hashPrevBlocks.end())
+                (*itFalse).second = false;
 
             if(GetArg("-verbose", 0) >= 2)
                 printf("CTrustPool::Disconnect() : Removed Genesis Trust Key %s From Trust Pool\n", cKey.ToString().substr(0, 20).c_str());
