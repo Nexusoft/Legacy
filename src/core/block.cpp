@@ -884,8 +884,8 @@ namespace Core
 
 
         /* Check that Block is Descendant of Hardened Checkpoints. */
-        if(!fRepairMode && !IsInitialBlockDownload() && pindexPrev && !IsDescendant(pindexPrev))
-            return error("AcceptBlock() : Not a descendant of Last Checkpoint");
+        //if(!fRepairMode && !IsInitialBlockDownload() && pindexPrev && !IsDescendant(pindexPrev))
+        //    return error("AcceptBlock() : Not a descendant of Last Checkpoint");
 
 
         /** Check the Coinbase Transactions in Block Version 3. **/
