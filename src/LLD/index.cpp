@@ -166,7 +166,7 @@ namespace LLD
 
         Core::CBlockIndex* pindexFork = NULL;
 
-        uint1024 hashBlock = Core::hashGenesisBlock;
+        uint1024 hashBlock = Core::hashBestChain;
         while(!fRequestShutdown)
         {
             Core::CDiskBlockIndex diskindex;
@@ -206,98 +206,87 @@ namespace LLD
 
             /** Detect the Genesis Block on Loading. */
             if(hashBlock == Core::hashGenesisBlock)
-                Core::pindexGenesisBlock = pindexNew;
-            else
             {
+                Core::pindexGenesisBlock = pindexNew;
+
+                break;
+            }
+
+            hashBlock = diskindex.hashPrev;
+        }
+
+        Core::CBlockIndex* pindexNew = Core::pindexGenesisBlock;
+        while(pindexNew->pnext)
+        {
+            //TODO: Optimize Correctly
+            if(GetBoolArg("-richlist", false))
+            {
+                Core::CBlock block;
+                if(!block.ReadFromDisk(pindexNew))
+                    continue;
+
+                /** Grab the transactions for the block and set the address balances. **/
+                for(int nTx = 0; nTx < block.vtx.size(); nTx++)
+                {
+                    for(int nOut = 0; nOut < block.vtx[nTx].vout.size(); nOut++)
+                    {
+                        Wallet::NexusAddress cAddress;
+                        if(!ExtractAddress(block.vtx[nTx].vout[nOut].scriptPubKey, cAddress))
+                            continue;
+
+                        Core::mapAddressTransactions[cAddress.GetHash256()] += block.vtx[nTx].vout[nOut].nValue;
+
+                        if(!Core::mapRichList.count(cAddress.GetHash256()))
+                            Core::mapRichList[cAddress.GetHash256()] = { std::make_pair(block.vtx[nTx].IsCoinBase(), block.vtx[nTx].GetHash()) };
+                        else
+                            Core::mapRichList[cAddress.GetHash256()].push_back(std::make_pair(block.vtx[nTx].IsCoinBase(), block.vtx[nTx].GetHash()));
+                    }
+
+                    if(!block.vtx[nTx].IsCoinBase())
+                    {
+                        for(auto txin : block.vtx[nTx].vin)
+                        {
+                            if(txin.IsStakeSig())
+                                continue;
+
+                            Core::CTransaction tx;
+                            Core::CTxIndex txind;
+
+                            if(!ReadTxIndex(txin.prevout.hash, txind))
+                                continue;
+
+                            if(!tx.ReadFromDisk(txind.pos))
+                                continue;
+
+                            Wallet::NexusAddress cAddress;
+                            if(!ExtractAddress(tx.vout[txin.prevout.n].scriptPubKey, cAddress))
+                                continue;
+
+                            Core::mapAddressTransactions[cAddress.GetHash256()] = std::max((uint64)0, Core::mapAddressTransactions[cAddress.GetHash256()] - tx.vout[txin.prevout.n].nValue);
+
+                            if(!Core::mapRichList.count(cAddress.GetHash256()))
+                                Core::mapRichList[cAddress.GetHash256()] = { std::make_pair(block.vtx[nTx].IsCoinBase(), tx.GetHash()) };
+                            else
+                                Core::mapRichList[cAddress.GetHash256()].push_back(std::make_pair(block.vtx[nTx].IsCoinBase(), tx.GetHash()));
+                        }
+                    }
+                }
+
+
                 //TODO: Trust key accept with no cBlock (CBlockIndex instead)
                 if(pindexNew->IsProofOfStake())
                 {
                     Core::CBlock block;
                     if(!block.ReadFromDisk(pindexNew))
-                    {
-                        pindexFork = pindexNew;
                         error("CTxDB::LoadBlockIndex() : Failed to Read Block");
 
-                        Core::mapBlockIndex.erase(diskindex.GetBlockHash());
-
-                        break;
-                    }
-
                     if(!Core::cTrustPool.Accept(block, true))
-                    {
-                        pindexFork = pindexNew;
-                        error("CTxDB::LoadBlockIndex() : Failed To Accept Trust Key Block.");
-
-                        Core::mapBlockIndex.erase(diskindex.GetBlockHash());
-
-                        break;
-                    }
+                        return error("CTxDB::LoadBlockIndex() : Failed To Accept Trust Key Block.");
 
                     if(!Core::cTrustPool.Connect(block, true))
-                    {
-                        pindexFork = pindexNew;
-                        error("CTxDB::LoadBlockIndex() : Failed To Connect Trust Key Block.");
-
-                        Core::mapBlockIndex.erase(diskindex.GetBlockHash());
-
-                        break;
-                    }
+                        return error("CTxDB::LoadBlockIndex() : Failed To Connect Trust Key Block.");
                 }
 
-                //TODO: Optimize Correctly
-                if(GetBoolArg("-richlist", false))
-                {
-                    Core::CBlock block;
-                    if(!block.ReadFromDisk(pindexNew))
-                        continue;
-
-                    /** Grab the transactions for the block and set the address balances. **/
-                    for(int nTx = 0; nTx < block.vtx.size(); nTx++)
-                    {
-                        for(int nOut = 0; nOut < block.vtx[nTx].vout.size(); nOut++)
-                        {
-                            Wallet::NexusAddress cAddress;
-                            if(!ExtractAddress(block.vtx[nTx].vout[nOut].scriptPubKey, cAddress))
-                                continue;
-
-                            Core::mapAddressTransactions[cAddress.GetHash256()] += block.vtx[nTx].vout[nOut].nValue;
-
-                            if(!Core::mapRichList.count(cAddress.GetHash256()))
-                                Core::mapRichList[cAddress.GetHash256()] = { std::make_pair(block.vtx[nTx].IsCoinBase(), block.vtx[nTx].GetHash()) };
-                            else
-                                Core::mapRichList[cAddress.GetHash256()].push_back(std::make_pair(block.vtx[nTx].IsCoinBase(), block.vtx[nTx].GetHash()));
-                        }
-
-                        if(!block.vtx[nTx].IsCoinBase())
-                        {
-                            for(auto txin : block.vtx[nTx].vin)
-                            {
-                                if(txin.IsStakeSig())
-                                    continue;
-
-                                Core::CTransaction tx;
-                                Core::CTxIndex txind;
-
-                                if(!ReadTxIndex(txin.prevout.hash, txind))
-                                    continue;
-
-                                if(!tx.ReadFromDisk(txind.pos))
-                                    continue;
-
-                                Wallet::NexusAddress cAddress;
-                                if(!ExtractAddress(tx.vout[txin.prevout.n].scriptPubKey, cAddress))
-                                    continue;
-
-                                Core::mapAddressTransactions[cAddress.GetHash256()] = std::max((uint64)0, Core::mapAddressTransactions[cAddress.GetHash256()] - tx.vout[txin.prevout.n].nValue);
-
-                                if(!Core::mapRichList.count(cAddress.GetHash256()))
-                                    Core::mapRichList[cAddress.GetHash256()] = { std::make_pair(block.vtx[nTx].IsCoinBase(), tx.GetHash()) };
-                                else
-                                    Core::mapRichList[cAddress.GetHash256()].push_back(std::make_pair(block.vtx[nTx].IsCoinBase(), tx.GetHash()));
-                            }
-                        }
-                    }
-                }
             }
 
             /** Add the Pending Checkpoint into the Blockchain. **/
@@ -307,7 +296,7 @@ namespace LLD
                 pindexNew->PendingCheckpoint = pindexNew->pprev->PendingCheckpoint;
 
             Core::pindexBest  = pindexNew;
-            hashBlock = diskindex.hashNext;
+            pindexNew = pindexNew->pnext;
         }
         if(fRequestShutdown)
             return false;
