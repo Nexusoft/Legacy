@@ -35,6 +35,7 @@ std::map<std::string, int> MAP_TIME_DATA;
 static const std::vector<std::string> DNS_SeedNodes =
 {
     "node1.nexusearth.com",
+    "node1.nexusoft.io",
     "node1.mercuryminer.com",
     "node1.nexusminingpool.com",
     "node1.nexus2.space",
@@ -45,6 +46,7 @@ static const std::vector<std::string> DNS_SeedNodes =
     "node1.nexplorer.io",
     "node1.positivism.trade",
     "node2.nexusearth.com",
+    "node2.nexusoft.io",
     "node2.mercuryminer.com",
     "node2.nexusminingpool.com",
     "node2.nexus2.space",
@@ -53,6 +55,7 @@ static const std::vector<std::string> DNS_SeedNodes =
     "node2.nxs.efficienthash.com",
     "node2.henryskinner.net",
     "node3.nexusearth.com",
+    "node3.nexusoft.io",
     "node3.mercuryminer.com",
     "node3.nexusminingpool.com",
     "node3.nexus2.space",
@@ -61,6 +64,7 @@ static const std::vector<std::string> DNS_SeedNodes =
     "node3.nxs.efficienthash.com",
     "node3.henryskinner.net",
     "node4.nexusearth.com",
+    "node4.nexusoft.io",
     "node4.mercuryminer.com",
     "node4.nexus2.space",
     "node4.barbequemedia.com",
