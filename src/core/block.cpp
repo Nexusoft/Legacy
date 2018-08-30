@@ -382,6 +382,9 @@ namespace Core
 
                 if (!block.ConnectBlock(indexdb, pindex))
                 {
+                    if(block.strValidationError != "")
+                        strValidationError = block.strValidationError;
+
                     indexdb.TxnAbort();
                     return error("CBlock::SetBestChain() : ConnectBlock %s Height %u failed", pindex->GetBlockHash().ToString().substr(0,20).c_str(), pindex->nHeight);
                 }
