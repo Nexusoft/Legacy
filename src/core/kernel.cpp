@@ -572,8 +572,7 @@ namespace Core
         uint576 cKey;
         cKey.SetBytes(vKeys[0]);
 
-
-        if(cBlock.GetHash().ToString() == "000003c49a9388ff86d7f916a1e030932ddae05af530b1feba580160fd207099746fa1916d81ec43245f347e0d9849e22df2a9245da2df1f983c2bbe5246db8bdbbf443189a9b9ef8c502a9c5c0d1c2f5f7220d6f507c489236a17dd441e1bc881c91f6408efd0fa50208bb3f2017b51a8f4ebc8c88258225c7a00ce29594416")
+        if(cBlock.nHeight == 2175725)
             cBlock.print();
 
         std::string hex = HexStr(vKeys[0].begin(), vKeys[0].end());
