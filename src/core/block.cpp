@@ -945,6 +945,7 @@ namespace Core
     }
 
 
+    static std::map<uint1024, std::vector<Net::CNode*> > mapInvalidNodes;
     bool ProcessBlock(Net::CNode* pfrom, CBlock* pblock)
     {
         // Check for duplicate
@@ -985,6 +986,11 @@ namespace Core
             }
             else if(fRepairMode)
             {
+                //eliminate nodes
+                if(mapInvalidBlocks.count(hash) && mapInvalidBlocks[hash] == pblock->SignatureHash())
+                {
+                    mapInvalidNodes[hash].push_back(pfrom);
+                }
                 //ask your neighborhood nodes for the list of possible invalid blocks
                 std::vector<Net::CInv> vInv;
                 for(auto it = mapInvalidBlocks.begin(); it != mapInvalidBlocks.end(); it++)
@@ -992,7 +998,19 @@ namespace Core
 
                 LOCK(Net::cs_vNodes);
                 for(auto pnode : Net::vNodes)
+                {
+                    for(auto inv : vInv)
+                    {
+                        if(mapInvalidNodes.count(inv.hash))
+                        {
+                            for(auto node : mapInvalidNodes[inv.hash])
+                                if(pnode == node)
+                                    continue;
+                        }
+                    }
+
                     pnode->PushMessage("getdata", vInv);
+                }
             }
             else
                 return error("ProcessBlock() : already have block %d %s", mapBlockIndex[hash]->nHeight, hash.ToString().substr(0,20).c_str());
