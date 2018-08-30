@@ -388,6 +388,7 @@ namespace Core
                     indexdb.TxnAbort();
 
                     /* Revert the trust keys if failed to disconnect. */
+                    reverse(vDisconnect.begin(), vDisconnect.end());
                     for(auto pindex : vDisconnect)
                     {
                         CBlock block;
