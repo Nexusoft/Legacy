@@ -74,7 +74,7 @@ namespace Core
             nLastBlockTime = GetUnifiedTimestamp();
         }
 
-        return (pindexBest->GetBlockTime() < GetUnifiedTimestamp() - 5 * 60 && GetUnifiedTimestamp() - nLastBlockTime < 5 * 60) || (nBestHeight < nBestHeightSeen);
+        return (pindexBest->GetBlockTime() < GetUnifiedTimestamp() - 10 * 60 && GetUnifiedTimestamp() - nLastBlockTime < 60);
     }
 
 
@@ -884,8 +884,8 @@ namespace Core
 
 
         /* Check that Block is Descendant of Hardened Checkpoints. */
-        //if(!fRepairMode && !IsInitialBlockDownload() && pindexPrev && !IsDescendant(pindexPrev))
-        //    return error("AcceptBlock() : Not a descendant of Last Checkpoint");
+        if(!fRepairMode && !IsInitialBlockDownload() && pindexPrev && !IsDescendant(pindexPrev))
+            return error("AcceptBlock() : Not a descendant of Last Checkpoint");
 
 
         /** Check the Coinbase Transactions in Block Version 3. **/
