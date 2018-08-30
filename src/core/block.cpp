@@ -983,9 +983,24 @@ namespace Core
 
                 return true;
             }
+            else if(fRepairMode)
+            {
+                //ask your neighborhood nodes for the list of possible invalid blocks
+                std::vector<Net::CInv> vInv;
+                for(auto it = mapInvalidBlocks.begin(); it != mapInvalidBlocks.end(); it++)
+                    vInv.push_back(Net::CInv(Net::MSG_BLOCK, it->first));
+
+                LOCK(Net::cs_vNodes);
+                for(auto pnode : Net::vNodes)
+                    pnode->PushMessage("getdata", vInv);
+            }
             else
                 return error("ProcessBlock() : already have block %d %s", mapBlockIndex[hash]->nHeight, hash.ToString().substr(0,20).c_str());
         }
+
+        /* Skip all blocks if in repair mode. */
+        if(fRepairMode)
+            return false;
 
         if (mapOrphanBlocks.count(hash))
             return error("ProcessBlock() : already have block (orphan) %s", hash.ToString().substr(0,20).c_str());
@@ -999,7 +1014,7 @@ namespace Core
             nBestHeightSeen = pblock->nHeight;
 
         // If don't already have its previous block, shunt it off to holding area until we get it
-        if (!fRepairMode && !mapBlockIndex.count(pblock->hashPrevBlock))
+        if (!mapBlockIndex.count(pblock->hashPrevBlock))
         {
             if(GetArg("-verbose", 0) >= 0)
                 printf("ProcessBlock: ORPHAN BLOCK, prev=%s\n", pblock->hashPrevBlock.ToString().substr(0,20).c_str());
