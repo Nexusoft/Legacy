@@ -572,6 +572,12 @@ namespace Core
         uint576 cKey;
         cKey.SetBytes(vKeys[0]);
 
+        std::string hex = HexStr(vKeys[0].begin(), vKeys[0].end());
+        if(hex == "0300c097ff78557e23e3e71e26095477dabdff68c804993c82517c63a1e653d7edb62ab1537f57d00fba97a371f5177b1701e0abc298eb79eff8bb4e811fa8340ececcb792b69c6c77")
+        {
+            cBlock.print();
+        }
+
         /* Handle Genesis Transaction Rules. Genesis is checked after Trust Key Established. */
         if(cBlock.vtx[0].IsGenesis())
         {
