@@ -386,6 +386,19 @@ namespace Core
                         strValidationError = block.strValidationError;
 
                     indexdb.TxnAbort();
+
+                    /* Revert the trust keys if failed to disconnect. */
+                    for(auto pindex : vDisconnect)
+                    {
+                        CBlock block;
+                        if (!block.ReadFromDisk(pindex))
+                            return error("CBlock::SetBestChain() : ReadFromDisk for reset connect failed");
+
+                        /** Remove Transactions from Current Trust Keys **/
+                        if(block.IsProofOfStake() && !cTrustPool.Connect(block))
+                            return error("CBlock::SetBestChain() : Disconnect Failed to Restore Block %s", pindex->GetBlockHash().ToString().substr(0,20).c_str());
+                    }
+
                     return error("CBlock::SetBestChain() : ConnectBlock %s Height %u failed", pindex->GetBlockHash().ToString().substr(0,20).c_str(), pindex->nHeight);
                 }
 
@@ -906,7 +919,6 @@ namespace Core
 
             if(!cTrustPool.Accept(*this))
                 return DoS(50, error("AcceptBlock() : Unable to Accept Trust Key"));
-
         }
 
 
