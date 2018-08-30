@@ -636,280 +636,280 @@ namespace Core
 
 
 
-    bool CTransaction::DisconnectInputs(LLD::CIndexDB& indexdb)
-    {
-        // Relinquish previous transactions' spent pointers
-        if (!IsCoinBase())
-        {
-            for(int nIndex = (int) IsCoinStake(); nIndex < vin.size(); nIndex++)
-            {
-                CTxIn txin = vin[nIndex];
-                COutPoint prevout = txin.prevout;
+	bool CTransaction::DisconnectInputs(LLD::CIndexDB& indexdb)
+	{
+		// Relinquish previous transactions' spent pointers
+		if (!IsCoinBase())
+		{
+			for(int nIndex = (int) IsCoinStake(); nIndex < vin.size(); nIndex++)
+			{
+				CTxIn txin = vin[nIndex];
+				COutPoint prevout = txin.prevout;
 
-                // Get prev txindex from disk
-                CTxIndex txindex;
-                if (!indexdb.ReadTxIndex(prevout.hash, txindex))
-                    return error("DisconnectInputs() : ReadTxIndex failed");
+				// Get prev txindex from disk
+				CTxIndex txindex;
+				if (!indexdb.ReadTxIndex(prevout.hash, txindex))
+					return error("DisconnectInputs() : ReadTxIndex failed");
 
-                if (prevout.n >= txindex.vSpent.size())
-                    return error("DisconnectInputs() : prevout.n out of range");
+				if (prevout.n >= txindex.vSpent.size())
+					return error("DisconnectInputs() : prevout.n out of range");
 
-                // Mark outpoint as not spent
-                txindex.vSpent[prevout.n].SetNull();
+				// Mark outpoint as not spent
+				txindex.vSpent[prevout.n].SetNull();
 
-                // Write back
-                if (!indexdb.UpdateTxIndex(prevout.hash, txindex))
-                    return error("DisconnectInputs() : UpdateTxIndex failed");
-            }
-        }
+				// Write back
+				if (!indexdb.UpdateTxIndex(prevout.hash, txindex))
+					return error("DisconnectInputs() : UpdateTxIndex failed");
+			}
+		}
 
-        // Remove transaction from index
-        // This can fail if a duplicate of this transaction was in a chain that got
-        // reorganized away. This is only possible if this transaction was completely
-        // spent, so erasing it would be a no-op anway.
-        indexdb.EraseTxIndex(*this);
+		// Remove transaction from index
+		// This can fail if a duplicate of this transaction was in a chain that got
+		// reorganized away. This is only possible if this transaction was completely
+		// spent, so erasing it would be a no-op anway.
+		indexdb.EraseTxIndex(*this);
 
-        return true;
-    }
-
-
-    bool CTransaction::FetchInputs(LLD::CIndexDB& indexdb, const map<uint512, CTxIndex>& mapTestPool,
-                                   bool fBlock, bool fMiner, MapPrevTx& inputsRet, bool& fInvalid)
-    {
-        // FetchInputs can return false either because we just haven't seen some inputs
-        // (in which case the transaction should be stored as an orphan)
-        // or because the transaction is malformed (in which case the transaction should
-        // be dropped).  If tx is definitely invalid, fInvalid will be set to true.
-        fInvalid = false;
-
-        if (IsCoinBase())
-            return true; // Coinbase transactions have no inputs to fetch.
-
-        for (unsigned int i = (int) IsCoinStake(); i < vin.size(); i++)
-        {
-            COutPoint prevout = vin[i].prevout;
-            if (inputsRet.count(prevout.hash))
-                continue; // Got it already
-
-            // Read txindex
-            CTxIndex& txindex = inputsRet[prevout.hash].first;
-            bool fFound = true;
-            if ((fBlock || fMiner) && mapTestPool.count(prevout.hash))
-            {
-                // Get txindex from current proposed changes
-                txindex = mapTestPool.find(prevout.hash)->second;
-            }
-            else
-            {
-                // Read txindex from txdb
-                fFound = indexdb.ReadTxIndex(prevout.hash, txindex);
-            }
-            if (!fFound && (fBlock || fMiner))
-                return fMiner ? false : error("FetchInputs() : %s prev tx %s index entry not found", GetHash().ToString().substr(0,10).c_str(),  prevout.hash.ToString().substr(0,10).c_str());
-
-            // Read txPrev
-            CTransaction& txPrev = inputsRet[prevout.hash].second;
-            if (!fFound || txindex.pos == CDiskTxPos(1,1,1))
-            {
-                // Get prev tx from single transactions in memory
-                {
-                    LOCK(mempool.cs);
-                    if (!mempool.exists(prevout.hash))
-                        return error("FetchInputs() : %s mempool Tx prev not found %s", GetHash().ToString().substr(0,10).c_str(),  prevout.hash.ToString().substr(0,10).c_str());
-                    txPrev = mempool.lookup(prevout.hash);
-                }
-                if (!fFound)
-                    txindex.vSpent.resize(txPrev.vout.size());
-            }
-            else
-            {
-                // Get prev tx from disk
-                if (!txPrev.ReadFromDisk(txindex.pos))
-                    return error("FetchInputs() : %s ReadFromDisk prev tx %s failed", GetHash().ToString().substr(0,10).c_str(),  prevout.hash.ToString().substr(0,10).c_str());
-            }
-        }
-
-        // Make sure all prevout.n's are valid:
-        for (unsigned int i = (int) IsCoinStake(); i < vin.size(); i++)
-        {
-            const COutPoint prevout = vin[i].prevout;
-            assert(inputsRet.count(prevout.hash) != 0);
-            const CTxIndex& txindex = inputsRet[prevout.hash].first;
-            const CTransaction& txPrev = inputsRet[prevout.hash].second;
-            if (prevout.n >= txPrev.vout.size() || prevout.n >= txindex.vSpent.size())
-            {
-                // Revisit this if/when transaction replacement is implemented and allows
-                // adding inputs:
-                fInvalid = true;
-                return DoS(100, error("FetchInputs() : %s prevout.n out of range %d %d %d prev tx %s\n%s", GetHash().ToString().substr(0,10).c_str(), prevout.n, txPrev.vout.size(), txindex.vSpent.size(), prevout.hash.ToString().substr(0,10).c_str(), txPrev.ToString().c_str()));
-            }
-        }
-
-        return true;
-    }
-
-    const CTxOut& CTransaction::GetOutputFor(const CTxIn& input, const MapPrevTx& inputs) const
-    {
-        MapPrevTx::const_iterator mi = inputs.find(input.prevout.hash);
-        if (mi == inputs.end())
-            throw std::runtime_error("CTransaction::GetOutputFor() : prevout.hash not found");
-
-        const CTransaction& txPrev = (mi->second).second;
-        if (input.prevout.n >= txPrev.vout.size())
-            throw std::runtime_error("CTransaction::GetOutputFor() : prevout.n out of range");
-
-        return txPrev.vout[input.prevout.n];
-    }
-
-    int64 CTransaction::GetValueIn(const MapPrevTx& inputs) const
-    {
-        if (IsCoinBase())
-            return 0;
-
-        int64 nResult = 0;
-        for (unsigned int i = (int) IsCoinStake(); i < vin.size(); i++)
-        {
-            nResult += GetOutputFor(vin[i], inputs).nValue;
-        }
-        return nResult;
-
-    }
-
-    unsigned int CTransaction::TotalSigOps(const MapPrevTx& inputs) const
-    {
-        if (IsCoinBase())
-            return 0;
-
-        unsigned int nSigOps = 0;
-        for (unsigned int i = (int) IsCoinStake(); i < vin.size(); i++)
-        {
-            const CTxOut& prevout = GetOutputFor(vin[i], inputs);
-            nSigOps += prevout.scriptPubKey.GetSigOpCount(vin[i].scriptSig);
-        }
-        return nSigOps;
-    }
-
-    bool CTransaction::ConnectInputs(LLD::CIndexDB& indexdb, MapPrevTx inputs,
-                                     map<uint512, CTxIndex>& mapTestPool, const CDiskTxPos& posThisTx,
-                                     const CBlockIndex* pindexBlock, bool fBlock, bool fMiner)
-    {
-        // Take over previous transactions' spent pointers
-        // fBlock is true when this is called from AcceptBlock when a new best-block is added to the blockchain
-        // ... both are false when called from CTransaction::AcceptToMemoryPool
-        if (!IsCoinBase())
-        {
-            int64 nValueIn = 0;
-            for (unsigned int i = (int) IsCoinStake(); i < vin.size(); i++)
-            {
-                COutPoint prevout = vin[i].prevout;
-                assert(inputs.count(prevout.hash) > 0);
-                CTxIndex& txindex = inputs[prevout.hash].first;
-                CTransaction& txPrev = inputs[prevout.hash].second;
-
-                if (prevout.n >= txPrev.vout.size() || prevout.n >= txindex.vSpent.size())
-                    return DoS(100, error("ConnectInputs() : %s prevout.n out of range %d %d %d prev tx %s\n%s", GetHash().ToString().substr(0,10).c_str(), prevout.n, txPrev.vout.size(), txindex.vSpent.size(), prevout.hash.ToString().substr(0,10).c_str(), txPrev.ToString().c_str()));
-
-                // If prev is coinbase/coinstake, check that it's matured
-                if (txPrev.IsCoinBase() || txPrev.IsCoinStake())
-                    for (const CBlockIndex* pindex = pindexBlock; pindex && pindexBlock->nHeight - pindex->nHeight < nCoinbaseMaturity; pindex = pindex->pprev)
-                        if (pindex->nBlockPos == txindex.pos.nBlockPos && pindex->nFile == txindex.pos.nFile)
-                            return error("ConnectInputs() : tried to spend coinbase/coinstake at depth %d", pindexBlock->nHeight - pindex->nHeight);
-
-                // Nexus: check transaction timestamp
-                if (txPrev.nTime > nTime)
-                    return DoS(100, error("ConnectInputs() : transaction timestamp earlier than input transaction"));
-
-                // Check for negative or overflow input values
-                nValueIn += txPrev.vout[prevout.n].nValue;
-                if (!MoneyRange(txPrev.vout[prevout.n].nValue) || !MoneyRange(nValueIn))
-                    return DoS(100, error("ConnectInputs() : txin values out of range"));
-
-            }
-            // The first loop above does all the inexpensive checks.
-            // Only if ALL inputs pass do we perform expensive ECDSA signature checks.
-            // Helps prevent CPU exhaustion attacks.
-            for (unsigned int i = (int) IsCoinStake(); i < vin.size(); i++)
-            {
-                COutPoint prevout = vin[i].prevout;
-                assert(inputs.count(prevout.hash) > 0);
-                CTxIndex& txindex = inputs[prevout.hash].first;
-                CTransaction& txPrev = inputs[prevout.hash].second;
-
-                // Check for conflicts (double-spend)
-                // This doesn't trigger the DoS code on purpose; if it did, it would make it easier
-                // for an attacker to attempt to split the network.
-                if (!txindex.vSpent[prevout.n].IsNull())
-                    return error("ConnectInputs() : %s prev tx already used at %s", GetHash().ToString().substr(0,10).c_str(), txindex.vSpent[prevout.n].ToString().c_str());
-
-                // Skip ECDSA signature verification when mining blocks (fMiner=true) since they are already checked on memory pool
-                if (!IsInitialBlockDownload() && !fMiner && !Wallet::VerifySignature(txPrev, *this, i, 0))
-                    return error("ConnectInputs() : %s Wallet::VerifySignature failed prev %s", GetHash().ToString().substr(0,10).c_str(), txPrev.GetHash().ToString().substr(0, 10).c_str());
-
-                // Mark outpoints as spent
-                txindex.vSpent[prevout.n] = posThisTx;
-
-                // Write back
-                if (fBlock || fMiner)
-                {
-                    mapTestPool[prevout.hash] = txindex;
-                }
-            }
-
-            if (IsCoinStake())
-            {
-                int64 nInterest;
-                GetCoinstakeInterest(indexdb, nInterest);
-
-                printf("ConnectInputs() : %f Value Out, %f Expected\n", (double)round_coin_digits(vout[0].nValue, 3) / COIN, (double)(round_coin_digits(nInterest + nValueIn, 3)) / COIN);
-
-                if (round_coin_digits(vout[0].nValue, 3) > round_coin_digits((nInterest + nValueIn), 3))
-                    return DoS(100, error("ConnectInputs() : %s stake reward mismatch", GetHash().ToString().substr(0,10).c_str()));
-
-            }
-            else if (nValueIn < GetValueOut())
-                return DoS(100, error("ConnectInputs() : %s value in < value out", GetHash().ToString().substr(0,10).c_str()));
-
-        }
-
-        return true;
-    }
+		return true;
+	}
 
 
-    bool CTransaction::ClientConnectInputs()
-    {
-        if (IsCoinBase())
-            return false;
+	bool CTransaction::FetchInputs(LLD::CIndexDB& indexdb, const map<uint512, CTxIndex>& mapTestPool,
+								   bool fBlock, bool fMiner, MapPrevTx& inputsRet, bool& fInvalid)
+	{
+		// FetchInputs can return false either because we just haven't seen some inputs
+		// (in which case the transaction should be stored as an orphan)
+		// or because the transaction is malformed (in which case the transaction should
+		// be dropped).  If tx is definitely invalid, fInvalid will be set to true.
+		fInvalid = false;
 
-        // Take over previous transactions' spent pointers
-        {
-            LOCK(mempool.cs);
-            int64 nValueIn = 0;
-            for (unsigned int i = (int) IsCoinStake(); i < vin.size(); i++)
-            {
-                // Get prev tx from single transactions in memory
-                COutPoint prevout = vin[i].prevout;
-                if (!mempool.exists(prevout.hash))
-                    return false;
-                CTransaction& txPrev = mempool.lookup(prevout.hash);
+		if (IsCoinBase())
+			return true; // Coinbase transactions have no inputs to fetch.
 
-                if (prevout.n >= txPrev.vout.size())
-                    return false;
+		for (unsigned int i = (int) IsCoinStake(); i < vin.size(); i++)
+		{
+			COutPoint prevout = vin[i].prevout;
+			if (inputsRet.count(prevout.hash))
+				continue; // Got it already
 
-                // Verify signature
-                if (!Wallet::VerifySignature(txPrev, *this, i, 0))
-                    return error("ConnectInputs() : Wallet::VerifySignature failed");
+			// Read txindex
+			CTxIndex& txindex = inputsRet[prevout.hash].first;
+			bool fFound = true;
+			if ((fBlock || fMiner) && mapTestPool.count(prevout.hash))
+			{
+				// Get txindex from current proposed changes
+				txindex = mapTestPool.find(prevout.hash)->second;
+			}
+			else
+			{
+				// Read txindex from txdb
+				fFound = indexdb.ReadTxIndex(prevout.hash, txindex);
+			}
+			if (!fFound && (fBlock || fMiner))
+				return fMiner ? false : error("FetchInputs() : %s prev tx %s index entry not found", GetHash().ToString().substr(0,10).c_str(),  prevout.hash.ToString().substr(0,10).c_str());
 
-                nValueIn += txPrev.vout[prevout.n].nValue;
+			// Read txPrev
+			CTransaction& txPrev = inputsRet[prevout.hash].second;
+			if (!fFound || txindex.pos == CDiskTxPos(1,1,1))
+			{
+				// Get prev tx from single transactions in memory
+				{
+					LOCK(mempool.cs);
+					if (!mempool.exists(prevout.hash))
+						return error("FetchInputs() : %s mempool Tx prev not found %s", GetHash().ToString().substr(0,10).c_str(),  prevout.hash.ToString().substr(0,10).c_str());
+					txPrev = mempool.lookup(prevout.hash);
+				}
+				if (!fFound)
+					txindex.vSpent.resize(txPrev.vout.size());
+			}
+			else
+			{
+				// Get prev tx from disk
+				if (!txPrev.ReadFromDisk(txindex.pos))
+					return error("FetchInputs() : %s ReadFromDisk prev tx %s failed", GetHash().ToString().substr(0,10).c_str(),  prevout.hash.ToString().substr(0,10).c_str());
+			}
+		}
 
-                if (!MoneyRange(txPrev.vout[prevout.n].nValue) || !MoneyRange(nValueIn))
-                    return error("ClientConnectInputs() : txin values out of range");
-            }
-            if (GetValueOut() > nValueIn)
-                return false;
-        }
+		// Make sure all prevout.n's are valid:
+		for (unsigned int i = (int) IsCoinStake(); i < vin.size(); i++)
+		{
+			const COutPoint prevout = vin[i].prevout;
+			assert(inputsRet.count(prevout.hash) != 0);
+			const CTxIndex& txindex = inputsRet[prevout.hash].first;
+			const CTransaction& txPrev = inputsRet[prevout.hash].second;
+			if (prevout.n >= txPrev.vout.size() || prevout.n >= txindex.vSpent.size())
+			{
+				// Revisit this if/when transaction replacement is implemented and allows
+				// adding inputs:
+				fInvalid = true;
+				return DoS(100, error("FetchInputs() : %s prevout.n out of range %d %d %d prev tx %s\n%s", GetHash().ToString().substr(0,10).c_str(), prevout.n, txPrev.vout.size(), txindex.vSpent.size(), prevout.hash.ToString().substr(0,10).c_str(), txPrev.ToString().c_str()));
+			}
+		}
 
-        return true;
-    }
+		return true;
+	}
+
+	const CTxOut& CTransaction::GetOutputFor(const CTxIn& input, const MapPrevTx& inputs) const
+	{
+		MapPrevTx::const_iterator mi = inputs.find(input.prevout.hash);
+		if (mi == inputs.end())
+			throw std::runtime_error("CTransaction::GetOutputFor() : prevout.hash not found");
+
+		const CTransaction& txPrev = (mi->second).second;
+		if (input.prevout.n >= txPrev.vout.size())
+			throw std::runtime_error("CTransaction::GetOutputFor() : prevout.n out of range");
+
+		return txPrev.vout[input.prevout.n];
+	}
+
+	int64 CTransaction::GetValueIn(const MapPrevTx& inputs) const
+	{
+		if (IsCoinBase())
+			return 0;
+
+		int64 nResult = 0;
+		for (unsigned int i = (int) IsCoinStake(); i < vin.size(); i++)
+		{
+			nResult += GetOutputFor(vin[i], inputs).nValue;
+		}
+		return nResult;
+
+	}
+
+	unsigned int CTransaction::TotalSigOps(const MapPrevTx& inputs) const
+	{
+		if (IsCoinBase())
+			return 0;
+
+		unsigned int nSigOps = 0;
+		for (unsigned int i = (int) IsCoinStake(); i < vin.size(); i++)
+		{
+			const CTxOut& prevout = GetOutputFor(vin[i], inputs);
+			nSigOps += prevout.scriptPubKey.GetSigOpCount(vin[i].scriptSig);
+		}
+		return nSigOps;
+	}
+
+	bool CTransaction::ConnectInputs(LLD::CIndexDB& indexdb, MapPrevTx inputs,
+									 map<uint512, CTxIndex>& mapTestPool, const CDiskTxPos& posThisTx,
+									 const CBlockIndex* pindexBlock, bool fBlock, bool fMiner)
+	{
+		// Take over previous transactions' spent pointers
+		// fBlock is true when this is called from AcceptBlock when a new best-block is added to the blockchain
+		// ... both are false when called from CTransaction::AcceptToMemoryPool
+		if (!IsCoinBase())
+		{
+			int64 nValueIn = 0;
+			for (unsigned int i = (int) IsCoinStake(); i < vin.size(); i++)
+			{
+				COutPoint prevout = vin[i].prevout;
+				assert(inputs.count(prevout.hash) > 0);
+				CTxIndex& txindex = inputs[prevout.hash].first;
+				CTransaction& txPrev = inputs[prevout.hash].second;
+
+				if (prevout.n >= txPrev.vout.size() || prevout.n >= txindex.vSpent.size())
+					return DoS(100, error("ConnectInputs() : %s prevout.n out of range %d %d %d prev tx %s\n%s", GetHash().ToString().substr(0,10).c_str(), prevout.n, txPrev.vout.size(), txindex.vSpent.size(), prevout.hash.ToString().substr(0,10).c_str(), txPrev.ToString().c_str()));
+
+				// If prev is coinbase/coinstake, check that it's matured
+				if (txPrev.IsCoinBase() || txPrev.IsCoinStake())
+					for (const CBlockIndex* pindex = pindexBlock; pindex && pindexBlock->nHeight - pindex->nHeight < nCoinbaseMaturity; pindex = pindex->pprev)
+						if (pindex->nBlockPos == txindex.pos.nBlockPos && pindex->nFile == txindex.pos.nFile)
+							return error("ConnectInputs() : tried to spend coinbase/coinstake at depth %d", pindexBlock->nHeight - pindex->nHeight);
+
+				// Nexus: check transaction timestamp
+				if (txPrev.nTime > nTime)
+					return DoS(100, error("ConnectInputs() : transaction timestamp earlier than input transaction"));
+
+				// Check for negative or overflow input values
+				nValueIn += txPrev.vout[prevout.n].nValue;
+				if (!MoneyRange(txPrev.vout[prevout.n].nValue) || !MoneyRange(nValueIn))
+					return DoS(100, error("ConnectInputs() : txin values out of range"));
+
+			}
+			// The first loop above does all the inexpensive checks.
+			// Only if ALL inputs pass do we perform expensive ECDSA signature checks.
+			// Helps prevent CPU exhaustion attacks.
+			for (unsigned int i = (int) IsCoinStake(); i < vin.size(); i++)
+			{
+				COutPoint prevout = vin[i].prevout;
+				assert(inputs.count(prevout.hash) > 0);
+				CTxIndex& txindex = inputs[prevout.hash].first;
+				CTransaction& txPrev = inputs[prevout.hash].second;
+
+				// Check for conflicts (double-spend)
+				// This doesn't trigger the DoS code on purpose; if it did, it would make it easier
+				// for an attacker to attempt to split the network.
+				if (!txindex.vSpent[prevout.n].IsNull())
+					return error("ConnectInputs() : %s prev tx already used at %s", GetHash().ToString().substr(0,10).c_str(), txindex.vSpent[prevout.n].ToString().c_str());
+
+				// Skip ECDSA signature verification when mining blocks (fMiner=true) since they are already checked on memory pool
+				if (!IsInitialBlockDownload() && !fMiner && !Wallet::VerifySignature(txPrev, *this, i, 0))
+					return error("ConnectInputs() : %s Wallet::VerifySignature failed prev %s", GetHash().ToString().substr(0,10).c_str(), txPrev.GetHash().ToString().substr(0, 10).c_str());
+
+				// Mark outpoints as spent
+				txindex.vSpent[prevout.n] = posThisTx;
+
+				// Write back
+				if (fBlock || fMiner)
+				{
+					mapTestPool[prevout.hash] = txindex;
+				}
+			}
+
+			if (IsCoinStake())
+			{
+				int64 nInterest;
+				GetCoinstakeInterest(indexdb, nInterest);
+
+				printf("ConnectInputs() : %f Value Out, %f Expected\n", (double)round_coin_digits(vout[0].nValue, 6) / COIN, (double)(round_coin_digits(nInterest + nValueIn, 6)) / COIN);
+
+				if (round_coin_digits(vout[0].nValue, 6) > round_coin_digits((nInterest + nValueIn), 6))
+					return Invalid("interest:mismatch", error("ConnectInputs() : %s stake reward mismatch", GetHash().ToString().substr(0, 10).c_str()));
+
+			}
+			else if (nValueIn < GetValueOut())
+				return DoS(100, error("ConnectInputs() : %s value in < value out", GetHash().ToString().substr(0,10).c_str()));
+
+		}
+
+		return true;
+	}
+
+
+	bool CTransaction::ClientConnectInputs()
+	{
+		if (IsCoinBase())
+			return false;
+
+		// Take over previous transactions' spent pointers
+		{
+			LOCK(mempool.cs);
+			int64 nValueIn = 0;
+			for (unsigned int i = (int) IsCoinStake(); i < vin.size(); i++)
+			{
+				// Get prev tx from single transactions in memory
+				COutPoint prevout = vin[i].prevout;
+				if (!mempool.exists(prevout.hash))
+					return false;
+				CTransaction& txPrev = mempool.lookup(prevout.hash);
+
+				if (prevout.n >= txPrev.vout.size())
+					return false;
+
+				// Verify signature
+				if (!Wallet::VerifySignature(txPrev, *this, i, 0))
+					return error("ConnectInputs() : Wallet::VerifySignature failed");
+
+				nValueIn += txPrev.vout[prevout.n].nValue;
+
+				if (!MoneyRange(txPrev.vout[prevout.n].nValue) || !MoneyRange(nValueIn))
+					return error("ClientConnectInputs() : txin values out of range");
+			}
+			if (GetValueOut() > nValueIn)
+				return false;
+		}
+
+		return true;
+	}
 
 // Return transaction in tx, and if it was found inside a block, its hash is placed in hashBlock
 bool GetTransaction(const uint512 &hash, CTransaction &tx, uint1024 &hashBlock)
@@ -964,5 +964,3 @@ bool Wallet::CWalletTx::AcceptWalletTransaction()
     LLD::CIndexDB indexdb("r");
     return AcceptWalletTransaction(indexdb);
 }
-
-
