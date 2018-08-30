@@ -164,6 +164,8 @@ namespace LLD
         if(!ReadHashBestChain(Core::hashBestChain))
             return error("No Hash Best Chain in Index Database.");
 
+        Core::CBlockIndex* pindexFork = NULL;
+
         uint1024 hashBlock = Core::hashGenesisBlock;
         while(!fRequestShutdown)
         {
@@ -207,6 +209,41 @@ namespace LLD
                 Core::pindexGenesisBlock = pindexNew;
             else
             {
+                //TODO: Trust key accept with no cBlock (CBlockIndex instead)
+                if(pindexNew->IsProofOfStake())
+                {
+                    Core::CBlock block;
+                    if(!block.ReadFromDisk(pindexNew))
+                    {
+                        pindexFork = pindexNew;
+                        error("CTxDB::LoadBlockIndex() : Failed to Read Block");
+
+                        Core::mapBlockIndex.erase(diskindex.GetBlockHash());
+
+                        break;
+                    }
+
+                    if(!Core::cTrustPool.Accept(block, true))
+                    {
+                        pindexFork = pindexNew;
+                        error("CTxDB::LoadBlockIndex() : Failed To Accept Trust Key Block.");
+
+                        Core::mapBlockIndex.erase(diskindex.GetBlockHash());
+
+                        break;
+                    }
+
+                    if(!Core::cTrustPool.Connect(block, true))
+                    {
+                        pindexFork = pindexNew;
+                        error("CTxDB::LoadBlockIndex() : Failed To Connect Trust Key Block.");
+
+                        Core::mapBlockIndex.erase(diskindex.GetBlockHash());
+
+                        break;
+                    }
+                }
+
                 //TODO: Optimize Correctly
                 if(GetBoolArg("-richlist", false))
                 {
@@ -261,22 +298,6 @@ namespace LLD
                         }
                     }
                 }
-
-
-                //TODO: Trust key accept with no cBlock (CBlockIndex instead)
-                if(pindexNew->IsProofOfStake())
-                {
-                    Core::CBlock block;
-                    if(!block.ReadFromDisk(pindexNew))
-                        return error("CTxDB::LoadBlockIndex() : Failed to Read Block");
-
-                    if(!Core::cTrustPool.Accept(block, true))
-                        return error("CTxDB::LoadBlockIndex() : Failed To Accept Trust Key Block.");
-
-                    if(!Core::cTrustPool.Connect(block, true))
-                        return error("CTxDB::LoadBlockIndex() : Failed To Connect Trust Key Block.");
-                }
-
             }
 
             /** Add the Pending Checkpoint into the Blockchain. **/
@@ -305,7 +326,6 @@ namespace LLD
         if (nCheckDepth > Core::nBestHeight)
             nCheckDepth = Core::nBestHeight;
         printf("Verifying last %i blocks at level %i\n", nCheckDepth, nCheckLevel);
-        Core::CBlockIndex* pindexFork = NULL;
 
         /* Allow Forking out an old chain. */
         unsigned int nFork = GetArg("-forkblocks", 0);

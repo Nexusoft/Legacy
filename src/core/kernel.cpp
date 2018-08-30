@@ -572,15 +572,6 @@ namespace Core
         uint576 cKey;
         cKey.SetBytes(vKeys[0]);
 
-        if(cBlock.nHeight == 2175725)
-            cBlock.print();
-
-        std::string hex = HexStr(vKeys[0].begin(), vKeys[0].end());
-        if(hex == "0300c097ff78557e23e3e71e26095477dabdff68c804993c82517c63a1e653d7edb62ab1537f57d00fba97a371f5177b1701e0abc298eb79eff8bb4e811fa8340ececcb792b69c6c77")
-        {
-            cBlock.print();
-        }
-
         /* Handle Genesis Transaction Rules. Genesis is checked after Trust Key Established. */
         if(cBlock.vtx[0].IsGenesis())
         {
@@ -617,12 +608,7 @@ namespace Core
 
             /* Check that the Trust Key and Current Block match. */
             if(mapTrustKeys[cKey].vchPubKey != vKeys[0])
-            {
-                cBlock.print();
-                mapTrustKeys[cKey].Print();
-
                 return error("CTrustPool::Connect() : Trust Key and Block Key Mismatch. %s - %s", HexStr(mapTrustKeys[cKey].vchPubKey.begin(), mapTrustKeys[cKey].vchPubKey.end()).c_str(), HexStr(vKeys[0].begin(), vKeys[0].end()).c_str());
-            }
 
             /* Trust Keys can only exist after the Genesis Transaction. */
             if(!mapBlockIndex.count(mapTrustKeys[cKey].hashGenesisBlock))
