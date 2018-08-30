@@ -336,9 +336,15 @@ namespace Core
                 if(i->second.Age(nTime) > keyBestTrust.Age(nTime) || keyBestTrust.IsNull())
                 {
                     keyBestTrust = i->second;
+<<<<<<< HEAD
 
                     if(GetArg("-verbose", 0) >= 0)
                         printf("CTrustPool::HasTrustKey() : Trying Trust Key %s\n", HexStr(keyBestTrust.vchPubKey.begin(), keyBestTrust.vchPubKey.end()).c_str());
+=======
+
+                    if(GetArg("-verbose", 0) >= 0)
+                        printf("CTrustPool::HasTrustKey() : Checking Trust Key %s\n", HexStr(keyBestTrust.vchPubKey.begin(), keyBestTrust.vchPubKey.end()).c_str());
+>>>>>>> 2.4.4-validation
                 }
             }
         }
@@ -879,8 +885,13 @@ namespace Core
     {
         /* Genesis Transaction Block Age is Time to Genesis Time. */
         if(!mapBlockIndex.count(hashPrevBlock))
+<<<<<<< HEAD
             return 0;
 
+=======
+            return error("CTrustKey::BlockAge() : %s not in Map Block Index", hashPrevBlock.ToString().c_str());
+
+>>>>>>> 2.4.4-validation
         /* Catch overflow attacks. Should be caught in verify stake but double check here. */
         if(nGenesisTime > mapBlockIndex[hashPrevBlock]->GetBlockTime())
             return error("CTrustKey::BlockAge() : %u Time is < Genesis %u", (unsigned int) mapBlockIndex[hashPrevBlock]->GetBlockTime(), nGenesisTime);
@@ -1035,8 +1046,13 @@ namespace Core
             /* Set the Reporting Variables for the Qt. */
             dTrustWeight = nTrustWeight;
             dBlockWeight = nBlockWeight;
+<<<<<<< HEAD
 
 
+=======
+
+
+>>>>>>> 2.4.4-validation
             if(GetArg("-verbose", 0) >= 0)
                 printf("Stake Minter : Staking at Total Weight %u | Trust Weight %f | Block Weight %f | Coin Age %" PRIu64 " | Trust Age %" PRIu64 "| Block Age %" PRIu64 "\n", nTotalWeight, nTrustWeight, nBlockWeight, nCoinAge, nTrustAge, nBlockAge);
 

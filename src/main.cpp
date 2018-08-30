@@ -128,19 +128,13 @@ int main(int argc, char* argv[])
 
 bool AppInit(int argc, char* argv[])
 {
-    bool fRet = false;
-    try
-    {
-        fRet = AppInit2(argc, argv);
-    }
-    catch (std::exception& e) {
-        PrintException(&e, "AppInit()");
-    } catch (...) {
-        PrintException(NULL, "AppInit()");
-    }
-    if (!fRet)
+    if(!AppInit2(argc, argv)) {
         Shutdown(NULL);
-    return fRet;
+        
+        return false;
+    }
+    
+    return true;
 }
 
 bool AppInit2(int argc, char* argv[])
@@ -190,7 +184,7 @@ bool AppInit2(int argc, char* argv[])
     if (mapArgs.count("-?") || mapArgs.count("--help"))
     {
         string strUsage = string() +
-          _("Nexus version") + " " + FormatFullVersion() + "\n\n" +
+          _("Nexus version") + " " + FormatFullVersion() + "\n\n9" +
           _("Usage:") + "\t\t\t\t\t\t\t\t\t\t\n" +
             "  Nexus [options]                   \t  " + "\n" +
             "  Nexus [options] <command> [params]\t  " + _("Send command to -server or Nexus") + "\n" +
