@@ -23,7 +23,7 @@ namespace Core
     /** Check Checkpoint Timespan. **/
     bool IsNewTimespan(CBlockIndex* pindex)
     {
-        if(mapCheckpoints.empty() || !pindex->pprev)
+        if(mapCheckpoints.empty() || !pindex->pprev || !mapBlockIndex.count(pindex->PendingCheckpoint.second) )
             return true;
 
         int nFirstMinutes = floor((pindex->GetBlockTime() - mapBlockIndex[pindex->PendingCheckpoint.second]->GetBlockTime()) / 60.0);
