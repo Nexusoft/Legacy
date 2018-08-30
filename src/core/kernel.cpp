@@ -608,7 +608,14 @@ namespace Core
 
             /* Check that the Trust Key and Current Block match. */
             if(mapTrustKeys[cKey].vchPubKey != vKeys[0])
-                return error("CTrustPool::Connect() : Trust Key and Block Key Mismatch.");
+            {
+                cBlock.print();
+
+                error("CTrustPool::Connect() : Trust Key and Block Key Mismatch. %s - %s", HexStr(mapTrustKeys[cKey].vchPubKey.begin(), mapTrustKeys[cKey].vchPubKey.end()).c_str(), HexStr(vKeys[0].begin(), vKeys[0].end()).c_str());
+
+                if(!fInit)
+                    return false;
+            }
 
             /* Trust Keys can only exist after the Genesis Transaction. */
             if(!mapBlockIndex.count(mapTrustKeys[cKey].hashGenesisBlock))
