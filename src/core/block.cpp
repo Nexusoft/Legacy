@@ -952,6 +952,9 @@ namespace Core
                 /* Change Invalid Flags to current block. */
                 mapInvalidBlocks.erase(hash);
 
+                /* Move back to normal mode. */
+                fRepairMode = false;
+
                 if(GetArg("-verbose", 0) >= 2)
                     printf("ProcessBlock() : ACCEPTED (Resolved Mutated Block)\n");
 
@@ -972,7 +975,7 @@ namespace Core
             return error("ProcessBlock() : CheckBlock FAILED");
 
         // If don't already have its previous block, shunt it off to holding area until we get it
-        if (!mapBlockIndex.count(pblock->hashPrevBlock))
+        if (!fRepairMode && !mapBlockIndex.count(pblock->hashPrevBlock))
         {
             if(GetArg("-verbose", 0) >= 0)
                 printf("ProcessBlock: ORPHAN BLOCK, prev=%s\n", pblock->hashPrevBlock.ToString().substr(0,20).c_str());
@@ -995,7 +998,7 @@ namespace Core
             if(pblock->strValidationError != "")
             {
                 printf("\u001b[31;1m ProcessBlock() : Validation Error... Entering Repair-Mode \x1b[0m \n");
-                Core::fRepairMode = true;
+                fRepairMode = true;
 
                 std::vector<Net::CInv> vInv;
 
