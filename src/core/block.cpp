@@ -74,7 +74,7 @@ namespace Core
             nLastBlockTime = GetUnifiedTimestamp();
         }
 
-        return (pindexBest->GetBlockTime() < GetUnifiedTimestamp() - 5 * 60 && GetUnifiedTimestamp() - nLastBlockTime < 5 * 60);
+        return (pindexBest->GetBlockTime() < GetUnifiedTimestamp() - 5 * 60 && GetUnifiedTimestamp() - nLastBlockTime < 5 * 60) || (nBestHeight < nBestHeightSeen);
     }
 
 
@@ -977,6 +977,10 @@ namespace Core
         // Preliminary checks
         if (!pblock->CheckBlock())
             return error("ProcessBlock() : CheckBlock FAILED");
+
+        //set the best height seen
+        if(nBestHeightSeen < pblock->nHeight)
+            nBestHeightSeen = pblock->nHeight;
 
         // If don't already have its previous block, shunt it off to holding area until we get it
         if (!fRepairMode && !mapBlockIndex.count(pblock->hashPrevBlock))
