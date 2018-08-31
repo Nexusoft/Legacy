@@ -575,6 +575,13 @@ namespace Core
         /* Handle Genesis Transaction Rules. Genesis is checked after Trust Key Established. */
         if(cBlock.vtx[0].IsGenesis())
         {
+            if(!mapTrustKeys.count(cKey))
+            {
+                if(!Accept(cBlock, fInit))
+                    return error("CTrustPool::Connect() : Failed to Accept Genesis Key");
+
+                return Connect(cBlock, fInit);
+            }
 
             std::vector< std::pair<uint1024, bool> >::iterator itFalse = std::find(mapTrustKeys[cKey].hashPrevBlocks.begin(), mapTrustKeys[cKey].hashPrevBlocks.end(), std::make_pair(cBlock.GetHash(), false) );
 

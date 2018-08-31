@@ -373,6 +373,18 @@ namespace Core
 
                 if (!block.ConnectBlock(indexdb, pindex))
                 {
+                    //restore trust keys
+                    reverse(vDisconnect.begin(), vDisconnect.end());
+                    for(auto pindex : vDisconnect)
+                    {
+                        CBlock block;
+                        if (!block.ReadFromDisk(pindex))
+                            return error("CBlock::SetBestChain() : ReadFromDisk for disconnect failed");
+
+                        if(block.IsProofOfStake() && !cTrustPool.Connect(block))
+                            return error("CBlock::SetBestChain() : Failed To Accept Trust Key Block.");
+                    }
+
                     indexdb.TxnAbort();
                     return error("CBlock::SetBestChain() : ConnectBlock %s Height %u failed", pindex->GetBlockHash().ToString().substr(0,20).c_str(), pindex->nHeight);
                 }
