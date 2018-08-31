@@ -371,6 +371,9 @@ namespace Core
                 if (!block.ReadFromDisk(pindex))
                     return error("CBlock::SetBestChain() : ReadFromDisk for connect failed");
 
+                if(GetBoolArg("-dumpblocks", false))
+                    block.print();
+
                 if (!block.ConnectBlock(indexdb, pindex))
                 {
                     //restore trust keys
@@ -379,9 +382,9 @@ namespace Core
                     {
                         CBlock block;
                         if (!block.ReadFromDisk(pindex))
-                            return error("CBlock::SetBestChain() : ReadFromDisk for disconnect failed");
+                            return error("CBlock::SetBestChain() : ReadFromDisk for connect failed");
 
-                        if(block.IsProofOfStake() && !cTrustPool.Connect(block))
+                        if(block.IsProofOfStake() && !cTrustPool.Connect(block, false))
                             return error("CBlock::SetBestChain() : Failed To Accept Trust Key Block.");
                     }
 

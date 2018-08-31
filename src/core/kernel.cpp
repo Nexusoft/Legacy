@@ -613,13 +613,13 @@ namespace Core
             if(!mapTrustKeys.count(cKey))
                 return error("CTrustPool::Connect() : Cannot Create Trust Transaction without Genesis.");
 
-            /* Check that the Trust Key and Current Block match. */
-            if(mapTrustKeys[cKey].vchPubKey != vKeys[0])
-                return error("CTrustPool::Connect() : Trust Key and Block Key Mismatch.");
-
             /* Trust Keys can only exist after the Genesis Transaction. */
             if(!mapBlockIndex.count(mapTrustKeys[cKey].hashGenesisBlock))
-                return error("CTrustPool::Connect() : Block Not Found.");
+                return error("CTrustPool::Connect() : Genesis Block (%s) Not Found.", mapTrustKeys[cKey].hashGenesisBlock.ToString().substr(0, 20).c_str());
+
+            /* Check that the Trust Key and Current Block match. */
+            if(mapTrustKeys[cKey].vchPubKey != vKeys[0])
+                return error("CTrustPool::Connect() : Trust Key (%s) and Block Key (%s) Mismatch", HexStr(mapTrustKeys[cKey].vchPubKey.begin(), mapTrustKeys[cKey].vchPubKey.end()).c_str(), HexStr(vKeys[0].begin(), vKeys[0].end()).c_str());
 
             /* Don't allow Expired Trust Keys. Check Expiration from Previous Block Timestamp. */
             if(mapTrustKeys[cKey].Expired(cBlock.GetHash(), cBlock.hashPrevBlock))
