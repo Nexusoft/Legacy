@@ -1111,7 +1111,10 @@ namespace Core
                     if(!cTrustPool.mapTrustKeys.count(cKey))
                         return error("ProcessBlock() : (interest:mismatch) trust key does not exist");
 
-                    printf("Genesis: %s\n", mapBlockIndex[cTrustPool.mapTrustKeys[cKey].hashGenesisBlock.ToString().c_str());
+                    printf("Genesis: %s\n", cTrustPool.mapTrustKeys[cKey].hashGenesisBlock.ToString().c_str());
+
+                    if(!mapBlockIndex.count(cTrustPool.mapTrustKeys[cKey].hashGenesisBlock))
+                        return error("ProcessBlock() : (interest:mismatch) genesis not in map block index");
 
                     /* Read the Block from the Disk. */
                     CBlock block;
