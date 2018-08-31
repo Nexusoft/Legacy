@@ -615,7 +615,7 @@ namespace Core
 
             /* Trust Keys can only exist after the Genesis Transaction. */
             if(!mapBlockIndex.count(mapTrustKeys[cKey].hashGenesisBlock))
-                return error("CTrustPool::Connect() : Genesis Block (%s) Not Found.", mapTrustKeys[cKey].hashGenesisBlock.ToString().substr(0, 20).c_str());
+                return error("CTrustPool::Connect() : Genesis Block (hash=%s, time=%u, tx=%s) Not Found.", mapTrustKeys[cKey].hashGenesisBlock.ToString().substr(0, 20).c_str(), mapTrustKeys[cKey].nGenesisTime, mapTrustKeys[cKey].hashGenesisTx.ToString().substr(0, 20).c_str());
 
             /* Check that the Trust Key and Current Block match. */
             if(mapTrustKeys[cKey].vchPubKey != vKeys[0])

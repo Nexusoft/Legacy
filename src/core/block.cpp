@@ -384,8 +384,11 @@ namespace Core
                         if (!block.ReadFromDisk(pindex))
                             return error("CBlock::SetBestChain() : ReadFromDisk for connect failed");
 
-                        if(block.IsProofOfStake() && !cTrustPool.Connect(block, false))
-                            return error("CBlock::SetBestChain() : Failed To Accept Trust Key Block.");
+                        if(block.IsProofOfStake())
+                        {
+                            if(!cTrustPool.Connect(block, false))
+                                return error("CBlock::SetBestChain() : Failed To Reaccept Trust Key Block.");
+                        }
                     }
 
                     indexdb.TxnAbort();
