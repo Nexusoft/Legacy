@@ -1061,7 +1061,6 @@ namespace Core
             if(pblock->strValidationError != "")
             {
                 printf("\u001b[31;1m ProcessBlock() : Validation Error %s... Entering Repair-Mode \x1b[0m \n", pblock->strValidationError.c_str());
-                fRepairMode = true;
 
                 std::vector<Net::CInv> vInv;
 
@@ -1203,6 +1202,8 @@ namespace Core
                 /* If invalid blocks were flagged and found. */
                 if(vInv.size() > 0)
                 {
+                    fRepairMode = true;
+
                     printf("\x1b[31m checking block signatures from invalid state: %s\x1b[0m\n", pblock->strValidationError.c_str());
 
                     for(auto inv : vInv)
