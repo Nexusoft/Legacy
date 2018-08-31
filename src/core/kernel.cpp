@@ -50,7 +50,7 @@ namespace Wallet
 
             /* Do not add coins to Genesis block if age < 24hrs */
             if (txNew.IsGenesis() && (txNew.nTime - pcoin->nTime) < 24 * 60 * 60)
-            continue;
+                continue;
 
             for (unsigned int i = 0; i < pcoin->vout.size(); i++)
             {

@@ -190,12 +190,18 @@ namespace Core
             CTxIndex txindexOld;
             if (indexdb.ReadTxIndex(tx.GetHash(), txindexOld))
             {
-                BOOST_FOREACH(CDiskTxPos &pos, txindexOld.vSpent)
-                    if (pos.IsNull()){
+                //if the block doesn't exist, db mismatched transaction
+                CBlock block;
+                if (!block.ReadFromDisk(txindexOld.pos.nFile, txindexOld.pos.nBlockPos, false))
+                    continue;
 
-                        return error("ConnectBlock() : Transaction Disk Index is Null %s", tx.GetHash().ToString().c_str());
-                    }
+                //if transaction is already in a block, reject current block
+                if(block.GetHash() != GetHash())
+                    return error("ConnectBlock() : Transaction %s already in block %s", tx.GetHash().ToString().substr(0, 10).c_str(), block.GetHash().ToString().substr(0, 10).c_str());
 
+                //BOOST_FOREACH(CDiskTxPos &pos, txindexOld.vSpent)
+                //    if (pos.IsNull())
+                //        return error("ConnectBlock() : Transaction Disk Index is Null %s", tx.GetHash().ToString().c_str());
             }
         }
 
