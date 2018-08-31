@@ -860,9 +860,9 @@ namespace Core
                 int64 nInterest;
                 GetCoinstakeInterest(indexdb, nInterest);
 
-                printf("ConnectInputs() : %f Value Out, %f Expected\n", (double)round_coin_digits(vout[0].nValue, 3) / COIN, (double)(round_coin_digits(nInterest + nValueIn, 3)) / COIN);
+                printf("ConnectInputs() : %f Value Out, %f Expected\n", (double)round_coin_digits(vout[0].nValue, 2) / COIN, (double)(round_coin_digits(nInterest + nValueIn, 2)) / COIN);
 
-                if (round_coin_digits(vout[0].nValue, 3) > round_coin_digits((nInterest + nValueIn), 3))
+                if (round_coin_digits(vout[0].nValue, 2) > round_coin_digits((nInterest + nValueIn), 2))
                     return DoS(100, error("ConnectInputs() : %s stake reward mismatch", GetHash().ToString().substr(0,10).c_str()));
 
             }
@@ -964,5 +964,3 @@ bool Wallet::CWalletTx::AcceptWalletTransaction()
     LLD::CIndexDB indexdb("r");
     return AcceptWalletTransaction(indexdb);
 }
-
-
