@@ -167,6 +167,7 @@ namespace LLD
         Core::CBlockIndex* pindexFork = NULL;
 
         uint1024 hashBlock = Core::hashBestChain;
+        Core::CDiskBlockIndex diskindexNext;
         while(!fRequestShutdown)
         {
             Core::CDiskBlockIndex diskindex;
@@ -175,6 +176,14 @@ namespace LLD
                 printf("Failed to Read Block %s Height %u\n", hashBlock.ToString().substr(0, 20).c_str(), diskindex.nHeight);
 
                 break;
+            }
+
+            if(diskindex.hashNext == 0 && hashBlock != Core::hashBestChain)
+            {
+                printf("Detected NULL hashNext at block %u... Repairing\n", diskindex.nHeight);
+
+                diskindex.hashNext = diskindexNext.GetBlockHash();
+                WriteBlockIndex(diskindex);
             }
 
             Core::CBlockIndex* pindexNew = InsertBlockIndex(diskindex.GetBlockHash());
@@ -213,6 +222,7 @@ namespace LLD
             }
 
             hashBlock = diskindex.hashPrev;
+            diskindexNext = diskindex;
         }
 
         Core::CBlockIndex* pindexNew = Core::pindexGenesisBlock;
