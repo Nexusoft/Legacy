@@ -855,7 +855,7 @@ namespace Core
 				}
 			}
 
-			if (IsCoinStake()) //checked twice I know
+			if (IsCoinStake()) 
 			{
 				int64 nInterest;
 				GetCoinstakeInterest(indexdb, nInterest);
