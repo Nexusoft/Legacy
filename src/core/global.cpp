@@ -103,7 +103,7 @@ namespace Core
     const unsigned int NETWORK_VERSION_TIMELOCK[]    = {  1412964000,        //--- Block Version 2 Activation:                10/10/2014 12:00:00 GMT - 6
                                                                             1421949600,        //--- Block Version 3 Activation:                01/22/2015 12:00:00 GMT - 6
                                                                             1438369200,        //--- Block Version 4 Activation:                07/31/2015 12:00:00 GMT - 7
-                                                                            1483294271 };    //--- Block Version 5 Activation:                01/01/2017 11:11:11 GMT - 7
+                                                                            1536174660 };    //--- Block Version 5 Activation:                09/05/2018 12:11:00 GMT - 7
 
 
     /** Time - Lock for the Nexus Channels on the Testnet. Each Channel Cannot produce blocks before their corresponding Time - Locks. **/
