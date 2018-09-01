@@ -129,18 +129,18 @@ namespace Core
 
     /** Addresses of the Exchange Channels. **/
     const string CHANNEL_ADDRESSES[] =  {  "2Qn8MsUCkv9S8X8sMvUPkr9Ekqqg5VKzeKJk2ftcFMUiJ5QnWRc",
-                                        "2S4WLATVCdJXTpcfdkDNDVKK5czDi4rjR5HrCRjayktJZ4rN8oA",
-                                        "2RE29WahXWawQ9huhyaGhfvEMmUWHH9Hfo1anbNk8eW3nTU7H2g",
-                                        "2QpSfg6MBZYCjQKXjTgo9eHoKMCJsYjLQsNT3xeeAYhrQmNBEUd",
-                                        "2RHjigCh1qt1j3WKz4mShFBiVE5g6z9vrFpGMT6EDQsFJbtx4hr",
-                                        "2SZ87FB1zukH5h7BLDT4yUyMTQnEJEt2KzpGYFxuUzMqAxEFN7Y",
-                                        "2STyHuCeBgE81ZNjhH5QB8UXViXW7WPYM1YQgmXfLvMJXaKAFCs",
-                                        "2SLq49uDrhLyP1N7Xnkj86WCHQUKxn6zx38LBNoTgwsAjfV1seq",
-                                        "2RwtQdi3VPPQqht15QmXnS4KELgxrfaH2hXSywtJrfDdCJMnwPQ",
-                                        "2SWscUR6rEezZKgFh5XkEyhmRmja2qrHMRsfmtxdapwMymmM96Q",
-                                        "2SJzPMXNPEgW2zJW4489qeiCjdUanDTqCuSNAMmZXm1KX269jAt",
-                                        "2Rk2mBEYWkGDMzQhEqdpSGZ77ZGvp9HWAbcsY6mDtbWKJy4DQuq",
-                                        "2Rnh3qFvzeRQmSJEHtz6dNphq3r7uDSGQdjucnVFtpcuzBbeiLx" };
+                                            "2S4WLATVCdJXTpcfdkDNDVKK5czDi4rjR5HrCRjayktJZ4rN8oA",
+                                            "2RE29WahXWawQ9huhyaGhfvEMmUWHH9Hfo1anbNk8eW3nTU7H2g",
+                                            "2QpSfg6MBZYCjQKXjTgo9eHoKMCJsYjLQsNT3xeeAYhrQmNBEUd",
+                                            "2RHjigCh1qt1j3WKz4mShFBiVE5g6z9vrFpGMT6EDQsFJbtx4hr",
+                                            "2SZ87FB1zukH5h7BLDT4yUyMTQnEJEt2KzpGYFxuUzMqAxEFN7Y",
+                                            "2STyHuCeBgE81ZNjhH5QB8UXViXW7WPYM1YQgmXfLvMJXaKAFCs",
+                                            "2SLq49uDrhLyP1N7Xnkj86WCHQUKxn6zx38LBNoTgwsAjfV1seq",
+                                            "2RwtQdi3VPPQqht15QmXnS4KELgxrfaH2hXSywtJrfDdCJMnwPQ",
+                                            "2SWscUR6rEezZKgFh5XkEyhmRmja2qrHMRsfmtxdapwMymmM96Q",
+                                            "2SJzPMXNPEgW2zJW4489qeiCjdUanDTqCuSNAMmZXm1KX269jAt",
+                                            "2Rk2mBEYWkGDMzQhEqdpSGZ77ZGvp9HWAbcsY6mDtbWKJy4DQuq",
+                                            "2Rnh3qFvzeRQmSJEHtz6dNphq3r7uDSGQdjucnVFtpcuzBbeiLx" };
 
 
     /** Addresses for the Developer Accounts. **/
@@ -189,6 +189,40 @@ namespace Core
                                                                 {0x76, 0xa9, 0x20, 0x90, 0xc9, 0x19, 0x58, 0x78, 0xd2, 0xe3, 0xb9, 0x53, 0xaf, 0xf1, 0xdb, 0x5c, 0x3d, 0xad, 0xce, 0x77, 0xc5, 0x83, 0x2b, 0xd8, 0x01, 0x0a, 0xd5, 0x29, 0x1d, 0x54, 0xf2, 0x34, 0xcd, 0xc9, 0x81, 0x88, 0xac},
                                                                 {0x76, 0xa9, 0x20, 0x96, 0xd3, 0x5f, 0xb1, 0x67, 0xda, 0xfb, 0x4d, 0x2c, 0x7d, 0xd3, 0x3d, 0x41, 0x34, 0x4f, 0x69, 0xa6, 0x91, 0xda, 0x7c, 0xc1, 0x18, 0xfb, 0x5b, 0x43, 0x3d, 0x25, 0x74, 0x3b, 0x08, 0xf3, 0x41, 0x88, 0xac} };
 
+
+    /* New ambassador addresses recycled. */
+    const string AMBASSADOR_ADDRESSES_RECYCLED[] = {    "2RSWG4zGzJZdkem23CeuqSEVjjbwUbVe2oZRpcA5ZpSqTojzQYy",
+                                                        "2RmF9e5k2W4RvKsZsKXK8y6Md1Hd5joNQFrrEKeLMpv3CfFMjQZ",
+                                                        "2QyxbcfCckkr5HQzxGqrKdChnVwXzwuAjt8ADMBYw5i3jxYu96H",
+                                                        "2Ruf4e6FWEkJKoPewJ9DPi5gjgLCR5a8NGvFd99ycsPjxmrzbo2",
+                                                        "2S7diRGZQF9nwmJ3J1hH1Zapgvo551eBtPT69arsSLrhuyqfpwR",
+                                                        "2RdnyGpVhQarMswVj9We7eNs6TTazWEcnFCwVyK7zReg5hKq8kc",
+                                                        "2RHsaGpRjSheYDGpBsvDPyW5tSuQjHXkBdbZZ6QLpLBhcWHJyUZ",
+                                                        "2RhMNr6qaEnQndMUiuSwBpNToQovcDbVK6FDGkxrMALdcPY1zWv",
+                                                        "2SaPcUuSMj7J7szWeuH5ZHhPg9oQGtfJFrU7Prezkw6aqENXGvc",
+                                                        "2Rjsdzb6HPPNtjCmDbJ1fNHFKNmQLfxVGYqE1gCdfPnJh78bKwz",
+                                                        "2RsG4LMrMCCuPnsy21FRSXrbXRVLJWguQbzL4aZFJEWSkvu75Qb",
+                                                        "2QmAPn1ymoJj2UVYGedetEkN3WkPXPDL1Tn13W6vAoDS71543UJ",
+                                                        "2RbJ6uqpnVmNvzzHz73v6m3J4M3ks3Jv6E7bDZhTgtXkSTEsiob" };
+
+
+    /* New developer addresses recycled. */
+    const string DEVELOPER_ADDRESSES_RECYCLED[] = {     "2SPinzyuXJdf9iFchK4fvH7Fcu6SLqTasugDaPpUTrV4WDo27Vx",
+                                                        "2RS4jz5TdHNvhnQPGQCfhsddyT6PXc4tip2uRQ61hMK9dkfFZE4",
+                                                        "2Qip9FFJH3CjhHLv7ZfxpjenKohmbEz2zVe27TfE5gqT1rg8Y8P",
+                                                        "2R7gedizZWpe9RySUXmxVznoJJie3c7SypBVHkRZ8Dbo6mBj8zw",
+                                                        "2Rz6Z6XMPH8A2iyeKnYS14cV9rHDwGWPCs2z4EZ6Qc4FX8DBdE3",
+                                                        "2SRto8HnG6GfXY6m37zxSbKD9shAXYtdWn62umezHhC85i61LKB",
+                                                        "2Rdfzmijbn8m7yWRkhWdsfJJ78XSAp7VPks2Ci18x98hFfru4bN",
+                                                        "2S7JbY11Kfss3A2bhchzzxeervQZ6JpGDSC7FBJ3oXq1xoCbHse",
+                                                        "2RVKmatLPGP6iWGvMdXzQrkrkNcMkgeoHXdJafrg7UTHhjxFLcR",
+                                                        "2S81rREFrxgGoBhp6g7yi14sKpnDNEnwp28q9Eqg1KG5JMvRjXF",
+                                                        "2ReZqUDgSMBFJ6W4qGrDDxecmgChYt2RZjonAT7eNzUdCZQyHA9",
+                                                        "2QkNsRC3jsqCSeeUpJgCusMX11QTcUHYNrh798HsSdWTyFQ2du3",
+                                                        "2Qv9haWgvomJkawpy2EDDmtCaE3rXpnvtH4pRRuM8JgJQTxoCt8" };
+
+
+    //TODO: Recycled Byte Code for new addresses
 
     CCriticalSection cs_setpwalletRegistered;
 
