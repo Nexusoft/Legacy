@@ -94,27 +94,27 @@ namespace Core
 
 
     /* TestNet Time - Lock for the First Nexus Block Update. Version 1 Blocks Rejected after this Time - Lock, Version 2 Blocks Rejected Before it. */
-    const unsigned int TESTNET_VERSION_TIMELOCK[]    = {  1412676000,        //--- Block Version 2 Testnet Activation:        10/07/2014 04:00:00 GMT - 6
-                                                                            1421293891,        //--- Block Version 3 Testnet Activation:        01/15/2015 07:51:31 GMT - 6
-                                                                            1421949600,        //--- Block Version 4 Testnet Activation:        05/10/2015 08:01:00 GMT - 6
-                                                                            1482679327 };    //--- Block Version 5 Testnet Activation:        12/25/2016 08:22:07 GMT - 7
+    const unsigned int TESTNET_VERSION_TIMELOCK[]   = { 1412676000,        //--- Block Version 2 Testnet Activation:  10/07/2014 04:00:00 GMT - 6
+                                                        1421293891,        //--- Block Version 3 Testnet Activation:  01/15/2015 07:51:31 GMT - 6
+                                                        1421949600,        //--- Block Version 4 Testnet Activation:  05/10/2015 08:01:00 GMT - 6
+                                                        1535915460 };      //--- Block Version 5 Testnet Activation:  09/01/2018 12:11:00 GMT - 7
 
     /* Network Time - Lock for the First Nexus Block Update. Version 1 Blocks Rejected after this Time - Lock, Version 2 Blocks Rejected Before it. */
-    const unsigned int NETWORK_VERSION_TIMELOCK[]    = {  1412964000,        //--- Block Version 2 Activation:                10/10/2014 12:00:00 GMT - 6
-                                                                            1421949600,        //--- Block Version 3 Activation:                01/22/2015 12:00:00 GMT - 6
-                                                                            1438369200,        //--- Block Version 4 Activation:                07/31/2015 12:00:00 GMT - 7
-                                                                            1536174660 };    //--- Block Version 5 Activation:                09/05/2018 12:11:00 GMT - 7
+    const unsigned int NETWORK_VERSION_TIMELOCK[]   = { 1412964000,        //--- Block Version 2 Activation:          10/10/2014 12:00:00 GMT - 6
+                                                        1421949600,        //--- Block Version 3 Activation:          01/22/2015 12:00:00 GMT - 6
+                                                        1438369200,        //--- Block Version 4 Activation:          07/31/2015 12:00:00 GMT - 7
+                                                        1536174660 };      //--- Block Version 5 Activation:          09/05/2018 12:11:00 GMT - 7
 
 
     /** Time - Lock for the Nexus Channels on the Testnet. Each Channel Cannot produce blocks before their corresponding Time - Locks. **/
-    const unsigned int CHANNEL_TESTNET_TIMELOCK[] = {     1421949600,        //--- POS Testnet Activation:              05/10/2015 08:01:00 GMT - 6
-                                                                        1411437371,        //--- CPU Testnet Activation:              09/22/2014 18:56:11 GMT - 6
-                                                                        1411437371 };    //--- GPU Testnet Activation:              09/22/2014 18:56:11 GMT - 6
+    const unsigned int CHANNEL_TESTNET_TIMELOCK[] = {   1421949600,        //--- POS Testnet Activation:              05/10/2015 08:01:00 GMT - 6
+                                                        1411437371,        //--- CPU Testnet Activation:              09/22/2014 18:56:11 GMT - 6
+                                                        1411437371 };      //--- GPU Testnet Activation:              09/22/2014 18:56:11 GMT - 6
 
     /** Time - Lock for the Nexus Channels. Each Channel Cannot produce blocks before their corresponding Time - Locks. **/
-    const unsigned int CHANNEL_NETWORK_TIMELOCK[] = {     1438369200,        //--- POS Channel Activation:              07/31/2015 12:00:00 GMT - 7
-                                                                        1411510800,        //--- CPU Channel Activation:              09/23/2014 16:20:00 GMT - 6
-                                                                        1413914400 };    //--- GPU Channel Activation:              10/21/2014 12:00:00 GMT - 6
+    const unsigned int CHANNEL_NETWORK_TIMELOCK[] = {   1438369200,        //--- POS Channel Activation:              07/31/2015 12:00:00 GMT - 7
+                                                        1411510800,        //--- CPU Channel Activation:              09/23/2014 16:20:00 GMT - 6
+                                                        1413914400 };      //--- GPU Channel Activation:              10/21/2014 12:00:00 GMT - 6
 
 
 
