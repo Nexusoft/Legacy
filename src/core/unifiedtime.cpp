@@ -123,8 +123,10 @@ static const std::vector<std::string> DNS_SeedNodes =
 /** Declarations for the DNS Seed Nodes. **/
 static const std::vector<std::string> DNS_SeedNodes_Testnet =
 {
-    "node1.nexusearth.com",
-    "node4.nexusearth.com"
+    "node1.nexusoft.io",
+    "node2.nexusoft.io",
+    "node3.nexusoft.io",
+    "node4.nexusoft.io"
 };
 
 
