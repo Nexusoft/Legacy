@@ -361,7 +361,7 @@ namespace Core
                     return error("CBlock::SetBestChain() : DisconnectBlock %s failed", pindex->GetBlockHash().ToString().substr(0,20).c_str());
 
                 /** Remove Transactions from Current Trust Keys **/
-                if(block.IsProofOfStake() && !cTrustPool.Disconnect(block))
+                if(block.nVersion < 5 && block.IsProofOfStake() && !cTrustPool.Disconnect(block))
                     return error("CBlock::SetBestChain() : Disconnect Failed to Remove Trust Key at Block %s", pindex->GetBlockHash().ToString().substr(0,20).c_str());
 
                 /** Resurrect Memory Pool Transactions. **/
@@ -391,8 +391,8 @@ namespace Core
                 if(pindex->pprev && IsNewTimespan(pindex->pprev))
                     HardenCheckpoint(pindex);
 
-                /* Add Transaction to Current Trust Keys */
-                if(block.IsProofOfStake() && !cTrustPool.Connect(block))
+                /* Add Transaction to Current Trust Keys (only for versions < 5)*/
+                if(block.nVersion < 5 && block.IsProofOfStake() && !cTrustPool.Connect(block))
                     return error("CBlock::SetBestChain() : Failed To Accept Trust Key Block.");
 
                 /* Delete Memory Pool Transactions contained already. **/
@@ -635,11 +635,10 @@ namespace Core
         /** Check the Prime Number Proof of Work for the Prime Channel. **/
         if(GetChannel() == 1)
         {
-            unsigned int nPrimeBits = GetPrimeBits(GetPrime());
-            if (GetBoolArg("-regtest",false))
-                if (nPrimeBits < bnProofOfWorkLimitRegtest[1])
-                    return error("VerifyWork() : prime below minimum work");
+            if(nVersion >= 5 && ProofHash() < bnPrimeMinOrigins.getuint1024())
+                return error("VerifyWork() : prime origins below 1016-bits");
 
+            unsigned int nPrimeBits = GetPrimeBits(GetPrime());
             if (nPrimeBits < bnProofOfWorkLimit[1])
                 return error("VerifyWork() : prime below minimum work");
 
@@ -658,7 +657,7 @@ namespace Core
 
 
         /** Check that the Hash is within Proof of Work Amount. **/
-        if (GetHash() > bnTarget.getuint1024())
+        if ((nVersion < 5 ? GetHash() : ProofHash()) > bnTarget.getuint1024())
             return error("VerifyWork() : proof-of-work hash below target");
 
         return true;
@@ -993,6 +992,34 @@ namespace Core
         return true;
     }
 
+    /* New proof hash for all channels (version > 5) */
+    uint1024 CBlock::ProofHash() const
+    {
+        if(GetChannel() == 1)
+            return SK1024(BEGIN(nVersion), END(nBits));
+
+        /* Hashing template for GPU uses nVersion to nNonce */
+        if(GetChannel() == 2)
+            return SK1024(BEGIN(nVersion), END(nNonce));
+
+        /* Extract the Key from the Script Signature. */
+        vector<std::vector<unsigned char> > vSolutions;
+        Wallet::TransactionType whichType;
+        const CTxOut& txout = vtx[0].vout[0];
+
+        if (!Solver(txout.scriptPubKey, whichType, vSolutions))
+            return false;
+        if (whichType != Wallet::TX_PUBKEY)
+            return ~uint1024(0);
+
+        /* Set the Public Key Integer Key from Bytes. */
+        uint576 cKey;
+        cKey.SetBytes(vSolutions[0]);
+
+        //nVersion, hashPrevBlock, nChannel, nHeight, nBits, nOnce, vchTrustKey (extracted from coinstake)
+        return SerializeHash(nVersion, hashPrevBlock, nChannel, nHeight, nBits, cKey, nNonce);
+    }
+
 
     // Nexus: sign block
     bool CBlock::SignBlock(const Wallet::CKeyStore& keystore)
@@ -1012,7 +1039,7 @@ namespace Core
                 return false;
             if (key.GetPubKey() != vchPubKey)
                 return false;
-            return key.Sign((nVersion >= 4) ? SignatureHash() : GetHash(), vchBlockSig, 1024);
+            return key.Sign((nVersion == 4) ? SignatureHash() : GetHash(), vchBlockSig, 1024);
         }
         return false;
     }
@@ -1038,7 +1065,7 @@ namespace Core
                 return false;
             if (vchBlockSig.empty())
                 return false;
-            return key.Verify((nVersion >= 4) ? SignatureHash() : GetHash(), vchBlockSig, 1024);
+            return key.Verify((nVersion == 4) ? SignatureHash() : GetHash(), vchBlockSig, 1024);
         }
         return false;
     }

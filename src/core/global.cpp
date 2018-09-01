@@ -40,6 +40,10 @@ namespace Core
     const int64 MAX_TXOUT_AMOUNT = 1000000 * COIN;
 
 
+    /** Maximum Coins that can be Sent in 1 Transaction is 50 Million Nexus. **/
+    const int64 MAX_TRANSACTION_AMOUNT = 50000000 * COIN;
+
+
     /** Minimum Output can be 1 Satoshi. **/
     const int64 MIN_TXOUT_AMOUNT = 1;
 
@@ -254,10 +258,7 @@ namespace Core
     /** Initial Difficulty Adjustments. **/
     CBigNum bnProofOfWorkLimit[] = { CBigNum(~uint1024(0) >> 5), CBigNum(20000000), CBigNum(~uint1024(0) >> 17) };
     CBigNum bnProofOfWorkStart[] = { CBigNum(~uint1024(0) >> 7), CBigNum(25000000), CBigNum(~uint1024(0) >> 22) };
-
-    /** Alternate Difficulty Adjustments for Regression Tests. **/
-    CBigNum bnProofOfWorkLimitRegtest[] = { CBigNum(~uint1024(0) >> 5), CBigNum(100000), CBigNum(~uint1024(0) >> 17) };
-    CBigNum bnProofOfWorkStartRegtest[] = { CBigNum(~uint1024(0) >> 7), CBigNum(100000), CBigNum(~uint1024(0) >> 22) };
+    CBigNum bnPrimeMinOrigins    =  CBigNum(~uint1024(0) >> 8); //minimum prime origins of 1016 bits
 
     int nCoinbaseMaturity = COINBASE_MATURITY;
     CBlockIndex* pindexGenesisBlock = NULL;
@@ -291,4 +292,5 @@ namespace Core
 
     // Settings
     int64 nTransactionFee = MIN_TX_FEE;
+
 }

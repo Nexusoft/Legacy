@@ -323,7 +323,7 @@ namespace Core
             if ((!txout.IsEmpty()) && txout.nValue < MIN_TXOUT_AMOUNT)
                 return DoS(100, error("CTransaction::CheckTransaction() : txout.nValue below minimum"));
 
-            if (txout.nValue > MAX_TXOUT_AMOUNT)
+            if (txout.nValue > MaxTxOut())
                 return DoS(100, error("CTransaction::CheckTransaction() : txout.nValue too high"));
 
             nValueOut += txout.nValue;
@@ -964,5 +964,3 @@ bool Wallet::CWalletTx::AcceptWalletTransaction()
     LLD::CIndexDB indexdb("r");
     return AcceptWalletTransaction(indexdb);
 }
-
-

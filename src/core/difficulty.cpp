@@ -111,11 +111,6 @@ namespace Core
     /** Proof of Stake Retargeting: Modulate Difficulty based on production rate. **/
     unsigned int RetargetPOS(const CBlockIndex* pindex, bool output)
     {
-        /** Do not retarget in regression test mode. **/
-        if (GetBoolArg("-regtest",false)) {
-            return bnProofOfWorkStartRegtest[0].GetCompact();
-        }
-
         /** Get Last Block Index [1st block back in Channel]. **/
         const CBlockIndex* pindexFirst = GetLastChannelIndex(pindex, 0);
         if (pindexFirst->pprev == NULL)
@@ -179,14 +174,8 @@ namespace Core
 
 
         /** Don't allow Difficulty to decrease below minimum. **/
-        if (GetBoolArg("-regtest",false)) {
-            if (bnNew > bnProofOfWorkLimitRegtest[0])
-                bnNew = bnProofOfWorkLimitRegtest[0];
-        }
-        else {
-            if (bnNew > bnProofOfWorkLimit[0])
-                bnNew = bnProofOfWorkLimit[0];
-        }
+        if (bnNew > bnProofOfWorkLimit[0])
+            bnNew = bnProofOfWorkLimit[0];
 
 
         if(GetArg("-verbose", 0) >= 1 && output)
@@ -209,11 +198,6 @@ namespace Core
         will decrease keeping the time difference in difficulty jumps the same from diff 1 - 100. **/
     unsigned int RetargetCPU(const CBlockIndex* pindex, bool output)
     {
-        /** For regression testing only, allow low difficulty. **/
-        if (GetBoolArg("-regtest",false)) {
-            return bnProofOfWorkStartRegtest[1].getuint();
-        }
-
         /** Get Last Block Index [1st block back in Channel]. **/
         const CBlockIndex* pindexFirst = GetLastChannelIndex(pindex, 1);
         if (!pindexFirst->pprev)

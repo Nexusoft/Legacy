@@ -75,7 +75,7 @@ namespace Net
     int64 AmountFromValue(const Value& value)
     {
         double dAmount = value.get_real();
-        if (dAmount <= 0.0 || dAmount > Core::MAX_TXOUT_AMOUNT)
+        if (dAmount <= 0.0 || dAmount > Core::MaxTxOut())
             throw JSONRPCError(-3, "Invalid amount");
         int64 nAmount = roundint64(dAmount * COIN);
         if (!Core::MoneyRange(nAmount))

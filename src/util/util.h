@@ -679,6 +679,18 @@ uint512 SerializeHash(const T& obj, int nType=SER_GETHASH, int nVersion=PROTOCOL
     return SK512(ss.begin(), ss.end());
 }
 
+template<typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7>
+uint1024 SerializeHash(const T1& t1, const T2& t2, const T3& t3, const T4& t4, const T5& t5, const T6& t6, const T7& t7, int nType=SER_GETHASH, int nVersion=PROTOCOL_VERSION)
+{
+    // Most of the time is spent allocating and deallocating CDataStream's
+    // buffer.  If this ever needs to be optimized further, make a CStaticStream
+    // class with its buffer on the stack.
+    CDataStream ss(nType, nVersion);
+    ss.reserve(10000);
+    ss << t1 << t2 << t3 << t4 << t5 << t6 << t7;
+    return SK1024(ss.begin(), ss.end());
+}
+
 
 /** Average Filter used to give the Numerical Average over given set of values. **/
 template <typename type> class CAverage
@@ -853,4 +865,3 @@ inline uint32_t ByteReverse(uint32_t value)
 }
 
 #endif
-
