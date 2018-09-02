@@ -387,10 +387,6 @@ namespace Core
                     return error("CBlock::SetBestChain() : ConnectBlock %s Height %u failed", pindex->GetBlockHash().ToString().substr(0,20).c_str(), pindex->nHeight);
                 }
 
-                /* Harden a pending checkpoint if this is the case. */
-                if(pindex->pprev && IsNewTimespan(pindex->pprev))
-                    HardenCheckpoint(pindex);
-
                 /* Add Transaction to Current Trust Keys (only for versions < 5)*/
                 if(block.nVersion < 5 && block.IsProofOfStake() && !cTrustPool.Connect(block))
                     return error("CBlock::SetBestChain() : Failed To Accept Trust Key Block.");
@@ -574,7 +570,7 @@ namespace Core
         }
 
         /* Add the Pending Checkpoint into the Blockchain. */
-        if(!pindexNew->pprev || IsNewTimespan(pindexNew->pprev))
+        if(!pindexNew->pprev || HardenCheckpoint(pindexNew->pprev))
         {
             pindexNew->PendingCheckpoint = make_pair(pindexNew->nHeight, pindexNew->GetBlockHash());
 
@@ -915,28 +911,14 @@ namespace Core
             if (vtx[0].nTime < pindexPrev->GetBlockTime())
                 return error("AcceptBlock() : Coinstake Timestamp too Early.");
 
-            if(nVersion < 5)
-            {
-                if(!cTrustPool.Accept(*this))
-                    return DoS(50, error("AcceptBlock() : Unable to Accept Trust Key"));
-            }
-            else //version 5 and up
-            {
-                /* Check the proof hash of the stake block on version 5 and above. */
-                CBigNum bnTarget;
-                bnTarget.SetCompact(nBits);
-                uint1024 hashTarget = bnTarget.getuint1024();
+            /* Version 4 blocks accept as usual into the trust pool. */
+            if(nVersion < 5 && !cTrustPool.Accept(*this))
+                return DoS(50, error("AcceptBlock() : Unable to Accept Trust Key"));
 
-                if(StakeHash() > hashTarget)
-                    return error("CTrustPool::check() : Proof of Stake Hash not meeting Target.");
+            /* Version 5 blocks don't need trust pool - do basic checks here. */
+            else if(!CheckStake())
+                return DoS(50, error("AcceptBlock() : Invalid Proof of Stake"));
 
-                unsigned int nScore;
-                if(!TrustScore(nScore))
-                    return DoS(50, error("AcceptBlock() : Trust Score Incorrect"));
-
-                if(!CheckStake())
-                    return DoS(50, error("AcceptBlock() : Invalid Proof of Stake"));
-            }
         }
 
 
@@ -1029,93 +1011,274 @@ namespace Core
     }
 
 
-    bool CBlock::CheckStake() const
+    bool CBlock::CheckStake()
     {
+        /* Check the proof hash of the stake block on version 5 and above. */
+        CBigNum bnTarget;
+        bnTarget.SetCompact(nBits);
+        if(StakeHash() > bnTarget.getuint1024())
+            return error("CBlock::CheckStake() : Proof of Stake Hash not meeting Target.");
 
+        /* Get the score and make sure it all checks out. */
+        unsigned int nTrustAge;
+        if(!TrustScore(nTrustAge))
+            return DoS(50, error("CBlock::CheckStake() : Trust Score Incorrect"));
+
+        /* Get the weights with the block age. */
+        unsigned int nBlockAge;
+        if(!BlockAge(nBlockAge))
+            return DoS(50, error("CBlock::CheckStake() : Failed to get block age"));
+
+        /* Weight for Trust transactions combine block weight and stake weight. */
+        double nTrustWeight = 0.0, nBlockWeight = 0.0;
+        if(vtx[0].IsTrust())
+        {
+
+            /** Trust Weight Reaches Maximum at 30 day Limit. **/
+            nTrustWeight = min(17.5, (((16.5 * log(((2.0 * nTrustAge) / (60 * 60 * 24 * 28)) + 1.0)) / log(3))) + 1.0);
+
+            /** Block Weight Reaches Maximum At Trust Key Expiration. **/
+            nBlockWeight = min(20.0, (((19.0 * log(((2.0 * nBlockAge) / ((fTestNet ? TRUST_KEY_TIMESPAN_TESTNET : TRUST_KEY_TIMESPAN))) + 1.0)) / log(3))) + 1.0);
+        }
+
+        /* Weight for Gensis transactions are based on your coin age. */
+        else
+        {
+            /* Calculate the Average Coinstake Age. */
+            LLD::CIndexDB indexdb("r");
+            uint64 nCoinAge;
+            if(!vtx[0].GetCoinstakeAge(indexdb, nCoinAge))
+                return error("CBlock::CheckStake() : Failed to Get Coinstake Age.");
+
+            /* Genesis has to wait for one full trust key timespan. */
+            if(nCoinAge < (fTestNet ? TRUST_KEY_TIMESPAN_TESTNET : TRUST_KEY_TIMESPAN))
+                return error("CBlock::CheckStake() : Genesis age is immature");
+
+            /* Trust Weight For Genesis Transaction Reaches Maximum at 90 day Limit. */
+            nTrustWeight = min(17.5, (((16.5 * log(((2.0 * nCoinAge) / (60 * 60 * 24 * 28 * 3)) + 1.0)) / log(3))) + 1.0);
+        }
+
+        /* Check the energy efficiency requirements. */
+        double nThreshold = ((nTime - vtx[0].nTime) * 100.0) / nNonce;
+        double nRequired  = ((50.0 - nTrustWeight - nBlockWeight) * MAX_STAKE_WEIGHT) / vtx[0].vout[0].nValue;
+        if(nThreshold < nRequired)
+            return error("CBlock::CheckStake() : energy threshold too low (%f) required (%f)", nThreshold, nRequired);
+
+        /* Verbose logging. */
+        if(GetArg("-verbose", 0) >= 2)
+        {
+            printf("VerifyStake: hash=%s target=%s trustscore=%u blockage=%u trustweight=%f blockweight=%f threshold=%f required=%f time=%u nonce=%" PRIu64 "\n", StakeHash().ToString().substr(0, 20).c_str(), bnTarget.getuint1024().ToString().substr(0, 20).c_str(), nTrustAge, nBlockAge, nTrustWeight, nBlockWeight, nThreshold, nRequired, (unsigned int)(nTime - vtx[0].nTime), nNonce);
+        }
+
+        return true;
     }
 
 
     bool CBlock::ExtractTrust(uint1024& hashLastBlock, unsigned int& nSequence, unsigned int& nTrustScore)
     {
+        /* Don't extract trust if not coinstake. */
         if(!IsProofOfStake())
             return error("CBlock::ExtractTrust() : not proof of stake");
 
+        /* Check the script size matches expected length. */
         if(vtx[0].vin[0].scriptSig.size() != 144)
             return error("CBlock::ExtractTrust() : script not 144 (%u) bytes", vtx[0].vin[0].scriptSig.size());
 
-        //extract the published data from input script
+        /* Put script in deserializing stream. */
         CDataStream scriptPub(vtx[0].vin[0].scriptSig, SER_NETWORK, PROTOCOL_VERSION);
-        scriptPub.erase(scriptPub.begin(), scriptPub.begin() + 8); //erase the script sig bytes
+
+        /* Erase the first 8 bytes of the fib byte series flag. */
+        scriptPub.erase(scriptPub.begin(), scriptPub.begin() + 8);
+
+        /* Deserialize the values from stream. */
         scriptPub >> hashLastBlock >> nSequence >> nTrustScore;
 
         return true;
     }
 
 
+    bool CBlock::BlockAge(unsigned int& nAge)
+    {
+        /* No age for non proof of stake or non version 5 blocks */
+        if(!IsProofOfStake() || nVersion < 5)
+            return error("CBlock::TrustScore() : not proof of stake / version < 5");
+
+        /* Genesis has a age 0. */
+        if(vtx[0].IsGenesis())
+        {
+            nAge = 0;
+            return true;
+        }
+
+        /* Version 5 - last trust block. */
+        uint1024 hashLastBlock;
+
+        /* Version 5 - the key sequence number. */
+        unsigned int nSequence;
+
+        /* Version 5 - the key trust score. */
+        unsigned int nTrustScore;
+
+        /* Extract values from coinstake vin. */
+        if(!ExtractTrust(hashLastBlock, nSequence, nTrustScore))
+            return error("CBlock::BlockAge() : failed to extract values from script");
+
+        /* Check that the last block is in the block index. */
+        if(!mapBlockIndex.count(hashLastBlock))
+            return error("CBlock::BlockAge() : previous block (%s) not in block index", hashLastBlock.ToString().substr(0, 20).c_str());
+
+        /* Read the previous block from disk. */
+        nAge = mapBlockIndex[hashPrevBlock]->GetBlockTime() - mapBlockIndex[hashLastBlock]->GetBlockTime();
+
+        return true;
+    }
+
+
+    /* Calculates the trust score of given trust key included in a block. */
     bool CBlock::TrustScore(unsigned int& nScore)
     {
+        /* No trust score for non proof of stake (for now). */
         if(!IsProofOfStake())
             return error("CBlock::TrustScore() : not proof of stake");
 
+        /* Genesis has a trust score of 0. */
         if(vtx[0].IsGenesis())
-            return 0;
-
-        if(nVersion == 4)
         {
-            uint576 cKey;
-            if(!TrustKey(cKey))
-                return error("CBlock::TrustScore() : trust key not found in script");
+            nScore = 0;
+            return true;
+        }
 
+        /* Extract the trust key from the coinstake. */
+        uint576 cKey;
+        if(!TrustKey(cKey))
+            return error("CBlock::TrustScore() : trust key not found in script");
+
+        /* Block version 4 specific rules. */
+        if(nVersion < 5)
+        {
+            /* Check the trust pool - this should only execute once transitioning from version 4 to version 5 trust keys. */
             if(!cTrustPool.Exists(cKey))
                 return error("CBlock::TrustScore() : version 4 key not found");
 
+            /* Ensure that a version 4 trust key is not expired. */
             CTrustKey trustKey = cTrustPool.Find(cKey);
             if(trustKey.Expired(GetHash(), hashPrevBlock))
                 return error("CBlock::TrustScore() : version 4 key expired.");
 
+            /* Score is the total age of the trust key for version 4. */
             nScore = trustKey.Age(mapBlockIndex[hashPrevBlock]->GetBlockTime());
 
             return true;
         }
 
-        uint1024 hashLastBlock[1];
-        unsigned int nSequence[1];
-        unsigned int nTrustScore[1];
-        if(!ExtractTrust(hashLastBlock[0], nSequence[0], nTrustScore[0]))
-            return false;
+        /* Version 5 - last trust blocks. */
+        uint1024 hashLastBlock;
 
+        /* Version 5 - the key sequence numbers. */
+        unsigned int nSequence;
 
-        //check if previous block matches
-        if(!mapBlockIndex.count(hashLastBlock[0]))
-            return error("CBlock::TrustScore() : previous block (%s) not in block index", hashLastBlock[0].ToString().substr(0, 20).c_str());
+        /* Version 5 - the key trust scores. */
+        unsigned int nTrustScore;
 
-        //read previous block
+        /* Extract values from coinstake vin. */
+        if(!ExtractTrust(hashLastBlock, nSequence, nTrustScore))
+            return error("CBlock::TrustScore() : failed to extract trust");
+
+        /* Check that the last block is in the block index. */
+        if(!mapBlockIndex.count(hashLastBlock))
+            return error("CBlock::TrustScore() : previous block (%s) not in block index", hashLastBlock.ToString().substr(0, 20).c_str());
+
+        /* Check that the block is connected. */
+        CBlockIndex* pindexPrev = mapBlockIndex[hashLastBlock];
+        if(!pindexPrev->pnext)
+            return error("CBlock::TrustScore() : previous blocks is not in main chain");
+
+        /* Read the previous block from disk. */
         CBlock blockPrev;
-        if(!blockPrev.ReadFromDisk(mapBlockIndex[hashLastBlock[0]]->nFile, mapBlockIndex[hashLastBlock[0]]->nBlockPos, true))
+        if(!blockPrev.ReadFromDisk(pindexPrev->nFile, pindexPrev->nBlockPos, true))
             return error("CBlock::TrustScore() : can't read previous block");
 
-        unsigned int nPrevScore = 0;
-        if(blockPrev.nVersion >= 5)
+        /* Extract the last trust key */
+        uint576 keyLast;
+        if(!blockPrev.TrustKey(keyLast))
+            return error("CBlock::TrustScore() : trust key not found in previous script");
+
+        /* Enforce the minimum trust key interval of 120 blocks. */
+        if(nHeight - blockPrev.nHeight < 120)
+            return error("CBlock::TrustScore() : trust key interval below 120 blocks %u", nHeight - blockPrev.nHeight);
+
+        /* Ensure the last block being checked is the same trust key. */
+        if(keyLast != cKey)
+            return error("CBlock::TrustScore() : trust key in previous block (%s) mismatch to this one (%s)", cKey.ToString().substr(0, 20).c_str(), keyLast.ToString().substr(0, 20).c_str());
+
+        /* Placeholder in case previous block is a version 4 block. */
+        unsigned int nScorePrev = 0;
+
+        /* Version 4 blocks need to get score from previous blocks calculated score from the trust pool. */
+        if(nVersion < 5)
         {
-            if(!ExtractTrust(hashLastBlock[1], nSequence[1], nTrustScore[1]))
-                return false;
+            /* Enforce sequence number of 1 for anything made from version 4 blocks. */
+            if(nSequence != 1)
+                return error("CBlock::TrustScore() : version 4 block sequence number not 1 (%u)", nSequence);
 
-            //enforce the sequence numbering
-            if(nSequence[0] != nSequence[1] + 1)
-                return error("CBlock::TrustScore() : Previous Sequence (%u) broken (%u)", nSequence[1], nSequence[0]);
-
-            nPrevScore = nTrustScore[1];
+            /* Set the previous score from trust pool recursively. */
+            if(!blockPrev.TrustScore(nScorePrev))
+                return error("CBlock::TrustScore() : Previous block (%s) couldn't get score", hashLastBlock.ToString().substr(0, 20).c_str());
         }
-        else if(!blockPrev.TrustScore(nPrevScore))
-            return error("CBlock::TrustScore() : Previous block (%s) couldn't get score", hashLastBlock[0].ToString().substr(0, 20).c_str());
 
-        int nTimespan = (nTime - mapBlockIndex[hashLastBlock[0]]->GetBlockTime());
+        /* Version 5 blocks that are trust must pass sequence checks. */
+        else if(blockPrev.vtx[0].IsTrust())
+        {
+            /* The last block of previous. */
+            uint1024 hashBlockPrev; //dummy variable unless we want to do recursive checking of scores all the way back to genesis
+
+            /* Extract the value from the previous block. */
+            unsigned int nSequencePrev;
+            if(!blockPrev.ExtractTrust(hashBlockPrev, nSequencePrev, nScorePrev))
+                return error("CBlock::TrustScore() : failed to extract trust");
+
+            /* Enforce Sequence numbering, must be +1 always. */
+            if(nSequence != nSequencePrev + 1)
+                return error("CBlock::TrustScore() : Previous Sequence (%u) broken (%u)", nSequencePrev, nSequence);
+        }
+
+        /* If previous block is genesis, set previous score to 0. */
+        else if(blockPrev.vtx[0].IsGenesis())
+        {
+            /* Enforce sequence number 1 if previous block was genesis */
+            if(nSequence != 1)
+                return error("CBlock::TrustScore() : first trust block and sequence is not 1 (%u)", nSequence);
+
+            /* Genesis results in a previous score of 0. */
+            nScorePrev = 0;
+        }
+
+        /* The time it has been since the last trust block for this trust key. */
+        int nTimespan = (nTime - blockPrev.nTime);
+
+        /* Timespan less than required timespan is awarded the total seconds it took to find. */
         if(nTimespan < (fTestNet ? TRUST_KEY_TIMESPAN_TESTNET : TRUST_KEY_TIMESPAN))
-            nScore = nPrevScore + nTimespan; //trust score is previous score + new time found
-        else
-            nScore = (nPrevScore - ((nTimespan - (fTestNet ? TRUST_KEY_TIMESPAN_TESTNET : TRUST_KEY_TIMESPAN) * 3))); //penalty is 3 times the time past 3 days
+            nScore = nScorePrev + nTimespan;
 
-        if(nTrustScore[0] != nScore)
+        /* Timespan more than required timespan is penalized 3 times the time it took past the required timespan. */
+        else
+        {
+            /* Calculate the penalty for score (3x the time). */
+            int nPenalty = (nTimespan - (fTestNet ? TRUST_KEY_TIMESPAN_TESTNET : TRUST_KEY_TIMESPAN)) * 3;
+
+            /* Catch overflows and zero out if penalties are greater than previous score. */
+            if(nPenalty > nScorePrev)
+                nScore = 0;
+            else
+                nScore = (nScorePrev - nPenalty);
+        }
+
+        /* Debug output. */
+        if(GetArg("-verbose", 0) >= 2)
+            printf("TrustScore: score=%u prev=%u change=%i", nScore, nScorePrev, (int)(nScore - nScorePrev));
+
+        /* Check that published score in this block is equivilent to calculated score. */
+        if(nTrustScore != nScore)
             return error("CBlock::TrustScore() : published trust score (%u) not meeting calculated score (%u)", nTrustScore, nScore);
 
         return true;
@@ -1128,9 +1291,11 @@ namespace Core
         Wallet::TransactionType whichType;
         const CTxOut& txout = vtx[0].vout[0];
 
+        /* Extract the key from script sig. */
         if (!Solver(txout.scriptPubKey, whichType, vSolutions))
             return error("CBlock::TrustKey() : Couldn't find trust key in script");
 
+        /* Enforce public key rules. */
         if (whichType != Wallet::TX_PUBKEY)
             return error("CBlock::TrustKey() : key not of public key type");
 
@@ -1290,7 +1455,7 @@ namespace Core
             fTestNet? "Test" : "Nexus", hashGenesisBlock.ToString().substr(0, 20).c_str(), bnProofOfWorkLimit[0].GetCompact(), bnProofOfWorkStart[0].GetCompact(), nCoinbaseMaturity);
 
         /** Initialize Block Index Database. **/
-        LLD::CIndexDB indexdb("cr");
+        LLD::CIndexDB indexdb("r+");
         if (!indexdb.LoadBlockIndex() || mapBlockIndex.empty())
         {
             if (!fAllowNew)
@@ -1317,6 +1482,8 @@ namespace Core
             block.nNonce   = fTestNet ? 122999499 : 2196828850;
 
             assert(block.hashMerkleRoot == uint512("0x8a971e1cec5455809241a3f345618a32dc8cb3583e03de27e6fe1bb4dfa210c413b7e6e15f233e938674a309df5a49db362feedbf96f93fb1c6bfeaa93bd1986"));
+
+            assert(txNew.nTime == block.nTime);
 
             CBigNum target;
             target.SetCompact(block.nBits);

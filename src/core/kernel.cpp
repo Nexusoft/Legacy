@@ -50,7 +50,7 @@ namespace Wallet
 
             /* Do not add coins to Genesis block if age < 24hrs */
             if (txNew.IsGenesis() && (txNew.nTime - pcoin->nTime) < 24 * 60 * 60)
-            continue;
+                continue;
 
             for (unsigned int i = 0; i < pcoin->vout.size(); i++)
             {
@@ -894,8 +894,15 @@ namespace Core
                 {
                     cKey.SetBytes(reservekey.GetReservedKey());
                     baseBlock.vtx[0].vout[0].scriptPubKey << reservekey.GetReservedKey() << Wallet::OP_CHECKSIG;
+                    assert(cKey.GetBytes() == reservekey.GetReservedKey());
 
                     indexdb.WriteMyKey(cKey);
+                }
+                else
+                {
+                    baseBlock.vtx[0].vout[0].scriptPubKey << cKey.GetBytes() << Wallet::OP_CHECKSIG;
+                    baseBlock.vtx[0].vin[0].prevout.n = 0;
+                    baseBlock.vtx[0].vin[0].prevout.hash = ~uint512(0); //version 5 prevout is 0xffffffff.....
                 }
             }
             else

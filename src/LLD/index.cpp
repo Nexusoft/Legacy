@@ -274,7 +274,7 @@ namespace LLD
 
 
                 //TODO: Trust key accept with no cBlock (CBlockIndex instead)
-                if(pindexNew->IsProofOfStake())
+                if(pindexNew->IsProofOfStake() && pindexNew->nVersion < 5)
                 {
                     Core::CBlock block;
                     if(!block.ReadFromDisk(pindexNew))
@@ -285,6 +285,18 @@ namespace LLD
 
                     if(!Core::cTrustPool.Connect(block, true))
                         return error("CTxDB::LoadBlockIndex() : Failed To Connect Trust Key Block.");
+
+                    uint576 cKey;
+                    if(!block.TrustKey(cKey))
+                        return error("CTxDb::LoadBlockIndex() : Failed to extract new trust key");
+
+                    Core::CTrustKey cTrust;
+                    if(!ReadTrustKey(cKey, cTrust))
+                    {
+                        cTrust = Core::cTrustPool.Find(cKey);
+                        WriteTrustKey(cKey, cTrust);
+                        printf("Writing Trust Key to Disk %s\n", cKey.ToString().substr(0, 20).c_str());
+                    }
                 }
 
             }

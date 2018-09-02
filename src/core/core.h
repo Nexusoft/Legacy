@@ -1456,6 +1456,10 @@ namespace Core
         uint1024 StakeHash();
 
 
+        /* The block age for version 5 blocks. */
+        bool BlockAge(unsigned int& nAge);
+
+
         /* The trust score of key. */
         bool TrustScore(unsigned int& nScore);
 
@@ -1465,7 +1469,7 @@ namespace Core
 
 
         /* Check the proof of stake claims. */
-        bool CheckStake() const;
+        bool CheckStake();
 
 
         /* Extract the trust variables from coinstake. */
