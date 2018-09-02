@@ -916,7 +916,7 @@ namespace Core
                 return DoS(50, error("AcceptBlock() : Unable to Accept Trust Key"));
 
             /* Version 5 blocks don't need trust pool - do basic checks here. */
-            else if(!CheckStake())
+            else if(nVersion >= 5 && !CheckStake())
                 return DoS(50, error("AcceptBlock() : Invalid Proof of Stake"));
 
         }

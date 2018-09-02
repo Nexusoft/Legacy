@@ -889,6 +889,8 @@ namespace Core
 
             if(baseBlock.nVersion >= 5)
             {
+                baseBlock.print();
+
                 uint576 cKey;
                 if(!indexdb.ReadMyKey(cKey))
                 {
@@ -896,7 +898,7 @@ namespace Core
                     baseBlock.vtx[0].vout[0].scriptPubKey << reservekey.GetReservedKey() << Wallet::OP_CHECKSIG;
                     assert(cKey.GetBytes() == reservekey.GetReservedKey());
 
-                    indexdb.WriteMyKey(cKey);
+                    //indexdb.WriteMyKey(cKey);
                 }
                 else
                 {
