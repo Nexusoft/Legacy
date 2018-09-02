@@ -912,7 +912,7 @@ namespace Core
         else if (IsProofOfStake())
         {
             /* Check that the Coinbase / CoinstakeTimstamp is after Previous Block. */
-            if (vtx[0].nTime <= pindexPrev->GetBlockTime())
+            if (vtx[0].nTime < pindexPrev->GetBlockTime())
                 return error("AcceptBlock() : Coinstake Timestamp too Early.");
 
             if(nVersion < 5)
@@ -1118,6 +1118,7 @@ namespace Core
 
         if (!Solver(txout.scriptPubKey, whichType, vSolutions))
             return error("CBlock::TrustKey() : Couldn't find trust key in script");
+
         if (whichType != Wallet::TX_PUBKEY)
             return error("CBlock::TrustKey() : key not of public key type");
 

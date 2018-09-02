@@ -191,7 +191,7 @@ namespace Core
         if(GetUnifiedTimestamp() > (fTestNet ? TESTNET_VERSION_TIMELOCK[3] : NETWORK_VERSION_TIMELOCK[3]))
             return MAX_TRANSACTION_AMOUNT;
 
-        return MaxTxOut();
+        return MAX_TXOUT_AMOUNT;
     }
 
 
