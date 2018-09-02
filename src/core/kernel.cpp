@@ -889,18 +889,21 @@ namespace Core
 
             /* Check the Trust Keys. */
             uint576 cKey;
-            if(!cTrustPool.HasTrustKey(pindexBest->GetBlockTime()))
+            if(!indexdb.ReadMyKey(cKey))
             {
-                cKey.SetBytes(reservekey.GetReservedKey());
-                baseBlock.vtx[0].vout[0].scriptPubKey << reservekey.GetReservedKey() << Wallet::OP_CHECKSIG;
-            }
-            else
-            {
-                cKey.SetBytes(cTrustPool.vchTrustKey);
+                if(!cTrustPool.HasTrustKey(pindexBest->GetBlockTime()))
+                {
+                    cKey.SetBytes(reservekey.GetReservedKey());
+                    baseBlock.vtx[0].vout[0].scriptPubKey << reservekey.GetReservedKey() << Wallet::OP_CHECKSIG;
+                }
+                else
+                {
+                    cKey.SetBytes(cTrustPool.vchTrustKey);
 
-                baseBlock.vtx[0].vout[0].scriptPubKey << cTrustPool.vchTrustKey << Wallet::OP_CHECKSIG;
-                baseBlock.vtx[0].vin[0].prevout.n = 0;
-                baseBlock.vtx[0].vin[0].prevout.hash = cTrustPool.Find(cKey).GetHash();
+                    baseBlock.vtx[0].vout[0].scriptPubKey << cTrustPool.vchTrustKey << Wallet::OP_CHECKSIG;
+                    baseBlock.vtx[0].vin[0].prevout.n = 0;
+                    baseBlock.vtx[0].vin[0].prevout.hash = cTrustPool.Find(cKey).GetHash();
+                }
             }
 
 

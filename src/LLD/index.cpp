@@ -117,24 +117,24 @@ namespace LLD
         return Write(string("hashBestChain"), hashBestChain);
     }
 
-    bool CIndexDB::WriteTrustKey(uint512 hashTrustKey, Core::CTrustKey cTrustKey)
+    bool CIndexDB::WriteMyKey(uint576 hashTrustKey)
+    {
+        return Write(string("mytrustkey"), hashTrustKey);
+    }
+
+    bool CIndexDB::ReadMyKey(uint576& hashTrustKey)
+    {
+        return Read(string("mytrustkey"), hashTrustKey);
+    }
+
+    bool CIndexDB::WriteTrustKey(uint576 hashTrustKey, Core::CTrustKey cTrustKey)
     {
         return Write(make_pair(string("trustKey"), hashTrustKey), cTrustKey);
     }
 
-    bool CIndexDB::ReadTrustKey(uint512 hashTrustKey, Core::CTrustKey& cTrustKey)
+    bool CIndexDB::ReadTrustKey(uint576 hashTrustKey, Core::CTrustKey& cTrustKey)
     {
         return Read(make_pair(string("trustKey"), hashTrustKey), cTrustKey);
-    }
-
-    bool CIndexDB::AddTrustBlock(uint512 hashTrustKey, uint1024 hashTrustBlock)
-    {
-        return Write(make_pair(string("trustBlock"), hashTrustBlock), hashTrustKey);
-    }
-
-    bool CIndexDB::RemoveTrustBlock(uint1024 hashTrustBlock)
-    {
-        return Erase(make_pair(string("trustBlock"), hashTrustBlock));
     }
 
     Core::CBlockIndex static * InsertBlockIndex(uint1024 hash)
@@ -298,7 +298,7 @@ namespace LLD
 
         /** Verify the Blocks in the Best Chain To Last Checkpoint. **/
         int nCheckLevel = GetArg("-checklevel", 6);
-        int nCheckDepth = GetArg( "-checkblocks", 10);
+        int nCheckDepth = GetArg("-checkblocks", 10);
         if (nCheckDepth == 0)
             nCheckDepth = 1000000000;
 

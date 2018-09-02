@@ -620,6 +620,7 @@ namespace Core
         uint1024  hashGenesisBlock;
         uint512   hashGenesisTx;
         unsigned int nGenesisTime;
+        unsigned int nTotalBlocks;
 
         /* Previous Blocks Vector to store list of blocks of this Trust Key. */
         mutable std::vector< std::pair<uint1024, bool> > hashPrevBlocks;
@@ -645,6 +646,7 @@ namespace Core
             READWRITE(hashGenesisBlock);
             READWRITE(hashGenesisTx);
             READWRITE(nGenesisTime);
+            READWRITE(nTotalBlocks);
         )
 
 
@@ -655,6 +657,7 @@ namespace Core
             hashGenesisBlock     = 0;
             hashGenesisTx        = 0;
             nGenesisTime         = 0;
+            nTotalBlocks         = 0;
 
             vchPubKey.clear();
         }

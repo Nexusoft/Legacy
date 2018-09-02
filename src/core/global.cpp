@@ -22,8 +22,8 @@ namespace Core
 
 
     /** The current Block Version Activating in this Release. **/
-    const unsigned int NETWORK_BLOCK_CURRENT_VERSION = 4;
-    const unsigned int TESTNET_BLOCK_CURRENT_VERSION = 4;
+    const unsigned int NETWORK_BLOCK_CURRENT_VERSION = 5;
+    const unsigned int TESTNET_BLOCK_CURRENT_VERSION = 5;
 
 
     /** Nexus Max Block size is 2 MB. This is to stay consistent with Nexus's 1 MB limit with 256 bit hashes, where Nexus Transactions are 512 bit. **/
