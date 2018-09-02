@@ -309,7 +309,7 @@ namespace Core
         }
         else
         {
-            if(!IsInitialBlockDownload() && IsProofOfStake() && GetBoolArg("-softban", true) && !cTrustPool.IsValid(*this))
+            if(!fTestNet && !IsInitialBlockDownload() && IsProofOfStake() && GetBoolArg("-softban", true) && !cTrustPool.IsValid(*this))
             {
                 error("\x1b[31m SOFTBAN: Invalid nPoS %s\x1b[0m", hash.ToString().substr(0, 20).c_str());
 
@@ -933,6 +933,9 @@ namespace Core
                 unsigned int nScore;
                 if(!TrustScore(nScore))
                     return DoS(50, error("AcceptBlock() : Trust Score Incorrect"));
+
+                if(!CheckStake())
+                    return DoS(50, error("AcceptBlock() : Invalid Proof of Stake"));
             }
         }
 
@@ -1026,6 +1029,12 @@ namespace Core
     }
 
 
+    bool CBlock::CheckStake() const
+    {
+
+    }
+
+
     bool CBlock::ExtractTrust(uint1024& hashLastBlock, unsigned int& nSequence, unsigned int& nTrustScore)
     {
         if(!IsProofOfStake())
@@ -1047,6 +1056,9 @@ namespace Core
     {
         if(!IsProofOfStake())
             return error("CBlock::TrustScore() : not proof of stake");
+
+        if(vtx[0].IsGenesis())
+            return 0;
 
         if(nVersion == 4)
         {

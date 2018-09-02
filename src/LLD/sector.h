@@ -36,13 +36,15 @@ namespace LLD
         TODO:: Add in the Database File Searching from Sector Keys. Allow Multiple Files.
 
     **/
+
+    /** Mutex for Thread Synchronization.
+        TODO: Lock Mutex based on Read / Writes on a per Sector Basis.
+        Will allow higher efficiency for thread concurrency. **/
+    static boost::mutex SECTOR_MUTEX;
+
     class SectorDatabase
     {
     protected:
-        /** Mutex for Thread Synchronization.
-            TODO: Lock Mutex based on Read / Writes on a per Sector Basis.
-            Will allow higher efficiency for thread concurrency. **/
-        boost::mutex SECTOR_MUTEX;
 
         /** The String to hold the Disk Location of Database File.
             Each Database File Acts as a New Table as in Conventional Design.

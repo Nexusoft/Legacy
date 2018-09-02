@@ -105,7 +105,7 @@ namespace Core
                                                         1421293891,        //--- Block Version 3 Testnet Activation:  01/15/2015 07:51:31 GMT - 6
                                                         1421949600,        //--- Block Version 4 Testnet Activation:  05/10/2015 08:01:00 GMT - 6
                                                         1535915460 };      //--- Block Version 5 Testnet Activation:  09/01/2018 12:11:00 GMT - 7
-
+                                                        
     /* Network Time - Lock for the First Nexus Block Update. Version 1 Blocks Rejected after this Time - Lock, Version 2 Blocks Rejected Before it. */
     const unsigned int NETWORK_VERSION_TIMELOCK[]   = { 1412964000,        //--- Block Version 2 Activation:          10/10/2014 12:00:00 GMT - 6
                                                         1421949600,        //--- Block Version 3 Activation:          01/22/2015 12:00:00 GMT - 6

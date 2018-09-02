@@ -31,6 +31,9 @@ namespace LLD
         bool WriteTrustKey(uint576 hashTrustKey, Core::CTrustKey cTrustKey);
         bool ReadTrustKey(uint576 hashTrustKey, Core::CTrustKey& cTrustKey);
 
+        bool ReadLastTrust(uint1024& hashLastBlock);
+        bool WriteLastTrust(uint1024 hashLastBlock);
+
         bool WriteBlockIndex(const Core::CDiskBlockIndex& blockindex);
         bool ReadBlockIndex(const uint1024 hashBlock, Core::CBlockIndex* pindexNew);
         bool ReadHashBestChain(uint1024& hashBestChain);

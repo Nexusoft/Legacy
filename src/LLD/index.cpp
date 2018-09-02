@@ -137,6 +137,16 @@ namespace LLD
         return Read(make_pair(string("trustKey"), hashTrustKey), cTrustKey);
     }
 
+    bool CIndexDB::ReadLastTrust(uint1024& hashLastBlock)
+    {
+        return Read(string("lasttrust"), hashLastBlock);
+    }
+
+    bool CIndexDB::WriteLastTrust(uint1024 hashLastBlock)
+    {
+        return Write(string("lasttrust"), hashLastBlock);
+    }
+
     Core::CBlockIndex static * InsertBlockIndex(uint1024 hash)
     {
         if (hash == 0)
