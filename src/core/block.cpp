@@ -787,6 +787,23 @@ namespace Core
         if (GetBlockTime() > (int64)vtx[0].nTime + ((nVersion < 4) ? 1200 : 3600))
             return DoS(50, error("CheckBlock() : coinbase/coinstake timestamp is too early"));
 
+        /* Ensure the Block is for Proof of Stake Only. */
+        if(IsProofOfStake())
+        {
+
+            /* Check the Coinstake Time is before Unified Timestamp. */
+            if(vtx[0].nTime > (GetUnifiedTimestamp() + MAX_UNIFIED_DRIFT))
+                return error("CheckBlock() : Coinstake Transaction too far in Future.");
+
+            /* Make Sure Coinstake Transaction is First. */
+            if (!vtx[0].IsCoinStake())
+                return error("CheckBlock() : First transaction non-coinstake %s", vtx[0].GetHash().ToString().c_str());
+
+            /* Make Sure Coinstake Transaction Time is Before Block. */
+            if (vtx[0].nTime > nTime)
+                return error("CheckBlock()  : Coinstake Timestamp to is ahead of block time");
+
+        }
 
         /** Check the Transactions in the Block. **/
         BOOST_FOREACH(const CTransaction& tx, vtx)
@@ -834,13 +851,13 @@ namespace Core
 
     bool CBlock::AcceptBlock()
     {
-        /** Check for Duplicate Block. **/
+        /* Check for Duplicate Block. */
         uint1024 hash = GetHash();
         if (mapBlockIndex.count(hash))
             return error("AcceptBlock() : block already in mapBlockIndex");
 
 
-        /** Find the Previous block from hashPrevBlock. **/
+        /* Find the Previous block from hashPrevBlock. */
         map<uint1024, CBlockIndex*>::iterator mi = mapBlockIndex.find(hashPrevBlock);
         if (mi == mapBlockIndex.end())
             return DoS(10, error("AcceptBlock() : prev block not found"));
@@ -848,27 +865,26 @@ namespace Core
         int nPrevHeight = pindexPrev->nHeight + 1;
 
 
-        /** Check the Height of Block to Previous Block. **/
+        /* Check the Height of Block to Previous Block. */
         if(nPrevHeight != nHeight)
             return DoS(100, error("AcceptBlock() : incorrect block height."));
 
 
-        /** Check that the nBits match the current Difficulty. **/
+        /* Check that the nBits match the current Difficulty. **/
         if (nBits != GetNextTargetRequired(pindexPrev, GetChannel(), !IsInitialBlockDownload()))
             return DoS(100, error("AcceptBlock() : incorrect proof-of-work/proof-of-stake"));
 
 
-        /** Check That Block Timestamp is not before previous block. **/
+        /* Check That Block Timestamp is not before previous block. */
         if (GetBlockTime() <= pindexPrev->GetBlockTime())
             return error("AcceptBlock() : block's timestamp too early Block: %" PRId64 " Prev: %" PRId64 "", GetBlockTime(), pindexPrev->GetBlockTime());
-
 
         /* Check that Block is Descendant of Hardened Checkpoints. */
         if(!IsInitialBlockDownload() && pindexPrev && !IsDescendant(pindexPrev))
             return error("AcceptBlock() : Not a descendant of Last Checkpoint");
 
 
-        /** Check the Coinbase Transactions in Block Version 3. **/
+        /* Check the Coinbase Transactions in Block Version 3. */
         if(IsProofOfWork() && nHeight > 0 && nVersion >= 3)
         {
             unsigned int nSize = vtx[0].vout.size();
@@ -895,12 +911,29 @@ namespace Core
         /** Check the Proof of Stake Claims. **/
         else if (IsProofOfStake())
         {
-            if(!cTrustPool.Check(*this))
-                return DoS(50, error("AcceptBlock() : Invalid Trust Key"));
+            /* Check that the Coinbase / CoinstakeTimstamp is after Previous Block. */
+            if (vtx[0].nTime <= pindexPrev->GetBlockTime())
+                return error("AcceptBlock() : Coinstake Timestamp too Early.");
 
-            if(!cTrustPool.Accept(*this))
-                return DoS(50, error("AcceptBlock() : Unable to Accept Trust Key"));
+            if(nVersion < 5)
+            {
+                if(!cTrustPool.Accept(*this))
+                    return DoS(50, error("AcceptBlock() : Unable to Accept Trust Key"));
+            }
+            else //version 5 and up
+            {
+                /* Check the proof hash of the stake block on version 5 and above. */
+                CBigNum bnTarget;
+                bnTarget.SetCompact(nBits);
+                uint1024 hashTarget = bnTarget.getuint1024();
 
+                if(StakeHash() > hashTarget)
+                    return error("CTrustPool::check() : Proof of Stake Hash not meeting Target.");
+
+                unsigned int nScore;
+                if(!TrustScore(nScore))
+                    return DoS(50, error("AcceptBlock() : Trust Score Incorrect"));
+            }
         }
 
 
@@ -992,32 +1025,126 @@ namespace Core
         return true;
     }
 
-    /* New proof hash for all channels (version > 5) */
-    uint1024 CBlock::ProofHash() const
+
+    bool CBlock::ExtractTrust(uint1024& hashLastBlock, unsigned int& nSequence, unsigned int& nTrustScore)
     {
-        if(GetChannel() == 1)
-            return SK1024(BEGIN(nVersion), END(nBits));
+        if(!IsProofOfStake())
+            return error("CBlock::ExtractTrust() : not proof of stake");
 
-        /* Hashing template for GPU uses nVersion to nNonce */
-        if(GetChannel() == 2)
-            return SK1024(BEGIN(nVersion), END(nNonce));
+        if(vtx[0].vin[0].scriptSig.size() != 144)
+            return error("CBlock::ExtractTrust() : script not 144 (%u) bytes", vtx[0].vin[0].scriptSig.size());
 
+        //extract the published data from input script
+        CDataStream scriptPub(vtx[0].vin[0].scriptSig, SER_NETWORK, PROTOCOL_VERSION);
+        scriptPub.erase(scriptPub.begin(), scriptPub.begin() + 8); //erase the script sig bytes
+        scriptPub >> hashLastBlock >> nSequence >> nTrustScore;
+
+        return true;
+    }
+
+
+    bool CBlock::TrustScore(unsigned int& nScore)
+    {
+        if(!IsProofOfStake())
+            return error("CBlock::TrustScore() : not proof of stake");
+
+        if(nVersion == 4)
+        {
+            uint576 cKey;
+            if(!TrustKey(cKey))
+                return error("CBlock::TrustScore() : trust key not found in script");
+
+            if(!cTrustPool.Exists(cKey))
+                return error("CBlock::TrustScore() : version 4 key not found");
+
+            CTrustKey trustKey = cTrustPool.Find(cKey);
+            if(trustKey.Expired(GetHash(), hashPrevBlock))
+                return error("CBlock::TrustScore() : version 4 key expired.");
+
+            nScore = trustKey.Age(mapBlockIndex[hashPrevBlock]->GetBlockTime());
+
+            return true;
+        }
+
+        uint1024 hashLastBlock[1];
+        unsigned int nSequence[1];
+        unsigned int nTrustScore[1];
+        if(!ExtractTrust(hashLastBlock[0], nSequence[0], nTrustScore[0]))
+            return false;
+
+
+        //check if previous block matches
+        if(!mapBlockIndex.count(hashLastBlock[0]))
+            return error("CBlock::TrustScore() : previous block (%s) not in block index", hashLastBlock[0].ToString().substr(0, 20).c_str());
+
+        //read previous block
+        CBlock blockPrev;
+        if(!blockPrev.ReadFromDisk(mapBlockIndex[hashLastBlock[0]]->nFile, mapBlockIndex[hashLastBlock[0]]->nBlockPos, true))
+            return error("CBlock::TrustScore() : can't read previous block");
+
+        unsigned int nPrevScore = 0;
+        if(blockPrev.nVersion >= 5)
+        {
+            if(!ExtractTrust(hashLastBlock[1], nSequence[1], nTrustScore[1]))
+                return false;
+
+            //enforce the sequence numbering
+            if(nSequence[0] != nSequence[1] + 1)
+                return error("CBlock::TrustScore() : Previous Sequence (%u) broken (%u)", nSequence[1], nSequence[0]);
+
+            nPrevScore = nTrustScore[1];
+        }
+        else if(!blockPrev.TrustScore(nPrevScore))
+            return error("CBlock::TrustScore() : Previous block (%s) couldn't get score", hashLastBlock[0].ToString().substr(0, 20).c_str());
+
+        int nTimespan = (nTime - mapBlockIndex[hashLastBlock[0]]->GetBlockTime());
+        if(nTimespan < (fTestNet ? TRUST_KEY_TIMESPAN_TESTNET : TRUST_KEY_TIMESPAN))
+            nScore = nPrevScore + nTimespan; //trust score is previous score + new time found
+        else
+            nScore = (nPrevScore - ((nTimespan - (fTestNet ? TRUST_KEY_TIMESPAN_TESTNET : TRUST_KEY_TIMESPAN) * 3))); //penalty is 3 times the time past 3 days
+
+        if(nTrustScore[0] != nScore)
+            return error("CBlock::TrustScore() : published trust score (%u) not meeting calculated score (%u)", nTrustScore, nScore);
+
+        return true;
+    }
+
+    bool CBlock::TrustKey(uint576& cKey)
+    {
         /* Extract the Key from the Script Signature. */
         vector<std::vector<unsigned char> > vSolutions;
         Wallet::TransactionType whichType;
         const CTxOut& txout = vtx[0].vout[0];
 
         if (!Solver(txout.scriptPubKey, whichType, vSolutions))
-            return false;
+            return error("CBlock::TrustKey() : Couldn't find trust key in script");
         if (whichType != Wallet::TX_PUBKEY)
-            return ~uint1024(0);
+            return error("CBlock::TrustKey() : key not of public key type");
 
         /* Set the Public Key Integer Key from Bytes. */
-        uint576 cKey;
         cKey.SetBytes(vSolutions[0]);
+
+        return true;
+    }
+
+    /* New proof hash for all channels (version > 5) */
+    uint1024 CBlock::StakeHash()
+    {
+        /* Get the trust key. */
+        uint576 cKey;
+        TrustKey(cKey);
 
         //nVersion, hashPrevBlock, nChannel, nHeight, nBits, nOnce, vchTrustKey (extracted from coinstake)
         return SerializeHash(nVersion, hashPrevBlock, nChannel, nHeight, nBits, cKey, nNonce);
+    }
+
+    /* New proof hash for all channels (version > 5) */
+    uint1024 CBlock::ProofHash() const
+    {
+        if(GetChannel() == 1)
+            return SK1024(BEGIN(nVersion), END(nBits));
+
+        return SK1024(BEGIN(nVersion), END(nNonce));
     }
 
 

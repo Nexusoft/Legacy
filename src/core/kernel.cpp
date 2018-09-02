@@ -507,52 +507,6 @@ namespace Core
     }
 
 
-
-    /** Check a Block's Coinstake Transaction to see if it fits Trust Key Protocol.
-
-        If Key doesn't exist Transaction must meet Genesis Protocol Requirements.
-        If Key does exist it Must Meet Trust Protocol Requirements.
-
-    **/
-    bool CTrustPool::Check(CBlock cBlock)
-    {
-        /* Lock Accepting Trust Keys to Mutex. */
-        LOCK(cs);
-
-        /* Ensure the Block is for Proof of Stake Only. */
-        if(!cBlock.IsProofOfStake())
-            return error("CTrustPool::check() : Cannot Accept non Coinstake Transactions.");
-
-        /* Check the Coinstake Time is before Unified Timestamp. */
-        if(cBlock.vtx[0].nTime > (GetUnifiedTimestamp() + MAX_UNIFIED_DRIFT))
-            return error("CTrustPool::check() : Coinstake Transaction too far in Future.");
-
-        /* Make Sure Coinstake Transaction is First. */
-        if (!cBlock.vtx[0].IsCoinStake())
-            return error("CTrustPool::check() : First transaction non-coinstake %s", cBlock.vtx[0].GetHash().ToString().c_str());
-
-        /* Make Sure Coinstake Transaction Time is Before Block. */
-        if (cBlock.vtx[0].nTime > cBlock.nTime)
-            return error("CTrustPool::check()  : Coinstake Timestamp to far into Future.");
-
-        /* Check that the Coinbase / CoinstakeTimstamp is after Previous Block. */
-        if (mapBlockIndex[cBlock.hashPrevBlock]->GetBlockTime() > cBlock.vtx[0].nTime)
-            return error("CTrustPool::check()  : Coinstake Timestamp too Early.");
-
-        /* Extract the Key from the Script Signature. */
-        vector< std::vector<unsigned char> > vKeys;
-        Wallet::TransactionType keyType;
-        if (!Wallet::Solver(cBlock.vtx[0].vout[0].scriptPubKey, keyType, vKeys))
-            return error("CTrustPool::check() : Failed To Solve Trust Key Script.");
-
-        /** Ensure the Key is Public Key. No Pay Hash or Script Hash for Trust Keys. **/
-        if (keyType != Wallet::TX_PUBKEY)
-            return error("CTrustPool::check() : Trust Key must be of Public Key Type Created from Keypool.");
-
-        return true;
-    }
-
-
     bool CTrustPool::Connect(CBlock cBlock, bool fInit)
     {
         /* Lock Accepting Trust Keys to Mutex. */
@@ -1088,14 +1042,6 @@ namespace Core
                         {
                             if(GetArg("-verbose", 0) >= 1)
                                 printf("Stake Minter : Could Not Sign Proof of Stake Block.");
-
-                            break;
-                        }
-
-                        if(!cTrustPool.Check(block[i]))
-                        {
-                            if(GetArg("-verbose", 0) >= 1)
-                                error("Stake Minter : Check Trust Key Failed...");
 
                             break;
                         }

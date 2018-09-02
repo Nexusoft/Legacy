@@ -64,9 +64,12 @@ namespace Core
     int TRUST_KEY_EXPIRE   = 60 * 60 * 24;
 
 
-    /* NOTE: For Blocks Version 5 and Above.
-    *     The Maximum Grace time before trust begins to be reduced from no trust blocks seen.. **/
-    int TRUST_KEY_MAX_TIMESPAN = 60 * 60 * 8;
+    /* nVersion > 4 - timespan is 3 days **/
+    int TRUST_KEY_TIMESPAN = 60 * 60 * 24 * 3;
+
+
+    /* nVersion > 4 - timespan is 30 minutes for testnet **/
+    int TRUST_KEY_TIMESPAN_TESTNET = 60 * 30;
 
 
     /* Difficulty Trheshold Weight for Trust Keys. MAX_TIMESPAN is influenced linearly with this number. */

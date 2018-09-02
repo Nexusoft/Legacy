@@ -101,6 +101,8 @@ namespace Core
     extern const int STAKE_TARGET_SPACING;
 
     extern int TRUST_KEY_EXPIRE;
+    extern int TRUST_KEY_TIMESPAN;
+    extern int TRUST_KEY_TIMESPAN_TESTNET;
     extern int TRUST_KEY_MIN_INTERVAL;
 
     extern const uint64 MAX_STAKE_WEIGHT;
@@ -735,7 +737,6 @@ namespace Core
         bool HasTrustKey(unsigned int nTime);
 
         bool IsValid(CBlock cBlock);
-        bool Check(CBlock cBlock);
         bool Accept(CBlock cBlock, bool fInit = false);
         bool Connect(CBlock cBlock, bool fInit = false);
         bool Disconnect(CBlock cBlock, bool fInit = false);
@@ -1450,8 +1451,22 @@ namespace Core
         /* The proof of work hash. */
         uint1024 ProofHash() const;
 
-        /* New trust key expiration. */
-        bool TrustExpired() const;
+
+        /* The proof of stake hash. */
+        uint1024 StakeHash();
+
+
+        /* The trust score of key. */
+        bool TrustScore(unsigned int& nScore);
+
+
+        /* Get the trust key from script. */
+        bool TrustKey(uint576& cKey);
+
+
+        /* Extract the trust variables from coinstake. */
+        bool ExtractTrust(uint1024& hashLastBlock, unsigned int& nSequence, unsigned int& nTrustScore);
+
 
 		/** Generate the Signature Hash Required After Block completes Proof of Work / Stake.
 			This is to seal the Block Timestamp / nNonce [For CPU Channel] into the Block Signature while allowing it
@@ -1921,6 +1936,7 @@ namespace Core
             block.nHeight         = nHeight;
             block.nBits           = nBits;
             block.nNonce          = nNonce;
+            block.nTime           = nTime;
 
             return block.GetHash();
         }
