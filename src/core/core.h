@@ -105,6 +105,9 @@ namespace Core
     extern int TRUST_KEY_TIMESPAN_TESTNET;
     extern int TRUST_KEY_MIN_INTERVAL;
 
+    extern int TESTNET_MINIMUM_INTERVAL;
+    extern int MAINNET_MINIMUM_INTERVAL;
+
     extern const uint64 MAX_STAKE_WEIGHT;
     extern const uint1024 hashGenesisBlockOfficial;
     extern const uint1024 hashGenesisBlockTestNet;

@@ -238,16 +238,16 @@ namespace Core
         if (keyType != Wallet::TX_PUBKEY)
             return error("CTransaction::GetCoinstakeInterest() : Trust Key must be of Public Key Type Created from Keypool.");
 
-        /** Set the Public Key Integer Key from Bytes. **/
+        /* Set the Public Key Integer Key from Bytes. */
         uint576 cKey;
         cKey.SetBytes(vKeys[0]);
 
-        /** Output figure to show the amount of coins being staked at their interest rates. **/
+        /* Output figure to show the amount of coins being staked at their interest rates. */
         int64 nTotalCoins = 0, nAverageAge = 0;
         nInterest = 0;
 
-        /** Calculate the Variable Interest Rate for Given Coin Age Input. [0.5% Minimum - 3% Maximum].
-            Logarithmic Variable Interest Equation = 0.03 ln((9t / 31449600) + 1) / ln(10) **/
+        /* Calculate the Variable Interest Rate for Given Coin Age Input. [0.5% Minimum - 3% Maximum].
+            Logarithmic Variable Interest Equation = 0.03 ln((9t / 31449600) + 1) / ln(10) */
         double nInterestRate = cTrustPool.InterestRate(cKey, nTime);
 
         /** Check the coin age of each Input. **/
@@ -256,24 +256,24 @@ namespace Core
             CTransaction txPrev;
             CTxIndex txindex;
 
-            /** Ignore Outputs that are not in the Main Chain. **/
+            /* Ignore Outputs that are not in the Main Chain. */
             if (!txPrev.ReadFromDisk(indexdb, vin[nIndex].prevout, txindex))
                 return error("CTransaction::GetCoinstakeInterest() : Invalid Previous Transaction");
 
-            /** Read the Previous Transaction's Block from Disk. **/
+            /* Read the Previous Transaction's Block from Disk. */
             CBlock block;
             if (!block.ReadFromDisk(txindex.pos.nFile, txindex.pos.nBlockPos, false))
                 return error("CTransaction::GetCoinstakeInterest() : Failed To Read Block from Disk");
 
-            /** Calculate the Age and Value of given output. **/
+            /* Calculate the Age and Value of given output. */
             int64 nCoinAge = (nTime - block.GetBlockTime());
             int64 nValue = txPrev.vout[vin[nIndex].prevout.n].nValue;
 
-            /** Compound the Total Figures. **/
+            /* Compound the Total Figures. */
             nTotalCoins += nValue;
             nAverageAge += nCoinAge;
 
-            /** Interest is 2% of Year's Interest of Value of Coins. Coin Age is in Seconds. **/
+            /* Interest is 3% of Year's Interest of Value of Coins. Coin Age is in Seconds. */
             nInterest += ((nValue * nInterestRate * nCoinAge) / (60 * 60 * 24 * 28 * 13));
 
         }

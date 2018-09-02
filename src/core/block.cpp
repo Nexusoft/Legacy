@@ -1034,10 +1034,10 @@ namespace Core
         if(vtx[0].IsTrust())
         {
 
-            /** Trust Weight Reaches Maximum at 30 day Limit. **/
-            nTrustWeight = min(17.5, (((16.5 * log(((2.0 * nTrustAge) / (60 * 60 * 24 * 28)) + 1.0)) / log(3))) + 1.0);
+            /* Trust Weight Continues to grow the longer you have staked and higher your interest rate */
+            nTrustWeight = (((16.5 * log(((2.0 * nTrustAge) / (60 * 60 * 24 * 28)) + 1.0)) / log(3))) + 1.0;
 
-            /** Block Weight Reaches Maximum At Trust Key Expiration. **/
+            /* Block Weight Reaches Maximum At Trust Key Expiration. */
             nBlockWeight = min(20.0, (((19.0 * log(((2.0 * nBlockAge) / ((fTestNet ? TRUST_KEY_TIMESPAN_TESTNET : TRUST_KEY_TIMESPAN))) + 1.0)) / log(3))) + 1.0);
         }
 
@@ -1204,7 +1204,7 @@ namespace Core
             return error("CBlock::TrustScore() : trust key not found in previous script");
 
         /* Enforce the minimum trust key interval of 120 blocks. */
-        if(nHeight - blockPrev.nHeight < 120)
+        if(nHeight - blockPrev.nHeight < (fTestNet ? TESTNET_MINIMUM_INTERVAL : MAINNET_MINIMUM_INTERVAL))
             return error("CBlock::TrustScore() : trust key interval below 120 blocks %u", nHeight - blockPrev.nHeight);
 
         /* Ensure the last block being checked is the same trust key. */
