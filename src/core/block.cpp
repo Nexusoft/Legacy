@@ -75,7 +75,7 @@ namespace Core
             nLastBlockTime = GetUnifiedTimestamp();
         }
 
-        return (pindexBest->GetBlockTime() < GetUnifiedTimestamp() - 20 * 60 && GetUnifiedTimestamp() - nLastBlockTime < 600);
+        return (pindexBest->GetBlockTime() < GetUnifiedTimestamp() - 20 * 60 && GetUnifiedTimestamp() - nLastBlockTime < 60);
     }
 
 
