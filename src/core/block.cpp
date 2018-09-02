@@ -1195,7 +1195,7 @@ namespace Core
 
         /* Read the previous block from disk. */
         CBlock blockPrev;
-        if(!blockPrev.ReadFromDisk(pindexPrev->nFile, pindexPrev->nBlockPos, true))
+        if(!blockPrev.ReadFromDisk(pindexPrev, true))
             return error("CBlock::TrustScore() : can't read previous block");
 
         /* Extract the last trust key */
@@ -1215,7 +1215,7 @@ namespace Core
         unsigned int nScorePrev = 0;
 
         /* Version 4 blocks need to get score from previous blocks calculated score from the trust pool. */
-        if(nVersion < 5)
+        if(blockPrev.nVersion < 5)
         {
             /* Enforce sequence number of 1 for anything made from version 4 blocks. */
             if(nSequence != 1)

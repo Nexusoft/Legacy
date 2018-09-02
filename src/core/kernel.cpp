@@ -887,24 +887,94 @@ namespace Core
             if(baseBlock.IsNull())
                 continue;
 
+                uint576 cKey;
+                std::vector<unsigned char> vchTrustKey = reservekey.GetReservedKey();
+                baseBlock.vtx[0].vout[0].scriptPubKey << vchTrustKey << Wallet::OP_CHECKSIG;
+
+                cKey.SetBytes(vchTrustKey);
+                std::vector<unsigned char> vchBytes = cKey.GetBytes();
+
+                vchBytes.back() << 5;
+
+                printf("assert\n%s\n%s\n", HexStr(vchTrustKey.begin(), vchTrustKey.end()).c_str(), HexStr(vchBytes.begin(), vchBytes.end()).c_str());
+                assert(vchBytes == vchTrustKey);
+
+                assert(1 == 2);
+
             if(baseBlock.nVersion >= 5)
             {
                 baseBlock.print();
 
+                std::vector<unsigned char> vchTrustKey;
+                uint1024 hashLastBlock;
+
+                /* Genesis Transaction. */
                 uint576 cKey;
                 if(!indexdb.ReadMyKey(cKey))
                 {
-                    cKey.SetBytes(reservekey.GetReservedKey());
-                    baseBlock.vtx[0].vout[0].scriptPubKey << reservekey.GetReservedKey() << Wallet::OP_CHECKSIG;
-                    assert(cKey.GetBytes() == reservekey.GetReservedKey());
+                    vchTrustKey = reservekey.GetReservedKey();
+                    baseBlock.vtx[0].vout[0].scriptPubKey << vchTrustKey << Wallet::OP_CHECKSIG;
 
-                    //indexdb.WriteMyKey(cKey);
+                    cKey.SetBytes(vchTrustKey);
+                    std::vector<unsigned char> vchBytes = cKey.GetBytes();
+
+                    vchBytes.pop_back();
+
+                    printf("assert\n%s\n%s\n", HexStr(vchTrustKey.begin(), vchTrustKey.end()).c_str(), HexStr(vchBytes.begin(), vchBytes.end()).c_str());
+                    assert(vchBytes == vchTrustKey);
+
+                    if(!indexdb.WriteMyKey(cKey))
+                        continue;
                 }
+
+                /* Trust Transactions. */
                 else
                 {
-                    baseBlock.vtx[0].vout[0].scriptPubKey << cKey.GetBytes() << Wallet::OP_CHECKSIG;
+                    baseBlock.vtx[0].vout[0].scriptPubKey << vchTrustKey << Wallet::OP_CHECKSIG;
                     baseBlock.vtx[0].vin[0].prevout.n = 0;
                     baseBlock.vtx[0].vin[0].prevout.hash = ~uint512(0); //version 5 prevout is 0xffffffff.....
+
+                    uint1024 hashLastBlock;
+                    if(!indexdb.ReadLastTrust(hashLastBlock)) //if the previous block was version 4
+                    {
+                        uint576 cKey;
+                        cKey.SetBytes(vchTrustKey);
+
+                        hashLastBlock = cTrustPool.Find(cKey).Back(); //get the last block from the trust pool
+                    }
+
+                    CBlockIndex* pindexPrev = mapBlockIndex[hashLastBlock];
+
+                    //check the index object for pnext
+                    CBlock blockPrev;
+                    if(!blockPrev.ReadFromDisk(pindexPrev, true))
+                        continue;
+
+                    unsigned int nSequence, nTrustPrev;
+                    if(blockPrev.nVersion < 5)
+                    {
+                        uint576 cKey;
+                        cKey.SetBytes(vchTrustKey);
+
+                        nSequence  = 1;
+                        nTrustPrev = cTrustPool.Find(cKey).Age(pindexBest->GetBlockTime());
+                    }
+                    else if(blockPrev.vtx[0].IsGenesis())
+                    {
+                        nSequence   = 1;
+                        nTrustPrev  = 0;
+                    }
+                    else
+                    {
+                        uint1024 hashLastBlockPrev;
+                        if(!blockPrev.ExtractTrust(hashLastBlockPrev, nSequence, nTrustPrev))
+                            continue; //throw an error here possibly
+
+                        nSequence ++; //nSequence is +1 from previous sequence
+                    }
+
+                    /* Serialize the base two trust indicators in. */
+                    //baseBlock.vtx[0].vin[0].scriptSig << nSequence; //hashLastBlock << nSequence;
                 }
             }
             else
@@ -923,7 +993,13 @@ namespace Core
                     baseBlock.vtx[0].vout[0].scriptPubKey << cTrustPool.vchTrustKey << Wallet::OP_CHECKSIG;
                     baseBlock.vtx[0].vin[0].prevout.n = 0;
                     baseBlock.vtx[0].vin[0].prevout.hash = cTrustPool.Find(cKey).GetHash();
+
+                    std::vector<unsigned char> vchTrustKey;
+                    if(!indexdb.ReadMyKey(cKey))
+                        indexdb.WriteMyKey(cKey);
                 }
+
+
 
 
                 /* Determine Trust Age if the Trust Key Exists. */
