@@ -1173,7 +1173,7 @@ namespace Core
         {
 
             //version 5 rule - previous coinstake required as vin[1]
-            
+
 
             /* Get the score and make sure it all checks out. */
             if(!TrustScore(nTrustAge))
@@ -1637,7 +1637,7 @@ namespace Core
         if (fTestNet)
         {
             hashGenesisBlock = hashGenesisBlockTestNet;
-            nCoinbaseMaturity = 10;
+            nCoinbaseMaturity = 5;
 
             TRUST_KEY_EXPIRE = 60 * 60 * 12;
             TRUST_KEY_MIN_INTERVAL = 5;

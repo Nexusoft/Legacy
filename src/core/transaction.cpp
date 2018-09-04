@@ -572,7 +572,7 @@ namespace Core
     {
         if (!(IsCoinBase() || IsCoinStake()))
             return 0;
-        return max(0, (nCoinbaseMaturity + 20) - GetDepthInMainChain());
+        return max(0, (nCoinbaseMaturity + (fTestNet ? 1 : 20)) - GetDepthInMainChain());
     }
 
 
