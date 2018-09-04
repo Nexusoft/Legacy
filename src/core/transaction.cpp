@@ -860,7 +860,7 @@ namespace Core
                 int64 nInterest;
                 GetCoinstakeInterest(pindexBlock, indexdb, nInterest);
 
-                printf("ConnectInputs() : %f Value Out, %f Expected\n", (double)round_coin_digits(vout[0].nValue, 3) / COIN, (double)(round_coin_digits(nInterest + nValueIn, 3)) / COIN);
+                printf("ConnectInputs() : %f Value Out, %f Expected\n", (double)round_coin_digits(vout[0].nValue, 6) / COIN, (double)(round_coin_digits(nInterest + nValueIn, 6)) / COIN);
 
                 if (round_coin_digits(vout[0].nValue, 3) > round_coin_digits((nInterest + nValueIn), 3))
                     return DoS(100, error("ConnectInputs() : %s stake reward mismatch", GetHash().ToString().substr(0,10).c_str()));

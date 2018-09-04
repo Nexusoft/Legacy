@@ -177,7 +177,7 @@ namespace LLP
             MAP_BLOCKS.clear();
 
             if(GetArg("-verbose", 0) >= 2)
-                printf("%%%%%%%%%% Mining LLP: New Block, Clearing Blocks Map.\n");
+                printf("***** Mining LLP: New Block, Clearing Blocks Map.\n");
         }
 
         void Event(unsigned char EVENT, unsigned int LENGTH = 0)
@@ -289,7 +289,7 @@ namespace LLP
                         this->WritePacket(RESPONSE);
 
                         if(GetArg("-verbose", 0) >= 2)
-                            printf("%%%%%%%%%% Mining LLP: Sent Block %s to Worker.\n\n", NEW_BLOCK.GetHash().ToString().c_str());
+                            printf("***** Mining LLP: Sent Block %s to Worker.\n\n", NEW_BLOCK.GetHash().ToString().c_str());
                     }
                 }
 
@@ -317,17 +317,17 @@ namespace LLP
                 Send a failed response to the miners, unless this is a regression test. **/
             if(!GetBoolArg("-regtest",false) && Net::vNodes.size() == 0 )
             {
-                printf("%%%%%%%%%% Mining LLP: Rejected Request...No Connections\n"); return false;
+                printf("***** Mining LLP: Rejected Request...No Connections\n"); return false;
             }
 
             if(Core::IsInitialBlockDownload() )
             {
-                printf("%%%%%%%%%% Mining LLP: Rejected Request...Downloading BLockchain\n"); return false;
+                printf("***** Mining LLP: Rejected Request...Downloading BLockchain\n"); return false;
             }
 
             if( pwalletMain->IsLocked())
             {
-                printf("%%%%%%%%%% Mining LLP: Rejected Request...Wallet Locked\n"); return false;
+                printf("***** Mining LLP: Rejected Request...Wallet Locked\n"); return false;
             }
 
 
@@ -341,7 +341,7 @@ namespace LLP
                     return false;
 
                 if(GetArg("-verbose", 0) >= 2)
-                    printf("%%%%%%%%%% Mining LLP: Channel Set %u\n", nChannel);
+                    printf("***** Mining LLP: Channel Set %u\n", nChannel);
 
                 return true;
             }
@@ -363,7 +363,7 @@ namespace LLP
                     this->WritePacket(RESPONSE);
 
                     if(GetArg("-verbose", 0) >= 2)
-                        printf("%%%%%%%%%% Mining LLP: Invalid Coinbase Tx\n") ;
+                        printf("***** Mining LLP: Invalid Coinbase Tx\n") ;
                 }
                 else
                 {
@@ -462,7 +462,7 @@ namespace LLP
                 this->WritePacket(RESPONSE);
 
                 if(GetArg("-verbose", 0) >= 2)
-                    printf("%%%%%%%%%% Mining LLP: Sent Coinbase Reward of %" PRIu64 "\n", nCoinbaseReward);
+                    printf("***** Mining LLP: Sent Coinbase Reward of %" PRIu64 "\n", nCoinbaseReward);
 
                 return true;
             }
@@ -477,7 +477,7 @@ namespace LLP
                     return false;
 
                 if(GetArg("-verbose", 0) >= 2)
-                    printf("%%%%%%%%%% Mining LLP: Subscribed to %u Blocks\n", nSubscribed);
+                    printf("***** Mining LLP: Subscribed to %u Blocks\n", nSubscribed);
 
                 return true;
             }
@@ -494,12 +494,26 @@ namespace LLP
 
                 /* Create new block from base block by changing the input script to search from new merkle root. */
                 Core::CBlock NEW_BLOCK = BASE_BLOCK;
-                NEW_BLOCK.vtx[0].vin[0].scriptSig = (Wallet::CScript() << (1024 * (MAP_BLOCKS.size() + 1)));
-                NEW_BLOCK.hashMerkleRoot = NEW_BLOCK.BuildMerkleTree();
-                NEW_BLOCK.UpdateTime();
+
+                /* Checks for prime min origins. */
+                for(int i = 0; ; i++)
+                {
+                    /* Create a vin script sig that will change merkle root */
+                    NEW_BLOCK.vtx[0].vin[0].scriptSig = (Wallet::CScript() << (i * 1024 * (MAP_BLOCKS.size() + 1)));
+                    NEW_BLOCK.hashMerkleRoot = NEW_BLOCK.BuildMerkleTree();
+                    NEW_BLOCK.UpdateTime();
+
+                    /* Skip if not prime channel or version < 5 */
+                    if(nChannel != 1 || NEW_BLOCK.nVersion < 5)
+                        break;
+
+                    /* Don't deliver blocks that are below the minimum prime origins. */
+                    if(NEW_BLOCK.ProofHash() > Core::bnPrimeMinOrigins.getuint1024())
+                        break;
+                }
 
                 if(GetArg("-verbose", 0) >= 3)
-                    printf("%%%%%%%%%% Mining LLP: Created new Block %s\n", NEW_BLOCK.hashMerkleRoot.ToString().substr(0, 20).c_str());
+                    printf("***** Mining LLP: Created new Block %s\n", NEW_BLOCK.hashMerkleRoot.ToString().substr(0, 20).c_str());
 
                 /* Store the new block in the memory map of recent blocks being worked on. */
                 MAP_BLOCKS[NEW_BLOCK.hashMerkleRoot] = NEW_BLOCK;
@@ -536,7 +550,7 @@ namespace LLP
                     this->WritePacket(RESPONSE);
 
                     if(GetArg("-verbose", 0) >= 2)
-                        printf("%%%%%%%%%% Mining LLP: Block Not Found %s\n", hashMerkleRoot.ToString().substr(0, 20).c_str());
+                        printf("***** Mining LLP: Block Not Found %s\n", hashMerkleRoot.ToString().substr(0, 20).c_str());
 
                     return true;
                 }
@@ -558,7 +572,7 @@ namespace LLP
                     this->WritePacket(RESPONSE);
 
                     if(GetArg("-verbose", 0) >= 2)
-                        printf("%%%%%%%%%% Mining LLP: Unable to Sign block %s\n", hashMerkleRoot.ToString().substr(0, 20).c_str());
+                        printf("***** Mining LLP: Unable to Sign block %s\n", hashMerkleRoot.ToString().substr(0, 20).c_str());
 
                     return true;
                 }
@@ -573,14 +587,14 @@ namespace LLP
                     this->WritePacket(RESPONSE);
 
                     if(GetArg("-verbose", 0) >= 2)
-                        printf("%%%%%%%%%% Mining LLP: Invalid Work for block %s\n", hashMerkleRoot.ToString().substr(0, 20).c_str());
+                        printf("***** Mining LLP: Invalid Work for block %s\n", hashMerkleRoot.ToString().substr(0, 20).c_str());
 
                     return true;
                 }
 
 
                 if(GetArg("-verbose", 0) >= 2)
-                        printf("%%%%%%%%%% Mining LLP: Found new Block %s\n", NEW_BLOCK->hashMerkleRoot.ToString().substr(0, 10).c_str());
+                        printf("***** Mining LLP: Found new Block %s\n", NEW_BLOCK->hashMerkleRoot.ToString().substr(0, 10).c_str());
 
                 Packet RESPONSE;
                 RESPONSE.HEADER = BLOCK_ACCEPTED;

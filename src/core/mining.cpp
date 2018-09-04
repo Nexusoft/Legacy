@@ -24,8 +24,6 @@ namespace Core
 {
 
     /** Used to Iterate the Coinbase Addresses used For Exchange Channels and Developer Fund. **/
-    static unsigned int nCoinbaseCounter = 0;
-    static boost::mutex COUNTER_MUTEX;
     static boost::mutex PROCESS_MUTEX;
 
     class COrphan
@@ -131,11 +129,8 @@ namespace Core
             else
                 txNew.vout[0].nValue = GetCoinbaseReward(pindexPrev, nChannel, 0);
 
-            COUNTER_MUTEX.lock();
-
-            /** Reset the Coinbase Transaction Counter. **/
-            if(nCoinbaseCounter >= 13)
-                nCoinbaseCounter = 0;
+            /* Make coinbase counter mod 13 of height. */
+            int nCoinbaseCounter = pindexPrev->nHeight % 13;
 
             /** Set the Proper Addresses for the Coinbase Transaction. **/
             txNew.vout.resize(txNew.vout.size() + 2);
@@ -145,9 +140,6 @@ namespace Core
             /** Set the Proper Coinbase Output Amounts for Recyclers and Developers. **/
             txNew.vout[txNew.vout.size() - 2].nValue = GetCoinbaseReward(pindexPrev, nChannel, 1);
             txNew.vout[txNew.vout.size() - 1].nValue = GetCoinbaseReward(pindexPrev, nChannel, 2);
-
-            nCoinbaseCounter++;
-            COUNTER_MUTEX.unlock();
         }
 
         /** Add our Coinbase / Coinstake Transaction. **/
