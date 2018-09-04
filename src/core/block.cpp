@@ -1171,6 +1171,10 @@ namespace Core
         unsigned int nTrustAge = 0, nBlockAge = 0;
         if(vtx[0].IsTrust())
         {
+
+            //version 5 rule - previous coinstake required as vin[1]
+            
+
             /* Get the score and make sure it all checks out. */
             if(!TrustScore(nTrustAge))
                 return error("CBlock::CheckStake() : failed to get trust score");
