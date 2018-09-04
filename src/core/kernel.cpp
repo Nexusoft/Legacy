@@ -726,8 +726,12 @@ namespace Core
                 bnTarget.SetCompact(block.nBits);
                 uint1024 hashTarget = bnTarget.getuint1024();
 
+                /* Sign the new Proof of Stake Block. */
+                if(GetArg("-verbose", 0) >= 0)
+                    printf("Stake Minter : staking from block %s\n", hashBest.ToString().substr(0, 20).c_str());
+
                 /* Search for the proof of stake hash. */
-                while(hashBest != hashBestChain)
+                while(hashBest == hashBestChain)
                 {
                     Sleep(10);
 
