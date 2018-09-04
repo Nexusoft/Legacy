@@ -323,7 +323,7 @@ bool AppInit2(int argc, char* argv[])
         }
     #endif
 
-    #if !defined(WIN32) && !defined(QT_GUI)
+    #if !defined(WIN32) && !defined(QT_GUI) && !defined(NO_DAEMON)
         if (fDaemon)
         {
             // Daemonize
@@ -349,12 +349,14 @@ bool AppInit2(int argc, char* argv[])
     printf("Nexus version %s (%s)\n", FormatFullVersion().c_str(), CLIENT_DATE.c_str());
     printf("Default data directory %s\n", GetDefaultDataDir().string().c_str());
 
+
     for(auto node : mapMultiArgs["-banned"])
         printf("PERMANENT BAN %s\n", node.c_str());
 
     #ifdef USE_LLD
         InitMessage(_("Initializing LLD Keychains..."));
         LLD::RegisterKeychain("blkindex", "blkindex");
+        LLD::RegisterKeychain("trustdb", "trustdb");
     #endif
 
     InitMessage(_("Initializing Unified Time..."));
@@ -685,4 +687,3 @@ bool AppInit2(int argc, char* argv[])
 
     return true;
 }
-

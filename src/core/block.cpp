@@ -313,7 +313,7 @@ namespace Core
                 return error("ConnectBlock() : Genesis Block Not Found.");
 
             /* Don't allow Expired Trust Keys. Check Expiration from Previous Block Timestamp. */
-            if(nVersion < 4 && trustKey.Expired(GetHash()))
+            if(nVersion < 4 && trustKey.Expired(hashPrevBlock))
                 return error("ConnectBlock() : Cannot Create Block for Expired Trust Key.");
 
             /* Don't allow Blocks Created without First Input Previous Output hash of Trust Key Hash.
@@ -335,7 +335,7 @@ namespace Core
             /* Don't allow Blocks Created Before Minimum Interval. */
             if(nVersion < 4)
             {
-                uint1024 hashLastTrust = GetHash();
+                uint1024 hashLastTrust = hashPrevBlock;
                 if(!LastTrustBlock(cKey, hashLastTrust))
                     return error("ConnectBlock() : Can't find last trust block");
 
@@ -1313,7 +1313,7 @@ namespace Core
             return error("CBlock::CheckTrust() : previous block (%s) not in block index", hashLastBlock.ToString().substr(0, 20).c_str());
 
         /* Strict rule, may be removed since sequence prevents anyone from claiming a trust block out of order. */
-        uint1024 hashTestBlock = GetHash();
+        uint1024 hashTestBlock = hashPrevBlock;
         if(!LastTrustBlock(cKey, hashTestBlock))
             return error("CBlock::CheckTrust() : couldn't get last trust block");
         if(hashTestBlock != hashLastBlock)
@@ -1372,7 +1372,7 @@ namespace Core
                 return error("CBlock::CheckTrust() : trust key not found in database");
 
             /* Ensure that a version 4 trust key is not expired. */
-            if(trustKey.Expired(GetHash()))
+            if(trustKey.Expired(hashPrevBlock))
                 return error("CBlock::CheckTrust() : version 4 key expired.");
 
             /* Score is the total age of the trust key for version 4. */

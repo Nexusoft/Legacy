@@ -128,7 +128,7 @@ namespace Core
                 return error("CBlock::VerifyStake() : Genesis Time cannot be after Trust Time.");
 
             nTrustAge = trustKey.Age(mapBlockIndex[hashPrevBlock]->GetBlockTime());
-            nBlockAge = trustKey.BlockAge(GetHash());
+            nBlockAge = trustKey.BlockAge(hashPrevBlock);
 
             /** Trust Weight Reaches Maximum at 30 day Limit. **/
             nTrustWeight = min(17.5, (((16.5 * log(((2.0 * nTrustAge) / (60 * 60 * 24 * 28)) + 1.0)) / log(3))) + 1.0);
