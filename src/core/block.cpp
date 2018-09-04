@@ -959,6 +959,26 @@ namespace Core
             return DoS(100, error("AcceptBlock() : incorrect block height."));
 
 
+        /* Loggging of the proof hashes. */
+        if(GetArg("-verbose", 0) >= 2)
+        {
+            /* Get the proof hash for this block. */
+            uint1024 hash = (nVersion < 5 ? GetHash() : GetChannel() == 0 ? StakeHash() : ProofHash());
+
+            /* Get the target hash for this block. */
+            uint1024 hashTarget = CBigNum().SetCompact(nBits).getuint1024();
+
+            /* Verbose logging of proof and target. */
+            printf("  proof:  %s  \n", hash.ToString().substr(0, 30).c_str());
+
+            /* Channel switched output. */
+            if(GetChannel() == 1)
+                printf("  prime cluster verified of size %f\n", GetDifficulty(nBits, 1));
+            else
+                printf("  target: %s\n", hashTarget.ToString().substr(0, 30).c_str());
+        }
+
+
         /* Check that the nBits match the current Difficulty. **/
         if (nBits != GetNextTargetRequired(pindexPrev, GetChannel(), !IsInitialBlockDownload()))
             return DoS(100, error("AcceptBlock() : incorrect proof-of-work/proof-of-stake"));
@@ -967,6 +987,7 @@ namespace Core
         /* Check That Block Timestamp is not before previous block. */
         if (GetBlockTime() <= pindexPrev->GetBlockTime())
             return error("AcceptBlock() : block's timestamp too early Block: %" PRId64 " Prev: %" PRId64 "", GetBlockTime(), pindexPrev->GetBlockTime());
+
 
         /* Check that Block is Descendant of Hardened Checkpoints. */
         if(!IsInitialBlockDownload() && pindexPrev && !IsDescendant(pindexPrev))
@@ -1030,7 +1051,6 @@ namespace Core
         /** Write new Block to Disk. **/
         if (!CheckDiskSpace(::GetSerializeSize(*this, SER_DISK, DATABASE_VERSION)))
             return error("AcceptBlock() : out of disk space");
-
 
         unsigned int nFile = -1;
         unsigned int nBlockPos = 0;
