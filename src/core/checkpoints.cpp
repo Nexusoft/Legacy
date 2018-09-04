@@ -69,7 +69,7 @@ namespace Core
     {
 
         /** Only Harden New Checkpoint if it Fits new Timestamp. **/
-        if(!IsNewTimespan(pcheckpoint->pprev))
+        if(pcheckpoint->pprev && !IsNewTimespan(pcheckpoint->pprev))
             return false;
 
 
