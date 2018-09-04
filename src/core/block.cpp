@@ -663,7 +663,7 @@ namespace Core
         }
 
         /* Add the Pending Checkpoint into the Blockchain. */
-        if(!pindexNew->pprev || HardenCheckpoint(pindexNew->pprev))
+        if(!pindexNew->pprev || HardenCheckpoint(pindexNew))
         {
             pindexNew->PendingCheckpoint = make_pair(pindexNew->nHeight, pindexNew->GetBlockHash());
 
