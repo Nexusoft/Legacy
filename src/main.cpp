@@ -367,7 +367,7 @@ bool AppInit2(int argc, char* argv[])
     #ifdef USE_LLD
         InitMessage(_("Initializing LLD Keychains..."));
         LLD::RegisterKeychain("blkindex", "blkindex");
-        LLD::RegisterKeychain("trustdb", "trustdb");
+        LLD::RegisterKeychain("trust", "trust");
     #endif
 
     InitMessage(_("Initializing Unified Time..."));
