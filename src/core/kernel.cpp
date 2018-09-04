@@ -757,6 +757,9 @@ namespace Core
                         if(GetArg("-verbose", 0) >= 0)
                             printf("Stake Minter : found new stake hash %s\n", block.StakeHash().ToString().substr(0, 20).c_str());
 
+                        /* Set the staking thread priorities. */
+                        SetThreadPriority(THREAD_PRIORITY_NORMAL);
+
                         /* Add the transactions into the block from memory pool. */
                         if (!block.vtx[0].IsGenesis())
                             AddTransactions(block.vtx, pindexBest);
@@ -812,6 +815,8 @@ namespace Core
                         break;
                     }
                 }
+
+                SetThreadPriority(THREAD_PRIORITY_LOWEST);
             }
 
 

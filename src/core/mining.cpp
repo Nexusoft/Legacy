@@ -370,7 +370,7 @@ namespace Core
         to ensure that you do not submit a bad block. **/
     bool CheckWork(CBlock* pblock, Wallet::CWallet& wallet, Wallet::CReserveKey& reservekey)
     {
-        uint1024 hash = (pblock->nVersion < 5 ? pblock->GetHash() : pblock->ProofHash());
+        uint1024 hash = (pblock->nVersion < 5 ? pblock->GetHash() : pblock->GetChannel() == 0 ? pblock->StakeHash() : pblock->ProofHash());
         uint1024 hashTarget = CBigNum().SetCompact(pblock->nBits).getuint1024();
 
         if(pblock->GetChannel() > 0 && !pblock->VerifyWork())
