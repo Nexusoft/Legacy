@@ -375,7 +375,8 @@ namespace Core
 
         if(pblock->GetChannel() > 0 && !pblock->VerifyWork())
             return error("Nexus Miner : proof of work not meeting target.");
-        else
+
+        if(pblock->GetChannel() == 0)
         {
             CBigNum bnTarget;
             bnTarget.SetCompact(pblock->nBits);

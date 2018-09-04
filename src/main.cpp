@@ -106,6 +106,8 @@ void Shutdown(void* parg)
 
 void HandleSIGTERM(int)
 {
+    StartShutdown();
+
     fRequestShutdown = true;
 }
 
@@ -163,15 +165,24 @@ bool AppInit2(int argc, char* argv[])
         sa.sa_handler = HandleSIGTERM;
         sigemptyset(&sa.sa_mask);
         sa.sa_flags = 0;
-        sigaction(SIGTERM, &sa, NULL);
+
+        //catch all signals to flag fShutdown for all threads
+        sigaction(SIGABRT, &sa, NULL);
+        sigaction(SIGILL, &sa, NULL);
         sigaction(SIGINT, &sa, NULL);
-        sigaction(SIGHUP, &sa, NULL);
+        sigaction(SIGTERM, &sa, NULL);
+
     #else
+        //catch all signals to flag fShutdown for all threads
+        signal(SIGABRT, HandleSIGTERM);
+        signal(SIGILL, HandleSIGTERM);
         signal(SIGINT, HandleSIGTERM);
         signal(SIGTERM, HandleSIGTERM);
+
     #ifdef SIGBREAK
         signal(SIGBREAK, HandleSIGTERM);
     #endif
+
     #endif
 
     //
