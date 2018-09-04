@@ -741,15 +741,6 @@ namespace Core
             return fIn;
         }
 
-        // logging for core validation errors
-        mutable std::string strValidationError;
-		bool Invalid(std::string strMessage, bool fIn) const
-		{
-            strValidationError = strMessage;
-
-            return fIn;
-        }
-
 		CTransaction()
 		{
 			SetNull();
@@ -773,8 +764,6 @@ namespace Core
 			vout.clear();
 			nLockTime = 0;
 			nDoS = 0;  // Denial-of-service prevention
-
-			strValidationError = std::string("");
 		}
 
 		bool IsNull() const
@@ -1299,15 +1288,6 @@ namespace Core
             return fIn;
         }
 
-        // logging for core validation errors
-        mutable std::string strValidationError;
-		bool Invalid(std::string strMessage, bool fIn) const
-		{
-            strValidationError = strMessage;
-
-            return fIn;
-        }
-
 		CBlock()
 		{
 			SetNull();
@@ -1364,8 +1344,6 @@ namespace Core
 			vchBlockSig.clear();
 			vMerkleTree.clear();
 			nDoS = 0;
-
-            strValidationError = std::string("");
 		}
 
 		void SetChannel(unsigned int nNewChannel)
