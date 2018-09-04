@@ -1425,7 +1425,7 @@ namespace Core
 
         /* Debug output. */
         if(GetArg("-verbose", 0) >= 2)
-            printf("CheckTrust: score=%u prev=%u change=%i", nScore, nScorePrev, (int)(nScore - nScorePrev));
+            printf("CheckTrust: score=%u prev=%u change=%i\n", nScore, nScorePrev, (int)(nScore - nScorePrev));
 
         return true;
     }
