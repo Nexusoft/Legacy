@@ -43,7 +43,7 @@ namespace Wallet
         random_shuffle(vCoins.begin(), vCoins.end(), GetRandInt);
         BOOST_FOREACH(const CWalletTx* pcoin, vCoins)
         {
-            if (!pcoin->IsFinal())
+            if (!pcoin->IsFinal() || pcoin->GetDepthInMainChain() < 3)
                 continue;
 
             if ((pcoin->IsCoinBase() || pcoin->IsCoinStake()) && pcoin->GetBlocksToMaturity() > 0)
