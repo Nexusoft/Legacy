@@ -357,6 +357,8 @@ namespace Net
         unsigned int nTotalActive = 0;
         Array trustkeys;
         Object ret;
+
+        /* TODO : Link up the RPC server with the new trust indexing system
         for(std::map<uint576, Core::CTrustKey>::iterator it = Core::cTrustPool.mapTrustKeys.begin(); it != Core::cTrustPool.mapTrustKeys.end(); ++it)
         {
             Object obj;
@@ -364,7 +366,6 @@ namespace Net
             if(it->second.Expired(0, Core::pindexBest->pprev->GetBlockHash()))
                 continue;
 
-            /** Check the Wallet and Trust Keys in Trust Pool to see if we own any keys. **/
             Wallet::NexusAddress address;
             address.SetPubKey(it->second.vchPubKey);
 
@@ -376,10 +377,11 @@ namespace Net
 
             trustkeys.push_back(obj);
         }
+        */
 
         ret.push_back(Pair("keys", trustkeys));
         ret.push_back(Pair("total active", (int) nTotalActive));
-        ret.push_back(Pair("total expired", (int) (Core::cTrustPool.mapTrustKeys.size() - nTotalActive)));
+        //ret.push_back(Pair("total expired", (int) (Core::cTrustPool.mapTrustKeys.size() - nTotalActive)));
 
         return ret;
     }
@@ -2512,18 +2514,19 @@ namespace Net
                 "List all the Trust Keys this Node owns.\n");
 
 
-        /** Check each Trust Key to See if we Own it if there is no Key. **/
         Object result;
+        
+        /* TODO: Link up with new trust key indexing system.
         for(std::map<uint576, Core::CTrustKey>::iterator i = Core::cTrustPool.mapTrustKeys.begin(); i != Core::cTrustPool.mapTrustKeys.end(); ++i)
         {
 
-            /** Check the Wallet and Trust Keys in Trust Pool to see if we own any keys. **/
             Wallet::NexusAddress address;
             address.SetPubKey(i->second.vchPubKey);
             if(pwalletMain->HaveKey(address))
                 result.push_back(Pair(address.ToString(), i->second.Expired(0, Core::pindexBest->pprev->GetBlockHash()) ? "TRUE" : "FALSE"));
 
         }
+        */
 
         return result;
     }

@@ -160,6 +160,19 @@ namespace Core
             if (!vtx[i].DisconnectInputs(indexdb))
                 return false;
 
+        // handle for trust keys
+        std::vector<unsigned char> vTrustKey;
+        if(!TrustKey(vTrustKey))
+            return error("DisconnectBlock() : can't extract trust key.");
+
+        /* Set the ckey object. */
+        uint576 cKey;
+        cKey.SetBytes(vTrustKey);
+
+        /* Erase Genesis on disconnect. */
+        if(vtx[0].IsGenesis())
+            indexdb.EraseTrustKey(cKey);
+
         // Update block index on disk without changing it in memory.
         // The memory index structure will be changed after the db commits.
         if (pindex->pprev)
@@ -253,6 +266,88 @@ namespace Core
         pindex->nMint = nValueOut - nValueIn;
         pindex->nMoneySupply = (pindex->pprev ? pindex->pprev->nMoneySupply : 0) + nValueOut - nValueIn;
 
+        // handle for trust keys
+        std::vector<unsigned char> vTrustKey;
+        if(!TrustKey(vTrustKey))
+            return error("ConnectBlock() : can't extract trust key.");
+
+        /* Set the ckey object. */
+        uint576 cKey;
+        cKey.SetBytes(vTrustKey);
+
+        /* Handle Genesis Transaction Rules. Genesis is checked after Trust Key Established. */
+        if(vtx[0].IsGenesis())
+        {
+            /* Check that Transaction is not Genesis when Trust Key is Established. */
+            CTrustKey trustCheck;
+            if(indexdb.ReadTrustKey(cKey, trustCheck))
+                return error("ConnectBlock() : Duplicate Genesis not Allowed");
+
+            /* Create the Trust Key from Genesis Transaction Block. */
+            CTrustKey trustKey(vTrustKey, GetHash(), vtx[0].GetHash(), nTime);
+            if(!trustKey.CheckGenesis(*this))
+                return error("ConnectBlock() : Invalid Genesis Transaction.");
+
+            /* Write the trust key to indexDB */
+            indexdb.WriteTrustKey(cKey, trustKey);
+
+            /* Dump the Trust Key to Console if not Initializing. */
+            if(GetArg("-verbose", 0) >= 2)
+                trustKey.Print();
+        }
+
+        /* Handle Adding Trust Transactions. */
+        else if(vtx[0].IsTrust())
+        {
+            /* No Trust Transaction without a Genesis. */
+            CTrustKey trustKey;
+            if(!indexdb.ReadTrustKey(cKey, trustKey))
+                return error("ConnectBlock() : Cannot Create Trust Transaction without Genesis.");
+
+            /* Check that the Trust Key and Current Block match. */
+            if(trustKey.vchPubKey != vTrustKey)
+                return error("ConnectBlock() : Trust Key and Block Key Mismatch.");
+
+            /* Trust Keys can only exist after the Genesis Transaction. */
+            if(!mapBlockIndex.count(trustKey.hashGenesisBlock))
+                return error("ConnectBlock() : Genesis Block Not Found.");
+
+            /* Don't allow Expired Trust Keys. Check Expiration from Previous Block Timestamp. */
+            if(nVersion < 4 && trustKey.Expired(GetHash()))
+                return error("ConnectBlock() : Cannot Create Block for Expired Trust Key.");
+
+            /* Don't allow Blocks Created without First Input Previous Output hash of Trust Key Hash.
+                This Secures and Anchors the Trust Key to all Descending Trust Blocks of that Key. */
+            if(vtx[0].vin[0].prevout.hash != trustKey.GetHash())
+            {
+                return error("ConnectBlock() : Trust Block Input Hash Mismatch to Trust Key Hash\n%s\n%s", vtx[0].vin[0].prevout.hash.ToString().c_str(), trustKey.GetHash().ToString().c_str());
+            }
+
+            /* Read the Genesis Transaction's Block from Disk. */
+            CBlock blockGenesis;
+            if(!blockGenesis.ReadFromDisk(mapBlockIndex[trustKey.hashGenesisBlock], true))
+                return error("ConnectBlock() : Could not Read Genesis Block.");
+
+            /* Double Check the Genesis Transaction. */
+            if(!trustKey.CheckGenesis(blockGenesis))
+                return error("ConnectBlock() : Invalid Genesis Transaction.");
+
+            /* Don't allow Blocks Created Before Minimum Interval. */
+            if(nVersion < 4)
+            {
+                uint1024 hashLastTrust = GetHash();
+                if(!LastTrustBlock(cKey, hashLastTrust))
+                    return error("ConnectBlock() : Can't find last trust block");
+
+                if(nHeight - mapBlockIndex[hashLastTrust]->nHeight < TRUST_KEY_MIN_INTERVAL)
+                    return error("ConnectBlock() : Trust Block Created Before Minimum Trust Key Interval.");
+            }
+
+            /* Dump the Trust Key to Console if not Initializing. */
+            if(GetArg("-verbose", 0) >= 2)
+                trustKey.Print();
+        }
+
         if(GetArg("-verbose", 0) >= 0)
             printf("Generated %f Nexus\n", (double) pindex->nMint / COIN);
 
@@ -309,12 +404,14 @@ namespace Core
         }
         else
         {
-            if(!fTestNet && !IsInitialBlockDownload() && IsProofOfStake() && GetBoolArg("-softban", true) && !cTrustPool.IsValid(*this))
+            /*
+            if(nVersion < 4 && !fTestNet && !IsInitialBlockDownload() && IsProofOfStake() && GetBoolArg("-softban", true) && !cTrustPool.IsValid(*this))
             {
                 error("\x1b[31m SOFTBAN: Invalid nPoS %s\x1b[0m", hash.ToString().substr(0, 20).c_str());
 
                 return true;
             }
+            */
 
             CBlockIndex* pfork = pindexBest;
             CBlockIndex* plonger = pindexNew;
@@ -360,10 +457,6 @@ namespace Core
                 if (!block.DisconnectBlock(indexdb, pindex))
                     return error("CBlock::SetBestChain() : DisconnectBlock %s failed", pindex->GetBlockHash().ToString().substr(0,20).c_str());
 
-                /** Remove Transactions from Current Trust Keys **/
-                if(block.nVersion < 5 && block.IsProofOfStake() && !cTrustPool.Disconnect(block))
-                    return error("CBlock::SetBestChain() : Disconnect Failed to Remove Trust Key at Block %s", pindex->GetBlockHash().ToString().substr(0,20).c_str());
-
                 /** Resurrect Memory Pool Transactions. **/
                 BOOST_FOREACH(const CTransaction& tx, block.vtx)
                     if (!(tx.IsCoinBase() || tx.IsCoinStake()))
@@ -386,10 +479,6 @@ namespace Core
                     indexdb.TxnAbort();
                     return error("CBlock::SetBestChain() : ConnectBlock %s Height %u failed", pindex->GetBlockHash().ToString().substr(0,20).c_str(), pindex->nHeight);
                 }
-
-                /* Add Transaction to Current Trust Keys (only for versions < 5)*/
-                if(block.nVersion < 5 && block.IsProofOfStake() && !cTrustPool.Connect(block))
-                    return error("CBlock::SetBestChain() : Failed To Accept Trust Key Block.");
 
                 /* Delete Memory Pool Transactions contained already. **/
                 BOOST_FOREACH(const CTransaction& tx, block.vtx)
@@ -909,16 +998,19 @@ namespace Core
         {
             /* Check that the Coinbase / CoinstakeTimstamp is after Previous Block. */
             if (vtx[0].nTime < pindexPrev->GetBlockTime())
-                return error("AcceptBlock() : Coinstake Timestamp too Early.");
-
-            /* Version 4 blocks accept as usual into the trust pool. */
-            if(nVersion < 5 && !cTrustPool.Accept(*this))
-                return DoS(50, error("AcceptBlock() : Unable to Accept Trust Key"));
+                return error("AcceptBlock() : coinstake transaction too early");
 
             /* Version 5 blocks don't need trust pool - do basic checks here. */
-            else if(nVersion >= 5 && !CheckStake())
-                return DoS(50, error("AcceptBlock() : Invalid Proof of Stake"));
+            if(nVersion >= 5)
+            {
+                /* Check the claimed stake limits are met. */
+                if(!CheckStake())
+                    return DoS(50, error("AcceptBlock() : invalid proof of stake"));
 
+                /* Check the claimed trust scores are met. */
+                if(!CheckTrust())
+                    return DoS(50, error("AcceptBlock() : invalid trust score"));
+            }
         }
 
 
@@ -1011,6 +1103,34 @@ namespace Core
     }
 
 
+    bool LastTrustBlock(uint576 trustKey, uint1024& hashTrustBlock)
+    {
+        /* Get the last trust block. */
+        const CBlockIndex* pindex = GetLastBlockIndex(mapBlockIndex[hashTrustBlock]->pprev, true);
+        if(!pindex->IsProofOfStake())
+            return error("LastTrustBlock : not proof of stake");
+
+        /* Read the previous block from disk. */
+        CBlock block;
+        if(!block.ReadFromDisk(pindex, true))
+            return error("LastTrustBlock : can't read trust block");
+
+        /* Get the trust key from block. */
+        uint576 cKey;
+        if(!block.TrustKey(cKey))
+            return error("LastTrustBlock : can't get trust key");
+
+        /* Set current trust block in recursion. */
+        hashTrustBlock = block.GetHash();
+
+        /* if the key is equivilent, return. */
+        if(cKey == trustKey)
+            return true;
+
+        return LastTrustBlock(trustKey, hashTrustBlock);
+    }
+
+
     bool CBlock::CheckStake()
     {
         /* Check the proof hash of the stake block on version 5 and above. */
@@ -1019,31 +1139,33 @@ namespace Core
         if(StakeHash() > bnTarget.getuint1024())
             return error("CBlock::CheckStake() : Proof of Stake Hash not meeting Target.");
 
-        /* Get the score and make sure it all checks out. */
-        unsigned int nTrustAge;
-        if(!TrustScore(nTrustAge))
-            return DoS(50, error("CBlock::CheckStake() : Trust Score Incorrect"));
-
-        /* Get the weights with the block age. */
-        unsigned int nBlockAge;
-        if(!BlockAge(nBlockAge))
-            return DoS(50, error("CBlock::CheckStake() : Failed to get block age"));
-
         /* Weight for Trust transactions combine block weight and stake weight. */
         double nTrustWeight = 0.0, nBlockWeight = 0.0;
+        unsigned int nTrustAge = 0, nBlockAge = 0;
         if(vtx[0].IsTrust())
         {
+            /* Get the score and make sure it all checks out. */
+            if(!TrustScore(nTrustAge))
+                return error("CBlock::CheckStake() : failed to get trust score");
+
+            /* Get the weights with the block age. */
+            if(!BlockAge(nBlockAge))
+                return error("CBlock::CheckStake() : failed to get block age");
 
             /* Trust Weight Continues to grow the longer you have staked and higher your interest rate */
-            nTrustWeight = (((16.5 * log(((2.0 * nTrustAge) / (60 * 60 * 24 * 28)) + 1.0)) / log(3))) + 1.0;
+            nTrustWeight = (((34.0 * log(((2.0 * nTrustAge) / (60 * 60 * 24 * 28)) + 1.0)) / log(3))) + 1.0;
 
             /* Block Weight Reaches Maximum At Trust Key Expiration. */
-            nBlockWeight = min(20.0, (((19.0 * log(((2.0 * nBlockAge) / ((fTestNet ? TRUST_KEY_TIMESPAN_TESTNET : TRUST_KEY_TIMESPAN))) + 1.0)) / log(3))) + 1.0);
+            nBlockWeight = min(16.5, (((17.5 * log(((2.0 * nBlockAge) / ((fTestNet ? TRUST_KEY_TIMESPAN_TESTNET : TRUST_KEY_TIMESPAN))) + 1.0)) / log(3))) + 1.0);
         }
 
         /* Weight for Gensis transactions are based on your coin age. */
         else
         {
+            /* Genesis transaction can't have any transactions. */
+            if(vtx.size() != 1)
+                return error("CBlock::CheckStake() : Genesis can't include transactions");
+
             /* Calculate the Average Coinstake Age. */
             LLD::CIndexDB indexdb("r");
             uint64 nCoinAge;
@@ -1067,7 +1189,7 @@ namespace Core
         /* Verbose logging. */
         if(GetArg("-verbose", 0) >= 2)
         {
-            printf("VerifyStake: hash=%s target=%s trustscore=%u blockage=%u trustweight=%f blockweight=%f threshold=%f required=%f time=%u nonce=%" PRIu64 "\n", StakeHash().ToString().substr(0, 20).c_str(), bnTarget.getuint1024().ToString().substr(0, 20).c_str(), nTrustAge, nBlockAge, nTrustWeight, nBlockWeight, nThreshold, nRequired, (unsigned int)(nTime - vtx[0].nTime), nNonce);
+            printf("CheckStake : hash=%s target=%s trustscore=%u blockage=%u trustweight=%f blockweight=%f threshold=%f required=%f time=%u nonce=%" PRIu64 "\n", StakeHash().ToString().substr(0, 20).c_str(), bnTarget.getuint1024().ToString().substr(0, 20).c_str(), nTrustAge, nBlockAge, nTrustWeight, nBlockWeight, nThreshold, nRequired, (unsigned int)(nTime - vtx[0].nTime), nNonce);
         }
 
         return true;
@@ -1112,11 +1234,7 @@ namespace Core
 
         /* Version 5 - last trust block. */
         uint1024 hashLastBlock;
-
-        /* Version 5 - the key sequence number. */
         unsigned int nSequence;
-
-        /* Version 5 - the key trust score. */
         unsigned int nTrustScore;
 
         /* Extract values from coinstake vin. */
@@ -1133,14 +1251,8 @@ namespace Core
         return true;
     }
 
-
-    /* Calculates the trust score of given trust key included in a block. */
     bool CBlock::TrustScore(unsigned int& nScore)
     {
-        /* No trust score for non proof of stake (for now). */
-        if(!IsProofOfStake())
-            return error("CBlock::TrustScore() : not proof of stake");
-
         /* Genesis has a trust score of 0. */
         if(vtx[0].IsGenesis())
         {
@@ -1148,86 +1260,124 @@ namespace Core
             return true;
         }
 
-        /* Extract the trust key from the coinstake. */
-        uint576 cKey;
-        if(!TrustKey(cKey))
-            return error("CBlock::TrustScore() : trust key not found in script");
-
-        /* Block version 4 specific rules. */
-        if(nVersion < 5)
-        {
-            /* Check the trust pool - this should only execute once transitioning from version 4 to version 5 trust keys. */
-            if(!cTrustPool.Exists(cKey))
-                return error("CBlock::TrustScore() : version 4 key not found");
-
-            /* Ensure that a version 4 trust key is not expired. */
-            CTrustKey trustKey = cTrustPool.Find(cKey);
-            if(trustKey.Expired(GetHash(), hashPrevBlock))
-                return error("CBlock::TrustScore() : version 4 key expired.");
-
-            /* Score is the total age of the trust key for version 4. */
-            nScore = trustKey.Age(mapBlockIndex[hashPrevBlock]->GetBlockTime());
-
-            return true;
-        }
-
         /* Version 5 - last trust blocks. */
         uint1024 hashLastBlock;
-
-        /* Version 5 - the key sequence numbers. */
         unsigned int nSequence;
-
-        /* Version 5 - the key trust scores. */
         unsigned int nTrustScore;
 
         /* Extract values from coinstake vin. */
         if(!ExtractTrust(hashLastBlock, nSequence, nTrustScore))
             return error("CBlock::TrustScore() : failed to extract trust");
 
+        /* Return true with the trust score. */
+        nScore = nTrustScore;
+        return true;
+    }
+
+
+    /* Calculates the trust score of given trust key included in a block. */
+    bool CBlock::CheckTrust()
+    {
+        /* No trust score for non proof of stake (for now). */
+        if(!IsProofOfStake())
+            return error("CBlock::CheckTrust() : not proof of stake");
+
+        /* Extract the trust key from the coinstake. */
+        uint576 cKey;
+        if(!TrustKey(cKey))
+            return error("CBlock::CheckTrust() : trust key not found in script");
+
+        /* Genesis has a trust score of 0. */
+        if(vtx[0].IsGenesis())
+        {
+            if(vtx[0].vin[0].scriptSig.size() != 8)
+                return error("CBlock::CheckTrust() : genesis unexpected size %u", vtx[0].vin[0].scriptSig.size());
+
+            return true;
+        }
+
+        /* Version 5 - last trust blocks. */
+        uint1024 hashLastBlock;
+        unsigned int nSequence;
+        unsigned int nTrustScore;
+
+        /* Extract values from coinstake vin. */
+        if(!ExtractTrust(hashLastBlock, nSequence, nTrustScore))
+            return error("CBlock::CheckTrust() : failed to extract trust");
+
         /* Check that the last block is in the block index. */
         if(!mapBlockIndex.count(hashLastBlock))
-            return error("CBlock::TrustScore() : previous block (%s) not in block index", hashLastBlock.ToString().substr(0, 20).c_str());
+            return error("CBlock::CheckTrust() : previous block (%s) not in block index", hashLastBlock.ToString().substr(0, 20).c_str());
+
+        /* Strict rule, may be removed since sequence prevents anyone from claiming a trust block out of order. */
+        uint1024 hashTestBlock = GetHash();
+        if(!LastTrustBlock(cKey, hashTestBlock))
+            return error("CBlock::CheckTrust() : couldn't get last trust block");
+        if(hashTestBlock != hashLastBlock)
+            return error("CBlock::CheckTrust() : last block claim not matching last block calculation");
 
         /* Check that the block is connected. */
         CBlockIndex* pindexPrev = mapBlockIndex[hashLastBlock];
         if(!pindexPrev->pnext)
-            return error("CBlock::TrustScore() : previous blocks is not in main chain");
+            return error("CBlock::CheckTrust() : previous blocks is not in main chain");
 
         /* Read the previous block from disk. */
         CBlock blockPrev;
         if(!blockPrev.ReadFromDisk(pindexPrev, true))
-            return error("CBlock::TrustScore() : can't read previous block");
+            return error("CBlock::CheckTrust() : can't read previous block");
 
         /* Extract the last trust key */
         uint576 keyLast;
         if(!blockPrev.TrustKey(keyLast))
-            return error("CBlock::TrustScore() : trust key not found in previous script");
+            return error("CBlock::CheckTrust() : trust key not found in previous script");
 
         /* Enforce the minimum trust key interval of 120 blocks. */
         if(nHeight - blockPrev.nHeight < (fTestNet ? TESTNET_MINIMUM_INTERVAL : MAINNET_MINIMUM_INTERVAL))
-            return error("CBlock::TrustScore() : trust key interval below 120 blocks %u", nHeight - blockPrev.nHeight);
+            return error("CBlock::CheckTrust() : trust key interval below minimum interval %u", nHeight - blockPrev.nHeight);
 
         /* Ensure the last block being checked is the same trust key. */
         if(keyLast != cKey)
-            return error("CBlock::TrustScore() : trust key in previous block (%s) mismatch to this one (%s)", cKey.ToString().substr(0, 20).c_str(), keyLast.ToString().substr(0, 20).c_str());
+            return error("CBlock::CheckTrust() : trust key in previous block (%s) mismatch to this one (%s)", cKey.ToString().substr(0, 20).c_str(), keyLast.ToString().substr(0, 20).c_str());
 
         /* Placeholder in case previous block is a version 4 block. */
-        unsigned int nScorePrev = 0;
+        unsigned int nScorePrev = 0, nScore = 0;
+
+        /* If previous block is genesis, set previous score to 0. */
+        if(blockPrev.vtx[0].IsGenesis())
+        {
+            /* Enforce sequence number 1 if previous block was genesis */
+            if(nSequence != 1)
+                return error("CBlock::CheckTrust() : first trust block and sequence is not 1 (%u)", nSequence);
+
+            /* Genesis results in a previous score of 0. */
+            nScorePrev = 0;
+        }
 
         /* Version 4 blocks need to get score from previous blocks calculated score from the trust pool. */
-        if(blockPrev.nVersion < 5)
+        else if(blockPrev.nVersion < 5)
         {
             /* Enforce sequence number of 1 for anything made from version 4 blocks. */
             if(nSequence != 1)
-                return error("CBlock::TrustScore() : version 4 block sequence number not 1 (%u)", nSequence);
+                return error("CBlock::CheckTrust() : version 4 block sequence number not 1 (%u)", nSequence);
 
-            /* Set the previous score from trust pool recursively. */
-            if(!blockPrev.TrustScore(nScorePrev))
-                return error("CBlock::TrustScore() : Previous block (%s) couldn't get score", hashLastBlock.ToString().substr(0, 20).c_str());
+            /* Establish the index database. */
+            LLD::CIndexDB indexdb("cr");
+
+            /* Check the trust pool - this should only execute once transitioning from version 4 to version 5 trust keys. */
+            CTrustKey trustKey;
+            if(!indexdb.ReadTrustKey(cKey, trustKey))
+                return error("CBlock::CheckTrust() : trust key not found in database");
+
+            /* Ensure that a version 4 trust key is not expired. */
+            if(trustKey.Expired(GetHash()))
+                return error("CBlock::CheckTrust() : version 4 key expired.");
+
+            /* Score is the total age of the trust key for version 4. */
+            nScorePrev = trustKey.Age(mapBlockIndex[hashPrevBlock]->GetBlockTime());
         }
 
         /* Version 5 blocks that are trust must pass sequence checks. */
-        else if(blockPrev.vtx[0].IsTrust())
+        else
         {
             /* The last block of previous. */
             uint1024 hashBlockPrev; //dummy variable unless we want to do recursive checking of scores all the way back to genesis
@@ -1235,26 +1385,15 @@ namespace Core
             /* Extract the value from the previous block. */
             unsigned int nSequencePrev;
             if(!blockPrev.ExtractTrust(hashBlockPrev, nSequencePrev, nScorePrev))
-                return error("CBlock::TrustScore() : failed to extract trust");
+                return error("CBlock::CheckTrust() : failed to extract trust");
 
             /* Enforce Sequence numbering, must be +1 always. */
             if(nSequence != nSequencePrev + 1)
-                return error("CBlock::TrustScore() : Previous Sequence (%u) broken (%u)", nSequencePrev, nSequence);
-        }
-
-        /* If previous block is genesis, set previous score to 0. */
-        else if(blockPrev.vtx[0].IsGenesis())
-        {
-            /* Enforce sequence number 1 if previous block was genesis */
-            if(nSequence != 1)
-                return error("CBlock::TrustScore() : first trust block and sequence is not 1 (%u)", nSequence);
-
-            /* Genesis results in a previous score of 0. */
-            nScorePrev = 0;
+                return error("CBlock::CheckTrust() : previous sequence (%u) broken (%u)", nSequencePrev, nSequence);
         }
 
         /* The time it has been since the last trust block for this trust key. */
-        int nTimespan = (nTime - blockPrev.nTime);
+        int nTimespan = (mapBlockIndex[hashPrevBlock]->GetBlockTime() - blockPrev.nTime);
 
         /* Timespan less than required timespan is awarded the total seconds it took to find. */
         if(nTimespan < (fTestNet ? TRUST_KEY_TIMESPAN_TESTNET : TRUST_KEY_TIMESPAN))
@@ -1273,16 +1412,17 @@ namespace Core
                 nScore = (nScorePrev - nPenalty);
         }
 
-        /* Debug output. */
-        if(GetArg("-verbose", 0) >= 2)
-            printf("TrustScore: score=%u prev=%u change=%i", nScore, nScorePrev, (int)(nScore - nScorePrev));
-
         /* Check that published score in this block is equivilent to calculated score. */
         if(nTrustScore != nScore)
-            return error("CBlock::TrustScore() : published trust score (%u) not meeting calculated score (%u)", nTrustScore, nScore);
+            return error("CBlock::CheckTrust() : published trust score (%u) not meeting calculated score (%u)", nTrustScore, nScore);
+
+        /* Debug output. */
+        if(GetArg("-verbose", 0) >= 2)
+            printf("CheckTrust: score=%u prev=%u change=%i", nScore, nScorePrev, (int)(nScore - nScorePrev));
 
         return true;
     }
+
 
     bool CBlock::TrustKey(uint576& cKey)
     {
@@ -1301,6 +1441,28 @@ namespace Core
 
         /* Set the Public Key Integer Key from Bytes. */
         cKey.SetBytes(vSolutions[0]);
+
+        return true;
+    }
+
+
+    bool CBlock::TrustKey(std::vector<unsigned char>& vchTrustKey)
+    {
+        /* Extract the Key from the Script Signature. */
+        vector<std::vector<unsigned char> > vSolutions;
+        Wallet::TransactionType whichType;
+        const CTxOut& txout = vtx[0].vout[0];
+
+        /* Extract the key from script sig. */
+        if (!Solver(txout.scriptPubKey, whichType, vSolutions))
+            return error("CBlock::TrustKey() : Couldn't find trust key in script");
+
+        /* Enforce public key rules. */
+        if (whichType != Wallet::TX_PUBKEY)
+            return error("CBlock::TrustKey() : key not of public key type");
+
+        /* Set the Public Key Integer Key from Bytes. */
+        vchTrustKey = vSolutions[0];
 
         return true;
     }

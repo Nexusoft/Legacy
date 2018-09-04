@@ -117,16 +117,6 @@ namespace LLD
         return Write(string("hashBestChain"), hashBestChain);
     }
 
-    bool CIndexDB::WriteMyKey(uint576 hashTrustKey)
-    {
-        return Write(string("mytrustkey"), hashTrustKey);
-    }
-
-    bool CIndexDB::ReadMyKey(uint576& hashTrustKey)
-    {
-        return Read(string("mytrustkey"), hashTrustKey);
-    }
-
     bool CIndexDB::WriteTrustKey(uint576 hashTrustKey, Core::CTrustKey cTrustKey)
     {
         return Write(make_pair(string("trustKey"), hashTrustKey), cTrustKey);
@@ -137,14 +127,21 @@ namespace LLD
         return Read(make_pair(string("trustKey"), hashTrustKey), cTrustKey);
     }
 
-    bool CIndexDB::ReadLastTrust(uint1024& hashLastBlock)
+    bool CIndexDB::EraseTrustKey(uint576 hashTrustKey)
     {
-        return Read(string("lasttrust"), hashLastBlock);
+        return Erase(make_pair(string("trustKey"), hashTrustKey));
     }
 
-    bool CIndexDB::WriteLastTrust(uint1024 hashLastBlock)
+    bool CIndexDB::KeysBootstrapped()
     {
-        return Write(string("lasttrust"), hashLastBlock);
+        uint1024 hash;
+        return Read(string("bootstrap"), hash);
+    }
+
+    bool CIndexDB::BootstrapKeys()
+    {
+        uint1024 hash;
+        return Write(string("bootstrap"), hash);
     }
 
     Core::CBlockIndex static * InsertBlockIndex(uint1024 hash)
@@ -174,7 +171,11 @@ namespace LLD
         if(!ReadHashBestChain(Core::hashBestChain))
             return error("No Hash Best Chain in Index Database.");
 
+        /* Flag to determine if keys need to be bootstrapped. */
+        bool fBootstrap = !KeysBootstrapped();
+
         uint1024 hashBlock = Core::hashGenesisBlock;
+        std::vector<uint576> vExpired;
         while(!fRequestShutdown)
         {
             Core::CDiskBlockIndex diskindex;
@@ -272,33 +273,38 @@ namespace LLD
                     }
                 }
 
-
-                //TODO: Trust key accept with no cBlock (CBlockIndex instead)
-                if(pindexNew->IsProofOfStake() && pindexNew->nVersion < 5)
+                if(fBootstrap && pindexNew->IsProofOfStake() && pindexNew->nVersion < 5)
                 {
                     Core::CBlock block;
                     if(!block.ReadFromDisk(pindexNew))
                         return error("CTxDB::LoadBlockIndex() : Failed to Read Block");
 
-                    if(!Core::cTrustPool.Accept(block, true))
-                        return error("CTxDB::LoadBlockIndex() : Failed To Accept Trust Key Block.");
-
-                    if(!Core::cTrustPool.Connect(block, true))
-                        return error("CTxDB::LoadBlockIndex() : Failed To Connect Trust Key Block.");
-
-                    uint576 cKey;
-                    if(!block.TrustKey(cKey))
+                    std::vector<unsigned char> vTrustKey;
+                    if(!block.TrustKey(vTrustKey))
                         return error("CTxDb::LoadBlockIndex() : Failed to extract new trust key");
 
-                    Core::CTrustKey cTrust;
-                    if(!ReadTrustKey(cKey, cTrust))
-                    {
-                        cTrust = Core::cTrustPool.Find(cKey);
-                        WriteTrustKey(cKey, cTrust);
-                        printf("Writing Trust Key to Disk %s\n", cKey.ToString().substr(0, 20).c_str());
-                    }
-                }
 
+                    uint576 cKey;
+                    cKey.SetBytes(vTrustKey);
+
+                    Core::CTrustKey trustKey;
+                    if(!ReadTrustKey(cKey, trustKey))
+                    {
+                        trustKey = Core::CTrustKey(vTrustKey, block.GetHash(), block.vtx[0].GetHash(), block.nTime);
+                        WriteTrustKey(cKey, trustKey);
+
+                        printf("CTxDb::LoadBlockIndex() : Writing Genesis %u Key to Disk %s\n", block.nHeight, cKey.ToString().substr(0, 20).c_str());
+                    }
+
+                    /* Check if the key is expired.
+                    if(trustKey.Expired(block.GetHash()))
+                    {
+                        printf("CTxDb::LoadBlockIndex() : trust key expired... erasing %s\n", cKey.ToString().substr(0, 20).c_str());
+
+                        EraseTrustKey(cKey);
+                    }
+                    */
+                }
             }
 
             /** Add the Pending Checkpoint into the Blockchain. **/
@@ -312,6 +318,9 @@ namespace LLD
         }
         if(fRequestShutdown)
             return false;
+
+        if(!BootstrapKeys())
+            return error("Failed to write the keys bootstrap");
 
         Core::nBestHeight = Core::pindexBest->nHeight;
         Core::nBestChainTrust = Core::pindexBest->nChainTrust;

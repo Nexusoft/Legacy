@@ -148,6 +148,10 @@ namespace Core
     extern std::map<uint1024, CBlockIndex*> mapBlockIndex;
     extern std::map<uint1024, uint1024>   mapInvalidBlocks;
 
+
+    /* Trust key specifics. */
+    extern std::vector<uint576> vTrustKeys;
+
     extern std::map<uint1024, uint1024> mapProofOfStake;
     extern std::map<uint512, CDataStream*> mapOrphanTransactions;
     extern std::map<uint512, std::map<uint512, CDataStream*> > mapOrphanTransactionsByPrev;
@@ -224,6 +228,7 @@ namespace Core
     FILE* AppendBlockFile(unsigned int& nFileRet);
     bool LoadBlockIndex(bool fAllowNew = true);
     bool CheckBlockIndex(uint1024 hashBlock);
+    bool LastTrustBlock(uint576 trustKey, uint1024& hashTrustBlock);
 
 
     /** DISPATCH.CPP **/
@@ -624,8 +629,6 @@ namespace Core
         uint512   hashGenesisTx;
         unsigned int nGenesisTime;
 
-        /* Previous Blocks Vector to store list of blocks of this Trust Key. */
-        mutable std::vector< std::pair<uint1024, bool> > hashPrevBlocks;
 
         CTrustKey() { SetNull(); }
         CTrustKey(std::vector<unsigned char> vchPubKeyIn, uint1024 hashBlockIn, uint512 hashTxIn, unsigned int nTimeIn)
@@ -669,34 +672,26 @@ namespace Core
         uint64 Age(unsigned int nTime) const;
 
         /* Time Since last Trust Block. */
-        uint64 BlockAge(uint1024 hashThisBlock, uint1024 hashPrevBlock) const;
+        uint64 BlockAge(uint1024 hashBestBlock) const;
 
-        /* Get the Back of the Vector Connected block. */
-        uint1024 Back(uint1024 hashThisBlock = 0) const
-        {
-            bool fFound = false;
-            for(auto prev = hashPrevBlocks.rbegin() ; prev != hashPrevBlocks.rend() ; prev ++){
-                if(hashThisBlock != 0){
-                    if((*prev).first == hashThisBlock){
-                        fFound = true;
+        /* Get the interest rate of given trust key. */
+        double InterestRate(const CBlockIndex* pindex, unsigned int nTime) const;
 
-                        continue;
-                    }
-
-                    if(!fFound)
-                        continue;
-                }
-                if((*prev).second)
-                    return (*prev).first;
-            }
-
-            return hashGenesisBlock;
-        }
+        /* Softban checks for trust key. */
+        bool IsValid(CBlock cBlock);
 
         /* Flag to Determine if Class is Empty and Null. */
-        bool IsNull()  const { return (hashGenesisBlock == 0 || hashGenesisTx == 0 || nGenesisTime == 0 || vchPubKey.empty()); }
-        bool Expired(uint1024 hashThisBlock, uint1024 hashPrevBlock) const;
+        bool IsNull() const
+        {
+            return (hashGenesisBlock == 0 && hashGenesisTx == 0 && nGenesisTime == 0 && vchPubKey.empty());
+        }
+
+        /* Flag if trust key is expired. */
+        bool Expired(uint1024 hashThisBlock) const;
+
+        /* Check the genesis transaction. */
         bool CheckGenesis(CBlock cBlock) const;
+
 
         std::string ToString()
         {
@@ -723,48 +718,6 @@ namespace Core
         }
     };
 
-    /** Holding Class Structure to contain the Trust Keys. **/
-    class CTrustPool
-    {
-    private:
-        mutable CCriticalSection cs;
-
-    public:
-        /* The trust keys stored into the trust pool. */
-        mutable std::map<uint576, CTrustKey> mapTrustKeys;
-
-        /* The Trust Key Owned By Current Node. */
-        std::vector<unsigned char>   vchTrustKey;
-
-        /* Helper Function to Find Trust Key. */
-        bool HasTrustKey(unsigned int nTime);
-
-        bool IsValid(CBlock cBlock);
-        bool Accept(CBlock cBlock, bool fInit = false);
-        bool Connect(CBlock cBlock, bool fInit = false);
-        bool Disconnect(CBlock cBlock, bool fInit = false);
-
-        bool Exists(uint576 cKey)    const { return mapTrustKeys.count(cKey); }
-        bool IsGenesis(uint576 cKey, uint1024 hashBlock) const
-        {
-            return mapTrustKeys[cKey].hashGenesisBlock == hashBlock;
-        }
-
-        bool IsGenesis(uint576 cKey) const
-        {
-            return mapTrustKeys[cKey].hashPrevBlocks.size() == 1;
-        }
-
-		double InterestRate(uint576 cKey, unsigned int nTime) const;
-
-		/* The Trust score of the Trust Key. Determines the Age and Interest Rates. */
-		uint64 TrustScore(uint576 cKey, unsigned int nTime) const;
-
-		/* Locate a Trust Key in the Trust Pool. */
-		CTrustKey Find(uint576 cKey) const { return mapTrustKeys[cKey]; }
-	};
-
-	extern CTrustPool cTrustPool;
 
 
 	/** The basic transaction that is broadcasted on the network and contained in
@@ -1141,7 +1094,7 @@ namespace Core
 		}
 
 
-		bool GetCoinstakeInterest(LLD::CIndexDB& txdb, int64& nInterest) const;
+		bool GetCoinstakeInterest(const CBlockIndex* pindex, LLD::CIndexDB& txdb, int64& nInterest) const;
 		bool GetCoinstakeAge(LLD::CIndexDB& txdb, uint64& nAge) const;
 
 
@@ -1467,8 +1420,16 @@ namespace Core
         bool TrustScore(unsigned int& nScore);
 
 
+        /* The trust score of key. */
+        bool CheckTrust();
+
+
         /* Get the trust key from script. */
         bool TrustKey(uint576& cKey);
+
+
+        /* Get the trust key from script. */
+        bool TrustKey(std::vector<unsigned char>& vchTrustKey);
 
 
         /* Check the proof of stake claims. */
@@ -1650,7 +1611,7 @@ namespace Core
         bool CheckBlock() const;
 
         bool VerifyWork() const;
-        bool VerifyStake() const;
+        bool VerifyStake();
 
         bool AcceptBlock();
         bool StakeWeight();

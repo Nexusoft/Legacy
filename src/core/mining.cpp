@@ -383,10 +383,19 @@ namespace Core
 
         if(pblock->GetChannel() > 0 && !pblock->VerifyWork())
             return error("Nexus Miner : proof of work not meeting target.");
+        else
+        {
+            CBigNum bnTarget;
+            bnTarget.SetCompact(pblock->nBits);
 
-        if(GetArg("-verbose", 0) >= 1){
+            if((pblock->nVersion < 5 ? pblock->GetHash() : pblock->StakeHash()) > bnTarget.getuint1024())
+                return error("Nexus Miner : proof of stake not meeting target");
+        }
+
+        if(GetArg("-verbose", 0) >= 1)
+        {
             printf("Nexus Miner: new %s block found\n", GetChannelName(pblock->GetChannel()).c_str());
-            printf("  hash: %s  \n", hash.ToString().substr(0, 30).c_str());
+            printf("  hash:   %s  \n", hash.ToString().substr(0, 30).c_str());
         }
 
         if(pblock->GetChannel() == 1)
@@ -395,12 +404,9 @@ namespace Core
             printf("  target: %s\n", hashTarget.ToString().substr(0, 30).c_str());
 
         printf("%s ", DateTimeStrFormat(GetUnifiedTimestamp()).c_str());
-        //printf("generated %s\n", FormatMoney(pblock->vtx[0].vout[0].nValue).c_str());
-
-        // Found a solution
         {
             LOCK(cs_main);
-            if (pblock->hashPrevBlock != hashBestChain && mapBlockIndex[pblock->hashPrevBlock]->GetChannel() == pblock->GetChannel())
+            if (pblock->hashPrevBlock != hashBestChain)
                 return error("Nexus Miner : generated block is stale");
 
             // Track how many getdata requests this block gets
@@ -409,11 +415,14 @@ namespace Core
                 wallet.mapRequestCount[pblock->GetHash()] = 0;
             }
 
+            /* Print the newly found block. */
+            pblock->print();
+
             /** Process the Block to see if it gets Accepted into Blockchain. **/
             if (!ProcessBlock(NULL, pblock))
                 return error("Nexus Miner : ProcessBlock, block not accepted\n");
 
-            /** Keep the Reserve Key only if it was used in a block. **/
+            /* Keep the Reserve Key only if it was used in a block. */
             reservekey.KeepKey();
         }
 

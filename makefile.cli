@@ -239,7 +239,8 @@ OBJS= build/version.o \
 	build/transaction.o \
 	build/global.o \
 	build/keychain.o \
-	build/index.o
+	build/index.o \
+	build/trustkeys.o
 
 ###############################################################################
 ifeq ($(detected_OS),Windows)
@@ -291,31 +292,31 @@ all: release/nexus.exe
 
 build/%.o: ./src/%.cpp $(HEADERS)
 	$(CXX) -c $(CXXFLAGS) -o $@ $<
-	
+
 build/%.o: ./src/core/%.cpp $(HEADERS)
 	$(CXX) -c $(CXXFLAGS) -o $@ $<
-	
+
 build/%.o: ./src/hash/%.cpp $(HEADERS)
 	$(CXX) -c $(CXXFLAGS) -o $@ $<
-	
+
 build/%.o: ./src/hash/%.c $(HEADERS)
 	$(CXX) -c $(CFLAGS) -x c -o $@ $<
-	
+
 build/%.o: ./src/keys/%.cpp $(HEADERS)
 	$(CXX) -c $(CXXFLAGS) -o $@ $<
-	
+
 build/%.o: ./src/LLP/%.cpp $(HEADERS)
 	$(CXX) -c $(CXXFLAGS) -o $@ $<
-	
+
 build/%.o: ./src/LLD/%.cpp $(HEADERS)
 	$(CXX) -c $(CXXFLAGS) -o $@ $<
-	
+
 build/%.o: ./src/net/%.cpp $(HEADERS)
 	$(CXX) -c $(CXXFLAGS) -o $@ $<
-	
+
 build/%.o: ./src/util/%.cpp $(HEADERS)
 	$(CXX) -c $(CXXFLAGS) -o $@ $<
-	
+
 build/%.o: ./src/wallet/%.cpp $(HEADERS)
 	$(CXX) -c $(CXXFLAGS) -o $@ $<
 
@@ -324,7 +325,7 @@ release/nexus.exe: $(OBJS:build/%=build/%)
 	@echo " "
 	@echo Finished building nexus.exe
 	@echo " "
-	
+
 clean:
 	-rm -f release\nexus.exe
 	-rm -f build/*.o
@@ -403,7 +404,7 @@ build/%.o: src/json/%.cpp $(HEADERS)
 	sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
 	-e '/^$$/ d' -e 's/$$/ :/' < $(@:%.o=%.d) >> $(@:%.o=%.P); \
 	rm -f $(@:%.o=%.d)
-	
+
 build/%.o: src/LLD/%.cpp $(HEADERS)
 	$(CXX) -c $(CXXFLAGS) -MMD -o $@ $<
 	@cp $(@:%.o=%.d) $(@:%.o=%.P); \
@@ -535,7 +536,7 @@ build/%.o: src/LLP/%.cpp
 	sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
 	-e '/^$$/ d' -e 's/$$/ :/' < $(@:%.o=%.d) >> $(@:%.o=%.P); \
 	rm -f $(@:%.o=%.d)
-	
+
 build/%.o: src/LLD/%.cpp
 	$(CXX) -c $(CXXFLAGS) -MMD -o $@ $<
 	@cp $(@:%.o=%.d) $(@:%.o=%.P); \

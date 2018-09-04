@@ -25,14 +25,11 @@ namespace LLD
         bool ReadDiskTx(Core::COutPoint outpoint, Core::CTransaction& tx, Core::CTxIndex& txindex);
         bool ReadDiskTx(Core::COutPoint outpoint, Core::CTransaction& tx);
 
-        bool WriteMyKey(uint576 hashTrustKey);
-        bool ReadMyKey(uint576& hashTrustKey);
-
         bool WriteTrustKey(uint576 hashTrustKey, Core::CTrustKey cTrustKey);
         bool ReadTrustKey(uint576 hashTrustKey, Core::CTrustKey& cTrustKey);
-
-        bool ReadLastTrust(uint1024& hashLastBlock);
-        bool WriteLastTrust(uint1024 hashLastBlock);
+        bool EraseTrustKey(uint576 hashTrustKey);
+        bool BootstrapKeys();
+        bool KeysBootstrapped();
 
         bool WriteBlockIndex(const Core::CDiskBlockIndex& blockindex);
         bool ReadBlockIndex(const uint1024 hashBlock, Core::CBlockIndex* pindexNew);

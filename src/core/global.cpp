@@ -252,9 +252,6 @@ namespace Core
     /** Transaction Holding Structure to wait to be confirmed in the Network. **/
     CTxMemPool mempool;
 
-    /** Trust Key Holding Structure To Verify Trust Keys Seen on Blockchain. **/
-    CTrustPool cTrustPool;
-
     /** In memory Indexing of Blocks into Blockchain. **/
     map<uint1024, CBlockIndex*> mapBlockIndex;
     map<uint1024, uint1024>     mapInvalidBlocks;
@@ -288,6 +285,9 @@ namespace Core
 
     uint64 nLastBlockTx = 0;
     uint64 nLastBlockSize = 0;
+
+
+    std::vector<uint576> vTrustKeys;
 
 
     CMajority<int> cPeerBlockCounts; // Amount of blocks that other nodes claim to have
