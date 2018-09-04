@@ -266,6 +266,10 @@ namespace Core
         pindex->nMint = nValueOut - nValueIn;
         pindex->nMoneySupply = (pindex->pprev ? pindex->pprev->nMoneySupply : 0) + nValueOut - nValueIn;
 
+        //move from check transaction to verify script size
+        if (vtx[0].vin[0].scriptSig.size() < 2 || vtx[0].vin[0].scriptSig.size() > (nVersion < 5 ? 100 : 144))
+            return DoS(100, error("CTransaction::CheckTransaction() : coinbase/coinstake script size"));
+
         // handle for trust keys
         std::vector<unsigned char> vTrustKey;
         if(!TrustKey(vTrustKey))

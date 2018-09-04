@@ -342,12 +342,7 @@ namespace Core
             vInOutPoints.insert(txin.prevout);
         }
 
-        if (IsCoinBase() || IsCoinStake())
-        {
-            if (vin[0].scriptSig.size() < 2 || vin[0].scriptSig.size() > 100)
-                return DoS(100, error("CTransaction::CheckTransaction() : coinbase script size"));
-        }
-        else
+        if (!IsCoinBase() && !IsCoinStake())
         {
             BOOST_FOREACH(const CTxIn& txin, vin)
                 if (txin.prevout.IsNull())
@@ -858,7 +853,13 @@ namespace Core
             if (IsCoinStake())
             {
                 int64 nInterest;
-                GetCoinstakeInterest(pindexBlock, indexdb, nInterest);
+
+                /* Read the Trust Key. */
+                CBlock block;
+                if(!block.ReadFromDisk(pindexBlock, true))
+                    return error("ConnectInputs() : couldn't read interest block from disk");
+
+                GetCoinstakeInterest(block, indexdb, nInterest);
 
                 printf("ConnectInputs() : %f Value Out, %f Expected\n", (double)round_coin_digits(vout[0].nValue, 6) / COIN, (double)(round_coin_digits(nInterest + nValueIn, 6)) / COIN);
 

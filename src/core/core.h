@@ -675,7 +675,7 @@ namespace Core
         uint64 BlockAge(uint1024 hashBestBlock) const;
 
         /* Get the interest rate of given trust key. */
-        double InterestRate(const CBlockIndex* pindex, unsigned int nTime) const;
+        double InterestRate(CBlock block, unsigned int nTime) const;
 
         /* Softban checks for trust key. */
         bool IsValid(CBlock cBlock);
@@ -1083,7 +1083,7 @@ namespace Core
 		}
 
 
-		bool GetCoinstakeInterest(const CBlockIndex* pindex, LLD::CIndexDB& txdb, int64& nInterest) const;
+		bool GetCoinstakeInterest(CBlock block, LLD::CIndexDB& txdb, int64& nInterest) const;
 		bool GetCoinstakeAge(LLD::CIndexDB& txdb, uint64& nAge) const;
 
 

@@ -23,14 +23,14 @@ using namespace std;
 namespace Wallet
 {
 
-    bool CWallet::AddCoinstakeInputs(Core::CBlockIndex* pindex, Core::CTransaction& txNew)
+    bool CWallet::AddCoinstakeInputs(Core::CBlock& block)
     {
 
         /* Add Each Input to Transaction. */
         vector<const CWalletTx*> vInputs;
         vector<const CWalletTx*> vCoins;
 
-        txNew.vout[0].nValue = 0;
+        block.vtx[0].vout[0].nValue = 0;
 
         {
         LOCK(cs_wallet);
@@ -50,7 +50,7 @@ namespace Wallet
                 continue;
 
             /* Do not add coins to Genesis block if age < 24hrs */
-            if (txNew.IsGenesis() && (txNew.nTime - pcoin->nTime) < 24 * 60 * 60)
+            if (block.vtx[0].IsGenesis() && (block.vtx[0].nTime - pcoin->nTime) < 24 * 60 * 60)
                 continue;
 
             for (unsigned int i = 0; i < pcoin->vout.size(); i++)
@@ -58,40 +58,40 @@ namespace Wallet
                 if (pcoin->IsSpent(i) || !IsMine(pcoin->vout[i]))
                     continue;
 
-                if (pcoin->nTime > txNew.nTime)
+                if (pcoin->nTime > block.vtx[0].nTime)
                     continue;
 
-                //if(txNew.vout[0].nValue > (nBalance - nReserveBalance))
+                //if(block.vtx[0].vout[0].nValue > (nBalance - nReserveBalance))
                 //    break;
 
                 /* Stop adding Inputs if has reached Maximum Transaction Size. */
-                unsigned int nBytes = ::GetSerializeSize(txNew, SER_NETWORK, PROTOCOL_VERSION);
+                unsigned int nBytes = ::GetSerializeSize(block.vtx[0], SER_NETWORK, PROTOCOL_VERSION);
                 if (nBytes >= Core::MAX_BLOCK_SIZE_GEN / 5)
                     break;
 
-                txNew.vin.push_back(Core::CTxIn(pcoin->GetHash(), i));
+                block.vtx[0].vin.push_back(Core::CTxIn(pcoin->GetHash(), i));
                 vInputs.push_back(pcoin);
 
                 /** Add the value to the first Output for Coinstake. **/
-                txNew.vout[0].nValue += pcoin->vout[i].nValue;
+                block.vtx[0].vout[0].nValue += pcoin->vout[i].nValue;
             }
         }
 
-        if(txNew.vin.size() == 1)
+        if(block.vtx[0].vin.size() == 1)
             return false;
 
         /** Set the Interest for the Coinstake Transaction. **/
         int64 nInterest;
         LLD::CIndexDB indexdb("cr");
-        if(!txNew.GetCoinstakeInterest(pindex, indexdb, nInterest))
+        if(!block.vtx[0].GetCoinstakeInterest(block, indexdb, nInterest))
             return error("AddCoinstakeInputs() : Failed to Get Interest");
 
-        txNew.vout[0].nValue += nInterest;
+        block.vtx[0].vout[0].nValue += nInterest;
 
         /** Sign Each Input to Transaction. **/
         for(int nIndex = 0; nIndex < vInputs.size(); nIndex++)
         {
-            if (!SignSignature(*this, *vInputs[nIndex], txNew, nIndex + 1))
+            if (!SignSignature(*this, *vInputs[nIndex], block.vtx[0], nIndex + 1))
                 return error("AddCoinstakeInputs() : Unable to sign Coinstake Transaction Input.");
 
         }
@@ -213,7 +213,7 @@ namespace Core
 
 
     /** Obtains the proper compounded interest from given Coin Stake Transaction. **/
-    bool CTransaction::GetCoinstakeInterest(const CBlockIndex* pindex, LLD::CIndexDB& indexdb, int64& nInterest) const
+    bool CTransaction::GetCoinstakeInterest(CBlock block, LLD::CIndexDB& indexdb, int64& nInterest) const
     {
         /** Check that the transaction is Coinstake. **/
         if(!IsCoinStake())
@@ -243,8 +243,8 @@ namespace Core
 
         /* Get the trust key from index database. */
         CTrustKey trustKey;
-        if(pindex && indexdb.ReadTrustKey(cKey, trustKey))
-            nInterestRate = trustKey.InterestRate(pindex, nTime);
+        if(indexdb.ReadTrustKey(cKey, trustKey))
+            nInterestRate = trustKey.InterestRate(block, nTime);
 
         /** Check the coin age of each Input. **/
         for(int nIndex = 1; nIndex < vin.size(); nIndex++)
@@ -411,13 +411,8 @@ namespace Core
 
 
     /** Interest is Determined By Logarithmic Equation from Genesis Key. **/
-    double CTrustKey::InterestRate(const CBlockIndex* pindex, unsigned int nTime) const
+    double CTrustKey::InterestRate(CBlock block, unsigned int nTime) const
     {
-        /* Read the Trust Key. */
-        CBlock block;
-        if(!block.ReadFromDisk(pindex, true))
-            return 0; //this will trigger an interest rate failure
-
         /* Genesis interest rate is 0.5% */
         if(block.vtx[0].IsGenesis())
             return 0.05;
@@ -653,7 +648,7 @@ namespace Core
                 }
 
                 /* Add the coinstake inputs */
-                if (!pwalletMain->AddCoinstakeInputs(pindexBest, block.vtx[0]))
+                if (!pwalletMain->AddCoinstakeInputs(block))
                 {
                     error("Stake Minter : failed to add coinstake inputs");
                     continue;
@@ -851,15 +846,14 @@ namespace Core
                     block.vtx[0].vout[0].scriptPubKey << vchTrustKey << Wallet::OP_CHECKSIG;
 
                     /* Calculate the Average Coinstake Age. */
-                    CTransaction txNew = block.vtx[0];
-                    if (!pwalletMain->AddCoinstakeInputs(pindexBest, txNew))
+                    if (!pwalletMain->AddCoinstakeInputs(block))
                     {
                         error("Stake Minter : genesis - failed to add coinstake inputs");
                         continue;
                     }
 
                     LLD::CIndexDB indexdb("cr");
-                    if(!txNew.GetCoinstakeAge(indexdb, nCoinAge))
+                    if(!block.vtx[0].GetCoinstakeAge(indexdb, nCoinAge))
                     {
                         if(GetArg("-verbose", 0) >= 2)
                             error("Stake Minter : Genesis - Failed to Get Coinstake Age.");
@@ -890,7 +884,7 @@ namespace Core
                 {
                     vBlocks[i] = block;
 
-                    if (!pwalletMain->AddCoinstakeInputs(pindexBest, vBlocks[i].vtx[0]))
+                    if (!pwalletMain->AddCoinstakeInputs(vBlocks[i]))
                         break;
 
                     if (!vBlocks[i].vtx[0].IsGenesis())
