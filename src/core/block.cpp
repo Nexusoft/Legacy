@@ -1011,6 +1011,9 @@ namespace Core
                 if(!CheckTrust())
                     return DoS(50, error("AcceptBlock() : invalid trust score"));
             }
+            else
+                if(!VerifyStake())
+                    return DoS(50, error("AcceptBlock() : invalid proof of stake"));
         }
 
 
