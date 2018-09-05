@@ -228,7 +228,7 @@ namespace Core
     FILE* AppendBlockFile(unsigned int& nFileRet);
     bool LoadBlockIndex(bool fAllowNew = true);
     bool CheckBlockIndex(uint1024 hashBlock);
-    bool LastTrustBlock(uint576 trustKey, uint1024& hashTrustBlock);
+    bool LastTrustBlock(CTrustKey trustKey, uint1024& hashTrustBlock);
 
 
     /** DISPATCH.CPP **/

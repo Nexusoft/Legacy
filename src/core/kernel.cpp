@@ -488,13 +488,10 @@ namespace Core
     /* The Age of a Key in Block age as in the Time it has been since Trust Key has produced block. */
     uint64 CTrustKey::BlockAge(uint1024 hashBestBlock) const
     {
-        /* Get the trust key. */
-        uint576 cKey;
-        cKey.SetBytes(vchPubKey);
 
         /* Get the last block. */
         uint1024 hashBlockLast = hashBestBlock;
-        if(!LastTrustBlock(cKey, hashBlockLast))
+        if(!LastTrustBlock(*this, hashBlockLast))
             return error("CTrustKey::BlockAge() : Can't find last trust block");
 
         /* Block Age is Time to Previous Block's Time. */
@@ -566,7 +563,7 @@ namespace Core
 
                     /* Get the last block of this trust key. */
                     uint1024 hashLastBlock = hashBest;
-                    if(!LastTrustBlock(trustKey.GetKey(), hashLastBlock))
+                    if(!LastTrustBlock(trustKey, hashLastBlock))
                     {
                         error("Stake Minter : failed to find last block for trust key");
                         continue;
