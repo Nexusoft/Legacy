@@ -279,10 +279,6 @@ namespace Core
         uint576 cKey;
         cKey.SetBytes(vTrustKey);
 
-        /* Verify the stake claims. */
-        if(nVersion < 5 && !VerifyStake())
-            return DoS(50, error("ConnectBlock() : invalid proof of stake"));
-
         /* Handle Genesis Transaction Rules. Genesis is checked after Trust Key Established. */
         if(vtx[0].IsGenesis())
         {
@@ -1040,6 +1036,8 @@ namespace Core
                 if(!CheckTrust())
                     return DoS(50, error("AcceptBlock() : invalid trust score"));
             }
+            else if(nVersion < 5 && !VerifyStake())
+                return DoS(50, error("ConnectBlock() : invalid proof of stake"));
         }
 
 
