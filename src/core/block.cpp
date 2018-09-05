@@ -280,20 +280,23 @@ namespace Core
         cKey.SetBytes(vTrustKey);
 
         /* Version 5 blocks don't need trust pool - do basic checks here. */
-        if(nVersion >= 5)
+        if(IsProofOfStake())
         {
-            /* Check the claimed stake limits are met. */
-            if(!CheckStake())
+            if(nVersion >= 5)
+            {
+                /* Check the claimed stake limits are met. */
+                if(!CheckStake())
+                    return DoS(50, error("ConnectBlock() : invalid proof of stake"));
+
+                /* Check the claimed trust scores are met. */
+                if(!CheckTrust())
+                    return DoS(50, error("ConnectBlock() : invalid trust score"));
+            }
+
+            /* Verify the stake claims. */
+            else if(!VerifyStake())
                 return DoS(50, error("ConnectBlock() : invalid proof of stake"));
-
-            /* Check the claimed trust scores are met. */
-            if(!CheckTrust())
-                return DoS(50, error("ConnectBlock() : invalid trust score"));
         }
-
-        /* Verify the stake claims. */
-        else if(!VerifyStake())
-            return DoS(50, error("ConnectBlock() : invalid proof of stake"));
 
         /* Handle Genesis Transaction Rules. Genesis is checked after Trust Key Established. */
         if(vtx[0].IsGenesis())
