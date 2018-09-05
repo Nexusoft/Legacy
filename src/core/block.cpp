@@ -1147,6 +1147,11 @@ namespace Core
             return true;
         }
 
+        /* If search passed the genesis, return an error. */
+        if(pindex->GetBlockTime() < trustKey.nGenesisTime)
+            return error("LastTrustBlock : genesis doesn't exist");
+
+        /* If serach block isn't proof of stake, return an error. */
         if(!pindex->IsProofOfStake())
             return error("LastTrustBlock : not proof of stake");
 
