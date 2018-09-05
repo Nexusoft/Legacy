@@ -254,6 +254,7 @@ namespace Core
                     // Relay to a limited number of other nodes
                     {
                         LOCK(Net::cs_vNodes);
+
                         // Use deterministic randomness to send to the same nodes for 24 hours
                         // at a time so the setAddrKnowns of the chosen nodes prevent repeats
                         static uint512 hashSalt;
@@ -265,8 +266,8 @@ namespace Core
                         multimap<uint512, Net::CNode*> mapMix;
                         BOOST_FOREACH(Net::CNode* pnode, Net::vNodes)
                         {
-                            unsigned int nPointer;
-                            memcpy(&nPointer, &pnode, sizeof(nPointer));
+                            unsigned int nPointer = (unsigned int)pnode->nLastRecv;
+
                             uint512 hashKey = hashRand ^ nPointer;
                             hashKey = SK512(BEGIN(hashKey), END(hashKey));
                             mapMix.insert(make_pair(hashKey, pnode));

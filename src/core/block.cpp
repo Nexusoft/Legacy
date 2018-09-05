@@ -1132,6 +1132,7 @@ namespace Core
 
     bool LastTrustBlock(uint576 trustKey, uint1024& hashTrustBlock)
     {
+
         /* Get the last trust block. */
         const CBlockIndex* pindex = GetLastBlockIndex(mapBlockIndex[hashTrustBlock]->pprev, true);
         if(!pindex->IsProofOfStake())
@@ -1188,6 +1189,7 @@ namespace Core
 
             /* Block Weight Reaches Maximum At Trust Key Expiration. */
             nBlockWeight = min(16.5, (((17.5 * log(((2.0 * nBlockAge) / ((fTestNet ? TRUST_KEY_TIMESPAN_TESTNET : TRUST_KEY_TIMESPAN))) + 1.0)) / log(3))) + 1.0);
+
         }
 
         /* Weight for Gensis transactions are based on your coin age. */
@@ -1595,7 +1597,7 @@ namespace Core
         if (nFile == -1)
             return NULL;
 
-        FILE* file = fopen((GetDataDir() / strprintf("blk%04d.dat", nFile)).string().c_str(), pszMode);
+        FILE* file = fopen((GetDataDir() / strprintf("blk%04u.dat", nFile)).string().c_str(), pszMode);
         if (!file)
             return NULL;
 

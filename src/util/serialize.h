@@ -838,7 +838,7 @@ public:
         {
             // special case for inserting at the front when there's room
             nReadPos -= (last - first);
-            memcpy(&vch[nReadPos], &first[0], last - first);
+            std::copy(&first[0], &last[0], &vch[nReadPos]);
         }
         else
             vch.insert(it, first, last);
@@ -852,7 +852,7 @@ public:
         {
             // special case for inserting at the front when there's room
             nReadPos -= (last - first);
-            memcpy(&vch[nReadPos], &first[0], last - first);
+            std::copy(&first[0], &last[0], &vch[nReadPos]);
         }
         else
             vch.insert(it, first, last);
@@ -866,7 +866,7 @@ public:
         {
             // special case for inserting at the front when there's room
             nReadPos -= (last - first);
-            memcpy(&vch[nReadPos], &first[0], last - first);
+            std::copy(&first[0], &last[0], &vch[nReadPos]);
         }
         else
             vch.insert(it, first, last);
@@ -955,36 +955,51 @@ public:
     CDataStream& read(char* pch, int nSize)
     {
         // Read from the beginning of the buffer
-        assert(nSize >= 0);
+        if(nSize <= 0)
+        {
+            //setstate(std::ios::failbit, "CDataStream::read() : empty size field");
+            return (*this);
+        }
+
         unsigned int nReadPosNext = nReadPos + nSize;
         if (nReadPosNext >= vch.size())
         {
             if (nReadPosNext > vch.size())
             {
-                setstate(std::ios::failbit, "CDataStream::read() : end of data");
+                //setstate(std::ios::failbit, "CDataStream::read() : end of data");
                 memset(pch, 0, nSize);
                 nSize = vch.size() - nReadPos;
             }
-            memcpy(pch, &vch[nReadPos], nSize);
+
+            std::copy(&vch[nReadPos], &vch[nReadPos] + nSize, pch);
             nReadPos = 0;
+
             vch.clear();
             return (*this);
         }
-        memcpy(pch, &vch[nReadPos], nSize);
+
+        std::copy(&vch[nReadPos], &vch[nReadPos] + nSize, pch);
         nReadPos = nReadPosNext;
+
         return (*this);
     }
 
     CDataStream& ignore(int nSize)
     {
         // Ignore from the beginning of the buffer
-        assert(nSize >= 0);
+        //assert(nSize >= 0);
+        if(nSize <= 0)
+        {
+            //setstate(std::ios::failbit, "CDataStream::ignore() : empty size field");
+            return (*this);
+        }
+
         unsigned int nReadPosNext = nReadPos + nSize;
         if (nReadPosNext >= vch.size())
         {
             if (nReadPosNext > vch.size())
             {
-                setstate(std::ios::failbit, "CDataStream::ignore() : end of data");
+                //setstate(std::ios::failbit, "CDataStream::ignore() : end of data");
                 nSize = vch.size() - nReadPos;
             }
             nReadPos = 0;
@@ -998,7 +1013,11 @@ public:
     CDataStream& write(const char* pch, int nSize)
     {
         // Write to the end of the buffer
-        assert(nSize >= 0);
+        if(nSize <= 0)
+        {
+            //setstate(std::ios::failbit, "CDataStream::write() : empty size field");
+            return (*this);
+        }
         vch.insert(vch.end(), pch, pch + nSize);
         return (*this);
     }

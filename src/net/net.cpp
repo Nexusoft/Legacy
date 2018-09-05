@@ -736,7 +736,7 @@ namespace Net
                             if (nBytes > 0)
                             {
                                 vRecv.resize(nPos + nBytes);
-                                memcpy(&vRecv[nPos], pchBuf, nBytes);
+                                std::copy(&pchBuf[0], &pchBuf[0] + nBytes, &vRecv[nPos]);
                                 pnode->nLastRecv = GetUnifiedTimestamp();
                             }
                             else if (nBytes == 0)
