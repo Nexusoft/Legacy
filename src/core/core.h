@@ -1540,9 +1540,13 @@ namespace Core
             SetNull();
 
             // Open history file to read
-            CAutoFile filein = CAutoFile(OpenBlockFile(nFile, nBlockPos, "rb"), SER_DISK, DATABASE_VERSION);
+            FILE* file = OpenBlockFile(nFile, nBlockPos, "rb");
+            if(!file)
+                return error("CBlock::ReadFromDisk() : failed to open block file");
+            CAutoFile filein = CAutoFile(file, SER_DISK, DATABASE_VERSION);
             if (!filein)
                 return error("CBlock::ReadFromDisk() : OpenBlockFile failed");
+
             if (!fReadTransactions)
                 filein.nType |= SER_BLOCKHEADERONLY;
 

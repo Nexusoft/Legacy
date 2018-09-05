@@ -1211,6 +1211,8 @@ namespace Core
             nTrustWeight = min(17.5, (((16.5 * log(((2.0 * nCoinAge) / (60 * 60 * 24 * 28 * 3)) + 1.0)) / log(3))) + 1.0);
         }
 
+        //TODO: New weighting calculations with time given a specific quality + nWeights, not -
+
         /* Check the energy efficiency requirements. */
         double nThreshold = ((nTime - vtx[0].nTime) * 100.0) / nNonce;
         double nRequired  = ((50.0 - nTrustWeight - nBlockWeight) * MAX_STAKE_WEIGHT) / vtx[0].vout[0].nValue;

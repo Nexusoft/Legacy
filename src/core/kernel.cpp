@@ -167,7 +167,7 @@ namespace Core
             printf("CBlock::VerifyStake() : Target Hash %s\n", bnTarget.getuint1024().ToString().substr(0, 20).c_str());
             printf("CBlock::VerifyStake() : Coin Age %" PRIu64 " Trust Age %" PRIu64 " Block Age %" PRIu64 "\n", nCoinAge, nTrustAge, nBlockAge);
             printf("CBlock::VerifyStake() : Trust Weight %f Block Weight %f\n", nTrustWeight, nBlockWeight);
-            printf("CBlock::VerifyStake() : Threshold %f Required %f Time %u nNonce %" PRIu64 "\n", nThreshold, nRequired, (unsigned int)(nTime - vtx[0].nTime), nNonce);
+            printf("CBlock::VerifyStake() : Threshold %u Required %u Time %u nNonce %" PRIu64 "\n", nThreshold, nRequired, (unsigned int)(nTime - vtx[0].nTime), nNonce);
         }
 
         return true;
@@ -728,7 +728,7 @@ namespace Core
                 /* Search for the proof of stake hash. */
                 while(hashBest == hashBestChain)
                 {
-                    Sleep(10);
+                    Sleep(1);
 
                     /* Update the block time for difficulty accuracy. */
                     block.UpdateTime();
