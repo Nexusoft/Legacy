@@ -1141,9 +1141,11 @@ namespace Core
             return error("LastTrustBlock : couldn't find index");
 
         /* Check for genesis. */
-        if(pindex->GetBlockHash() == trustKey.hashGenesisBlock ||
-            pindex->GetBlockTime() < trustKey.nGenesisTime)
-            return error("LastTrustBlock : missed genesis");
+        if(pindex->GetBlockHash() == trustKey.hashGenesisBlock)
+        {
+            hashTrustBlock = pindex->GetBlockHash();
+            return true;
+        }
 
         if(!pindex->IsProofOfStake())
             return error("LastTrustBlock : not proof of stake");
@@ -1154,15 +1156,15 @@ namespace Core
             return error("LastTrustBlock : can't read trust block");
 
         /* Get the trust key from block. */
-        uint576 cKey;
-        if(!block.TrustKey(cKey))
+        std::vector<unsigned char> vTrustKey;
+        if(!block.TrustKey(vTrustKey))
             return error("LastTrustBlock : can't get trust key");
 
         /* Set current trust block in recursion. */
         hashTrustBlock = block.GetHash();
 
         /* if the key is equivilent, return. */
-        if(cKey == trustKey.GetKey())
+        if(vTrustKey == trustKey.vchPubKey)
             return true;
 
         return LastTrustBlock(trustKey, hashTrustBlock);
