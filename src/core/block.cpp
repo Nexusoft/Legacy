@@ -1161,7 +1161,7 @@ namespace Core
 
         /* Read the previous block from disk. */
         CBlock block;
-        if(!block.ReadFromDisk(pindex, true))
+        if(!block.ReadFromDisk(pindex->nFile, pindex->nBlockPos, true))
             return error("LastTrustBlock : can't read trust block");
 
         /* Get the trust key from block. */
@@ -1611,7 +1611,11 @@ namespace Core
         if (nFile == -1)
             return NULL;
 
-        FILE* file = fopen((GetDataDir() / strprintf("blk%04u.dat", nFile)).string().c_str(), pszMode);
+        std::stringstream stream;
+        stream << "blk" << setfill('0') << setw(4) << nFile << ".dat";
+        std::string strPath = stream.str();
+
+        FILE* file = fopen((GetDataDir() / strPath).string().c_str(), pszMode);
         if (!file)
             return NULL;
 
