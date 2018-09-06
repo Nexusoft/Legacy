@@ -811,7 +811,8 @@ namespace Core
             return error("AcceptBlock() : block timestamp too far in the future");
 
 
-        /** Do not allow blocks to be accepted above the Current Block Version. **/
+        /** Do not allow blocks to be accepted above the Current Blo>::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
+            vCoins.push_back(&(*it).ck Version. **/
         if(nVersion > (fTestNet ? TESTNET_BLOCK_CURRENT_VERSION : NETWORK_BLOCK_CURRENT_VERSION))
             return DoS(50, error("CheckBlock() : Invalid Block Version."));
 
@@ -1133,8 +1134,16 @@ namespace Core
     }
 
 
-    bool LastTrustBlock(CTrustKey trustKey, uint1024& hashTrustBlock)
+    bool LastTrustBlock(CTrustKey trustKey, uint1024& hashTrustBlock, int nLimit)
     {
+        /* Handle the recursion limit. */
+        if(nLimit > 0)
+            nLimit --;
+
+        /* Return if limit has been reached. */
+        if(nLimit == 0)
+            return error("LastTrustBlock : last trust block limit reached.");
+
         /* check the map block index. */
         if(!mapBlockIndex.count(hashTrustBlock))
             return error("LastTrustBlock : not found in mapblockindex");
@@ -1170,7 +1179,7 @@ namespace Core
             return error("LastTrustBlock : can't get trust key");
 
         /* Set current trust block in recursion. */
-        hashTrustBlock = block.GetHash();
+        hashTrustBlock = pindex->GetBlockHash();
 
         /* if the key is equivilent, return. */
         if(vTrustKey == trustKey.vchPubKey)
@@ -1193,9 +1202,6 @@ namespace Core
         unsigned int nTrustAge = 0, nBlockAge = 0;
         if(vtx[0].IsTrust())
         {
-
-            //version 5 rule - previous coinstake required as vin[1]
-
 
             /* Get the score and make sure it all checks out. */
             if(!TrustScore(nTrustAge))
@@ -1611,11 +1617,7 @@ namespace Core
         if (nFile == -1)
             return NULL;
 
-        std::stringstream stream;
-        stream << "blk" << setfill('0') << setw(4) << nFile << ".dat";
-        std::string strPath = stream.str();
-
-        FILE* file = fopen((GetDataDir() / strPath).string().c_str(), pszMode);
+        FILE* file = fopen((GetDataDir() / strprintf("blk%04u.dat", nFile)).string().c_str(), pszMode);
         if (!file)
             return NULL;
 

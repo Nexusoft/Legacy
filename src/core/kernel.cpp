@@ -33,15 +33,15 @@ namespace Wallet
         block.vtx[0].vout[0].nValue = 0;
 
         {
-        LOCK(cs_wallet);
+            LOCK(cs_wallet);
 
-        vCoins.reserve(mapWallet.size());
-        for (map<uint512, CWalletTx>::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
-            vCoins.push_back(&(*it).second);
+            vCoins.reserve(mapWallet.size());
+            for (map<uint512, CWalletTx>::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
+                vCoins.push_back(&(*it).second);
         }
 
         random_shuffle(vCoins.begin(), vCoins.end(), GetRandInt);
-        BOOST_FOREACH(const CWalletTx* pcoin, vCoins)
+        for(auto pcoin : vCoins)
         {
             if (!pcoin->IsFinal() || pcoin->GetDepthInMainChain() < 6)
                 continue;
@@ -491,7 +491,7 @@ namespace Core
 
         /* Get the last block. */
         uint1024 hashBlockLast = hashBestBlock;
-        if(!LastTrustBlock(*this, hashBlockLast))
+        if(!LastTrustBlock(*this, hashBlockLast, 2000)) //block age has limit of 2k blocks. If any more than this, it will be expired
             return error("CTrustKey::BlockAge() : Can't find last trust block");
 
         /* Block Age is Time to Previous Block's Time. */
