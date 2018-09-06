@@ -15,4 +15,9 @@ namespace LLD
     {
         return Read(string("mytrustkey"), cTrustKey);
     }
+
+    bool CTrustDB::EraseMyKey()
+    {
+        return Erase(string("mytrustkey"));
+    }
 }

@@ -543,8 +543,6 @@ namespace Core
             else
                 vchTrustKey = reservekey.GetReservedKey();
 
-            //TODO: Select trust key from list of active trust keys if mine is not found
-
             /* Version 5 block staking minter. */
             if(block.nVersion >= 5)
             {
@@ -672,10 +670,10 @@ namespace Core
                     }
 
                     /* Trust Weight Continues to grow the longer you have staked and higher your interest rate */
-                    nTrustWeight = (((34.0 * log(((2.0 * nTrustAge) / (60 * 60 * 24 * 28)) + 1.0)) / log(3))) + 1.0;
+                    nTrustWeight = min(35.0, (((34.0 * log(((2.0 * nTrustAge) / (60 * 60 * 24 * 28)) + 1.0)) / log(3))) + 1.0);
 
                     /* Block Weight Reaches Maximum At Trust Key Expiration. */
-                    nBlockWeight = min(17.5, (((16.5 * log(((2.0 * nBlockAge) / ((fTestNet ? TRUST_KEY_TIMESPAN_TESTNET : TRUST_KEY_TIMESPAN))) + 1.0)) / log(3))) + 1.0);
+                    nBlockWeight = min(14.0, (((13.0 * log(((2.0 * nBlockAge) / ((fTestNet ? TRUST_KEY_TIMESPAN_TESTNET : TRUST_KEY_TIMESPAN))) + 1.0)) / log(3))) + 1.0);
 
                     /* Set the Reporting Variables for the Qt. */
                     dTrustWeight = nTrustWeight;
@@ -743,7 +741,7 @@ namespace Core
                     block.nNonce ++;
 
                     /* Debug output. */
-                    if(block.nNonce % 5 == 0 && GetArg("-verbose", 0) >= 3)
+                    if(block.nNonce % 1000 == 0 && GetArg("-verbose", 0) >= 3)
                         printf("Stake Minter : below threshold %f required %f incrementing nonce %" PRIu64 "\n", nThreshold, nRequired, block.nNonce);
 
                     /* Handle if block is found. */

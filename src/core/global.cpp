@@ -287,9 +287,6 @@ namespace Core
     uint64 nLastBlockSize = 0;
 
 
-    std::vector<uint576> vTrustKeys;
-
-
     CMajority<int> cPeerBlockCounts; // Amount of blocks that other nodes claim to have
 
     map<uint1024, CBlock*> mapOrphanBlocks;

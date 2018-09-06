@@ -1,4 +1,7 @@
 #include "index.h"
+#include "trustkeys.h"
+
+#include "../main.h"
 #include "../core/core.h"
 
 /** Lower Level Database Name Space. **/
@@ -122,6 +125,40 @@ namespace LLD
         return Write(make_pair(string("trustKey"), hashTrustKey), cTrustKey);
     }
 
+    bool CIndexDB::HasTrustKey(uint576 hashTrustKey)
+    {
+        return Exists(make_pair(string("trustKey"), hashTrustKey));
+    }
+
+    //this will be very slow. Think about optimizing it further.
+    bool CIndexDB::GetTrustKeys(std::vector<uint576>& vTrustKeys)
+    {
+        KeyDatabase* SectorKeys = GetKeychain(strKeychainRegistry);
+        if(!SectorKeys)
+            return error("Get() : Sector Keys not Registered for Name %s\n", strKeychainRegistry.c_str());
+
+        /* Get the keys from the keychain. */
+        std::vector< std::vector<unsigned char> > vKeys = SectorKeys->GetKeys();
+
+        /* Loop all the keys to check. */
+        for(auto vKey : vKeys)
+        {
+            CDataStream ssKey(vKey, SER_LLD, DATABASE_VERSION);
+            std::string strKey;
+            ssKey >> strKey;
+
+            if(strKey == "trustKey")
+            {
+                uint576 key;
+                ssKey >> key;
+
+                vTrustKeys.push_back(key);
+            }
+        }
+
+        return vTrustKeys.size() > 0;
+    }
+
     bool CIndexDB::ReadTrustKey(uint576 hashTrustKey, Core::CTrustKey& cTrustKey)
     {
         return Read(make_pair(string("trustKey"), hashTrustKey), cTrustKey);
@@ -130,18 +167,6 @@ namespace LLD
     bool CIndexDB::EraseTrustKey(uint576 hashTrustKey)
     {
         return Erase(make_pair(string("trustKey"), hashTrustKey));
-    }
-
-    bool CIndexDB::KeysBootstrapped()
-    {
-        uint1024 hash;
-        return Read(string("bootstrap"), hash);
-    }
-
-    bool CIndexDB::BootstrapKeys()
-    {
-        uint1024 hash;
-        return Write(string("bootstrap"), hash);
     }
 
     Core::CBlockIndex static * InsertBlockIndex(uint1024 hash)
@@ -171,11 +196,10 @@ namespace LLD
         if(!ReadHashBestChain(Core::hashBestChain))
             return error("No Hash Best Chain in Index Database.");
 
-        /* Flag to determine if keys need to be bootstrapped. */
-        bool fBootstrap = !KeysBootstrapped();
-
         uint1024 hashBlock = Core::hashGenesisBlock;
-        std::vector<uint576> vExpired;
+        std::vector<uint576> vTrustKeys;
+
+        bool fBootstrap = !GetTrustKeys(vTrustKeys);
         while(!fRequestShutdown)
         {
             Core::CDiskBlockIndex diskindex;
@@ -283,7 +307,6 @@ namespace LLD
                     if(!block.TrustKey(vTrustKey))
                         return error("CTxDb::LoadBlockIndex() : Failed to extract new trust key");
 
-
                     uint576 cKey;
                     cKey.SetBytes(vTrustKey);
 
@@ -293,17 +316,10 @@ namespace LLD
                         trustKey = Core::CTrustKey(vTrustKey, block.GetHash(), block.vtx[0].GetHash(), block.nTime);
                         WriteTrustKey(cKey, trustKey);
 
+                        vTrustKeys.push_back(cKey);
+
                         printf("CTxDb::LoadBlockIndex() : Writing Genesis %u Key to Disk %s\n", block.nHeight, cKey.ToString().substr(0, 20).c_str());
                     }
-
-                    /* Check if the key is expired.
-                    if(trustKey.Expired(block.GetHash()))
-                    {
-                        printf("CTxDb::LoadBlockIndex() : trust key expired... erasing %s\n", cKey.ToString().substr(0, 20).c_str());
-
-                        EraseTrustKey(cKey);
-                    }
-                    */
                 }
             }
 
@@ -316,11 +332,51 @@ namespace LLD
             Core::pindexBest  = pindexNew;
             hashBlock = diskindex.hashNext;
         }
+
+
+        /* Check for my trust key. */
+        LLD::CTrustDB trustdb("r+");
+        Core::CTrustKey myTrustKey;
+        uint576 myKey;
+        myKey.SetBytes(myTrustKey.vchPubKey);
+
+        /* If one has their trust key. */
+        bool fHasKey = trustdb.ReadMyKey(myTrustKey);
+
+        /* Erase expired trust keys. */
+        for(auto key : vTrustKeys)
+        {
+            Core::CTrustKey trustKey;
+            if(!ReadTrustKey(key, trustKey))
+                continue;
+
+            if(trustKey.Expired(Core::hashBestChain))
+            {
+                EraseTrustKey(key);
+
+                printf("Erasing Expired Trust Key %s\n", HexStr(key.begin(), key.end()).c_str());
+
+                if(fHasKey && key == myKey)
+                    trustdb.EraseMyKey();
+
+                continue;
+            }
+
+            if(!fHasKey)
+            {
+                Wallet::NexusAddress address;
+                address.SetPubKey(trustKey.vchPubKey);
+                if(pwalletMain->HaveKey(address))
+                {
+                    printf("Found my Trust Key %s\n", HexStr(key.begin(), key.end()).c_str());
+                    trustdb.WriteMyKey(trustKey);
+                }
+            }
+
+
+        }
         if(fRequestShutdown)
             return false;
-
-        if(!BootstrapKeys())
-            return error("Failed to write the keys bootstrap");
 
         Core::nBestHeight = Core::pindexBest->nHeight;
         Core::nBestChainTrust = Core::pindexBest->nChainTrust;

@@ -27,9 +27,9 @@ namespace LLD
 
         bool WriteTrustKey(uint576 hashTrustKey, Core::CTrustKey cTrustKey);
         bool ReadTrustKey(uint576 hashTrustKey, Core::CTrustKey& cTrustKey);
+        bool HasTrustKey(uint576 hashTrustKey);
+        bool GetTrustKeys(std::vector<uint576>& vTrustKeys);
         bool EraseTrustKey(uint576 hashTrustKey);
-        bool BootstrapKeys();
-        bool KeysBootstrapped();
 
         bool WriteBlockIndex(const Core::CDiskBlockIndex& blockindex);
         bool ReadBlockIndex(const uint1024 hashBlock, Core::CBlockIndex* pindexNew);

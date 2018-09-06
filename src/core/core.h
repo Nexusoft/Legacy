@@ -148,10 +148,6 @@ namespace Core
     extern std::map<uint1024, CBlockIndex*> mapBlockIndex;
     extern std::map<uint1024, uint1024>   mapInvalidBlocks;
 
-
-    /* Trust key specifics. */
-    extern std::vector<uint576> vTrustKeys;
-
     extern std::map<uint1024, uint1024> mapProofOfStake;
     extern std::map<uint512, CDataStream*> mapOrphanTransactions;
     extern std::map<uint512, std::map<uint512, CDataStream*> > mapOrphanTransactionsByPrev;
@@ -1630,6 +1626,10 @@ namespace Core
         std::pair<unsigned int, uint1024> PendingCheckpoint;
 
 
+        //memory only. keeps trust key
+        std::vector<unsigned char> vchTrustKey;
+
+
         unsigned int nFlags;  // Nexus: block index flags
         enum
         {
@@ -1729,6 +1729,11 @@ namespace Core
             block.nTime          = nTime;
 
             return block;
+        }
+
+        std::vector<unsigned char> TrustKey()
+        {
+            return vchTrustKey;
         }
 
         int GetChannel() const

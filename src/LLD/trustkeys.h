@@ -16,6 +16,7 @@ namespace LLD
 
         bool WriteMyKey(Core::CTrustKey cTrustKey);
         bool ReadMyKey(Core::CTrustKey& cTrustKey);
+        bool EraseMyKey();
     };
 }
 

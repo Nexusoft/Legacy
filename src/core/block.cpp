@@ -279,6 +279,24 @@ namespace Core
         uint576 cKey;
         cKey.SetBytes(vTrustKey);
 
+        /* Check the proof of stake claims. */
+        if (IsProofOfStake())
+        {
+            /* Version 5 blocks don't need trust pool - do basic checks here. */
+            if(nVersion >= 5)
+            {
+                /* Check the claimed stake limits are met. */
+                if(!CheckStake())
+                    return DoS(50, error("ConnectBlock() : invalid proof of stake"));
+
+                /* Check the claimed trust scores are met. */
+                if(!CheckTrust())
+                    return DoS(50, error("ConnectBlock() : invalid trust score"));
+            }
+            else if(nVersion < 5 && !VerifyStake())
+                return DoS(50, error("ConnectBlock() : invalid proof of stake"));
+        }
+
         /* Handle Genesis Transaction Rules. Genesis is checked after Trust Key Established. */
         if(vtx[0].IsGenesis())
         {
@@ -1024,20 +1042,6 @@ namespace Core
             /* Check that the Coinbase / CoinstakeTimstamp is after Previous Block. */
             if (vtx[0].nTime < pindexPrev->GetBlockTime())
                 return error("AcceptBlock() : coinstake transaction too early");
-
-            /* Version 5 blocks don't need trust pool - do basic checks here. */
-            if(nVersion >= 5)
-            {
-                /* Check the claimed stake limits are met. */
-                if(!CheckStake())
-                    return DoS(50, error("AcceptBlock() : invalid proof of stake"));
-
-                /* Check the claimed trust scores are met. */
-                if(!CheckTrust())
-                    return DoS(50, error("AcceptBlock() : invalid trust score"));
-            }
-            else if(nVersion < 5 && !VerifyStake())
-                return DoS(50, error("ConnectBlock() : invalid proof of stake"));
         }
 
 
