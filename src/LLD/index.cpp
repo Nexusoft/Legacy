@@ -200,6 +200,7 @@ namespace LLD
         std::vector<uint576> vTrustKeys;
 
         bool fBootstrap = !GetTrustKeys(vTrustKeys);
+        std::map<uint576, unsigned int> mapLastBlocks;
         while(!fRequestShutdown)
         {
             Core::CDiskBlockIndex diskindex;
@@ -310,6 +311,9 @@ namespace LLD
                     uint576 cKey;
                     cKey.SetBytes(vTrustKey);
 
+                    //log the time of the last block
+                    mapLastBlocks[cKey] = block.nTime;
+
                     Core::CTrustKey trustKey;
                     if(!ReadTrustKey(cKey, trustKey))
                     {
@@ -338,19 +342,16 @@ namespace LLD
         LLD::CTrustDB trustdb("r+");
         Core::CTrustKey myTrustKey;
         uint576 myKey;
-        myKey.SetBytes(myTrustKey.vchPubKey);
 
         /* If one has their trust key. */
         bool fHasKey = trustdb.ReadMyKey(myTrustKey);
+        if(fHasKey)
+            myKey.SetBytes(myTrustKey.vchPubKey);
 
         /* Erase expired trust keys. */
         for(auto key : vTrustKeys)
         {
-            Core::CTrustKey trustKey;
-            if(!ReadTrustKey(key, trustKey))
-                continue;
-
-            if(trustKey.Expired(Core::hashBestChain))
+            if(mapLastBlocks.count(key) && mapLastBlocks[key] + Core::TRUST_KEY_EXPIRE < Core::pindexBest->GetBlockTime())
             {
                 EraseTrustKey(key);
 
@@ -361,19 +362,6 @@ namespace LLD
 
                 continue;
             }
-
-            if(!fHasKey)
-            {
-                Wallet::NexusAddress address;
-                address.SetPubKey(trustKey.vchPubKey);
-                if(pwalletMain->HaveKey(address))
-                {
-                    printf("Found my Trust Key %s\n", HexStr(key.begin(), key.end()).c_str());
-                    trustdb.WriteMyKey(trustKey);
-                }
-            }
-
-
         }
         if(fRequestShutdown)
             return false;

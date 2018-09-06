@@ -16,6 +16,7 @@
 #include "net.h"
 
 #include "../LLD/index.h"
+#include "../LLD/trustkeys.h"
 #include "../LLP/miningserver.h"
 
 #undef printf
@@ -358,30 +359,35 @@ namespace Net
         Array trustkeys;
         Object ret;
 
-        /* TODO : Link up the RPC server with the new trust indexing system
-        for(std::map<uint576, Core::CTrustKey>::iterator it = Core::cTrustPool.mapTrustKeys.begin(); it != Core::cTrustPool.mapTrustKeys.end(); ++it)
-        {
-            Object obj;
+        std::vector<uint576> vKeys;
+        LLD::CIndexDB indexdb("cr");
+        if(!indexdb.GetTrustKeys(vKeys))
+            return ret;
 
-            if(it->second.Expired(0, Core::pindexBest->pprev->GetBlockHash()))
+        Core::CBlock block;
+        if(!block.ReadFromDisk(Core::pindexBest, true))
+            return ret;
+
+        /* Search through the trust keys. */
+        for(auto key : vKeys)
+        {
+            Core::CTrustKey trustKey;
+            if(!indexdb.ReadTrustKey(key, trustKey))
                 continue;
 
+            Object obj;
+
             Wallet::NexusAddress address;
-            address.SetPubKey(it->second.vchPubKey);
+            address.SetPubKey(trustKey.vchPubKey);
 
             obj.push_back(Pair("address", address.ToString()));
-            obj.push_back(Pair("interest rate", 100.0 * Core::cTrustPool.InterestRate(it->first, GetUnifiedTimestamp())));
-            obj.push_back(Pair("trust key", it->second.ToString()));
-
-            nTotalActive ++;
+            obj.push_back(Pair("interest rate", 100.0 * trustKey.InterestRate(block, GetUnifiedTimestamp())));
+            obj.push_back(Pair("trust key", trustKey.ToString()));
 
             trustkeys.push_back(obj);
         }
-        */
 
         ret.push_back(Pair("keys", trustkeys));
-        ret.push_back(Pair("total active", (int) nTotalActive));
-        //ret.push_back(Pair("total expired", (int) (Core::cTrustPool.mapTrustKeys.size() - nTotalActive)));
 
         return ret;
     }
@@ -2515,18 +2521,13 @@ namespace Net
 
 
         Object result;
-        
-        /* TODO: Link up with new trust key indexing system.
-        for(std::map<uint576, Core::CTrustKey>::iterator i = Core::cTrustPool.mapTrustKeys.begin(); i != Core::cTrustPool.mapTrustKeys.end(); ++i)
+        LLD::CTrustDB trustdb("cr");
+        Core::CTrustKey trustKey;
+        if(trustdb.ReadMyKey(trustKey))
         {
-
-            Wallet::NexusAddress address;
-            address.SetPubKey(i->second.vchPubKey);
-            if(pwalletMain->HaveKey(address))
-                result.push_back(Pair(address.ToString(), i->second.Expired(0, Core::pindexBest->pprev->GetBlockHash()) ? "TRUE" : "FALSE"));
-
+            //respond with json
         }
-        */
+
 
         return result;
     }

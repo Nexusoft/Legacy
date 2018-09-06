@@ -512,6 +512,41 @@ namespace Core
         /* Lower Level Database Instance. */
         LLD::CTrustDB trustdb("r+");
 
+        /* The trust key in a byte vector. */
+        std::vector<unsigned char> vchTrustKey;
+
+        /* Trust Key is written from version 5 rules. */
+        CTrustKey trustKey;
+        if(trustdb.ReadMyKey(trustKey))
+            vchTrustKey = trustKey.vchPubKey;
+        else
+        {
+            LLD::CIndexDB indexdb("cr");
+            std::vector<uint576> vKeys;
+            if(indexdb.GetTrustKeys(vKeys))
+            {
+                for(auto key : vKeys)
+                {
+                    Core::CTrustKey trustKey;
+                    if(!indexdb.ReadTrustKey(key, trustKey))
+                        continue;
+
+                    Wallet::NexusAddress address;
+                    address.SetPubKey(trustKey.vchPubKey);
+                    if(pwalletMain->HaveKey(address))
+                    {
+                        printf("Stake Minter : Found my Trust Key %s\n", HexStr(key.begin(), key.end()).c_str());
+                        trustdb.WriteMyKey(trustKey);
+
+                        vchTrustKey = trustKey.vchPubKey;
+                    }
+                }
+            }
+
+            if(vchTrustKey.empty())
+                vchTrustKey = reservekey.GetReservedKey();
+        }
+
         while(!fShutdown)
         {
             /* Sleep call to keep the thread from running. */
@@ -532,16 +567,6 @@ namespace Core
             CBlock block = CreateNewBlock(reservekey, pwalletMain, 0);
             if(block.IsNull())
                 continue;
-
-            /* The trust key in a byte vector. */
-            std::vector<unsigned char> vchTrustKey;
-
-            /* Trust Key is written from version 5 rules. */
-            CTrustKey trustKey;
-            if(trustdb.ReadMyKey(trustKey))
-                vchTrustKey = trustKey.vchPubKey;
-            else
-                vchTrustKey = reservekey.GetReservedKey();
 
             /* Version 5 block staking minter. */
             if(block.nVersion >= 5)
