@@ -363,6 +363,7 @@ namespace LLD
                 continue;
             }
         }
+
         if(fRequestShutdown)
             return false;
 

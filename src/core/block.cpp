@@ -1134,58 +1134,46 @@ namespace Core
     }
 
 
-    bool LastTrustBlock(CTrustKey trustKey, uint1024& hashTrustBlock, int nLimit)
+    bool LastTrustBlock(CTrustKey trustKey, uint1024& hashTrustBlock)
     {
-        /* Handle the recursion limit. */
-        if(nLimit > 0)
-            nLimit --;
+        /* Block Object. */
+        CBlock block;
 
-        /* Return if limit has been reached. */
-        if(nLimit == 0)
-            return error("LastTrustBlock : last trust block limit reached.");
+        /* Trust key of said block. */
+        std::vector<unsigned char> vTrustKey;
 
-        /* check the map block index. */
-        if(!mapBlockIndex.count(hashTrustBlock))
-            return error("LastTrustBlock : not found in mapblockindex");
-
-        /* Get the last trust block. */
-        const CBlockIndex* pindex = GetLastChannelIndex(mapBlockIndex[hashTrustBlock]->pprev, 0);
-        if(!pindex)
-            return error("LastTrustBlock : couldn't find index");
-
-        /* Check for genesis. */
-        if(pindex->GetBlockHash() == trustKey.hashGenesisBlock)
+        /* Loop through all previous blocks looking for most recent trust block. */
+        while(vTrustKey != trustKey.vchPubKey)
         {
+            /* Get the last trust block. */
+            const CBlockIndex* pindex = GetLastChannelIndex(mapBlockIndex[hashTrustBlock]->pprev, 0);
+            if(!pindex || !pindex->pprev)
+                return error("LastTrustBlock : couldn't find index");
+
+            /* Check for genesis. */
+            if(pindex->GetBlockHash() == trustKey.hashGenesisBlock)
+            {
+                hashTrustBlock = pindex->GetBlockHash();
+                return true;
+            }
+
+            /* If serach block isn't proof of stake, return an error. */
+            if(!pindex->IsProofOfStake())
+                return error("LastTrustBlock : not proof of stake");
+
+            /* Read the previous block from disk. */
+            if(!block.ReadFromDisk(pindex, true))
+                return error("LastTrustBlock : can't read trust block");
+
+            /* Get the trust key from block. */
+            if(!block.TrustKey(vTrustKey))
+                return error("LastTrustBlock : can't get trust key");
+
+            /* Set current trust block in recursion. */
             hashTrustBlock = pindex->GetBlockHash();
-            return true;
         }
 
-        /* If search passed the genesis, return an error. */
-        if(pindex->GetBlockTime() < trustKey.nGenesisTime)
-            return error("LastTrustBlock : genesis doesn't exist");
-
-        /* If serach block isn't proof of stake, return an error. */
-        if(!pindex->IsProofOfStake())
-            return error("LastTrustBlock : not proof of stake");
-
-        /* Read the previous block from disk. */
-        CBlock block;
-        if(!block.ReadFromDisk(pindex->nFile, pindex->nBlockPos, true))
-            return error("LastTrustBlock : can't read trust block");
-
-        /* Get the trust key from block. */
-        std::vector<unsigned char> vTrustKey;
-        if(!block.TrustKey(vTrustKey))
-            return error("LastTrustBlock : can't get trust key");
-
-        /* Set current trust block in recursion. */
-        hashTrustBlock = pindex->GetBlockHash();
-
-        /* if the key is equivilent, return. */
-        if(vTrustKey == trustKey.vchPubKey)
-            return true;
-
-        return LastTrustBlock(trustKey, hashTrustBlock);
+        return true;
     }
 
 

@@ -491,7 +491,7 @@ namespace Core
 
         /* Get the last block. */
         uint1024 hashBlockLast = hashBestBlock;
-        if(!LastTrustBlock(*this, hashBlockLast, 2000)) //block age has limit of 2k blocks. If any more than this, it will be expired
+        if(!LastTrustBlock(*this, hashBlockLast))
             return error("CTrustKey::BlockAge() : Can't find last trust block");
 
         /* Block Age is Time to Previous Block's Time. */
