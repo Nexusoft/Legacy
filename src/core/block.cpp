@@ -771,23 +771,23 @@ namespace Core
     }
 
     /** Verify the Signature is Valid for Last 2 Coinbase Tx Outputs. **/
-    bool VerifyAddress(const std::vector<unsigned char> cScript, const unsigned char nSignature[])
+    bool VerifyAddress(const std::vector<unsigned char> script, const std::vector<unsigned char> sig)
     {
-        if(cScript.size() != 37)
+        if(script.size() != 37)
             return error("Script Size not 37 Bytes");
 
-        for(int nIndex = 0; nIndex < 37; nIndex++)
-            if(cScript[nIndex] != nSignature[nIndex] )
+        for(int i = 0; i < 37; i++)
+            if(script[i] != sig[i])
                 return false;
 
         return true;
     }
 
     /** Compare Two Vectors Element by Element. **/
-    bool VerifyAddressList(const std::vector<unsigned char> cScript, const unsigned char SIGNATURES[][37])
+    bool VerifyAddressList(const std::vector<unsigned char> script, const std::vector<unsigned char> sigs[13])
     {
-        for(int nSig = 0; nSig < 13; nSig++)
-            if(VerifyAddress(cScript, SIGNATURES[nSig]))
+        for(int i = 0; i < 13; i++)
+            if(VerifyAddress(script, sigs[i]))
                 return true;
 
         return false;
@@ -856,10 +856,10 @@ namespace Core
 
             if(!fTestNet)
             {
-                if (!VerifyAddressList(vtx[0].vout[nSize - 2].scriptPubKey, AMBASSADOR_SCRIPT_SIGNATURES))
+                if (!VerifyAddressList(vtx[0].vout[nSize - 2].scriptPubKey, (nVersion < 5) ? AMBASSADOR_SCRIPT_SIGNATURES : AMBASSADOR_SCRIPT_SIGNATURES_RECYCLED))
                     return error("CheckBlock() : Block %u Channel Signature Not Verified.\n", nHeight);
 
-                if (!VerifyAddressList(vtx[0].vout[nSize - 1].scriptPubKey, DEVELOPER_SCRIPT_SIGNATURES))
+                if (!VerifyAddressList(vtx[0].vout[nSize - 1].scriptPubKey, (nVersion < 5) ? DEVELOPER_SCRIPT_SIGNATURES : DEVELOPER_SCRIPT_SIGNATURES_RECYCLED))
                     return error("CheckBlock() :  Block %u Developer Signature Not Verified.\n", nHeight);
             }
 
@@ -1036,7 +1036,7 @@ namespace Core
 
         }
 
-        /** Check the Proof of Stake Claims. **/
+        /* Check the Proof of Stake Claims. */
         else if (IsProofOfStake())
         {
             /* Check that the Coinbase / CoinstakeTimstamp is after Previous Block. */
@@ -1045,13 +1045,13 @@ namespace Core
         }
 
 
-        /** Check that Transactions are Finalized. **/
+        /* Check that Transactions are Finalized. */
         BOOST_FOREACH(const CTransaction& tx, vtx)
             if (!tx.IsFinal(nHeight, GetBlockTime()))
                 return DoS(10, error("AcceptBlock() : contains a non-final transaction"));
 
 
-        /** Write new Block to Disk. **/
+        /* Write new Block to Disk. */
         if (!CheckDiskSpace(::GetSerializeSize(*this, SER_DISK, DATABASE_VERSION)))
             return error("AcceptBlock() : out of disk space");
 
@@ -1206,10 +1206,10 @@ namespace Core
                 return error("CBlock::CheckStake() : failed to get block age");
 
             /* Trust Weight Continues to grow the longer you have staked and higher your interest rate */
-            nTrustWeight = (((34.0 * log(((2.0 * nTrustAge) / (60 * 60 * 24 * 28)) + 1.0)) / log(3))) + 1.0;
+            nTrustWeight = min(40.0, (((39.0 * log(((2.0 * nTrustAge) / (60 * 60 * 24 * 28 * 3)) + 1.0)) / log(3))) + 1.0);
 
             /* Block Weight Reaches Maximum At Trust Key Expiration. */
-            nBlockWeight = min(16.5, (((17.5 * log(((2.0 * nBlockAge) / ((fTestNet ? TRUST_KEY_TIMESPAN_TESTNET : TRUST_KEY_TIMESPAN))) + 1.0)) / log(3))) + 1.0);
+            nBlockWeight = min(10.0, (((9.0 * log(((2.0 * nBlockAge) / ((fTestNet ? TRUST_KEY_TIMESPAN_TESTNET : TRUST_KEY_TIMESPAN))) + 1.0)) / log(3))) + 1.0);
 
         }
 
@@ -1231,7 +1231,7 @@ namespace Core
                 return error("CBlock::CheckStake() : Genesis age is immature");
 
             /* Trust Weight For Genesis Transaction Reaches Maximum at 90 day Limit. */
-            nTrustWeight = min(17.5, (((16.5 * log(((2.0 * nCoinAge) / (60 * 60 * 24 * 28 * 3)) + 1.0)) / log(3))) + 1.0);
+            nTrustWeight = min(10.0, (((9.0 * log(((2.0 * nCoinAge) / (60 * 60 * 24 * 28 * 3)) + 1.0)) / log(3))) + 1.0);
         }
 
         //TODO: New weighting calculations with time given a specific quality + nWeights, not -
@@ -1364,13 +1364,6 @@ namespace Core
         /* Check that the last block is in the block index. */
         if(!mapBlockIndex.count(hashLastBlock))
             return error("CBlock::CheckTrust() : previous block (%s) not in block index", hashLastBlock.ToString().substr(0, 20).c_str());
-
-        /* Strict rule, may be removed since sequence prevents anyone from claiming a trust block out of order. */
-        //uint1024 hashTestBlock = hashPrevBlock;
-        //if(!LastTrustBlock(cKey, hashTestBlock))
-        //    return error("CBlock::CheckTrust() : couldn't get last trust block");
-        //if(hashTestBlock != hashLastBlock)
-        //    return error("CBlock::CheckTrust() : last block claim not matching last block calculation");
 
         /* Check that the block is connected. */
         CBlockIndex* pindexPrev = mapBlockIndex[hashLastBlock];

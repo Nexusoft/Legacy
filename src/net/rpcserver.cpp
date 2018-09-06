@@ -332,7 +332,6 @@ namespace Net
 
         nAverageTime       /= nTotal;
         nAverageDifficulty /= nTotal;
-        /* TODO END **/
 
         Object obj;
         obj.push_back(Pair("average time", (int) nAverageTime));
@@ -388,6 +387,7 @@ namespace Net
         }
 
         ret.push_back(Pair("keys", trustkeys));
+        ret.push_back(Pair("total", trustkeys.size()));
 
         return ret;
     }

@@ -123,10 +123,14 @@ namespace Core
     extern const std::string TESTNET_DUMMY_ADDRESS;
     extern const std::string CHANNEL_ADDRESSES[];
     extern const std::string DEVELOPER_ADDRESSES[];
+    extern const std::string AMBASSADOR_ADDRESSES_RECYCLED[];
+    extern const std::string DEVELOPER_ADDRESSES_RECYCLED[];
 
-    extern const unsigned char DEVELOPER_SCRIPT_SIGNATURES[][37];
-    extern const unsigned char AMBASSADOR_SCRIPT_SIGNATURES[][37];
-    extern const unsigned char TESTNET_DUMMY_SIGNATURE[];
+    extern std::vector<unsigned char> AMBASSADOR_SCRIPT_SIGNATURES[13];
+    extern std::vector<unsigned char> DEVELOPER_SCRIPT_SIGNATURES[13];
+    extern std::vector<unsigned char> AMBASSADOR_SCRIPT_SIGNATURES_RECYCLED[13];
+    extern std::vector<unsigned char> DEVELOPER_SCRIPT_SIGNATURES_RECYCLED[13];
+    extern std::vector<unsigned char> TESTNET_DUMMY_SIGNATURE;
 
 
     /** BigNum Global Externals **/

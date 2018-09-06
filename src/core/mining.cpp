@@ -134,10 +134,11 @@ namespace Core
 
             /** Set the Proper Addresses for the Coinbase Transaction. **/
             txNew.vout.resize(txNew.vout.size() + 2);
-            txNew.vout[txNew.vout.size() - 2].scriptPubKey.SetNexusAddress(fTestNet ? TESTNET_DUMMY_ADDRESS : CHANNEL_ADDRESSES[nCoinbaseCounter]);
-            txNew.vout[txNew.vout.size() - 1].scriptPubKey.SetNexusAddress(fTestNet ? TESTNET_DUMMY_ADDRESS : DEVELOPER_ADDRESSES[nCoinbaseCounter]);
+            txNew.vout[txNew.vout.size() - 2].scriptPubKey.SetNexusAddress(fTestNet ? TESTNET_DUMMY_ADDRESS : (cBlock.nVersion < 5 ? CHANNEL_ADDRESSES[nCoinbaseCounter] : AMBASSADOR_ADDRESSES_RECYCLED[nCoinbaseCounter]));
 
-            /** Set the Proper Coinbase Output Amounts for Recyclers and Developers. **/
+            txNew.vout[txNew.vout.size() - 1].scriptPubKey.SetNexusAddress(fTestNet ? TESTNET_DUMMY_ADDRESS : (cBlock.nVersion < 5 ? DEVELOPER_ADDRESSES[nCoinbaseCounter] : DEVELOPER_ADDRESSES_RECYCLED[nCoinbaseCounter]));
+
+            /* Set the Proper Coinbase Output Amounts for Recyclers and Developers. */
             txNew.vout[txNew.vout.size() - 2].nValue = GetCoinbaseReward(pindexPrev, nChannel, 1);
             txNew.vout[txNew.vout.size() - 1].nValue = GetCoinbaseReward(pindexPrev, nChannel, 2);
         }

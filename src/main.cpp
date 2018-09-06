@@ -356,6 +356,64 @@ bool AppInit2(int argc, char* argv[])
         }
     #endif
 
+    if(fTestNet)
+    {
+        Wallet::CScript scriptSig;
+        Core::TESTNET_DUMMY_SIGNATURE = (std::vector<unsigned char>)scriptSig;
+    }
+
+    Wallet::CScript scriptSig;
+    for(int i = 0; i < 13; i++)
+    {
+        /* Set the script byte code for ambassador addresses old. */
+        scriptSig.clear();
+        scriptSig.SetNexusAddress(Core::CHANNEL_ADDRESSES[i]);
+        Core::AMBASSADOR_SCRIPT_SIGNATURES[i] = (std::vector<unsigned char>)scriptSig;
+
+        if(GetBoolArg("-dumpsignatures", false))
+        {
+            printf("Ambassador Script %s\n", Core::CHANNEL_ADDRESSES[i].c_str());
+            PrintHex(scriptSig);
+            printf("\n\n");
+        }
+
+        /* Set the script byte code for ambassador addresses new. */
+        scriptSig.clear();
+        scriptSig.SetNexusAddress(Core::AMBASSADOR_ADDRESSES_RECYCLED[i]);
+        Core::AMBASSADOR_SCRIPT_SIGNATURES_RECYCLED[i] = (std::vector<unsigned char>)scriptSig;
+
+        if(GetBoolArg("-dumpsignatures", false))
+        {
+            printf("Ambassador New Script %s\n", Core::AMBASSADOR_ADDRESSES_RECYCLED[i].c_str());
+            PrintHex(Core::AMBASSADOR_SCRIPT_SIGNATURES_RECYCLED[i]);
+            printf("\n\n");
+        }
+
+        /* Set the script byte code for developer addresses old. */
+        scriptSig.clear();
+        scriptSig.SetNexusAddress(Core::DEVELOPER_ADDRESSES[i]);
+        Core::DEVELOPER_SCRIPT_SIGNATURES[i] = (std::vector<unsigned char>)scriptSig;
+
+        if(GetBoolArg("-dumpsignatures", false))
+        {
+            printf("Developer Script %s\n", Core::DEVELOPER_ADDRESSES[i].c_str());
+            PrintHex(Core::DEVELOPER_SCRIPT_SIGNATURES[i]);
+            printf("\n\n");
+        }
+
+        /* Set the script byte code for developer addresses new. */
+        scriptSig.clear();
+        scriptSig.SetNexusAddress(Core::DEVELOPER_ADDRESSES_RECYCLED[i]);
+        Core::DEVELOPER_SCRIPT_SIGNATURES_RECYCLED[i] = (std::vector<unsigned char>)scriptSig;
+
+        if(GetBoolArg("-dumpsignatures", false))
+        {
+            printf("Developer New Script %s\n", Core::DEVELOPER_ADDRESSES_RECYCLED[i].c_str());
+            PrintHex(Core::DEVELOPER_SCRIPT_SIGNATURES_RECYCLED[i]);
+            printf("\n\n");
+        }
+    }
+
     printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
     printf("Nexus version %s (%s)\n", FormatFullVersion().c_str(), CLIENT_DATE.c_str());
     printf("Default data directory %s\n", GetDefaultDataDir().string().c_str());
