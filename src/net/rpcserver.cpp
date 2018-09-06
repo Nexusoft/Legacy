@@ -387,7 +387,7 @@ namespace Net
         }
 
         ret.push_back(Pair("keys", trustkeys));
-        ret.push_back(Pair("total", trustkeys.size()));
+        ret.push_back(Pair("total", (int)trustkeys.size()));
 
         return ret;
     }
