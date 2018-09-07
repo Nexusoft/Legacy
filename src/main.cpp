@@ -359,6 +359,7 @@ bool AppInit2(int argc, char* argv[])
     if(fTestNet)
     {
         Wallet::CScript scriptSig;
+        scriptSig.SetNexusAddress(Core::TESTNET_DUMMY_ADDRESS);
         Core::TESTNET_DUMMY_SIGNATURE = (std::vector<unsigned char>)scriptSig;
     }
 
