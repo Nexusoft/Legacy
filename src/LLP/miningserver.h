@@ -496,7 +496,7 @@ namespace LLP
                 Core::CBlock NEW_BLOCK = BASE_BLOCK;
 
                 /* Checks for prime min origins. */
-                for(int i = 1; ; i++)
+                for(int i = MAP_BLOCKS.size(); ; i++)
                 {
                     /* Create a vin script sig that will change merkle root */
                     NEW_BLOCK.vtx[0].vin[0].scriptSig = (Wallet::CScript() << (1024 * (MAP_BLOCKS.size() + 1)) << (i * 510));
