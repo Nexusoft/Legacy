@@ -1409,8 +1409,8 @@ namespace Core
             if(!indexdb.ReadTrustKey(cKey, trustKey))
                 return error("CBlock::CheckTrust() : trust key not found in database");
 
-            /* Ensure that a version 4 trust key is not expired. */
-            if(trustKey.Expired(hashPrevBlock))
+            /* Ensure that a version 4 trust key is not expired based on new timespan rules. */
+            if(trustKey.Expired(hashPrevBlock, (fTestNet ? TRUST_KEY_TIMESPAN_TESTNET : TRUST_KEY_TIMESPAN)))
                 return error("CBlock::CheckTrust() : version 4 key expired.");
 
             /* Score is the total age of the trust key for version 4. */

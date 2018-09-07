@@ -469,9 +469,9 @@ namespace Core
 
     /* Key is Expired if Time between Network Previous Best Block and
      Trust Best Previous is Greater than Expiration Time. */
-    bool CTrustKey::Expired(uint1024 hashThisBlock) const
+    bool CTrustKey::Expired(uint1024 hashThisBlock, unsigned int nTimespan) const
     {
-        if(BlockAge(hashThisBlock) > TRUST_KEY_EXPIRE)
+        if(BlockAge(hashThisBlock) > nTimespan)
             return true;
 
         return false;

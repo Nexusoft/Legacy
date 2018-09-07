@@ -687,7 +687,7 @@ namespace Core
         }
 
         /* Flag if trust key is expired. */
-        bool Expired(uint1024 hashThisBlock) const;
+        bool Expired(uint1024 hashThisBlock, unsigned int nTimespan = TRUST_KEY_EXPIRE) const;
 
         /* Check the genesis transaction. */
         bool CheckGenesis(CBlock cBlock) const;
