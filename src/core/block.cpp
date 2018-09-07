@@ -1145,6 +1145,10 @@ namespace Core
         /* Loop through all previous blocks looking for most recent trust block. */
         while(vTrustKey != trustKey.vchPubKey)
         {
+            /* Check map block index for trust block. */
+            if(!mapBlockIndex.count(hashTrustBlock))
+                return error("LastTrustBlock : Couldn't find last trust block in mapblockindex");
+
             /* Get the last trust block. */
             const CBlockIndex* pindex = GetLastChannelIndex(mapBlockIndex[hashTrustBlock]->pprev, 0);
             if(!pindex || !pindex->pprev)

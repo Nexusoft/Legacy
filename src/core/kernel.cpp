@@ -527,17 +527,21 @@ namespace Core
             {
                 for(auto key : vKeys)
                 {
-                    Core::CTrustKey trustKey;
-                    if(!indexdb.ReadTrustKey(key, trustKey))
+                    CTrustKey trustCheck;
+                    if(!indexdb.ReadTrustKey(key, trustCheck))
                         continue;
 
                     Wallet::NexusAddress address;
-                    address.SetPubKey(trustKey.vchPubKey);
+                    address.SetPubKey(trustCheck.vchPubKey);
                     if(pwalletMain->HaveKey(address))
                     {
                         printf("Stake Minter : Found my Trust Key %s\n", HexStr(key.begin(), key.end()).c_str());
 
-                        vchTrustKey = trustKey.vchPubKey;
+                        /* Set the binary data of trust key. */
+                        vchTrustKey = trustCheck.vchPubKey;
+
+                        /* Set the trust key if found. */
+                        trustKey = trustCheck;
                     }
                 }
             }
