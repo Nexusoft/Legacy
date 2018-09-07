@@ -499,7 +499,7 @@ namespace LLP
                 for(int i = 1; ; i++)
                 {
                     /* Create a vin script sig that will change merkle root */
-                    NEW_BLOCK.vtx[0].vin[0].scriptSig = (Wallet::CScript() << (1024 * (MAP_BLOCKS.size() + 1)) << i);
+                    NEW_BLOCK.vtx[0].vin[0].scriptSig = (Wallet::CScript() << (1024 * (MAP_BLOCKS.size() + 1)) << (i * 510));
                     NEW_BLOCK.hashMerkleRoot = NEW_BLOCK.BuildMerkleTree();
                     NEW_BLOCK.UpdateTime();
 

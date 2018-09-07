@@ -301,11 +301,12 @@ namespace Core
         if(vtx[0].IsGenesis())
         {
             /* Check that Transaction is not Genesis when Trust Key is Established. */
-            CTrustKey trustKey;
-            if(!indexdb.ReadTrustKey(cKey, trustKey))
-                trustKey = CTrustKey(vTrustKey, GetHash(), vtx[0].GetHash(), nTime);
+            CTrustKey trustCheck;
+            if(indexdb.ReadTrustKey(cKey, trustCheck))
+                return error("ConnectBlock() : Duplicate Genesis not Allowed");
 
             /* Create the Trust Key from Genesis Transaction Block. */
+            CTrustKey trustKey(vTrustKey, GetHash(), vtx[0].GetHash(), nTime);
             if(!trustKey.CheckGenesis(*this))
                 return error("ConnectBlock() : Invalid Genesis Transaction.");
 
