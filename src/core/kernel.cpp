@@ -536,7 +536,6 @@ namespace Core
                     if(pwalletMain->HaveKey(address))
                     {
                         printf("Stake Minter : Found my Trust Key %s\n", HexStr(key.begin(), key.end()).c_str());
-                        trustdb.WriteMyKey(trustKey);
 
                         vchTrustKey = trustKey.vchPubKey;
                     }
@@ -1001,9 +1000,8 @@ namespace Core
                             if(GetArg("-verbose", 0) >= 1)
                                 vBlocks[i].print();
 
-                            SetThreadPriority(THREAD_PRIORITY_NORMAL);
-                            CheckWork(&vBlocks[i], *pwalletMain, reservekey);
-                            SetThreadPriority(THREAD_PRIORITY_LOWEST);
+                            if(!CheckWork(&vBlocks[i], *pwalletMain, reservekey))
+                                continue;
 
                             /* Write the trust key to the key db. */
                             if(trustKey.IsNull())
