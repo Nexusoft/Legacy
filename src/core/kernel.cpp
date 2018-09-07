@@ -49,8 +49,8 @@ namespace Wallet
             if ((pcoin->IsCoinBase() || pcoin->IsCoinStake()) && pcoin->GetBlocksToMaturity() > 0)
                 continue;
 
-            /* Do not add coins to Genesis block if age < 24hrs */
-            if (block.vtx[0].IsGenesis() && (block.vtx[0].nTime - pcoin->nTime) < 24 * 60 * 60)
+            /* Do not add coins to Genesis block if age less than trust timestamp */
+            if (block.vtx[0].IsGenesis() && (block.vtx[0].nTime - pcoin->nTime) < (fTestNet ? Core::TRUST_KEY_TIMESPAN_TESTNET : Core::TRUST_KEY_TIMESPAN))
                 continue;
 
             for (unsigned int i = 0; i < pcoin->vout.size(); i++)
@@ -695,10 +695,10 @@ namespace Core
                     }
 
                     /* Trust Weight Continues to grow the longer you have staked and higher your interest rate */
-                    nTrustWeight = min(35.0, (((34.0 * log(((2.0 * nTrustAge) / (60 * 60 * 24 * 28)) + 1.0)) / log(3))) + 1.0);
+                    nTrustWeight = min(90.0, (((44.0 * log(((2.0 * nTrustAge) / (60 * 60 * 24 * 28 * 3)) + 1.0)) / log(3))) + 1.0);
 
                     /* Block Weight Reaches Maximum At Trust Key Expiration. */
-                    nBlockWeight = min(14.0, (((13.0 * log(((2.0 * nBlockAge) / ((fTestNet ? TRUST_KEY_TIMESPAN_TESTNET : TRUST_KEY_TIMESPAN))) + 1.0)) / log(3))) + 1.0);
+                    nBlockWeight = min(10.0, (((9.0 * log(((2.0 * nBlockAge) / ((fTestNet ? TRUST_KEY_TIMESPAN_TESTNET : TRUST_KEY_TIMESPAN))) + 1.0)) / log(3))) + 1.0);
 
                     /* Set the Reporting Variables for the Qt. */
                     dTrustWeight = nTrustWeight;
@@ -726,7 +726,7 @@ namespace Core
                     }
 
                     /* Trust Weight For Genesis Transaction Reaches Maximum at 90 day Limit. */
-                    nTrustWeight = min(17.5, (((16.5 * log(((2.0 * nCoinAge) / (60 * 60 * 24 * 28 * 3)) + 1.0)) / log(3))) + 1.0);
+                    nTrustWeight = min(10.0, (((9.0 * log(((2.0 * nCoinAge) / (60 * 60 * 24 * 28 * 3)) + 1.0)) / log(3))) + 1.0);
 
                     /* Set the Reporting Variables for the Qt. */
                     dTrustWeight = nTrustWeight;
@@ -734,7 +734,7 @@ namespace Core
                 }
 
                 /* Calculate the energy efficiency requirements. */
-                double nRequired  = ((50.0 - nTrustWeight - nBlockWeight) * MAX_STAKE_WEIGHT) / block.vtx[0].vout[0].nValue;
+                double nRequired  = ((108.0 - nTrustWeight - nBlockWeight) * MAX_STAKE_WEIGHT) / block.vtx[0].vout[0].nValue;
 
                 /* Calculate the target value based on difficulty. */
                 CBigNum bnTarget;
@@ -748,8 +748,6 @@ namespace Core
                 /* Search for the proof of stake hash. */
                 while(hashBest == hashBestChain)
                 {
-                    Sleep(1);
-
                     /* Update the block time for difficulty accuracy. */
                     block.UpdateTime();
                     if(block.nTime == block.vtx[0].nTime)
@@ -760,7 +758,10 @@ namespace Core
 
                     /* Allow the Searching For Stake block if Below the Efficiency Threshold. */
                     if(nThreshold < nRequired)
+                    {
+                        Sleep(1);
                         continue;
+                    }
 
                     /* Increment the nOnce. */
                     block.nNonce ++;

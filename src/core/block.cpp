@@ -1200,7 +1200,7 @@ namespace Core
                 return error("CBlock::CheckStake() : failed to get block age");
 
             /* Trust Weight Continues to grow the longer you have staked and higher your interest rate */
-            nTrustWeight = min(40.0, (((39.0 * log(((2.0 * nTrustAge) / (60 * 60 * 24 * 28 * 3)) + 1.0)) / log(3))) + 1.0);
+            nTrustWeight = min(90.0, (((44.0 * log(((2.0 * nTrustAge) / (60 * 60 * 24 * 28 * 3)) + 1.0)) / log(3))) + 1.0);
 
             /* Block Weight Reaches Maximum At Trust Key Expiration. */
             nBlockWeight = min(10.0, (((9.0 * log(((2.0 * nBlockAge) / ((fTestNet ? TRUST_KEY_TIMESPAN_TESTNET : TRUST_KEY_TIMESPAN))) + 1.0)) / log(3))) + 1.0);
@@ -1228,11 +1228,9 @@ namespace Core
             nTrustWeight = min(10.0, (((9.0 * log(((2.0 * nCoinAge) / (60 * 60 * 24 * 28 * 3)) + 1.0)) / log(3))) + 1.0);
         }
 
-        //TODO: New weighting calculations with time given a specific quality + nWeights, not -
-
         /* Check the energy efficiency requirements. */
         double nThreshold = ((nTime - vtx[0].nTime) * 100.0) / nNonce;
-        double nRequired  = ((50.0 - nTrustWeight - nBlockWeight) * MAX_STAKE_WEIGHT) / vtx[0].vout[0].nValue;
+        double nRequired  = ((108.0 - nTrustWeight - nBlockWeight) * MAX_STAKE_WEIGHT) / vtx[0].vout[0].nValue;
         if(nThreshold < nRequired)
             return error("CBlock::CheckStake() : energy threshold too low (%f) required (%f)", nThreshold, nRequired);
 

@@ -24,6 +24,10 @@ bool fIsSeedNode = false;
 int UNIFIED_AVERAGE_OFFSET = 0;
 int UNIFIED_MOVING_ITERATOR = 0;
 
+const int UNIFEED_TIME_ADJUSTMENT = 8240;
+const int UNIFIED_TIME_ADJUSTMENT_TESTNET = 1000;
+int TIME_ADJUSTED = 0;
+
 
 /** Unified Time Declarations **/
 std::vector<int> UNIFIED_TIME_DATA;
@@ -198,14 +202,11 @@ void ThreadUnifiedSamples(void* parg)
     string ADDRESS = "";
     LLP::CoreOutbound SERVER("", strprintf("%u", fLispNet ? LISPNET_CORE_LLP_PORT : (fTestNet ? TESTNET_CORE_LLP_PORT : NEXUS_CORE_LLP_PORT)));
 
-    //
-
     /* Latency Timer. */
     loop() {
         try
         {
             Sleep(1000);
-
 
             /* Randomize the Time Seed Connection Iterator. */
             nIterator ++;
@@ -325,7 +326,39 @@ void ThreadUnifiedSamples(void* parg)
                     printf("***** %i Total Samples | %i Offset (%u) | %i Majority (%u) | %" PRId64 "\n", MAP_TIME_DATA.size(), nSamples.Majority(), TOTAL_SAMPLES[nSamples.Majority()], UNIFIED_AVERAGE_OFFSET, TOTAL_SAMPLES[UNIFIED_AVERAGE_OFFSET], GetUnifiedTimestamp());
             }
 
-            Sleep(30000);
+            /* Check for unified time adjustment. This code will be removed in 2.5.1 release - only needed for one time unified time sync rollback */
+            if(GetUnifiedTimestamp() > (fTestNet ? Core::TESTNET_VERSION_TIMELOCK[4] : Core::NETWORK_VERSION_TIMELOCK[4]))
+            {
+                /* Get the time elapsed since the activation time-lock. */
+                unsigned int nTimestamp = (GetUnifiedTimestamp() - (fTestNet ? Core::TESTNET_VERSION_TIMELOCK[4] : Core::NETWORK_VERSION_TIMELOCK[4]));
+
+                /* Break this into ten minute increments for adjustment period. */
+                unsigned int nTenMinutes = nTimestamp / 600; //the total time passed unified offset
+
+                //adjust the clock if within the span of minutes past the time-lock
+                if(nTenMinutes < (fTestNet ? UNIFIED_TIME_ADJUSTMENT_TESTNET : UNIFEED_TIME_ADJUSTMENT) && nTenMinutes > TIME_ADJUSTED)
+                {
+                    /* Set the time adjusted to how many intervals of 10 minutes there have been. */
+                    TIME_ADJUSTED = nTenMinutes;
+
+                    /* Clear time samples to get the new offset. All time seeds should be rolled back 1 second at this point. */
+                    MAP_TIME_DATA.clear();
+
+                    /* Reduce the unified average offset by 1 second. */
+                    UNIFIED_AVERAGE_OFFSET -= 1;
+
+                    /* Debug output to show the clock adjustments. */
+                    printf("***** Unified Time: Ten Minutes Elapsed (%u minutes), Adjusting clock back one second (%i new offset). Remaining %i seconds", nTenMinutes / 10u, UNIFIED_AVERAGE_OFFSET, ((fTestNet ? UNIFIED_TIME_ADJUSTMENT_TESTNET : UNIFEED_TIME_ADJUSTMENT) - TIME_ADJUSTED));
+
+                    /* Sleep for 2 seconds to account for one second loss in unified offset. */
+                    Sleep(2000);
+
+                    /* Skip the 20 second wait between time samples. */
+                    continue;
+                }
+            }
+
+            Sleep(20000);
 
             continue;
 
