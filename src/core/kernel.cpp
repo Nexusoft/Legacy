@@ -928,7 +928,7 @@ namespace Core
                 if(GetArg("-verbose", 0) >= 2)
                 {
                     printf("Stake Minter : Created New Block %s\n", vBlocks[0].GetHash().ToString().substr(0, 20).c_str());
-                    printf("Stake Minter : Total Nexus to Stake %f\n", (double)vBlocks[0].vtx[0].GetValueOut());
+                    printf("Stake Minter : Total Nexus to Stake %f\n", (double)vBlocks[0].vtx[0].GetValueOut() / COIN);
                 }
 
                 /* Set the Reporting Variables for the Qt. */
