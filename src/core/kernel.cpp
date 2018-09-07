@@ -860,7 +860,7 @@ namespace Core
                     block.vtx[0].vin[0].prevout.hash = trustKey.GetHash();
 
                     nTrustAge = trustKey.Age(mapBlockIndex[hashBest]->GetBlockTime());
-                    nBlockAge = trustKey.BlockAge(mapBlockIndex[hashBest]->GetBlockTime());
+                    nBlockAge = trustKey.BlockAge(hashBest);
 
                     /* Trust Weight Reaches Maximum at 30 day Limit. */
                     nTrustWeight = min(17.5, (((16.5 * log(((2.0 * nTrustAge) / (60 * 60 * 24 * 28)) + 1.0)) / log(3))) + 1.0);
