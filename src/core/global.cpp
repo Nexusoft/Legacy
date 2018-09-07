@@ -112,7 +112,7 @@ namespace Core
     const unsigned int TESTNET_VERSION_TIMELOCK[]   = { 1412676000,        //--- Block Version 2 Testnet Activation:  10/07/2014 04:00:00 GMT - 6
                                                         1421293891,        //--- Block Version 3 Testnet Activation:  01/15/2015 07:51:31 GMT - 6
                                                         1421949600,        //--- Block Version 4 Testnet Activation:  05/10/2015 08:01:00 GMT - 6
-                                                        1536302471 };      //--- Block Version 5 Testnet Activation:  09/06/2018 11:41:11 GMT - 7
+                                                        1536303271 };      //--- Block Version 5 Testnet Activation:  09/06/2018 12:11:11 GMT - 7
 
     /* Network Time - Lock for the First Nexus Block Update. Version 1 Blocks Rejected after this Time - Lock, Version 2 Blocks Rejected Before it. */
     const unsigned int NETWORK_VERSION_TIMELOCK[]   = { 1412964000,        //--- Block Version 2 Activation:          10/10/2014 12:00:00 GMT - 6

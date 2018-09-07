@@ -870,14 +870,15 @@ namespace Core
                     block.vtx[0].vout[0].scriptPubKey << vchTrustKey << Wallet::OP_CHECKSIG;
 
                     /* Calculate the Average Coinstake Age. */
-                    if (!pwalletMain->AddCoinstakeInputs(block))
+                    CBlock temp = block;
+                    if (!pwalletMain->AddCoinstakeInputs(temp))
                     {
                         error("Stake Minter : genesis - failed to add coinstake inputs");
                         continue;
                     }
 
                     LLD::CIndexDB indexdb("cr");
-                    if(!block.vtx[0].GetCoinstakeAge(indexdb, nCoinAge))
+                    if(!temp.vtx[0].GetCoinstakeAge(indexdb, nCoinAge))
                     {
                         if(GetArg("-verbose", 0) >= 2)
                             error("Stake Minter : Genesis - Failed to Get Coinstake Age.");
