@@ -741,9 +741,12 @@ namespace Core
                 bnTarget.SetCompact(block.nBits);
                 uint1024 hashTarget = bnTarget.getuint1024();
 
+                /* Set the interest rate variable. */
+                dInterestRate = trustKey.InterestRate(block, pindexBest->GetBlockTime());
+
                 /* Sign the new Proof of Stake Block. */
                 if(GetArg("-verbose", 0) >= 0)
-                    printf("Stake Minter : staking from block %s\n", hashBest.ToString().substr(0, 20).c_str());
+                    printf("Stake Minter : staking from block %s at weight %f and rate %f\n", hashBest.ToString().substr(0, 20).c_str(), (dTrustWeight + dBlockWeight), dInterestRate);
 
                 /* Search for the proof of stake hash. */
                 while(hashBest == hashBestChain)
@@ -921,16 +924,19 @@ namespace Core
                 if(GetArg("-verbose", 0) >= 2)
                 {
                     printf("Stake Minter : Created New Block %s\n", vBlocks[0].GetHash().ToString().substr(0, 20).c_str());
-                    printf("Stake Minter : Total Nexus to Stake %f\n", (double)vBlocks[0].vtx[0].GetValueOut() / COIN);
+                    printf("Stake Minter : Total Nexus to Stake %f\n", (double)vBlocks[0].vtx[0].GetValueOut());
                 }
 
                 /* Set the Reporting Variables for the Qt. */
                 dTrustWeight = nTrustWeight;
                 dBlockWeight = nBlockWeight;
 
+                /* Set the interest rate variable. */
+                dInterestRate = trustKey.InterestRate(vBlocks[0], pindexBest->GetBlockTime());
+
 
                 if(GetArg("-verbose", 0) >= 0)
-                    printf("Stake Minter : Staking at Total Weight %u | Trust Weight %f | Block Weight %f | Coin Age %" PRIu64 " | Trust Age %" PRIu64 "| Block Age %" PRIu64 "\n", nTotalWeight, nTrustWeight, nBlockWeight, nCoinAge, nTrustAge, nBlockAge);
+                    printf("Stake Minter : Staking at Interest %f | Total Weight %u | Trust Weight %f | Block Weight %f | Coin Age %" PRIu64 " | Trust Age %" PRIu64 "| Block Age %" PRIu64 "\n", dInterestRate, nTotalWeight, nTrustWeight, nBlockWeight, nCoinAge, nTrustAge, nBlockAge);
 
                 while(true)
                 {
