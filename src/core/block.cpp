@@ -744,6 +744,14 @@ namespace Core
                 LOCK(Net::cs_vNodes);
                 for(auto pnode : Net::vNodes)
                     pnode->PushInventory(Net::CInv(Net::MSG_BLOCK, hash));
+
+            }
+            else
+            {
+                LOCK(Net::cs_vNodes);
+                for(auto pnode : Net::vNodes)
+                    pnode->nLastGetBlocks = GetUnifiedTimestamp();
+
             }
 
             // Notify UI to display prev block's coinbase if it was ours
