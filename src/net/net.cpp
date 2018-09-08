@@ -78,11 +78,10 @@ namespace Net
         return (unsigned short)(GetArg("-port", GetDefaultPort()));
     }
 
-    static int nLastGetBlocks = 0;
     void CNode::PushGetBlocks(Core::CBlockIndex* pindexBegin, uint1024 hashEnd)
     {
         // Filter out duplicate requests
-        if (pindexBegin == pindexLastGetBlocksBegin && hashEnd == hashLastGetBlocksEnd && GetUnifiedTimestamp() - nLastGetBlocks > 3)
+        if (pindexBegin == pindexLastGetBlocksBegin && hashEnd == hashLastGetBlocksEnd && GetUnifiedTimestamp() - nLastGetBlocks < 3)
             return;
 
         pindexLastGetBlocksBegin = pindexBegin;
