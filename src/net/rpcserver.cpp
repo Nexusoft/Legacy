@@ -363,10 +363,6 @@ namespace Net
         if(!indexdb.GetTrustKeys(vKeys))
             return ret;
 
-        Core::CBlock block;
-        if(!block.ReadFromDisk(Core::pindexBest, true))
-            return ret;
-
         /* Search through the trust keys. */
         for(auto key : vKeys)
         {
@@ -374,10 +370,17 @@ namespace Net
             if(!indexdb.ReadTrustKey(key, trustKey))
                 continue;
 
-            Object obj;
+            if(trustKey.Expired(Core::pindexBest->GetBlockHash()))
+                continue;
 
+            Object obj;
             Wallet::NexusAddress address;
             address.SetPubKey(trustKey.vchPubKey);
+
+            /* Read the previous block from disk. */
+            Core::CBlock block;
+            if(!block.ReadFromDisk(Core::mapBlockIndex[trustKey.hashLastBlock], true))
+                continue;
 
             obj.push_back(Pair("address", address.ToString()));
             obj.push_back(Pair("interest rate", 100.0 * trustKey.InterestRate(block, GetUnifiedTimestamp())));
@@ -2519,13 +2522,28 @@ namespace Net
                 "listtrustkeys\n"
                 "List all the Trust Keys this Node owns.\n");
 
-
         Object result;
         LLD::CTrustDB trustdb("cr");
+        LLD::CIndexDB indexdb("cr");
+
         Core::CTrustKey trustKey;
         if(trustdb.ReadMyKey(trustKey))
         {
-            //respond with json
+            /* Read trust key from index database. */
+            uint576 key;
+            key.SetBytes(trustKey.vchPubKey);
+            if(!indexdb.ReadTrustKey(key, trustKey))
+                throw runtime_error("couldn't read last trust");
+
+            /* Read the last block from disk. */
+            Core::CBlock block; //TODO: optimize this by having last block stored in trust key. slower validation but faster execution of command
+            if(!block.ReadFromDisk(Core::mapBlockIndex[trustKey.hashLastBlock], true))
+                throw runtime_error("couldn't read last trust block");
+
+            /* Set the wallet address. */
+            Wallet::NexusAddress address;
+            address.SetPubKey(trustKey.vchPubKey);
+            result.push_back(Pair(address.ToString(), trustKey.InterestRate(block, block.nTime)));
         }
 
 

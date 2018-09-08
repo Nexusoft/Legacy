@@ -632,6 +632,8 @@ namespace Core
         uint512   hashGenesisTx;
         unsigned int nGenesisTime;
 
+        uint1024 hashLastBlock;
+
 
         CTrustKey() { SetNull(); }
         CTrustKey(std::vector<unsigned char> vchPubKeyIn, uint1024 hashBlockIn, uint512 hashTxIn, unsigned int nTimeIn)
@@ -654,6 +656,7 @@ namespace Core
             READWRITE(hashGenesisBlock);
             READWRITE(hashGenesisTx);
             READWRITE(nGenesisTime);
+            READWRITE(hashLastBlock);
         )
 
 

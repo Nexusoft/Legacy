@@ -402,19 +402,18 @@ namespace Core
     {
         /* Genesis interest rate is 0.5% */
         if(block.vtx[0].IsGenesis())
-            return 0.05;
-
-        unsigned int nTrustScore;
+            return 0.005;
 
         /* Block version 4 is the age of key from timestamp. */
+        unsigned int nTrustScore;
         if(block.nVersion == 4)
             nTrustScore = (nTime - nGenesisTime);
 
         /* Block version 5 is the trust score of the key. */
         else if(!block.TrustScore(nTrustScore))
-            return 0; //this will trigger an interest rate failure
+            return 0.0; //this will trigger an interest rate failure
 
-        return min(0.03, (((0.025 * log(((9.0 * (nTrustScore)) / (60 * 60 * 24 * 28 * 13)) + 1.0)) / log(10))) + 0.005);
+        return min(0.03, ((((0.025 * log(((9.0 * (nTrustScore)) / (60 * 60 * 24 * 28 * 13)) + 1.0)) / log(10))) + 0.005));
     }
 
     /** Break the Chain Age in Minutes into Days, Hours, and Minutes. **/
@@ -475,14 +474,8 @@ namespace Core
     /* The Age of a Key in Block age as in the Time it has been since Trust Key has produced block. */
     uint64 CTrustKey::BlockAge(uint1024 hashBestBlock) const
     {
-
-        /* Get the last block. */
-        uint1024 hashBlockLast = hashBestBlock;
-        if(!LastTrustBlock(*this, hashBlockLast))
-            return error("CTrustKey::BlockAge() : Can't find last trust block");
-
         /* Block Age is Time to Previous Block's Time. */
-        return (uint64)(mapBlockIndex[hashBestBlock]->pprev->GetBlockTime() - mapBlockIndex[hashBlockLast]->GetBlockTime());
+        return (uint64)(mapBlockIndex[hashBestBlock]->pprev->GetBlockTime() - mapBlockIndex[hashLastBlock]->GetBlockTime());
     }
 
 
