@@ -327,16 +327,16 @@ void ThreadUnifiedSamples(void* parg)
             }
 
             /* Check for unified time adjustment. This code will be removed in 2.5.1 release - only needed for one time unified time sync rollback */
-            if(GetUnifiedTimestamp() > (fTestNet ? Core::TESTNET_VERSION_TIMELOCK[4] : Core::NETWORK_VERSION_TIMELOCK[4]))
+            if(GetUnifiedTimestamp() > (fTestNet ? Core::TESTNET_VERSION_TIMELOCK[3] : Core::NETWORK_VERSION_TIMELOCK[3]))
             {
                 /* Get the time elapsed since the activation time-lock. */
-                unsigned int nTimestamp = (GetUnifiedTimestamp() - (fTestNet ? Core::TESTNET_VERSION_TIMELOCK[4] : Core::NETWORK_VERSION_TIMELOCK[4]));
+                unsigned int nTimestamp = (GetUnifiedTimestamp() - (fTestNet ? Core::TESTNET_VERSION_TIMELOCK[3] : Core::NETWORK_VERSION_TIMELOCK[3]));
 
                 /* Break this into ten minute increments for adjustment period. */
                 unsigned int nTenMinutes = (unsigned int)(nTimestamp / 600.0); //the total time passed unified offset
 
                 /* Add some time checking debug output. */
-                printf("***** Unified Time Check: time passed %u, ten mins %u, time adjusted %u, total to adjust %u", nTimestamp, nTenMinutes, TIME_ADJUSTED, (fTestNet ? UNIFIED_TIME_ADJUSTMENT_TESTNET : UNIFEED_TIME_ADJUSTMENT));
+                printf("***** Unified Time Check: time passed %u, ten mins %u, time adjusted %u, total to adjust %u\n", nTimestamp, nTenMinutes, TIME_ADJUSTED, (fTestNet ? UNIFIED_TIME_ADJUSTMENT_TESTNET : UNIFEED_TIME_ADJUSTMENT));
 
                 //adjust the clock if within the span of minutes past the time-lock
                 if(nTenMinutes < (fTestNet ? UNIFIED_TIME_ADJUSTMENT_TESTNET : UNIFEED_TIME_ADJUSTMENT) && nTenMinutes > TIME_ADJUSTED)
