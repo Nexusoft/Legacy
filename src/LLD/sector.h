@@ -132,8 +132,12 @@ namespace LLD
             ssKey << key;
             std::vector<unsigned char> vKey(ssKey.begin(), ssKey.end());
 
-            if(pTransaction){
+            if(pTransaction)
+            {
                 pTransaction->EraseTransaction(vKey);
+
+                if(pTransaction->mapTransactions.count(vKey))
+                    pTransaction->mapTransactions.erase(vKey);
 
                 return true;
             }
