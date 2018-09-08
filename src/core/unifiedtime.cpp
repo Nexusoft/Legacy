@@ -351,7 +351,7 @@ void ThreadUnifiedSamples(void* parg)
                     UNIFIED_AVERAGE_OFFSET -= 1;
 
                     /* Debug output to show the clock adjustments. */
-                    printf("***** Unified Time: Ten Minutes Elapsed (%u minutes), Adjusting clock back one second (%i new offset). Remaining %i seconds", nTenMinutes / 10u, UNIFIED_AVERAGE_OFFSET, ((fTestNet ? UNIFIED_TIME_ADJUSTMENT_TESTNET : UNIFEED_TIME_ADJUSTMENT) - TIME_ADJUSTED));
+                    printf("***** Unified Time: Ten Minutes Elapsed (%u minutes), Adjusting clock back one second (%i new offset). Remaining %i seconds\n", nTenMinutes / 10u, UNIFIED_AVERAGE_OFFSET, ((fTestNet ? UNIFIED_TIME_ADJUSTMENT_TESTNET : UNIFEED_TIME_ADJUSTMENT) - TIME_ADJUSTED));
 
                     /* Sleep for 2 seconds to account for one second loss in unified offset. */
                     Sleep(2000);
