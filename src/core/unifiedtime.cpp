@@ -25,7 +25,7 @@ int UNIFIED_AVERAGE_OFFSET = 0;
 int UNIFIED_MOVING_ITERATOR = 0;
 
 const int UNIFEED_TIME_ADJUSTMENT = 8240;
-const int UNIFIED_TIME_ADJUSTMENT_TESTNET = 1000;
+const int UNIFIED_TIME_ADJUSTMENT_TESTNET = 144;
 int TIME_ADJUSTED = 0;
 
 
@@ -335,7 +335,7 @@ void ThreadUnifiedSamples(void* parg)
                 /* Break this into ten minute increments for adjustment period. */
                 unsigned int nTenMinutes = (unsigned int)(nTimestamp / 600.0); //the total time passed unified offset
 
-                /* Add some time checking debug output. */
+                /* Add some time checking debug output. */ //TODO: for main release remove this debug output.
                 printf("***** Unified Time Check: time passed %u, ten mins %u, time adjusted %u, total to adjust %u\n", nTimestamp, nTenMinutes, TIME_ADJUSTED, (fTestNet ? UNIFIED_TIME_ADJUSTMENT_TESTNET : UNIFEED_TIME_ADJUSTMENT));
 
                 //adjust the clock if within the span of minutes past the time-lock

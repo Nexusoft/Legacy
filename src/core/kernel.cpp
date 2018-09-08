@@ -842,6 +842,7 @@ namespace Core
                             CTrustKey trustKeyNew(vchTrustKey, block.GetHash(), block.vtx[0].GetHash(), block.nTime);
                             trustdb.WriteMyKey(trustKeyNew);
 
+                            trustKey = trustKeyNew;
                             printf("Stake Minter : new trust key written\n");
                         }
 
@@ -1042,6 +1043,7 @@ namespace Core
                                 CTrustKey trustKeyNew(vchTrustKey, vBlocks[i].GetHash(), vBlocks[i].vtx[0].GetHash(), vBlocks[i].nTime);
                                 trustdb.WriteMyKey(trustKeyNew);
 
+                                trustKey = trustKeyNew;
                                 printf("Stake Minter : new trust key written\n");
                             }
 
