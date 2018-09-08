@@ -13,6 +13,7 @@
 #include "../util/strlcpy.h"
 #include "../util/ui_interface.h"
 #include "../wallet/db.h"
+#include "../core/unifiedtime.h"
 
 #ifdef WIN32
 #include <string.h>
@@ -77,14 +78,16 @@ namespace Net
         return (unsigned short)(GetArg("-port", GetDefaultPort()));
     }
 
+    static int nLastGetBlocks = 0;
     void CNode::PushGetBlocks(Core::CBlockIndex* pindexBegin, uint1024 hashEnd)
     {
         // Filter out duplicate requests
-        if (pindexBegin == pindexLastGetBlocksBegin && hashEnd == hashLastGetBlocksEnd)
+        if (pindexBegin == pindexLastGetBlocksBegin && hashEnd == hashLastGetBlocksEnd && GetUnifiedTimestamp() - nLastGetBlocks > 3)
             return;
 
         pindexLastGetBlocksBegin = pindexBegin;
         hashLastGetBlocksEnd = hashEnd;
+        nLastGetBlocks = GetUnifiedTimestamp();
 
         PushMessage("getblocks", Core::CBlockLocator(pindexBegin), hashEnd);
     }
