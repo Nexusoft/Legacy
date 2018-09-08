@@ -667,6 +667,7 @@ namespace Core
             hashGenesisBlock     = 0;
             hashGenesisTx        = 0;
             nGenesisTime         = 0;
+            hashLastBlock        = 0;
 
             vchPubKey.clear();
         }
@@ -704,7 +705,7 @@ namespace Core
             uint576 cKey;
             cKey.SetBytes(vchPubKey);
 
-            return strprintf("Hash = %s, Key = %s, Genesis = %s, Tx = %s, Time = %u, Age = %u", GetHash().ToString().c_str(), cKey.ToString().c_str(), hashGenesisBlock.ToString().c_str(), hashGenesisTx.ToString().c_str(), nGenesisTime, Age(GetUnifiedTimestamp()));
+            return strprintf("hash=%s, key=%s, genesis=%s, last=%s, tx=%s, tim=%u, age=%u", GetHash().ToString().c_str(), cKey.ToString().c_str(), hashGenesisBlock.ToString().c_str(), hashLastBlock.ToString().c_str(), hashGenesisTx.ToString().c_str(), nGenesisTime, Age(GetUnifiedTimestamp()));
         }
 
         uint576 GetKey()

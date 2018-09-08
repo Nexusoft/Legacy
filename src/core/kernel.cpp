@@ -474,6 +474,14 @@ namespace Core
     /* The Age of a Key in Block age as in the Time it has been since Trust Key has produced block. */
     uint64 CTrustKey::BlockAge(uint1024 hashBestBlock) const
     {
+        /* Check the index for the best block. */
+        if(!mapBlockIndex.count(hashBestBlock))
+            return error("CTrustKey::BlockAge() : best block not found %s", hashBestBlock.ToString().substr(0, 20).c_str());
+
+        /* Check the index for the last block. */
+        if(!mapBlockIndex.count(hashLastBlock))
+            return error("CTrustKey::BlockAge() : last block not found %s", hashLastBlock.ToString().substr(0, 20).c_str());
+
         /* Block Age is Time to Previous Block's Time. */
         return (uint64)(mapBlockIndex[hashBestBlock]->pprev->GetBlockTime() - mapBlockIndex[hashLastBlock]->GetBlockTime());
     }
@@ -558,13 +566,8 @@ namespace Core
                 /* Check the database for trust key. */
                 CTrustKey trustCheck;
                 if(!indexdb.ReadTrustKey(myKey, trustCheck))
-                {
-                    /* Erase my key from trustdb. */
-                    trustdb.EraseMyKey();
-
-                    /* Set the trust key to null. */
                     trustKey.SetNull();
-                }
+
             }
 
             /* Create the block(s) to work on. */

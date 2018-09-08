@@ -318,7 +318,7 @@ namespace Core
         {
             /* Check that Transaction is not Genesis when Trust Key is Established. */
             CTrustKey trustCheck;
-            if(indexdb.ReadTrustKey(cKey, trustCheck))
+            if(nVersion >= 5 && indexdb.ReadTrustKey(cKey, trustCheck))
                 return error("ConnectBlock() : Duplicate Genesis not Allowed");
 
             /* Create the Trust Key from Genesis Transaction Block. */
@@ -399,14 +399,16 @@ namespace Core
                     return error("ConnectBlock() : last trust block found mismatch");
             }
 
-            /* Set the new last trust block. */
-            trustKey.hashLastBlock = GetHash();
-            if(!indexdb.WriteTrustKey(cKey, trustKey))
-                return error("ConnectBlock() : can't write new last block to disk.");
+            /* Interest rate debug output
 
             /* Dump the Trust Key to Console if not Initializing. */
             if(GetArg("-verbose", 0) >= 2)
                 trustKey.Print();
+
+            /* Set the new last trust block. */
+            trustKey.hashLastBlock = GetHash();
+            if(!indexdb.WriteTrustKey(cKey, trustKey))
+                return error("ConnectBlock() : can't write new last block to disk.");
         }
 
         if(GetArg("-verbose", 0) >= 0)
