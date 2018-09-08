@@ -479,8 +479,9 @@ namespace Core
             return error("CTrustKey::BlockAge() : best block not found %s", hashBestBlock.ToString().substr(0, 20).c_str());
 
         /* Check the index for the last block. */
-        if(!mapBlockIndex.count(hashLastBlock))
-            return error("CTrustKey::BlockAge() : last block not found %s", hashLastBlock.ToString().substr(0, 20).c_str());
+        uint1024 hashLastBlock = hashBestBlock;
+        if(!LastTrustBlock(*this, hashLastBlock))
+            return error("CTrustKey::BlockAge() : last trust block not found %s", hashLastBlock.ToString().substr(0, 20).c_str());
 
         /* Block Age is Time to Previous Block's Time. */
         return (uint64)(mapBlockIndex[hashBestBlock]->pprev->GetBlockTime() - mapBlockIndex[hashLastBlock]->GetBlockTime());

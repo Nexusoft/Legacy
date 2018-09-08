@@ -119,7 +119,7 @@ static const std::vector<std::string> DNS_SeedNodes =
     "node19.mercuryminer.com",
     "node20.mercuryminer.com",
     "node21.mercuryminer.com",
-    "wallet5.ddns.net", //viod
+    "wallet5.ddns.net", //vido
     "wallet7.ddns.net",
     "wallet8.ddns.net"
 };
@@ -208,7 +208,6 @@ void ThreadUnifiedSamples(void* parg)
         {
             Sleep(1000);
 
-
             /* Check for unified time adjustment. This code will be removed in 2.5.1 release - only needed for one time unified time sync rollback */
             if(GetUnifiedTimestamp() > (fTestNet ? Core::TESTNET_VERSION_TIMELOCK[3] : Core::NETWORK_VERSION_TIMELOCK[3]))
             {
@@ -238,9 +237,6 @@ void ThreadUnifiedSamples(void* parg)
 
                     /* Sleep for 4 seconds to account for one second loss in unified offset. */
                     Sleep(5000);
-
-                    /* Skip the 20 second wait between time samples. */
-                    continue;
                 }
             }
 

@@ -318,17 +318,11 @@ namespace LLD
                     if(!ReadTrustKey(cKey, trustKey))
                     {
                         trustKey = Core::CTrustKey(vTrustKey, block.GetHash(), block.vtx[0].GetHash(), block.nTime);
-                        trustKey.hashLastBlock = pindexNew->GetBlockHash();
                         WriteTrustKey(cKey, trustKey);
 
                         vTrustKeys.push_back(cKey);
 
                         printf("CTxDb::LoadBlockIndex() : Writing Genesis %u Key to Disk %s\n", block.nHeight, cKey.ToString().substr(0, 20).c_str());
-                    }
-                    else
-                    {
-                        trustKey.hashLastBlock = pindexNew->GetBlockHash();
-                        WriteTrustKey(cKey, trustKey);
                     }
                 }
             }

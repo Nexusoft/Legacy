@@ -377,9 +377,14 @@ namespace Net
             Wallet::NexusAddress address;
             address.SetPubKey(trustKey.vchPubKey);
 
+            /* Get last trust block. */
+            uint1024 hashLastBlock = Core::pindexBest->GetBlockHash();
+            if(!LastTrustBlock(trustKey, hashLastBlock))
+                continue;
+
             /* Read the previous block from disk. */
             Core::CBlock block;
-            if(!block.ReadFromDisk(Core::mapBlockIndex[trustKey.hashLastBlock], true))
+            if(!block.ReadFromDisk(Core::mapBlockIndex[hashLastBlock], true))
                 continue;
 
             obj.push_back(Pair("address", address.ToString()));
@@ -2529,21 +2534,11 @@ namespace Net
         Core::CTrustKey trustKey;
         if(trustdb.ReadMyKey(trustKey))
         {
-            /* Read trust key from index database. */
-            uint576 key;
-            key.SetBytes(trustKey.vchPubKey);
-            if(!indexdb.ReadTrustKey(key, trustKey))
-                throw runtime_error("couldn't read last trust");
-
-            /* Read the last block from disk. */
-            Core::CBlock block; //TODO: optimize this by having last block stored in trust key. slower validation but faster execution of command
-            if(!block.ReadFromDisk(Core::mapBlockIndex[trustKey.hashLastBlock], true))
-                throw runtime_error("couldn't read last trust block");
 
             /* Set the wallet address. */
             Wallet::NexusAddress address;
             address.SetPubKey(trustKey.vchPubKey);
-            result.push_back(Pair(address.ToString(), trustKey.InterestRate(block, block.nTime)));
+            result.push_back(Pair(address.ToString(), Core::dInterestRate));
         }
 
 

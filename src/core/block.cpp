@@ -172,22 +172,6 @@ namespace Core
         /* Erase Genesis on disconnect. */
         if(vtx[0].IsGenesis())
             indexdb.EraseTrustKey(cKey);
-        else if(vtx[0].IsTrust())
-        {
-            CTrustKey trustKey;
-            if(!indexdb.ReadTrustKey(cKey, trustKey))
-                return error("DisconnectBlock() : can't find trust key");
-
-            /* Find the last block. */
-            uint1024 hashLastBlock = hashPrevBlock;
-            if(!LastTrustBlock(trustKey, hashLastBlock))
-                return error("DisconnectBlock() : can't find last trust block");
-
-            /* Set the previous trust block. */
-            trustKey.hashLastBlock = hashLastBlock;
-            if(!indexdb.WriteTrustKey(cKey, trustKey))
-                return error("DisconnectBlock() : can't write trust key to disk");
-        }
 
         // Update block index on disk without changing it in memory.
         // The memory index structure will be changed after the db commits.
@@ -309,6 +293,8 @@ namespace Core
                 if(!CheckTrust())
                     return DoS(50, error("ConnectBlock() : invalid trust score"));
             }
+            else if(nVersion < 5 && !VerifyStake())
+                return DoS(50, error("ConnectBlock() : invalid proof of stake"));
         }
 
         /* Handle Genesis Transaction Rules. Genesis is checked after Trust Key Established. */
@@ -321,7 +307,6 @@ namespace Core
 
             /* Create the Trust Key from Genesis Transaction Block. */
             CTrustKey trustKey(vTrustKey, GetHash(), vtx[0].GetHash(), nTime);
-            trustKey.hashLastBlock = GetHash();
 
             /* Check the genesis transaction. */
             if(!trustKey.CheckGenesis(*this))
@@ -378,9 +363,6 @@ namespace Core
                 if(!LastTrustBlock(trustKey, hashLastTrust))
                     return error("ConnectBlock() : Can't find last trust block");
 
-                if(hashLastTrust != trustKey.hashLastBlock)
-                    return error("ConnectBlock() : last trust block found mismatch");
-
                 if(nHeight - mapBlockIndex[hashLastTrust]->nHeight < TRUST_KEY_MIN_INTERVAL)
                     return error("ConnectBlock() : Trust Block Created Before Minimum Trust Key Interval.");
             }
@@ -391,10 +373,6 @@ namespace Core
                 unsigned int nSequence, nTrust;
                 if(!ExtractTrust(hashLastTrust, nSequence, nTrust))
                     return error("ConnectBlock() : can't extract trust from coinstake inputs");
-
-                /* Check the last trust block to trust block claims. */
-                if(hashLastTrust != trustKey.hashLastBlock)
-                    return error("ConnectBlock() : last trust block found mismatch");
             }
 
             /* Interest rate debug output
@@ -402,11 +380,6 @@ namespace Core
             /* Dump the Trust Key to Console if not Initializing. */
             if(GetArg("-verbose", 0) >= 2)
                 trustKey.Print();
-
-            /* Set the new last trust block. */
-            trustKey.hashLastBlock = GetHash();
-            if(!indexdb.WriteTrustKey(cKey, trustKey))
-                return error("ConnectBlock() : can't write new last block to disk.");
         }
 
         if(GetArg("-verbose", 0) >= 0)
@@ -1065,7 +1038,8 @@ namespace Core
         {
             unsigned int nSize = vtx[0].vout.size();
 
-            /* Add up the Miner Rewards from Coinbase Tx Outputs. */
+            /* Add up the Miner Re            if(nVersion < 5 && !VerifyStake())
+                return DoS(50, error("ConnectBlock() : invalid proof of stake"));wards from Coinbase Tx Outputs. */
             int64 nMiningReward = 0;
             for(int nIndex = 0; nIndex < nSize - 2; nIndex++)
                 nMiningReward += vtx[0].vout[nIndex].nValue;
@@ -1090,9 +1064,6 @@ namespace Core
             /* Check that the Coinbase / CoinstakeTimstamp is after Previous Block. */
             if (vtx[0].nTime < pindexPrev->GetBlockTime())
                 return error("AcceptBlock() : coinstake transaction too early");
-
-            if(nVersion < 5 && !VerifyStake())
-                return DoS(50, error("ConnectBlock() : invalid proof of stake"));
         }
 
 

@@ -632,8 +632,6 @@ namespace Core
         uint512   hashGenesisTx;
         unsigned int nGenesisTime;
 
-        uint1024 hashLastBlock;
-
 
         CTrustKey() { SetNull(); }
         CTrustKey(std::vector<unsigned char> vchPubKeyIn, uint1024 hashBlockIn, uint512 hashTxIn, unsigned int nTimeIn)
@@ -656,7 +654,6 @@ namespace Core
             READWRITE(hashGenesisBlock);
             READWRITE(hashGenesisTx);
             READWRITE(nGenesisTime);
-            READWRITE(hashLastBlock);
         )
 
 
@@ -667,7 +664,6 @@ namespace Core
             hashGenesisBlock     = 0;
             hashGenesisTx        = 0;
             nGenesisTime         = 0;
-            hashLastBlock        = 0;
 
             vchPubKey.clear();
         }
@@ -705,7 +701,7 @@ namespace Core
             uint576 cKey;
             cKey.SetBytes(vchPubKey);
 
-            return strprintf("hash=%s, key=%s, genesis=%s, last=%s, tx=%s, tim=%u, age=%u", GetHash().ToString().c_str(), cKey.ToString().c_str(), hashGenesisBlock.ToString().c_str(), hashLastBlock.ToString().c_str(), hashGenesisTx.ToString().c_str(), nGenesisTime, Age(GetUnifiedTimestamp()));
+            return strprintf("hash=%s, key=%s, genesis=%s, tx=%s, tim=%u, age=%u", GetHash().ToString().c_str(), cKey.ToString().c_str(), hashGenesisBlock.ToString().c_str(), hashGenesisTx.ToString().c_str(), nGenesisTime, Age(GetUnifiedTimestamp()));
         }
 
         uint576 GetKey()
