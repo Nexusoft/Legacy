@@ -333,7 +333,10 @@ void ThreadUnifiedSamples(void* parg)
                 unsigned int nTimestamp = (GetUnifiedTimestamp() - (fTestNet ? Core::TESTNET_VERSION_TIMELOCK[4] : Core::NETWORK_VERSION_TIMELOCK[4]));
 
                 /* Break this into ten minute increments for adjustment period. */
-                unsigned int nTenMinutes = nTimestamp / 600; //the total time passed unified offset
+                unsigned int nTenMinutes = (unsigned int)(nTimestamp / 600.0); //the total time passed unified offset
+
+                /* Add some time checking debug output. */
+                printf("***** Unified Time Check: time passed %u, ten mins %u, time adjusted %u, total to adjust %u", nTimestamp, nTenMinutes, TIME_ADJUSTED, (fTestNet ? UNIFIED_TIME_ADJUSTMENT_TESTNET : UNIFEED_TIME_ADJUSTMENT));
 
                 //adjust the clock if within the span of minutes past the time-lock
                 if(nTenMinutes < (fTestNet ? UNIFIED_TIME_ADJUSTMENT_TESTNET : UNIFEED_TIME_ADJUSTMENT) && nTenMinutes > TIME_ADJUSTED)
