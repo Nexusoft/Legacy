@@ -553,6 +553,27 @@ namespace Core
             /* Take a snapshot of the best block. */
             uint1024 hashBest = hashBestChain;
 
+            /* Check in case genesis was disconnected. */
+            if(!trustKey.IsNull())
+            {
+                LLD::CIndexDB indexdb("cr");
+
+                /* Extract my trust key. */
+                uint576 myKey;
+                myKey.SetBytes(trustKey.vchPubKey);
+
+                /* Check the database for trust key. */
+                CTrustKey trustCheck;
+                if(!indexdb.ReadTrustKey(myKey, trustCheck))
+                {
+                    /* Erase my key from trustdb. */
+                    trustdb.EraseMyKey();
+
+                    /* Set the trust key to null. */
+                    trustKey.SetNull();
+                }
+            }
+
             /* Create the block(s) to work on. */
             CBlock block = CreateNewBlock(reservekey, pwalletMain, 0);
             if(block.IsNull())
