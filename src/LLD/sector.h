@@ -198,6 +198,9 @@ namespace LLD
             /** Commit to the Database. **/
             if(pTransaction)
             {
+                /* Check that the key is not pending in a transaction for Erase. */
+                if(pTransaction->mapEraseData.count(vKey))
+                    pTransaction->mapEraseData.erase(vKey);
 
                 std::vector<unsigned char> vOriginalData;
                 //Get(vKey, vOriginalData);
@@ -274,10 +277,6 @@ namespace LLD
             KeyDatabase* SectorKeys = GetKeychain(strKeychainRegistry);
             if(!SectorKeys)
                 return error("Put() : Sector Keys not Registered for Name %s\n", strKeychainRegistry.c_str());
-
-            /* Check that the key is not pending in a transaction for Erase. */
-            if(pTransaction && pTransaction->mapEraseData.count(vKey))
-                pTransaction->mapEraseData.erase(vKey);
 
             /** Write Header if First Update. **/
             if(!SectorKeys->HasKey(vKey))
