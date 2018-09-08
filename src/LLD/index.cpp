@@ -318,6 +318,7 @@ namespace LLD
                     if(!ReadTrustKey(cKey, trustKey))
                     {
                         trustKey = Core::CTrustKey(vTrustKey, block.GetHash(), block.vtx[0].GetHash(), block.nTime);
+                        trustKey.hashLastBlock = pindexNew->GetBlockHash();
                         WriteTrustKey(cKey, trustKey);
 
                         vTrustKeys.push_back(cKey);
