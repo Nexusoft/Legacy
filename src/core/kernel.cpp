@@ -822,7 +822,6 @@ namespace Core
                             trustdb.WriteMyKey(trustKeyNew);
 
                             printf("Stake Minter : new trust key written\n");
-                            trustKeyNew.Print();
                         }
 
                         break;
@@ -842,6 +841,28 @@ namespace Core
                 double nTrustWeight = 0.0, nBlockWeight = 0.0;
                 if(!trustKey.IsNull())
                 {
+                    /* In version 4 check if trust key was expired. */
+                    if(trustKey.Expired(hashBest))
+                    {
+                        error("Stake Minter : version 4 trust key is expired");
+
+                        /* Erase my key from trustdb. */
+                        trustdb.EraseMyKey();
+
+                        /* Get the trust key index. */
+                        uint576 key;
+                        key.SetBytes(trustKey.vchPubKey);
+
+                        /* Erase from indexdb. */
+                        LLD::CIndexDB indexdb("r+");
+                        indexdb.EraseTrustKey(key);
+
+                        /* Set the trust key to null state. */
+                        trustKey.SetNull();
+
+                        continue;
+                    }
+
                     block.vtx[0].vout[0].scriptPubKey << vchTrustKey << Wallet::OP_CHECKSIG;
                     block.vtx[0].vin[0].prevout.n = 0;
                     block.vtx[0].vin[0].prevout.hash = trustKey.GetHash();
@@ -1001,7 +1022,6 @@ namespace Core
                                 trustdb.WriteMyKey(trustKeyNew);
 
                                 printf("Stake Minter : new trust key written\n");
-                                trustKeyNew.Print();
                             }
 
                             break;
