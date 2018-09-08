@@ -309,8 +309,6 @@ namespace Core
                 if(!CheckTrust())
                     return DoS(50, error("ConnectBlock() : invalid trust score"));
             }
-            else if(nVersion < 5 && !VerifyStake())
-                return DoS(50, error("ConnectBlock() : invalid proof of stake"));
         }
 
         /* Handle Genesis Transaction Rules. Genesis is checked after Trust Key Established. */
@@ -1092,6 +1090,9 @@ namespace Core
             /* Check that the Coinbase / CoinstakeTimstamp is after Previous Block. */
             if (vtx[0].nTime < pindexPrev->GetBlockTime())
                 return error("AcceptBlock() : coinstake transaction too early");
+
+            if(nVersion < 5 && !VerifyStake())
+                return DoS(50, error("ConnectBlock() : invalid proof of stake"));
         }
 
 
