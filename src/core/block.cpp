@@ -351,11 +351,11 @@ namespace Core
                 return error("ConnectBlock() : Invalid Genesis Transaction.");
 
             /* Don't allow Expired Trust Keys. Check Expiration from Previous Block Timestamp. */
-            if(nVersion < 4 && trustKey.Expired(hashPrevBlock))
+            if(nVersion < 5 && trustKey.Expired(hashPrevBlock))
                 return error("ConnectBlock() : Cannot Create Block for Expired Trust Key.");
 
             /* Don't allow Blocks Created Before Minimum Interval. */
-            if(nVersion < 4)
+            if(nVersion < 5)
             {
                 uint1024 hashLastTrust = hashPrevBlock;
                 if(!LastTrustBlock(trustKey, hashLastTrust))
@@ -426,14 +426,22 @@ namespace Core
         }
         else
         {
-            /*
-            if(nVersion < 4 && !fTestNet && !IsInitialBlockDownload() && IsProofOfStake() && GetBoolArg("-softban", true) && !cTrustPool.IsValid(*this))
+            if(nVersion < 5 && !fTestNet && !IsInitialBlockDownload() && IsProofOfStake())
             {
-                error("\x1b[31m SOFTBAN: Invalid nPoS %s\x1b[0m", hash.ToString().substr(0, 20).c_str());
+                uint576 cKey;
+                if(TrustKey(cKey))
+                {
+                    CTrustKey trustKey;
+                    if(indexdb.ReadTrustKey(cKey, trustKey) && !trustKey.IsValid(*this))
+                    {
+                        error("\x1b[31m SOFTBAN: Invalid nPoS %s\x1b[0m", hash.ToString().substr(0, 20).c_str());
 
-                return true;
+                        return true;
+                    }
+                }
+                else
+                    error("\x1b[31m SOFTBAN \x1b[0m : couldn't get trust key");
             }
-            */
 
             CBlockIndex* pfork = pindexBest;
             CBlockIndex* plonger = pindexNew;

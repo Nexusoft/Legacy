@@ -283,23 +283,10 @@ namespace Core
     bool CTrustKey::IsValid(CBlock cBlock)
     {
 
-        /* Extract the Key from the Script Signature. */
-        vector< std::vector<unsigned char> > vKeys;
-        Wallet::TransactionType keyType;
-        if (!Wallet::Solver(cBlock.vtx[0].vout[0].scriptPubKey, keyType, vKeys))
-            return error("CTrustPool::IsValid() : Failed To Solve Trust Key Script.");
-
-        /* Ensure the Key is Public Key. No Pay Hash or Script Hash for Trust Keys. */
-        if (keyType != Wallet::TX_PUBKEY)
-            return error("CTrustPool::IsValid() : Trust Key must be of Public Key Type Created from Keypool.");
-
-        /* Verify the Stake Efficiency Threshold. */
-        if(!cBlock.VerifyStake())
-            return error("CTrustPool::IsValid() : Invalid Proof of Stake");
-
         /* Set the Public Key Integer Key from Bytes. */
         uint576 cKey;
-        cKey.SetBytes(vKeys[0]);
+        if(!cBlock.TrustKey(cKey))
+            return error("CTrustKey::IsValid() : couldn't get trust key");
 
         /* Find the last 6 nPoS blocks. */
         CBlock pblock[6];
@@ -310,10 +297,10 @@ namespace Core
         {
             pindex[i] = GetLastChannelIndex(i == 0 ? mapBlockIndex[cBlock.hashPrevBlock] : pindex[i - 1]->pprev, 0);
             if(!pindex[i])
-                return error("CTrustPool::IsValid() : Can't Find last Channel Index");
+                return error("CTrustKey::IsValid() : Can't Find last Channel Index");
 
             if(!pblock[i].ReadFromDisk(pindex[i], true))
-                return error("CTrustPool::IsValid() : Can't Read Block from Disk");
+                return error("CTrustKey::IsValid() : Can't Read Block from Disk");
 
             if(i > 0)
                 nAverageTime += (pblock[i - 1].nTime - pblock[i].nTime);
@@ -341,16 +328,16 @@ namespace Core
 
                 /* Ignore Outputs that are not in the Main Chain. */
                 if (!txPrev.ReadFromDisk(indexdb, cBlock.vtx[0].vin[nIndex].prevout, txindex))
-                    return error("CTrustPool::IsValid() : Invalid Previous Transaction");
+                    return error("CTrustKey::IsValid() : Invalid Previous Transaction");
 
                 /* Read the Previous Transaction's Block from Disk. */
                 CBlock block;
                 if (!block.ReadFromDisk(txindex.pos.nFile, txindex.pos.nBlockPos, false))
-                    return error("CTrustPool::IsValid() : Failed To Read Block from Disk");
+                    return error("CTrustKey::IsValid() : Failed To Read Block from Disk");
 
                 /* Check that Genesis has no Transactions. */
                 if(cBlock.vtx.size() != 1)
-                    return error("CTrustPool::IsValid() : Cannot Include Transactions with Genesis Transaction");
+                    return error("CTrustKey::IsValid() : Cannot Include Transactions with Genesis Transaction");
 
                 /* RULE: No Genesis if coin age is less than 1 days old. */
                 if((cBlock.nTime - block.GetBlockTime()) < 24 * 60 * 60)
@@ -384,12 +371,12 @@ namespace Core
 
                 /* Ignore Outputs that are not in the Main Chain. */
                 if (!txPrev.ReadFromDisk(indexdb, cBlock.vtx[0].vin[nIndex].prevout, txindex))
-                    return error("GetCoinstakeAge() : Invalid Previous Transaction");
+                    return error("CTrustKey() : Invalid Previous Transaction");
 
                 /* Read the Previous Transaction's Block from Disk. */
                 CBlock block;
                 if (!block.ReadFromDisk(txindex.pos.nFile, txindex.pos.nBlockPos, false))
-                    return error("GetCoinstakeAge() : Failed To Read Block from Disk");
+                    return error("CTrustKey() : Failed To Read Block from Disk");
 
                 /* RULE: Inputs need to have at least 100 confirmations */
                 if(cBlock.nHeight - block.nHeight < 100)
