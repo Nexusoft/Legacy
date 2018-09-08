@@ -137,9 +137,17 @@ namespace Core
     /** Dummy address for running on the Testnet. **/
     const string TESTNET_DUMMY_ADDRESS   = "4jzgcyvCM6Yv8uoAPwCwe5eSikccs7ofJBnxsRWtmePGuJYnV8E";
 
+    /** new testnet dummy addresses. */
+    const string TESTNET_DUMMY_AMBASSADOR_RECYCLED = "4kRwiTAu6h3ZPTABfZ7wYjVfovHWWHJxShATUYCYYsSWVdiuCYa";
+    const string TESTNET_DUMMY_DEVELOPER_RECYCLED  = "4kUF9T3tCMFtRPyoFX5Kyhn6BVwxi5dgnVyDwPxUr8kZpwdr6Zy";
+
 
     /** Signature to Check Testnet Blocks are Produced Correctly. **/
     std::vector<unsigned char> TESTNET_DUMMY_SIGNATURE;
+
+    /** new testnet dummy signatures. **/
+    std::vector<unsigned char> TESTNET_DUMMY_SIGNATURE_AMBASSADOR_RECYCLED;
+    std::vector<unsigned char> TESTNET_DUMMY_SIGNATURE_DEVELOPER_RECYCLED;
 
 
     /** Addresses of the Exchange Channels. **/

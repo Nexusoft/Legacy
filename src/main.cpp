@@ -361,6 +361,16 @@ bool AppInit2(int argc, char* argv[])
         Wallet::CScript scriptSig;
         scriptSig.SetNexusAddress(Core::TESTNET_DUMMY_ADDRESS);
         Core::TESTNET_DUMMY_SIGNATURE = (std::vector<unsigned char>)scriptSig;
+
+
+        scriptSig.clear();
+        scriptSig.SetNexusAddress(Core::TESTNET_DUMMY_AMBASSADOR_RECYCLED);
+        Core::TESTNET_DUMMY_SIGNATURE_AMBASSADOR_RECYCLED = (std::vector<unsigned char>)scriptSig;
+
+
+        scriptSig.clear();
+        scriptSig.SetNexusAddress(Core::TESTNET_DUMMY_DEVELOPER_RECYCLED);
+        Core::TESTNET_DUMMY_SIGNATURE_DEVELOPER_RECYCLED = (std::vector<unsigned char>)scriptSig;
     }
 
     Wallet::CScript scriptSig;

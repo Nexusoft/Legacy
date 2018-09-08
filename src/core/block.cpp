@@ -866,7 +866,7 @@ namespace Core
             if(!fTestNet)
             {
                 if (!VerifyAddressList(vtx[0].vout[nSize - 2].scriptPubKey, (nVersion < 5) ? AMBASSADOR_SCRIPT_SIGNATURES : AMBASSADOR_SCRIPT_SIGNATURES_RECYCLED))
-                    return error("CheckBlock() : Block %u Channel Signature Not Verified.\n", nHeight);
+                    return error("CheckBlock() : Block %u Ambassador Signature Not Verified.\n", nHeight);
 
                 if (!VerifyAddressList(vtx[0].vout[nSize - 1].scriptPubKey, (nVersion < 5) ? DEVELOPER_SCRIPT_SIGNATURES : DEVELOPER_SCRIPT_SIGNATURES_RECYCLED))
                     return error("CheckBlock() :  Block %u Developer Signature Not Verified.\n", nHeight);
@@ -874,10 +874,10 @@ namespace Core
 
             else
             {
-                if (!VerifyAddress(vtx[0].vout[nSize - 2].scriptPubKey, TESTNET_DUMMY_SIGNATURE))
-                    return error("CheckBlock() :  Block %u Channel Signature Not Verified.\n", nHeight);
+                if (!VerifyAddress(vtx[0].vout[nSize - 2].scriptPubKey, (nVersion < 5) ? TESTNET_DUMMY_SIGNATURE : TESTNET_DUMMY_SIGNATURE_AMBASSADOR_RECYCLED))
+                    return error("CheckBlock() :  Block %u Ambassador Signature Not Verified.\n", nHeight);
 
-                if (!VerifyAddress(vtx[0].vout[nSize - 1].scriptPubKey, TESTNET_DUMMY_SIGNATURE))
+                if (!VerifyAddress(vtx[0].vout[nSize - 1].scriptPubKey, (nVersion < 5) ? TESTNET_DUMMY_SIGNATURE : TESTNET_DUMMY_SIGNATURE_DEVELOPER_RECYCLED))
                     return error("CheckBlock() :  Block %u Developer Signature Not Verified.\n", nHeight);
             }
         }

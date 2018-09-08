@@ -121,6 +121,8 @@ namespace Core
 
     /** Vectors to hold the addresses for Nexus Channels and Developers. **/
     extern const std::string TESTNET_DUMMY_ADDRESS;
+    extern const std::string TESTNET_DUMMY_AMBASSADOR_RECYCLED;
+    extern const std::string TESTNET_DUMMY_DEVELOPER_RECYCLED;
     extern const std::string CHANNEL_ADDRESSES[];
     extern const std::string DEVELOPER_ADDRESSES[];
     extern const std::string AMBASSADOR_ADDRESSES_RECYCLED[];
@@ -131,7 +133,8 @@ namespace Core
     extern std::vector<unsigned char> AMBASSADOR_SCRIPT_SIGNATURES_RECYCLED[13];
     extern std::vector<unsigned char> DEVELOPER_SCRIPT_SIGNATURES_RECYCLED[13];
     extern std::vector<unsigned char> TESTNET_DUMMY_SIGNATURE;
-
+    extern std::vector<unsigned char> TESTNET_DUMMY_SIGNATURE_AMBASSADOR_RECYCLED;
+    extern std::vector<unsigned char> TESTNET_DUMMY_SIGNATURE_DEVELOPER_RECYCLED;
 
     /** BigNum Global Externals **/
     extern CBigNum bnProofOfWorkLimit[];
