@@ -169,6 +169,19 @@ namespace LLD
         return Erase(make_pair(string("trustKey"), hashTrustKey));
     }
 
+    bool CIndexDB::Bootstrapped()
+    {
+        uint256 hash;
+        return Read(string("bootstrapped"), hash);
+    }
+
+    bool CIndexDB::Bootstrap()
+    {
+        uint256 hash = 0;
+        return Write(string("bootstrapped"), hash);
+    }
+
+
     Core::CBlockIndex static * InsertBlockIndex(uint1024 hash)
     {
         if (hash == 0)
@@ -199,7 +212,7 @@ namespace LLD
         uint1024 hashBlock = Core::hashGenesisBlock;
         std::vector<uint576> vTrustKeys;
 
-        bool fBootstrap = !GetTrustKeys(vTrustKeys);
+        bool fBootstrap = !Bootstrapped();
         std::map<uint576, unsigned int> mapLastBlocks;
         while(!fRequestShutdown)
         {
@@ -318,11 +331,17 @@ namespace LLD
                     if(!ReadTrustKey(cKey, trustKey))
                     {
                         trustKey = Core::CTrustKey(vTrustKey, block.GetHash(), block.vtx[0].GetHash(), block.nTime);
+                        trustKey.hashLastBlock = block.GetHash();
                         WriteTrustKey(cKey, trustKey);
 
                         vTrustKeys.push_back(cKey);
 
                         printf("CTxDb::LoadBlockIndex() : Writing Genesis %u Key to Disk %s\n", block.nHeight, cKey.ToString().substr(0, 20).c_str());
+                    }
+                    else
+                    {
+                        trustKey.hashLastBlock = block.GetHash();
+                        WriteTrustKey(cKey, trustKey);
                     }
                 }
             }
@@ -339,28 +358,33 @@ namespace LLD
 
 
         /* Check for my trust key. */
-        LLD::CTrustDB trustdb("r+");
-        Core::CTrustKey myTrustKey;
-        uint576 myKey;
-
-        /* If one has their trust key. */
-        bool fHasKey = trustdb.ReadMyKey(myTrustKey);
-        if(fHasKey)
-            myKey.SetBytes(myTrustKey.vchPubKey);
-
-        /* Erase expired trust keys. */
-        for(auto key : vTrustKeys)
+        if(fBootstrap)
         {
-            if(mapLastBlocks.count(key) && mapLastBlocks[key] + Core::TRUST_KEY_EXPIRE < Core::pindexBest->GetBlockTime())
+            Bootstrap();
+
+            LLD::CTrustDB trustdb("r+");
+            Core::CTrustKey myTrustKey;
+            uint576 myKey;
+
+            /* If one has their trust key. */
+            bool fHasKey = trustdb.ReadMyKey(myTrustKey);
+            if(fHasKey)
+                myKey.SetBytes(myTrustKey.vchPubKey);
+
+            /* Erase expired trust keys. */
+            for(auto key : vTrustKeys)
             {
-                EraseTrustKey(key);
+                if(mapLastBlocks.count(key) && mapLastBlocks[key] + Core::TRUST_KEY_EXPIRE < Core::pindexBest->GetBlockTime())
+                {
+                    EraseTrustKey(key);
 
-                printf("Erasing Expired Trust Key %s\n", HexStr(key.begin(), key.end()).c_str());
+                    printf("Erasing Expired Trust Key %s\n", HexStr(key.begin(), key.end()).c_str());
 
-                if(fHasKey && key == myKey)
-                    trustdb.EraseMyKey();
+                    if(fHasKey && key == myKey)
+                        trustdb.EraseMyKey();
 
-                continue;
+                    continue;
+                }
             }
         }
 

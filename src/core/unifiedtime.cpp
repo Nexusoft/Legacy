@@ -218,10 +218,11 @@ void ThreadUnifiedSamples(void* parg)
                 unsigned int nTenMinutes = (unsigned int)(nTimestamp / 600.0); //the total time passed unified offset
 
                 /* Add some time checking debug output. */ //TODO: for main release remove this debug output.
-                printf("***** Unified Time Check: time passed %u, ten mins %u, time adjusted %u, total to adjust %u\n", nTimestamp, nTenMinutes, TIME_ADJUSTED, (fTestNet ? UNIFIED_TIME_ADJUSTMENT_TESTNET : UNIFEED_TIME_ADJUSTMENT));
+                if(nTenMinutes < (fTestNet ? UNIFIED_TIME_ADJUSTMENT_TESTNET : UNIFEED_TIME_ADJUSTMENT) + 1)
+                    printf("***** Unified Time Check: time passed %u, ten mins %u, time adjusted %u, total to adjust %u\n", nTimestamp, nTenMinutes, TIME_ADJUSTED, (fTestNet ? UNIFIED_TIME_ADJUSTMENT_TESTNET : UNIFEED_TIME_ADJUSTMENT));
 
                 //adjust the clock if within the span of minutes past the time-lock
-                if(nTenMinutes < (fTestNet ? UNIFIED_TIME_ADJUSTMENT_TESTNET : UNIFEED_TIME_ADJUSTMENT) && nTenMinutes > TIME_ADJUSTED)
+                if(nTenMinutes < (fTestNet ? UNIFIED_TIME_ADJUSTMENT_TESTNET : UNIFEED_TIME_ADJUSTMENT) + 1 && nTenMinutes > TIME_ADJUSTED)
                 {
                     /* Set the time adjusted to how many intervals of 10 minutes there have been. */
                     TIME_ADJUSTED = nTenMinutes;
@@ -233,9 +234,9 @@ void ThreadUnifiedSamples(void* parg)
                     UNIFIED_AVERAGE_OFFSET -= 1;
 
                     /* Debug output to show the clock adjustments. */
-                    printf("***** Unified Time: Ten Minutes Elapsed (%u minutes), Adjusting clock back one second (%i new offset). Remaining %i seconds\n", nTenMinutes / 10u, UNIFIED_AVERAGE_OFFSET, ((fTestNet ? UNIFIED_TIME_ADJUSTMENT_TESTNET : UNIFEED_TIME_ADJUSTMENT) - TIME_ADJUSTED));
+                    printf("***** Unified Time: New timespan at %u minutes, adjusting clock back one second (%i new offset). Remaining %i seconds\n", (nTimestamp / 60), UNIFIED_AVERAGE_OFFSET, ((fTestNet ? UNIFIED_TIME_ADJUSTMENT_TESTNET : UNIFEED_TIME_ADJUSTMENT) - TIME_ADJUSTED));
 
-                    /* Sleep for 4 seconds to account for one second loss in unified offset. */
+                    /* Sleep for 5 seconds then get seeds from other nodes again. */
                     Sleep(5000);
                 }
             }

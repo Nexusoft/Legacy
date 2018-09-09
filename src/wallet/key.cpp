@@ -57,7 +57,7 @@ namespace Wallet
     // Perform ECDSA key recovery (see SEC1 4.1.6) for curves over (mod p)-fields
     // recid selects which key is recovered
     // if check is nonzero, additional checks are performed
-    int ECDSA_SIG_recover_key_GFp(EC_KEY *eckey, ECDSA_SIG *ecsig, const unsigned char *msg, int msglen, int recid, int check)
+    int ECDSA_SIG_recover_key_GFp(EC_KEY *eckey, BIGNUM* sig_r, BIGNUM* sig_s, const unsigned char *msg, int msglen, int recid, int check)
     {
         if (!eckey) return 0;
 
@@ -77,15 +77,6 @@ namespace Wallet
         BIGNUM *zero = NULL;
         int n = 0;
         int i = recid / 2;
-
-        const BIGNUM* sig_r = nullptr;
-        const BIGNUM* sig_s = nullptr;;
-        #if OPENSSL_VERSION_NUMBER >= 0x10100000L
-            ECDSA_SIG_get0(ecsig, &sig_r, &sig_s);
-        #else
-            sig_r = ecsig->r;
-            sig_s = ecsig->s;
-        #endif
 
         const EC_GROUP *group = EC_KEY_get0_group(eckey);
         if ((ctx = BN_CTX_new()) == NULL) { ret = -1; goto err; }
@@ -316,8 +307,9 @@ namespace Wallet
     {
         bool fOk = false;
         ECDSA_SIG *sig = ECDSA_do_sign((unsigned char*)&hash, sizeof(hash), pkey);
-        if (nullptr == sig)
-            return false;
+        if (sig == nullptr)
+            throw key_error("CKey::SignCompact() : Failed to make signature");
+
         vchSig.clear();
         vchSig.resize(145,0);
 
@@ -330,8 +322,16 @@ namespace Wallet
             sig_s = sig->s;
         #endif
 
-        int nBitsR = BN_num_bits(sig_r);
-        int nBitsS = BN_num_bits(sig_s);
+        int nBitsR, nBitsS;
+        #if OPENSSL_VERSION_NUMBER >= 0x10100000L
+            nBitsR = BN_num_bits(sig_r);
+            nBitsS = BN_num_bits(sig_s);
+        #else
+            nBitsR = BN_num_bits(sig->r);
+            nBitsS = BN_num_bits(sig->s);
+        #endif
+
+
         if (nBitsR <= 571 && nBitsS <= 571)
         {
             int nRecId = -1;
@@ -341,24 +341,50 @@ namespace Wallet
                 keyRec.fSet = true;
                 if (fCompressedPubKey)
                     keyRec.SetCompressedPubKey();
-                if (ECDSA_SIG_recover_key_GFp(keyRec.pkey, sig, (unsigned char*)&hash, sizeof(hash), i, 1) == 1)
+
+                #if OPENSSL_VERSION_NUMBER >= 0x10100000L
+                if (ECDSA_SIG_recover_key_GFp(keyRec.pkey, sig_r, sig_s, (unsigned char*)&hash, sizeof(hash), i, 1) == 1)
+                {
                     if (keyRec.GetPubKey() == this->GetPubKey())
                     {
                         nRecId = i;
                         break;
                     }
+                }
+                #else
+                if (ECDSA_SIG_recover_key_GFp(keyRec.pkey, sig->r, sig->s, (unsigned char*)&hash, sizeof(hash), i, 1) == 1)
+                {
+                    if (keyRec.GetPubKey() == this->GetPubKey())
+                    {
+                        nRecId = i;
+                        break;
+                    }
+                }
+                #endif
+
+
             }
 
             if (nRecId == -1)
+            {
                 ECDSA_SIG_free(sig);
                 throw key_error("CKey::SignCompact() : unable to construct recoverable key");
+            }
 
             vchSig[0] = nRecId+27+(fCompressedPubKey ? 4 : 0);
-            BN_bn2bin(sig_r, &vchSig[73-(nBitsR+7)/8]);
-            BN_bn2bin(sig_s, &vchSig[145-(nBitsS+7)/8]);
+
+            #if OPENSSL_VERSION_NUMBER >= 0x10100000L
+                BN_bn2bin(sig_r, &vchSig[73-(nBitsR+7)/8]);
+                BN_bn2bin(sig_s, &vchSig[145-(nBitsS+7)/8]);
+            #else
+                BN_bn2bin(sig->r, &vchSig[73-(nBitsR+7)/8]);
+                BN_bn2bin(sig->s, &vchSig[145-(nBitsS+7)/8]);
+            #endif
+
             fOk = true;
         }
         ECDSA_SIG_free(sig);
+
         return fOk;
     }
 
@@ -381,9 +407,13 @@ namespace Wallet
             // sig_r and sig_s will be deallocated by ECDSA_SIG_free(sig)
             BIGNUM* sig_r = BN_bin2bn(&vchSig[1], 72, BN_new());
             BIGNUM* sig_s = BN_bin2bn(&vchSig[73], 72, BN_new());
-            if ((nullptr == sig_r) || (nullptr == sig_s))
+
+            if ((sig_r == nullptr) || (sig_s == nullptr))
+            {
                 ECDSA_SIG_free(sig);
-                return false;
+                throw key_error("CKey::VerifyCompact() : r or s can't be null");
+            }
+
             // set r and s values, this transfers ownership to the ECDSA_SIG object
             ECDSA_SIG_set0(sig, sig_r, sig_s);
         #else
@@ -398,12 +428,23 @@ namespace Wallet
             SetCompressedPubKey();
             nV -= 4;
         }
-        if (ECDSA_SIG_recover_key_GFp(pkey, sig, (unsigned char*)&hash, sizeof(hash), nV - 27, 0) == 1)
+
+        #if OPENSSL_VERSION_NUMBER > 0x10100000L
+        if (ECDSA_SIG_recover_key_GFp(pkey, sig_r, sig_s, (unsigned char*)&hash, sizeof(hash), nV - 27, 0) == 1)
         {
             fSet = true;
             ECDSA_SIG_free(sig);
             return true;
         }
+        #else
+        if (ECDSA_SIG_recover_key_GFp(pkey, sig->r, sig->s, (unsigned char*)&hash, sizeof(hash), nV - 27, 0) == 1)
+        {
+            fSet = true;
+            ECDSA_SIG_free(sig);
+            return true;
+        }
+        #endif
+
         ECDSA_SIG_free(sig);
         return false;
     }

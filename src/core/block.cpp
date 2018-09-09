@@ -172,6 +172,38 @@ namespace Core
         /* Erase Genesis on disconnect. */
         if(vtx[0].IsGenesis())
             indexdb.EraseTrustKey(cKey);
+        else //handle the indexing of last trust block. Not validation rules so don't throw failures
+        {
+            CTrustKey trustKey;
+            if(indexdb.ReadTrustKey(cKey, trustKey))
+            {
+                /* Don't allow Blocks Created Before Minimum Interval. */
+                if(nVersion < 5)
+                {
+                    uint1024 hashLastTrust = hashPrevBlock;
+                    if(LastTrustBlock(trustKey, hashLastTrust))
+                    {
+                        trustKey.hashLastBlock = hashLastTrust;
+
+                        /* Write trust key changes to disk. */
+                        indexdb.WriteTrustKey(cKey, trustKey);
+                    }
+                }
+                else
+                {
+                    /* Extract the data from the coinstake input. */
+                    uint1024 hashLastTrust;
+                    unsigned int nSequence, nTrust;
+                    if(ExtractTrust(hashLastTrust, nSequence, nTrust))
+                    {
+                        trustKey.hashLastBlock = hashLastTrust;
+
+                        /* Write trust key changes to disk. */
+                        indexdb.WriteTrustKey(cKey, trustKey);
+                    }
+                }
+            }
+        }
 
         // Update block index on disk without changing it in memory.
         // The memory index structure will be changed after the db commits.
@@ -375,7 +407,9 @@ namespace Core
                     return error("ConnectBlock() : can't extract trust from coinstake inputs");
             }
 
-            /* Interest rate debug output
+            /* Write trust key changes to disk. */
+            trustKey.hashLastBlock = GetHash();
+            indexdb.WriteTrustKey(cKey, trustKey);
 
             /* Dump the Trust Key to Console if not Initializing. */
             if(GetArg("-verbose", 0) >= 2)

@@ -370,17 +370,16 @@ namespace Net
             if(!indexdb.ReadTrustKey(key, trustKey))
                 continue;
 
-            if(trustKey.Expired(Core::pindexBest->GetBlockHash()))
+            uint1024 hashLastBlock = trustKey.hashLastBlock;
+            if(!Core::mapBlockIndex.count(hashLastBlock))
+                continue;
+
+            if(Core::pindexBest->GetBlockTime() - Core::mapBlockIndex[hashLastBlock]->GetBlockTime() > Core::TRUST_KEY_EXPIRE)
                 continue;
 
             Object obj;
             Wallet::NexusAddress address;
             address.SetPubKey(trustKey.vchPubKey);
-
-            /* Get last trust block. */
-            uint1024 hashLastBlock = Core::pindexBest->GetBlockHash();
-            if(!LastTrustBlock(trustKey, hashLastBlock))
-                continue;
 
             /* Read the previous block from disk. */
             Core::CBlock block;
