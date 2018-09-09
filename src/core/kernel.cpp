@@ -150,8 +150,8 @@ namespace Core
         /** G] Check the nNonce Efficiency Proportion Requirements. **/
         unsigned int nThreshold = (((nTime - vtx[0].nTime) * 100.0) / nNonce) + 3;
         unsigned int nRequired  = ((50.0 - nTrustWeight - nBlockWeight) * MAX_STAKE_WEIGHT) / std::min((int64)MAX_STAKE_WEIGHT, vtx[0].vout[0].nValue);
-        if(nThreshold < nRequired)
-            return error("CBlock::VerifyStake() : Coinstake / nNonce threshold too low %u Required %u. Energy efficiency limits Reached", nThreshold, nRequired);
+        if(!IsInitialBlockDownload() && nThreshold < nRequired)
+            error("CBlock::VerifyStake() : Coinstake / nNonce threshold too low %u Required %u. Energy efficiency limits Reached", nThreshold, nRequired);
 
 
         /** H] Check the Block Hash with Weighted Hash to Target. **/
