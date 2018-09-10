@@ -190,7 +190,7 @@ void ThreadUnifiedSamples(void* parg)
     SetThreadPriority(THREAD_PRIORITY_ABOVE_NORMAL);
 
     /* Compile the Seed Nodes into a set of Vectors. */
-    SEED_NODES    = DNS_Lookup(fLispNet ? DNS_SeedNodes_LISPnet : (fTestNet ? DNS_SeedNodes_Testnet : DNS_SeedNodes));
+    SEED_NODES    = DNS_Lookup(fLispNet ? DNS_SeedNodes_LISPnet : (DNS_SeedNodes_Testnet));
 
     /* Iterator to be used to ensure every time seed is giving an equal weight towards the Global Seeds. */
     int nIterator = -1;
