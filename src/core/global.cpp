@@ -112,13 +112,13 @@ namespace Core
     const unsigned int TESTNET_VERSION_TIMELOCK[]   = { 1412676000,        //--- Block Version 2 Testnet Activation:  10/07/2014 04:00:00 GMT - 6
                                                         1421293891,        //--- Block Version 3 Testnet Activation:  01/15/2015 07:51:31 GMT - 6
                                                         1421949600,        //--- Block Version 4 Testnet Activation:  05/10/2015 08:01:00 GMT - 6
-                                                        1536372671 };      //--- Block Version 5 Testnet Activation:  09/07/2018 19:11:11 GMT - 7
+                                                        1536562800 };      //--- Block Version 5 Testnet Activation:  09/10/2018 00:00:00 GMT - 7
 
     /* Network Time - Lock for the First Nexus Block Update. Version 1 Blocks Rejected after this Time - Lock, Version 2 Blocks Rejected Before it. */
     const unsigned int NETWORK_VERSION_TIMELOCK[]   = { 1412964000,        //--- Block Version 2 Activation:          10/10/2014 12:00:00 GMT - 6
                                                         1421949600,        //--- Block Version 3 Activation:          01/22/2015 12:00:00 GMT - 6
                                                         1438369200,        //--- Block Version 4 Activation:          07/31/2015 12:00:00 GMT - 7
-                                                        1536804671 };      //--- Block Version 5 Activation:          09/12/2018 19:11:00 GMT - 7
+                                                        1536847860 };      //--- Block Version 5 Activation:          09/13/2018 19:11:00 GMT - 7
 
 
     /** Time - Lock for the Nexus Channels on the Testnet. Each Channel Cannot produce blocks before their corresponding Time - Locks. **/
@@ -135,7 +135,7 @@ namespace Core
 
 
     /** Dummy address for running on the Testnet. **/
-    const string TESTNET_DUMMY_ADDRESS   = "4jzgcyvCM6Yv8uoAPwCwe5eSikccs7ofJBnxsRWtmePGuJYnV8E";
+    const string TESTNET_DUMMY_ADDRESS             = "4jzgcyvCM6Yv8uoAPwCwe5eSikccs7ofJBnxsRWtmePGuJYnV8E";
 
     /** new testnet dummy addresses. */
     const string TESTNET_DUMMY_AMBASSADOR_RECYCLED = "4kRwiTAu6h3ZPTABfZ7wYjVfovHWWHJxShATUYCYYsSWVdiuCYa";
