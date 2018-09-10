@@ -531,6 +531,9 @@ namespace Core
 
                         /* Set the trust key if found. */
                         trustKey = trustCheck;
+
+                        /* Write my key to disk. */
+                        trustdb.WriteMyKey(trustKey);
                     }
                 }
             }
