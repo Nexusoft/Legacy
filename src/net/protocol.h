@@ -18,7 +18,7 @@
 #include <string>
 #include "../hash/uint1024.h"
 
-#define NEXUS_PORT  9323
+#define NEXUS_PORT  9383
 #define NEXUS_CORE_LLP_PORT 9324
 #define NEXUS_MINING_LLP_PORT 9325
 
