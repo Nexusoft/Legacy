@@ -18,11 +18,11 @@
 #include <string>
 #include "../hash/uint1024.h"
 
-#define NEXUS_PORT  5323
-#define NEXUS_CORE_LLP_PORT 5324
-#define NEXUS_MINING_LLP_PORT 5325
+#define NEXUS_PORT  11323
+#define NEXUS_CORE_LLP_PORT 11324
+#define NEXUS_MINING_LLP_PORT 11325
 
-#define RPC_PORT     5336
+#define RPC_PORT     11336
 #define TESTNET_RPC_PORT 8336
 
 #define TESTNET_PORT 8313
