@@ -869,6 +869,8 @@ namespace Core
         if (GetChannel() > 2)
             return DoS(50, error("CheckBlock() : Channel out of Range."));
 
+
+        /** Check that the time was within range. */
         if (GetBlockTime() > GetUnifiedTimestamp() + MAX_UNIFIED_DRIFT)
             return error("AcceptBlock() : block timestamp too far in the future");
 
