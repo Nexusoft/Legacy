@@ -430,7 +430,7 @@ namespace Core
     bool CTrustKey::CheckGenesis(CBlock cBlock) const
     {
         /* Invalid if Null. */
-        if(IsNull())
+        if(IsNull())https://www.google.com/search?q=random_shufft&ie=utf-8&oe=utf-8
             return false;
 
         /* Trust Keys must be created from only Proof of Stake Blocks. */
@@ -589,6 +589,26 @@ namespace Core
                 /* Trust transaction. */
                 if(!trustKey.IsNull())
                 {
+                    /* Set the key from bytes. */
+                    uint576 key;
+                    key.SetBytes(trustKey.vchPubKey);
+
+                    /* Check that the database has key. */
+                    LLD::CIndexDB indexdb("r+");
+                    CTrustKey keyCheck;
+                    if(!indexdb.ReadTrustKey(key, keyCheck))
+                    {
+                        error("Stake Minter : trust key was disconnected");
+
+                        /* Erase my key from trustdb. */
+                        trustdb.EraseMyKey();
+
+                        /* Set the trust key to null state. */
+                        trustKey.SetNull();
+
+                        continue;
+                    }
+
                     /* Previous out needs to be 0 in coinstake transaction. */
                     block.vtx[0].vin[0].prevout.n = 0;
 
@@ -599,7 +619,7 @@ namespace Core
                     uint1024 hashLastBlock = hashBest;
                     if(!LastTrustBlock(trustKey, hashLastBlock))
                     {
-                        error("Stake Minter : failed to find last block for trust key");
+                        error("Stake Minter : failed to find last block for trust key");https://www.google.com/search?q=random_shufft&ie=utf-8&oe=utf-8
                         continue;
                     }
 
@@ -668,6 +688,10 @@ namespace Core
                         if(nPenalty < nTrustPrev)
                             nScore = (nTrustPrev - nPenalty);
                     }
+
+                    /* Set maximum trust score to seconds passed for interest rate. */
+                    if(nScore > (60 * 60 * 24 * 28 * 13))
+                        nScore = (60 * 60 * 24 * 28 * 13);
 
                     /* Serialize the sequence and last block into vin. */
                     CDataStream scriptPub(block.vtx[0].vin[0].scriptSig, SER_NETWORK, PROTOCOL_VERSION);
@@ -878,6 +902,26 @@ namespace Core
                         /* Erase from indexdb. */
                         LLD::CIndexDB indexdb("r+");
                         indexdb.EraseTrustKey(key);
+
+                        /* Set the trust key to null state. */
+                        trustKey.SetNull();
+
+                        continue;
+                    }
+
+                    /* Set the key from bytes. */
+                    uint576 key;
+                    key.SetBytes(trustKey.vchPubKey);
+
+                    /* Check that the database has key. */
+                    LLD::CIndexDB indexdb("r+");
+                    CTrustKey keyCheck;
+                    if(!indexdb.ReadTrustKey(key, keyCheck))
+                    {
+                        error("Stake Minter : trust key was disconnected");
+
+                        /* Erase my key from trustdb. */
+                        trustdb.EraseMyKey();
 
                         /* Set the trust key to null state. */
                         trustKey.SetNull();

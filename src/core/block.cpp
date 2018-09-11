@@ -75,7 +75,7 @@ namespace Core
             nLastBlockTime = GetUnifiedTimestamp();
         }
 
-        return (pindexBest->GetBlockTime() < GetUnifiedTimestamp() - 20 * 60 && GetUnifiedTimestamp() - nLastBlockTime < 60);
+        return (pindexBest->GetBlockTime() < GetUnifiedTimestamp() - 20 * 60 && (fTestNet || GetUnifiedTimestamp() - nLastBlockTime < 60));
     }
 
 
@@ -1519,6 +1519,10 @@ namespace Core
             else
                 nScore = (nScorePrev - nPenalty);
         }
+
+        /* Set maximum trust score to seconds passed for interest rate. */
+        if(nScore > (60 * 60 * 24 * 28 * 13))
+            nScore = (60 * 60 * 24 * 28 * 13);
 
         /* Check that published score in this block is equivilent to calculated score. */
         if(nTrustScore != nScore)
