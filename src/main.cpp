@@ -210,6 +210,7 @@ bool AppInit2(int argc, char* argv[])
           _("Options:") + "\n" +
             "  -conf=<file>     \t\t  " + _("Specify configuration file (default: nexus.conf)") + "\n" +
             "  -pid=<file>      \t\t  " + _("Specify pid file (default: Nexus.pid)") + "\n" +
+            "  -wallet=<file>   \t\t  " + _("Specify wallet fille (default: wallet.dat)") + "\n" +
             "  -gen             \t\t  " + _("Generate coins") + "\n" +
             "  -gen=0           \t\t  " + _("Don't generate coins") + "\n" +
             "  -min             \t\t  " + _("Start minimized") + "\n" +
@@ -220,11 +221,14 @@ bool AppInit2(int argc, char* argv[])
             "  -timeout=<n>     \t  "   + _("Specify connection timeout (in milliseconds)") + "\n" +
             "  -proxy=<ip:port> \t  "   + _("Connect through socks4 proxy") + "\n" +
             "  -dns             \t  "   + _("Allow DNS lookups for addnode and connect") + "\n" +
-            "  -port=<port>     \t\t  " + _("Listen for connections on <port> (default: 9323 or testnet: 9903)") + "\n" +
+            "  -port=<port>     \t\t  " + _("Listen for connections on <port> (default: 9323 or testnet: 8313)") + "\n" +
             "  -maxconnections=<n>\t  " + _("Maintain at most <n> connections to peers (default: 125)") + "\n" +
             "  -addnode=<ip>    \t  "   + _("Add a node to connect to and attempt to keep the connection open") + "\n" +
+            "  -addseednode=<ip>    "   + _("Add a node to list of hardcoded seed nodes") + "\n" +
             "  -connect=<ip>    \t\t  " + _("Connect only to the specified node") + "\n" +
             "  -listen          \t  "   + _("Accept connections from outside (default: 1)") + "\n" +
+            "  -unified         \t  "   + _("Enable sending unified time samples. Used for seed nodes") + "\n" +
+            "  -unifiedport     \t  "   + _("Listen for unified time samples on <port> (default: 9324 or testnet: 8329). Does not affect outgoing port.") + "\n" +
         #ifdef QT_GUI
                     "  -lang=<lang>     \t\t  " + _("Set language, for example \"de_DE\" (default: system locale)") + "\n" +
         #endif
@@ -260,6 +264,7 @@ bool AppInit2(int argc, char* argv[])
                     "  -llpallowip=<ip> \t  "   + _("Allow mining from specified IP address or range (192.168.6.* for example") + "\n" +
                     "  -banned=<ip>     \t  "   + _("Manually Ban Addresses from Config File") + "\n" +
                     "  -mining             \t  "   + _("Allow mining (default: 0)") + "\n" +
+                    "  -miningport=<port> "     + _("Listen for mining connections on <port> (default: 9325)") + "\n" +
                     "  -rpcuser=<user>  \t  "   + _("Username for JSON-RPC connections") + "\n" +
                     "  -rpcpassword=<pw>\t  "   + _("Password for JSON-RPC connections") + "\n" +
                     "  -rpcport=<port>  \t\t  " + _("Listen for JSON-RPC connections on <port> (default: 9325)") + "\n" +
@@ -459,6 +464,14 @@ bool AppInit2(int argc, char* argv[])
     }
     std::ostringstream strErrors;
 
+    /**Wallet filename validity check. **/
+    if (!boost::filesystem::native(GetArg("-wallet", "wallet.dat")))
+    {
+	printf("Invalid wallet file name");
+        strErrors << _("Invalid wallet filename") << "\n";
+        ThreadSafeMessageBox(strErrors.str(), _("Nexus"), wxOK | wxMODAL);
+        return false;
+    }
 
 
     /** Run the process as Daemon RPC/LLP Server if Flagged. **/
@@ -501,7 +514,7 @@ bool AppInit2(int argc, char* argv[])
     printf("Loading wallet...\n");
     nStart = GetTimeMillis();
     bool fFirstRun;
-    pwalletMain = new Wallet::CWallet("wallet.dat");
+    pwalletMain = new Wallet::CWallet(GetArg("-wallet", "wallet.dat"));
     int nLoadWalletRet = pwalletMain->LoadWallet(fFirstRun);
     if (nLoadWalletRet != Wallet::DB_LOAD_OK)
     {
@@ -676,7 +689,7 @@ bool AppInit2(int argc, char* argv[])
                 Net::addrman.Add(addr, Net::CNetAddr("127.0.0.1"));
         }
     }
-
+    
     if (mapArgs.count("-paytxfee"))
     {
         if (!ParseMoney(mapArgs["-paytxfee"], Core::nTransactionFee) || Core::nTransactionFee < Core::MIN_TX_FEE)
@@ -718,17 +731,17 @@ bool AppInit2(int argc, char* argv[])
     /* Initialize the Core LLP if it is enabled. */
     if(GetBoolArg("-unified", false)) {
         InitMessage(_("Initializing Core LLP..."));
-        printf("Initializing Core LLP...\n");
-        LLP_SERVER = new LLP::Server<LLP::CoreLLP>(fLispNet ? LISPNET_CORE_LLP_PORT : fTestNet ? TESTNET_CORE_LLP_PORT : NEXUS_CORE_LLP_PORT, 5, true, 2, 5, 5);
+        printf("%%%%%%%% Initializing Core LLP...\n");
+        LLP_SERVER = new LLP::Server<LLP::CoreLLP>(GetArg("-unifiedport", fLispNet ? LISPNET_CORE_LLP_PORT : fTestNet ? TESTNET_CORE_LLP_PORT : NEXUS_CORE_LLP_PORT), 5, true, 2, 5, 5);
     }
 
 
     /* Initialize the Mining LLP if it is enabled. */
     if(GetBoolArg("-mining", false)) {
         InitMessage(_("Initializing Mining LLP..."));
-        printf("%%%%%%%%%% Initializing Mining LLP...");
+        printf("%%%%%%%%%% Initializing Mining LLP...\n");
 
-        LLP::MINING_LLP = new LLP::Server<LLP::MiningLLP>(fLispNet ? LISPNET_MINING_LLP_PORT : fTestNet ? TESTNET_MINING_LLP_PORT : NEXUS_MINING_LLP_PORT, GetArg("-mining_threads", 10), true, GetArg("-mining_cscore", 5), GetArg("-mining_rscore", 50), GetArg("-mining_timout", 60));
+        LLP::MINING_LLP = new LLP::Server<LLP::MiningLLP>(GetArg("-miningport", fLispNet ? LISPNET_MINING_LLP_PORT : fTestNet ? TESTNET_MINING_LLP_PORT : NEXUS_MINING_LLP_PORT), GetArg("-mining_threads", 10), true, GetArg("-mining_cscore", 5), GetArg("-mining_rscore", 50), GetArg("-mining_timout", 60));
     }
 
     if (!Core::CheckDiskSpace())

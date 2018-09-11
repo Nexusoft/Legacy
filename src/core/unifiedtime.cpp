@@ -36,7 +36,7 @@ std::vector<Net::CAddress> SEED_NODES;
 std::map<std::string, int> MAP_TIME_DATA;
 
 /** Declarations for the DNS Seed Nodes. **/
-static const std::vector<std::string> DNS_SeedNodes =
+static std::vector<std::string> DNS_SeedNodes =
 {
     "node1.nexusearth.com",
     "node1.nexusoft.io",
@@ -125,7 +125,7 @@ static const std::vector<std::string> DNS_SeedNodes =
 };
 
 /** Declarations for the DNS Seed Nodes. **/
-static const std::vector<std::string> DNS_SeedNodes_Testnet =
+static std::vector<std::string> DNS_SeedNodes_Testnet =
 {
     "node1.nexusoft.io",
     "node2.nexusoft.io",
@@ -135,7 +135,7 @@ static const std::vector<std::string> DNS_SeedNodes_Testnet =
 
 
 /** Declarations for the DNS Seed Nodes. **/
-static const std::vector<std::string> DNS_SeedNodes_LISPnet =
+static std::vector<std::string> DNS_SeedNodes_LISPnet =
 {
     "node1.nexus.lispers.net",
     "node2.nexus.lispers.net",
@@ -154,7 +154,6 @@ static const std::vector<std::string> DNS_SeedNodes_LISPnet =
 
 /** Seed Nodes for Unified Time. **/
 std::vector<string> SEEDS;
-
 
 /** Baseline Maximum Values for Unified Time. **/
 int MAX_UNIFIED_DRIFT   = 10;
@@ -189,6 +188,13 @@ void ThreadUnifiedSamples(void* parg)
     /* set the proper Thread priorities. */
     SetThreadPriority(THREAD_PRIORITY_ABOVE_NORMAL);
 
+    /* Add Seed Nodes from command line parameter */
+    if (mapArgs.count("-addseednode"))
+    {
+        BOOST_FOREACH(string& strAddSeed, mapMultiArgs["-addseednode"])
+            (fLispNet ? DNS_SeedNodes_LISPnet : (fTestNet ? DNS_SeedNodes_Testnet : DNS_SeedNodes)).push_back(strAddSeed);
+    }
+    
     /* Compile the Seed Nodes into a set of Vectors. */
     SEED_NODES    = DNS_Lookup(fLispNet ? DNS_SeedNodes_LISPnet : (fTestNet ? DNS_SeedNodes_Testnet : DNS_SeedNodes));
 
@@ -370,8 +376,9 @@ void ThreadUnifiedSamples(void* parg)
 }
 
 /* DNS Query of Domain Names Associated with Seed Nodes */
-std::vector<Net::CAddress> DNS_Lookup(const std::vector<std::string>& DNS_Seed)
+std::vector<Net::CAddress> DNS_Lookup(std::vector<std::string>& DNS_Seed)
 {
+    std::random_shuffle(DNS_Seed.begin(), DNS_Seed.end(), GetRandInt);
     std::vector<Net::CAddress> vNodes;
     int scount = 0;
     for (std::size_t seed = 0; seed < DNS_Seed.size(); seed++)

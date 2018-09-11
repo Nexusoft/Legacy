@@ -14,7 +14,7 @@
 #define __INCLUDED_PROTOCOL_H__
 
 #include "../util/serialize.h"
-#include "netbase.h"
+#include "../util/util.h"
 #include <string>
 #include "../hash/uint1024.h"
 
@@ -42,7 +42,7 @@ namespace Net
 
     static inline unsigned short GetDefaultPort()
     {
-        return fLispNet ? LISPNET_PORT : (fTestNet ? TESTNET_PORT : NEXUS_PORT);
+        return GetArg("-port", fLispNet ? LISPNET_PORT : (fTestNet ? TESTNET_PORT : NEXUS_PORT));
     }
 
 

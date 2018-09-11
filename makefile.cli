@@ -22,7 +22,7 @@ endif
 #Define default LIB and INCLUDE path variables
 ifndef BOOST_LIB_SUFFIX
 	ifeq ($(detected_OS),Windows)
-		BOOST_LIB_SUFFIX= "-mgw73-mt-s-$(BUILD_ARCH)-1_66"
+		BOOST_LIB_SUFFIX= "-mgw82-mt-s-$(BUILD_ARCH)-1_68"
 	endif
 	ifeq ($(detected_OS),OSX)
 		BOOST_LIB_SUFFIX= -mt
@@ -44,7 +44,7 @@ ifndef BOOST_LIB_PATH
 endif
 ifndef BOOST_INCLUDE_PATH
 	ifeq ($(detected_OS),Windows)
-		BOOST_INCLUDE_PATH= "C:\deps\include\boost-1_66"
+		BOOST_INCLUDE_PATH= "C:\deps\include\boost-1_68"
 	endif
 	ifeq ($(detected_OS),OSX)
 		BOOST_INCLUDE_PATH= /usr/local/opt/boost/include
@@ -271,7 +271,9 @@ LIBS+= -l kernel32 \
 DEFS+= -DWIN32 \
 	-D_WINDOWS \
 	-DBOOST_THREAD_USE_LIB \
-	-DBOOST_ASIO_ENABLE_OLD_SERVICES
+	-DBOOST_ASIO_ENABLE_OLD_SERVICES \
+	-DBOOST_USE_WINDOWS_H \
+	-DWIN32_LEAN_AND_MEAN
 
 #OS Specific Compiler Flags
 CXXFLAGS+= -mthreads \

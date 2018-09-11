@@ -35,7 +35,7 @@ QT_TRANSLATE_NOOP("Nexus-core", "Set database disk log size in megabytes (defaul
 QT_TRANSLATE_NOOP("Nexus-core", "Specify connection timeout (in milliseconds)"),
 QT_TRANSLATE_NOOP("Nexus-core", "Connect through socks4 proxy"),
 QT_TRANSLATE_NOOP("Nexus-core", "Allow DNS lookups for addnode and connect"),
-QT_TRANSLATE_NOOP("Nexus-core", "Listen for connections on <port> (default: 9901 or testnet: 9903)"),
+QT_TRANSLATE_NOOP("Nexus-core", "Listen for connections on <port> (default: 9323 or testnet: 8313)"),
 QT_TRANSLATE_NOOP("Nexus-core", "Maintain at most <n> connections to peers (default: 125)"),
 QT_TRANSLATE_NOOP("Nexus-core", "Add a node to connect to and attempt to keep the connection open"),
 QT_TRANSLATE_NOOP("Nexus-core", "Connect only to the specified node"),
@@ -61,7 +61,7 @@ QT_TRANSLATE_NOOP("Nexus-core", "Send trace/debug info to console instead of deb
 QT_TRANSLATE_NOOP("Nexus-core", "Send trace/debug info to debugger"),
 QT_TRANSLATE_NOOP("Nexus-core", "Username for JSON-RPC connections"),
 QT_TRANSLATE_NOOP("Nexus-core", "Password for JSON-RPC connections"),
-QT_TRANSLATE_NOOP("Nexus-core", "Listen for JSON-RPC connections on <port> (default: 9902)"),
+QT_TRANSLATE_NOOP("Nexus-core", "Listen for JSON-RPC connections on <port> (default: 9325)"),
 QT_TRANSLATE_NOOP("Nexus-core", "Allow JSON-RPC connections from specified IP address"),
 QT_TRANSLATE_NOOP("Nexus-core", "Send commands to node running on <ip> (default: 127.0.0.1)"),
 QT_TRANSLATE_NOOP("Nexus-core", ""

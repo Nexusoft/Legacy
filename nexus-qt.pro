@@ -3,7 +3,8 @@ TARGET = nexus-qt
 VERSION = 0.1.0.0
 INCLUDEPATH += src src/core src/hash src/json src/net src/qt src/util src/wallet src/LLD src/LLP
 DEFINES += QT_GUI BOOST_THREAD_USE_LIB BOOST_SPIRIT_THREADSAFE
-CONFIG += no_include_pwd optimize_full c++11
+win32:DEFINES+= BOOST_USE_WINDOWS_H WIN32_LEAN_AND_MEAN
+CONFIG += no_include_pwd optimize_full c++11 thread 
 greaterThan(QT_MAJOR_VERSION, 4) {
 	QT += uitools widgets
 }
@@ -55,53 +56,65 @@ contains(32BIT, 1) {
 DEFINES += $$BUILD_ARCH
 
 #Define default LIB and INCLUDE path variables
+win32:isEmpty(DRIVE_LETTER) {
+	DRIVE_LETTER=C
+}
+win32:isEmpty(BASE_DRIVE_LETTER) {
+    BASE_DRIVE_LETTER=C
+}
+isEmpty(BASE_LIB_PATH) {
+	win32:BASE_LIB_PATH=$$BASE_DRIVE_LETTER:/msys64/mingw64/lib
+}
+isEmpty(BASE_INCLUDE_PATH) {
+	win32:BASE_INCLUDE_PATH=$$BASE_DRIVE_LETTER:/msys64/mingw64/include
+}
 isEmpty(BOOST_LIB_SUFFIX) {
-	win32:BOOST_LIB_SUFFIX=-mgw73-mt-s-$$BUILD_ARCH-1_66
+	win32:BOOST_LIB_SUFFIX=-mgw82-mt-s-$$BUILD_ARCH-1_68
     macx:BOOST_LIB_SUFFIX = -mt
 }
 isEmpty(BOOST_LIB_PATH) {
-	win32:BOOST_LIB_PATH=C:/deps/lib
+	win32:BOOST_LIB_PATH=$$DRIVE_LETTER:/deps/lib
     macx:BOOST_LIB_PATH = /usr/local/opt/boost/lib
 	!macx:!win32:BOOST_LIB_PATH=/usr/lib/x86_64-linux-gnu/
 }
 isEmpty(BOOST_INCLUDE_PATH) {
-	win32:BOOST_INCLUDE_PATH=C:/deps/include/boost-1_66
+	win32:BOOST_INCLUDE_PATH=$$DRIVE_LETTER:/deps/include/boost-1_68
     macx:BOOST_INCLUDE_PATH = /usr/local/opt/boost/include
 	!macx:!win32:BOOST_INCLUDE_PATH=/usr/include/boost
 }
 isEmpty(OPENSSL_LIB_PATH) {
-	win32:OPENSSL_LIB_PATH=C:/deps/lib
+	win32:OPENSSL_LIB_PATH=$$DRIVE_LETTER:/deps/lib
     macx:OPENSSL_LIB_PATH = /usr/local/opt/openssl/lib
 }
 isEmpty(OPENSSL_INCLUDE_PATH) {
-	win32:OPENSSL_INCLUDE_PATH=C:/deps/include
+	win32:OPENSSL_INCLUDE_PATH=$$DRIVE_LETTER:/deps/include
     macx:OPENSSL_INCLUDE_PATH = /usr/local/opt/openssl/include
 }
 isEmpty(BDB_LIB_PATH) {
-	win32:BDB_LIB_PATH=C:/deps/lib
+	win32:BDB_LIB_PATH=$$DRIVE_LETTER:/deps/lib
     macx:BDB_LIB_PATH = /usr/local/opt/db/lib
 }
 isEmpty(BDB_LIB_SUFFIX) {
-    macx:BDB_LIB_SUFFIX = -6.2
+    macx:BDB_LIB_SUFFIX = -18.1
 }
 isEmpty(BDB_INCLUDE_PATH) {
-	win32:BDB_INCLUDE_PATH=C:/deps/include
+	win32:BDB_INCLUDE_PATH=$$DRIVE_LETTER:/deps/include
     macx:BDB_INCLUDE_PATH = /usr/local/opt/db/include
 }
 isEmpty(MINIUPNPC_LIB_PATH) {
-	win32:MINIUPNPC_LIB_PATH=C:/deps/lib
+	win32:MINIUPNPC_LIB_PATH=$$DRIVE_LETTER:/deps/lib
     macx:MINIUPNPC_LIB_PATH = /usr/local/opt/miniupnpc/lib
 }
 isEmpty(MINIUPNPC_INCLUDE_PATH) {
-	win32:MINIUPNPC_INCLUDE_PATH=C:/deps/include
+	win32:MINIUPNPC_INCLUDE_PATH=$$DRIVE_LETTER:/deps/include
     macx:MINIUPNPC_INCLUDE_PATH = /usr/local/opt/miniupnpc/include
 }
 isEmpty(QRENCODE_LIB_PATH) {
-	win32:QRENCODE_LIB_PATH=C:/deps/lib
+	win32:QRENCODE_LIB_PATH=$$DRIVE_LETTER:/deps/lib
 	macx:QRENCODE_LIB_PATH = /usr/local/opt/qrencode/lib
 }
 isEmpty(QRENCODE_INCLUDE_PATH) {
-	win32:QRENCODE_INCLUDE_PATH=C:/deps/include
+	win32:QRENCODE_INCLUDE_PATH=$$DRIVE_LETTER:/deps/include
 	macx:QRENCODE_INCLUDE_PATH = /usr/local/opt/qrencode/include
 }
 isEmpty(QMAKE_LRELEASE) {
@@ -290,6 +303,7 @@ HEADERS += src/qt/core/gui.h \
     src/LLP/server.h \
     src/LLP/types.h \
     src/LLD/index.h \
+    src/LLD/trustkeys.h \
     src/LLD/keychain.h \
     src/LLD/key.h \
     src/LLD/sector.h \
@@ -415,6 +429,7 @@ SOURCES += src/core/block.cpp \
     src/main.cpp \
     src/core/global.cpp \
     src/LLD/keychain.cpp \
+    src/LLD/trustkeys.cpp \
     src/LLD/index.cpp
 RESOURCES += src/qt/nexus.qrc
 FORMS += src/qt/forms/sendcoinsdialog.ui \
@@ -427,10 +442,7 @@ FORMS += src/qt/forms/sendcoinsdialog.ui \
     src/qt/forms/sendcoinsentry.ui \
     src/qt/forms/askpassphrasedialog.ui \
     src/qt/forms/rpcconsole.ui
-OTHER_FILES += doc/*.rst \
-    doc/*.txt \
-    doc/README \
-    src/qt/res/nexus-qt.rc
+OTHER_FILES += src/qt/res/nexus-qt.rc
 
 #Translation Support config
 TRANSLATIONS = $$files(src/qt/locale/nexus_*.ts)
@@ -471,17 +483,20 @@ macx:RC_ICONS = src/qt/res/icons/nexus.icns
 #Build final Includes and Libraries
 INCLUDEPATH += $$BOOST_INCLUDE_PATH \
 	$$BDB_INCLUDE_PATH \
-	$$OPENSSL_INCLUDE_PATH
+	$$OPENSSL_INCLUDE_PATH \
+	$$BASE_INCLUDE_PATH
 LIBS += $$join(BOOST_LIB_PATH,,-L,) \
 	$$join(BDB_LIB_PATH,,-L,) \
 	$$join(OPENSSL_LIB_PATH,,-L,) \
-	-lssl \
-	-lcrypto \
+	$$join(BASE_LIB_PATH,,-L,) \
 	-ldb_cxx$$BDB_LIB_SUFFIX \
 	-lboost_system$$BOOST_LIB_SUFFIX \
 	-lboost_filesystem$$BOOST_LIB_SUFFIX \
 	-lboost_program_options$$BOOST_LIB_SUFFIX \
-	-lboost_thread$$BOOST_LIB_SUFFIX
+	-lboost_thread$$BOOST_LIB_SUFFIX \
+	-lssl \
+	-lcrypto
+
 win32:LIBS += -lole32 -luuid -lgdi32
 
 #Fix for Arch Linux OpenSSL Version

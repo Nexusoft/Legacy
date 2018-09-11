@@ -1,13 +1,17 @@
+/**
+//Old testing setup. Commenting out all for now as no longer needed.
+//Will remove in later patch.
+
 #include "../LLP/client.h"
 
 namespace LLP
 {
 
-    /** Hard - coded Address and Port of Debug Server. **/
+    //Hard - coded Address and Port of Debug Server.
     static const std::string DEBUG_IP   = "208.94.247.42";
     static const std::string DEBUG_PORT = "9965";
 
-    /** Class to Wrap LLP for Interpreting Debug LLP **/
+    //Class to Wrap LLP for Interpreting Debug LLP
     class DebugClient : public Outbound
     {
     public:
@@ -22,7 +26,7 @@ namespace LLP
             CLOSE         = 255
         };
 
-        /** Create a new Packet to Send. **/
+        //Create a new Packet to Send.
         inline Packet GetPacket(unsigned char HEADER)
         {
             Packet PACKET;
@@ -30,14 +34,14 @@ namespace LLP
             return PACKET;
         }
 
-        /** Ping the Debug Server. **/
+        //Ping the Debug Server.
         inline void Ping()
         {
             Packet PACKET = GetPacket(PING);
             this->WritePacket(PACKET);
         }
 
-        /** Send Data to Debug Server. **/
+        //Send Data to Debug Server.
         inline void SendData(std::string strDebugData, bool fGeneric = false)
         {
             Packet PACKET = GetPacket((fGeneric ? GENERIC_DATA : DEBUG_DATA));
@@ -49,12 +53,12 @@ namespace LLP
     };
 }
 
-/** Thread to handle Debugging Server Reporting. **/
+//Thread to handle Debugging Server Reporting.
 void DebugThread(void* parg)
 {
     LLP::DebugClient* CLIENT = new LLP::DebugClient();
 
-    /** Clear the Debug Data from Core Initialization. **/
+    //Clear the Debug Data from Core Initialization.
     DEBUGGING_MUTEX.lock();
     DEBUGGING_OUTPUT.clear();
     DEBUGGING_MUTEX.unlock();
@@ -64,13 +68,13 @@ void DebugThread(void* parg)
     {
         try
         {
-            /** Run this thread slowly. **/
+            //Run this thread slowly.
             Sleep(1000);
 
             if(!CLIENT->Connected() || CLIENT->Errors())
             {
 
-                /** Try and Reconnect every 10 Seconds if Failed. **/
+                //Try and Reconnect every 10 Seconds if Failed.
                 if(!CLIENT->Connect())
                 {
                     Sleep(10000);
@@ -88,7 +92,7 @@ void DebugThread(void* parg)
                 continue;
 
 
-            /** Send the Data in the Queue to Debug Server **/
+            //Send the Data in the Queue to Debug Server
             DEBUGGING_MUTEX.lock();
             for(int nIndex = 0; nIndex < DEBUGGING_OUTPUT.size(); nIndex++ )
                 CLIENT->SendData(DEBUGGING_OUTPUT[nIndex].second, DEBUGGING_OUTPUT[nIndex].first);
@@ -98,4 +102,4 @@ void DebugThread(void* parg)
         }
         catch(std::exception& e){}
     }
-}
+} **/

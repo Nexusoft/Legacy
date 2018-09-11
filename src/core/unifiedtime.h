@@ -65,7 +65,7 @@ int GetUnifiedAverage();
     Checks current time against itself, if there is too much drift, your local offset adjusts to Unified Average. **/
 void ThreadUnifiedSamples(void* parg);
 
-std::vector<Net::CAddress> DNS_Lookup(const std::vector<std::string>& DNS_Seed);
+std::vector<Net::CAddress> DNS_Lookup(std::vector<std::string>& DNS_Seed);
 
 
 #endif
