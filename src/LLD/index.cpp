@@ -402,7 +402,7 @@ namespace LLD
             printf("[DATABASE] Found corrupted pnext... Resolving\n");
 
             /* Get the hash of the next block. */
-            uint1024 hash = Core::pindexBest->pnext->GetBlockHash();
+            hashCorruptedNext = Core::pindexBest->pnext->GetBlockHash();
 
             /* Set the memory index to 0 */
             Core::pindexBest->pnext = 0;
@@ -414,8 +414,8 @@ namespace LLD
                 return error("LoadBlockIndex() : WriteBlockIndex failed");
 
             /* Erase mapblockindex if found. */
-            if(Core::mapBlockIndex.count(hash))
-                Core::mapBlockIndex.erase(hash);
+            if(Core::mapBlockIndex.count(hashCorruptedNext))
+                Core::mapBlockIndex.erase(hashCorruptedNext);
         }
 
         /** Verify the Blocks in the Best Chain To Last Checkpoint. **/

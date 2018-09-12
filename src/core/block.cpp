@@ -161,45 +161,48 @@ namespace Core
                 return false;
 
         // handle for trust keys
-        std::vector<unsigned char> vTrustKey;
-        if(!TrustKey(vTrustKey))
-            return error("DisconnectBlock() : can't extract trust key.");
-
-        /* Set the ckey object. */
-        uint576 cKey;
-        cKey.SetBytes(vTrustKey);
-
-        /* Erase Genesis on disconnect. */
-        if(vtx[0].IsGenesis())
-            indexdb.EraseTrustKey(cKey);
-        else //handle the indexing of last trust block. Not validation rules so don't throw failures
+        if(IsProofOfStake())
         {
-            CTrustKey trustKey;
-            if(indexdb.ReadTrustKey(cKey, trustKey))
+            std::vector<unsigned char> vTrustKey;
+            if(!TrustKey(vTrustKey))
+                return error("DisconnectBlock() : can't extract trust key.");
+
+            /* Set the ckey object. */
+            uint576 cKey;
+            cKey.SetBytes(vTrustKey);
+
+            /* Erase Genesis on disconnect. */
+            if(vtx[0].IsGenesis())
+                indexdb.EraseTrustKey(cKey);
+            else //handle the indexing of last trust block. Not validation rules so don't throw failures
             {
-                /* Don't allow Blocks Created Before Minimum Interval. */
-                if(nVersion < 5)
+                CTrustKey trustKey;
+                if(indexdb.ReadTrustKey(cKey, trustKey))
                 {
-                    uint1024 hashLastTrust = hashPrevBlock;
-                    if(LastTrustBlock(trustKey, hashLastTrust))
+                    /* Don't allow Blocks Created Before Minimum Interval. */
+                    if(nVersion < 5)
                     {
-                        trustKey.hashLastBlock = hashLastTrust;
+                        uint1024 hashLastTrust = hashPrevBlock;
+                        if(LastTrustBlock(trustKey, hashLastTrust))
+                        {
+                            trustKey.hashLastBlock = hashLastTrust;
 
-                        /* Write trust key changes to disk. */
-                        indexdb.WriteTrustKey(cKey, trustKey);
+                            /* Write trust key changes to disk. */
+                            indexdb.WriteTrustKey(cKey, trustKey);
+                        }
                     }
-                }
-                else
-                {
-                    /* Extract the data from the coinstake input. */
-                    uint1024 hashLastTrust;
-                    unsigned int nSequence, nTrust;
-                    if(ExtractTrust(hashLastTrust, nSequence, nTrust))
+                    else
                     {
-                        trustKey.hashLastBlock = hashLastTrust;
+                        /* Extract the data from the coinstake input. */
+                        uint1024 hashLastTrust;
+                        unsigned int nSequence, nTrust;
+                        if(ExtractTrust(hashLastTrust, nSequence, nTrust))
+                        {
+                            trustKey.hashLastBlock = hashLastTrust;
 
-                        /* Write trust key changes to disk. */
-                        indexdb.WriteTrustKey(cKey, trustKey);
+                            /* Write trust key changes to disk. */
+                            indexdb.WriteTrustKey(cKey, trustKey);
+                        }
                     }
                 }
             }
@@ -1134,8 +1137,78 @@ namespace Core
 
     bool ProcessBlock(Net::CNode* pfrom, CBlock* pblock)
     {
-        // Check for duplicate
+        //check if this is the corrupted block that needs rewrite
         uint1024 hash = pblock->GetHash();
+        if(LLD::hashCorruptedNext > 0 && hash == LLD::hashCorruptedNext)
+        {
+            printf("ProcessBlock() : Found corrupted pnext... Resolving\n");
+            LLD::CIndexDB indexdb("r+");
+            indexdb.TxnBegin();
+            for (int i = pblock->vtx.size() - 1; i >= 0; i--)
+                if (!pblock->vtx[i].DisconnectInputs(indexdb))
+                    return false;
+
+            // handle for trust keys
+            if(pblock->IsProofOfStake())
+            {
+                std::vector<unsigned char> vTrustKey;
+                if(!pblock->TrustKey(vTrustKey))
+                    return error("ProcessBlock() : can't extract trust key.");
+
+                /* Set the ckey object. */
+                uint576 cKey;
+                cKey.SetBytes(vTrustKey);
+
+                /* Erase Genesis on disconnect. */
+                if(pblock->vtx[0].IsGenesis())
+                    indexdb.EraseTrustKey(cKey);
+                else //handle the indexing of last trust block. Not validation rules so don't throw failures
+                {
+                    CTrustKey trustKey;
+                    if(indexdb.ReadTrustKey(cKey, trustKey))
+                    {
+                        /* Don't allow Blocks Created Before Minimum Interval. */
+                        if(pblock->nVersion < 5)
+                        {
+                            uint1024 hashLastTrust = pblock->hashPrevBlock;
+                            if(LastTrustBlock(trustKey, hashLastTrust))
+                            {
+                                trustKey.hashLastBlock = hashLastTrust;
+
+                                /* Write trust key changes to disk. */
+                                indexdb.WriteTrustKey(cKey, trustKey);
+                            }
+                        }
+                        else
+                        {
+                            /* Extract the data from the coinstake input. */
+                            uint1024 hashLastTrust;
+                            unsigned int nSequence, nTrust;
+                            if(pblock->ExtractTrust(hashLastTrust, nSequence, nTrust))
+                            {
+                                trustKey.hashLastBlock = hashLastTrust;
+
+                                /* Write trust key changes to disk. */
+                                indexdb.WriteTrustKey(cKey, trustKey);
+                            }
+                        }
+                    }
+                }
+            }
+            indexdb.TxnCommit();
+
+            // Nexus: clean up wallet after disconnecting coinstake
+            BOOST_FOREACH(CTransaction& tx, pblock->vtx)
+                SyncWithWallets(tx, pblock, false, false);
+
+            printf("ProcessBlock() : Fixed corrupted pnext\n");
+
+            //reset the corrupted next to 0
+            LLD::hashCorruptedNext = 0;
+        }
+
+        // Check for duplicate
+
         if (mapBlockIndex.count(hash))
         {
             return error("ProcessBlock() : already have block %d %s", mapBlockIndex[hash]->nHeight, hash.ToString().substr(0,20).c_str());
