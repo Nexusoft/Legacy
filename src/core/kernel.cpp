@@ -430,7 +430,7 @@ namespace Core
     bool CTrustKey::CheckGenesis(CBlock cBlock) const
     {
         /* Invalid if Null. */
-        if(IsNull())https://www.google.com/search?q=random_shufft&ie=utf-8&oe=utf-8
+        if(IsNull())
             return false;
 
         /* Trust Keys must be created from only Proof of Stake Blocks. */
@@ -619,7 +619,7 @@ namespace Core
                     uint1024 hashLastBlock = hashBest;
                     if(!LastTrustBlock(trustKey, hashLastBlock))
                     {
-                        error("Stake Minter : failed to find last block for trust key");https://www.google.com/search?q=random_shufft&ie=utf-8&oe=utf-8
+                        error("Stake Minter : failed to find last block for trust key");
                         continue;
                     }
 
