@@ -1139,14 +1139,13 @@ namespace Core
     {
         //check if this is the corrupted block that needs rewrite
         uint1024 hash = pblock->GetHash();
+        if(LLD::hashCorruptedNext > 0)
+            printf("ProcessBlock() : corrupted next is %s\n", LLD::hashCorruptedNext.ToString().c_str());
 
-        /* Handle corrupted database. */
-        if(Core::pindexBest->pnext) //this will only happen if the database reads an extra pnext
+        if(LLD::hashCorruptedNext > 0 && hash == LLD::hashCorruptedNext)
         {
-            printf("[DATABASE] Found corrupted pnext %s... Resolving\n", hash.ToString().c_str());
-
+            printf("ProcessBlock() : Found corrupted pnext... Resolving\n");
             LLD::CIndexDB indexdb("r+");
-            indexdb.TxnBegin();
             for (int i = pblock->vtx.size() - 1; i >= 0; i--)
                 if (!pblock->vtx[i].DisconnectInputs(indexdb))
                     return false;
@@ -1202,23 +1201,14 @@ namespace Core
             /* Set the memory index to 0 */
             Core::pindexBest->pnext = 0;
 
-            /* Set the disk index back to 0. */
-            Core::CDiskBlockIndex blockindex(Core::pindexBest);
-            blockindex.hashNext = 0;
-            if (!indexdb.WriteBlockIndex(blockindex))
-                return error("LoadBlockIndex() : WriteBlockIndex failed");
-
-            indexdb.TxnCommit();
-
             // Nexus: clean up wallet after disconnecting coinstake
             BOOST_FOREACH(CTransaction& tx, pblock->vtx)
                 SyncWithWallets(tx, pblock, false, false);
 
-            /* Erase mapblockindex if found. */
-            if(Core::mapBlockIndex.count(hash))
-                Core::mapBlockIndex.erase(hash);
-
             printf("ProcessBlock() : Fixed corrupted pnext\n");
+
+            //reset the corrupted next to 0
+            LLD::hashCorruptedNext = 0;
         }
 
         // Check for duplicate
