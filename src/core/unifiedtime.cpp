@@ -194,15 +194,19 @@ void ThreadUnifiedSamples(void* parg)
         BOOST_FOREACH(string& strAddSeed, mapMultiArgs["-addseednode"])
             (fLispNet ? DNS_SeedNodes_LISPnet : (fTestNet ? DNS_SeedNodes_Testnet : DNS_SeedNodes)).push_back(strAddSeed);
     }
-    
+
     /* Compile the Seed Nodes into a set of Vectors. */
     SEED_NODES    = DNS_Lookup(fLispNet ? DNS_SeedNodes_LISPnet : (fTestNet ? DNS_SeedNodes_Testnet : DNS_SeedNodes));
 
     /* Iterator to be used to ensure every time seed is giving an equal weight towards the Global Seeds. */
     int nIterator = -1;
-
     for(int nIndex = 0; nIndex < SEED_NODES.size(); nIndex++)
         SEEDS.push_back(SEED_NODES[nIndex].ToStringIP());
+
+    /* Move random shuffle here. */
+    std::random_shuffle(SEED_NODES.begin(), SEED_NODES.end(), GetRandInt);
+    for(int nIndex = 0; nIndex < SEED_NODES.size(); nIndex++)
+        Net::addrman.Add(SEED_NODES[nIndex], (Net::CNetAddr)SEED_NODES[nIndex], true);
 
     /* The Entry Client Loop for Core LLP. */
     string ADDRESS = "";
@@ -378,7 +382,6 @@ void ThreadUnifiedSamples(void* parg)
 /* DNS Query of Domain Names Associated with Seed Nodes */
 std::vector<Net::CAddress> DNS_Lookup(std::vector<std::string>& DNS_Seed)
 {
-    std::random_shuffle(DNS_Seed.begin(), DNS_Seed.end(), GetRandInt);
     std::vector<Net::CAddress> vNodes;
     int scount = 0;
     for (std::size_t seed = 0; seed < DNS_Seed.size(); seed++)
@@ -398,12 +401,10 @@ std::vector<Net::CAddress> DNS_Lookup(std::vector<std::string>& DNS_Seed)
                 vNodes.push_back(addr);
 
                 printf("DNS Seed: %s\n", addr.ToStringIP().c_str());
-
-                //time penalty for seed nodes
-                Net::addrman.Add(addr, ip, true);
             }
         }
-    printf("DNS Seed Count: %d\n",scount);
+
+        printf("DNS Seed Count: %d\n",scount);
     }
 
     return vNodes;
