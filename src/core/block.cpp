@@ -210,7 +210,7 @@ namespace Core
 
         // Update block index on disk without changing it in memory.
         // The memory index structure will be changed after the db commits.
-        if (pindex->pprev)
+        if (pindex && pindex->pprev)
         {
             CDiskBlockIndex blockindexPrev(pindex->pprev);
             blockindexPrev.hashNext = 0;
@@ -1139,73 +1139,16 @@ namespace Core
     {
         //check if this is the corrupted block that needs rewrite
         uint1024 hash = pblock->GetHash();
-        if(LLD::hashCorruptedNext > 0)
-            printf("ProcessBlock() : corrupted next is %s\n", LLD::hashCorruptedNext.ToString().c_str());
-
-        if(LLD::hashCorruptedNext > 0 && hash == LLD::hashCorruptedNext)
+        if(LLD::hashCorruptedNext != 0 && hash == LLD::hashCorruptedNext)
         {
-            printf("ProcessBlock() : Found corrupted pnext... Resolving\n");
+            printf("ProcessBlock() : Detected corrupted pnext %s... Fixing\n", LLD::hashCorruptedNext.ToString().substr(0, 20).c_str());
+
+            /* Get the index database. */
             LLD::CIndexDB indexdb("r+");
-            for (int i = pblock->vtx.size() - 1; i >= 0; i--)
-                if (!pblock->vtx[i].DisconnectInputs(indexdb))
-                    return false;
 
-            // handle for trust keys
-            if(pblock->IsProofOfStake())
-            {
-                std::vector<unsigned char> vTrustKey;
-                if(!pblock->TrustKey(vTrustKey))
-                    return error("ProcessBlock() : can't extract trust key.");
-
-                /* Set the ckey object. */
-                uint576 cKey;
-                cKey.SetBytes(vTrustKey);
-
-                /* Erase Genesis on disconnect. */
-                if(pblock->vtx[0].IsGenesis())
-                    indexdb.EraseTrustKey(cKey);
-                else //handle the indexing of last trust block. Not validation rules so don't throw failures
-                {
-                    CTrustKey trustKey;
-                    if(indexdb.ReadTrustKey(cKey, trustKey))
-                    {
-                        /* Don't allow Blocks Created Before Minimum Interval. */
-                        if(pblock->nVersion < 5)
-                        {
-                            uint1024 hashLastTrust = pblock->hashPrevBlock;
-                            if(LastTrustBlock(trustKey, hashLastTrust))
-                            {
-                                trustKey.hashLastBlock = hashLastTrust;
-
-                                /* Write trust key changes to disk. */
-                                indexdb.WriteTrustKey(cKey, trustKey);
-                            }
-                        }
-                        else
-                        {
-                            /* Extract the data from the coinstake input. */
-                            uint1024 hashLastTrust;
-                            unsigned int nSequence, nTrust;
-                            if(pblock->ExtractTrust(hashLastTrust, nSequence, nTrust))
-                            {
-                                trustKey.hashLastBlock = hashLastTrust;
-
-                                /* Write trust key changes to disk. */
-                                indexdb.WriteTrustKey(cKey, trustKey);
-                            }
-                        }
-                    }
-                }
-            }
-
-            /* Set the memory index to 0 */
-            Core::pindexBest->pnext = 0;
-
-            // Nexus: clean up wallet after disconnecting coinstake
-            BOOST_FOREACH(CTransaction& tx, pblock->vtx)
-                SyncWithWallets(tx, pblock, false, false);
-
-            printf("ProcessBlock() : Fixed corrupted pnext\n");
+            /* Disconnect the block since corrupted pnext usually leave transaction indexes hanging.
+               This will reconnect this block right after this method executes. */
+            pblock->DisconnectBlock(indexdb, NULL);
 
             //reset the corrupted next to 0
             LLD::hashCorruptedNext = 0;
