@@ -890,22 +890,7 @@ namespace Core
                     /* In version 4 check if trust key was expired. */
                     if(trustKey.Expired(hashBest))
                     {
-                        error("Stake Minter : version 4 trust key is expired");
-
-                        /* Erase my key from trustdb. */
-                        trustdb.EraseMyKey();
-
-                        /* Get the trust key index. */
-                        uint576 key;
-                        key.SetBytes(trustKey.vchPubKey);
-
-                        /* Erase from indexdb. */
-                        LLD::CIndexDB indexdb("r+");
-                        indexdb.EraseTrustKey(key);
-
-                        /* Set the trust key to null state. */
-                        trustKey.SetNull();
-
+                        //don't stake if version 4 trust key is expired within 3 day grace period
                         continue;
                     }
 
