@@ -386,7 +386,7 @@ namespace Core
                 printf("extracted key %s\n", HexStr(vTrustKey).c_str());
                 printf("genesis hash %s\n", blockGenesis.GetHash().ToString().c_str());
                 printf("genesis time %u\n", trustKey.nGenesisTime);
-                printf("genesis tx %s\n", blockGenesis.vtx[0].GetHash());
+                printf("genesis tx %s\n", blockGenesis.vtx[0].GetHash().ToString().c_str());
 
                 assert(blockGenesis.vtx[0].GetHash() == trustKey.hashGenesisTx);
                 assert(blockGenesis.GetHash() == trustKey.hashGenesisBlock);
