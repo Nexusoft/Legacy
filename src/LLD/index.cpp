@@ -4,6 +4,8 @@
 #include "../main.h"
 #include "../core/core.h"
 
+#include "../util/ui_interface.h"
+
 /** Lower Level Database Name Space. **/
 namespace LLD
 {
@@ -211,6 +213,13 @@ namespace LLD
         if(!ReadHashBestChain(Core::hashBestChain))
             return error("No Hash Best Chain in Index Database.");
 
+
+        unsigned int nTotalBlocks = 0;
+        Core::CDiskBlockIndex diskindexBest;
+        if(Read(make_pair(string("blockindex"), Core::hashBestChain), diskindexBest))
+            nTotalBlocks = diskindexBest.nHeight;
+
+
         uint1024 hashBlock = Core::hashGenesisBlock;
         std::vector<uint576> vTrustKeys;
 
@@ -338,12 +347,26 @@ namespace LLD
 
                         vTrustKeys.push_back(cKey);
 
-                        printf("CTxDb::LoadBlockIndex() : Writing Genesis %u Key to Disk %s\n", block.nHeight, cKey.ToString().substr(0, 20).c_str());
+                        //printf("CTxDb::LoadBlockIndex() : Writing Genesis %u Key to Disk %s\n", block.nHeight, cKey.ToString().substr(0, 20).c_str());
                     }
                     else
                     {
                         trustKey.hashLastBlock = block.GetHash();
                         WriteTrustKey(cKey, trustKey);
+                    }
+                }
+
+                if(nTotalBlocks > 0)
+                {
+                    if(fBootstrap && pindexNew->nHeight % 1000 == 0)
+                    {
+                        std::string str = strprintf("Reindexing %f %% Complete...", (pindexNew->nHeight * 100.0 / nTotalBlocks));
+                        InitMessage(str.c_str());
+                    }
+                    else if(pindexNew->nHeight % 1000 == 0)
+                    {
+                        std::string str = strprintf("Index Loading %f %% Complete...", (pindexNew->nHeight * 100.0 / nTotalBlocks));
+                        InitMessage(str.c_str());
                     }
                 }
             }
