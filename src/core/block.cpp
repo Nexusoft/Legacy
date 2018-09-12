@@ -382,6 +382,11 @@ namespace Core
             {
                 trustKey.Print();
                 blockGenesis.print();
+
+                printf("extracted key %s\n", HexStr(vTrustKey).c_str());
+                printf("genesis hash %s\n", blockGenesis.GetHash().ToString().c_str());
+                printf("genesis time %u", trustKey.nGenesisTime);
+
                 return error("ConnectBlock() : Trust Block Input Hash Mismatch to Trust Key Hash\n%s\n%s", vtx[0].vin[0].prevout.hash.ToString().c_str(), trustKey.GetHash().ToString().c_str());
             }
 

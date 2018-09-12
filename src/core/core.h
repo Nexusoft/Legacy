@@ -702,10 +702,7 @@ namespace Core
 
         std::string ToString()
         {
-            uint576 cKey;
-            cKey.SetBytes(vchPubKey);
-
-            return strprintf("hash=%s, key=%s, genesis=%s, tx=%s, time=%u, age=%u", GetHash().ToString().c_str(), cKey.ToString().c_str(), hashGenesisBlock.ToString().c_str(), hashGenesisTx.ToString().c_str(), nGenesisTime, Age(GetUnifiedTimestamp()));
+            return strprintf("version=%u, hash=%s, key=%s, genesis=%s, tx=%s, time=%u, age=%u", nVersion, GetHash().ToString().c_str(), HexStr(vchPubKey.begin(), vchPubKey.end()).c_str(), hashGenesisBlock.ToString().c_str(), hashGenesisTx.ToString().c_str(), nGenesisTime, Age(GetUnifiedTimestamp()));
         }
 
         uint576 GetKey()
