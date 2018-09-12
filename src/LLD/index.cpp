@@ -391,10 +391,32 @@ namespace LLD
         if(fRequestShutdown)
             return false;
 
-        Core::nBestHeight = Core::pindexBest->nHeight;
+        Core::nBestHeight     = Core::pindexBest->nHeight;
         Core::nBestChainTrust = Core::pindexBest->nChainTrust;
         Core::hashBestChain   = Core::pindexBest->GetBlockHash();
         printf("[DATABASE] Indexes Loaded. Height %u Hash %s\n", Core::nBestHeight, Core::pindexBest->GetBlockHash().ToString().substr(0, 20).c_str());
+
+        /* Handle corrupted database. */
+        if(Core::pindexBest->pnext)
+        {
+            printf("[DATABASE] Found corrupted pnext... Resolving\n");
+
+            /* Get the hash of the next block. */
+            uint1024 hash = Core::pindexBest->pnext->GetBlockHash();
+
+            /* Set the memory index to 0 */
+            Core::pindexBest->pnext = 0;
+
+            /* Set the disk index back to 0. */
+            Core::CDiskBlockIndex blockindex(Core::pindexBest);
+            blockindex.hashNext = 0;
+            if (!WriteBlockIndex(blockindex))
+                return error("LoadBlockIndex() : WriteBlockIndex failed");
+
+            /* Erase mapblockindex if found. */
+            if(Core::mapBlockIndex.count(hash))
+                Core::mapBlockIndex.erase(hash);
+        }
 
         /** Verify the Blocks in the Best Chain To Last Checkpoint. **/
         int nCheckLevel = GetArg("-checklevel", 6);

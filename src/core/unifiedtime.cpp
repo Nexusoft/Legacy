@@ -213,7 +213,8 @@ void ThreadUnifiedSamples(void* parg)
     LLP::CoreOutbound SERVER("", strprintf("%u", fLispNet ? LISPNET_CORE_LLP_PORT : (fTestNet ? TESTNET_CORE_LLP_PORT : NEXUS_CORE_LLP_PORT)));
 
     /* Latency Timer. */
-    loop() {
+    loop()
+    {
         try
         {
             Sleep(1000);
