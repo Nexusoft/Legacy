@@ -360,12 +360,12 @@ namespace LLD
                 {
                     if(fBootstrap && pindexNew->nHeight % 1000 == 0)
                     {
-                        std::string str = strprintf("Reindexing %f %% Complete...", (pindexNew->nHeight * 100.0 / nTotalBlocks));
+                        std::string str = strprintf("Reindexing %.2f %% Complete... Do Not Close.", (pindexNew->nHeight * 100.0 / nTotalBlocks));
                         InitMessage(str.c_str());
                     }
                     else if(pindexNew->nHeight % 1000 == 0)
                     {
-                        std::string str = strprintf("Index Loading %f %% Complete...", (pindexNew->nHeight * 100.0 / nTotalBlocks));
+                        std::string str = strprintf("Index Loading %.2f %% Complete...", (pindexNew->nHeight * 100.0 / nTotalBlocks));
                         InitMessage(str.c_str());
                     }
                 }
@@ -385,6 +385,7 @@ namespace LLD
         /* Check for my trust key. */
         if(fBootstrap)
         {
+            InitMessage("Cleaning up Expired Trust Keys...");
             Bootstrap();
 
             LLD::CTrustDB trustdb("r+");
