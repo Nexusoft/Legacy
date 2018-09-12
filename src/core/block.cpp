@@ -385,9 +385,15 @@ namespace Core
 
                 printf("extracted key %s\n", HexStr(vTrustKey).c_str());
                 printf("genesis hash %s\n", blockGenesis.GetHash().ToString().c_str());
-                printf("genesis time %u", trustKey.nGenesisTime);
+                printf("genesis time %u\n", trustKey.nGenesisTime);
+                printf("genesis tx %s\n", blockGenesis.vtx[0].GetHash());
 
-                return error("ConnectBlock() : Trust Block Input Hash Mismatch to Trust Key Hash\n%s\n%s", vtx[0].vin[0].prevout.hash.ToString().c_str(), trustKey.GetHash().ToString().c_str());
+                assert(blockGenesis.vtx[0].GetHash() == trustKey.hashGenesisTx);
+                assert(blockGenesis.GetHash() == trustKey.hashGenesisBlock);
+                assert(blockGenesis.nTime == trustKey.nGenesisTime);
+                assert(vTrustKey == trustKey.vchPubKey);
+
+                error("ConnectBlock() : Trust Block Input Hash Mismatch to Trust Key Hash\n%s\n%s", vtx[0].vin[0].prevout.hash.ToString().c_str(), trustKey.GetHash().ToString().c_str());
             }
 
             /* Double Check the Genesis Transaction. */
