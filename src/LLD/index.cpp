@@ -401,10 +401,11 @@ namespace LLD
         /* Handle corrupted database. */
         if(Core::pindexBest->pnext)
         {
-            printf("[DATABASE] Found corrupted pnext %s... Resolving\n", hashCorruptedNext.ToString().substr(0, 20).c_str());
-
             /* Get the hash of the next block. */
             hashCorruptedNext = Core::pindexBest->pnext->GetBlockHash();
+
+            /* Debug output. */
+            printf("[DATABASE] Found corrupted pnext %s... Resolving\n", hashCorruptedNext.ToString().substr(0, 20).c_str());
 
             /* Set the memory index to 0 */
             Core::pindexBest->pnext = 0;
