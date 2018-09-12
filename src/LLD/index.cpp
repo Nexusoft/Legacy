@@ -9,6 +9,8 @@ namespace LLD
 {
     using namespace std;
 
+    uint1024 hashCorruptedNext = 0;
+
     bool CIndexDB::ReadTxIndex(uint512 hash, Core::CTxIndex& txindex)
     {
         txindex.SetNull();
@@ -219,7 +221,7 @@ namespace LLD
             Core::CDiskBlockIndex diskindex;
             if(!Read(make_pair(string("blockindex"), hashBlock), diskindex))
             {
-                printf("Failed to Read Block %s Height %u\n", hashBlock.ToString().substr(0, 20).c_str(), diskindex.nHeight);
+                printf("Failed to Read Block %s Height %u\n", hashBlock.ToString().c_str(), diskindex.nHeight);
 
                 break;
             }
@@ -395,28 +397,6 @@ namespace LLD
         Core::nBestChainTrust = Core::pindexBest->nChainTrust;
         Core::hashBestChain   = Core::pindexBest->GetBlockHash();
         printf("[DATABASE] Indexes Loaded. Height %u Hash %s\n", Core::nBestHeight, Core::pindexBest->GetBlockHash().ToString().substr(0, 20).c_str());
-
-        /* Handle corrupted database. */
-        if(Core::pindexBest->pnext)
-        {
-            printf("[DATABASE] Found corrupted pnext... Resolving\n");
-
-            /* Get the hash of the next block. */
-            hashCorruptedNext = Core::pindexBest->pnext->GetBlockHash();
-
-            /* Set the memory index to 0 */
-            Core::pindexBest->pnext = 0;
-
-            /* Set the disk index back to 0. */
-            Core::CDiskBlockIndex blockindex(Core::pindexBest);
-            blockindex.hashNext = 0;
-            if (!WriteBlockIndex(blockindex))
-                return error("LoadBlockIndex() : WriteBlockIndex failed");
-
-            /* Erase mapblockindex if found. */
-            if(Core::mapBlockIndex.count(hashCorruptedNext))
-                Core::mapBlockIndex.erase(hashCorruptedNext);
-        }
 
         /** Verify the Blocks in the Best Chain To Last Checkpoint. **/
         int nCheckLevel = GetArg("-checklevel", 6);

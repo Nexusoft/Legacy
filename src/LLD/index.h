@@ -9,7 +9,7 @@
 namespace LLD
 {
 #ifdef USE_LLD
-    static uint1024 hashCorruptedNext = 0;
+    extern uint1024 hashCorruptedNext;
 
     class CIndexDB : public SectorDatabase
     {
