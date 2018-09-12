@@ -375,6 +375,7 @@ namespace Core
                 This Secures and Anchors the Trust Key to all Descending Trust Blocks of that Key. */
             if(vtx[0].vin[0].prevout.hash != trustKey.GetHash())
             {
+                trustKey.Print();
                 return error("ConnectBlock() : Trust Block Input Hash Mismatch to Trust Key Hash\n%s\n%s", vtx[0].vin[0].prevout.hash.ToString().c_str(), trustKey.GetHash().ToString().c_str());
             }
 
