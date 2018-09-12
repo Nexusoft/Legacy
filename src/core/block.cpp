@@ -371,18 +371,19 @@ namespace Core
             if(!mapBlockIndex.count(trustKey.hashGenesisBlock))
                 return error("ConnectBlock() : Genesis Block Not Found.");
 
+            /* Read the Genesis Transaction's Block from Disk. */
+            CBlock blockGenesis;
+            if(!blockGenesis.ReadFromDisk(mapBlockIndex[trustKey.hashGenesisBlock], true))
+                return error("ConnectBlock() : Could not Read Genesis Block.");
+
             /* Don't allow Blocks Created without First Input Previous Output hash of Trust Key Hash.
                 This Secures and Anchors the Trust Key to all Descending Trust Blocks of that Key. */
             if(vtx[0].vin[0].prevout.hash != trustKey.GetHash())
             {
                 trustKey.Print();
+                blockGenesis.print();
                 return error("ConnectBlock() : Trust Block Input Hash Mismatch to Trust Key Hash\n%s\n%s", vtx[0].vin[0].prevout.hash.ToString().c_str(), trustKey.GetHash().ToString().c_str());
             }
-
-            /* Read the Genesis Transaction's Block from Disk. */
-            CBlock blockGenesis;
-            if(!blockGenesis.ReadFromDisk(mapBlockIndex[trustKey.hashGenesisBlock], true))
-                return error("ConnectBlock() : Could not Read Genesis Block.");
 
             /* Double Check the Genesis Transaction. */
             if(!trustKey.CheckGenesis(blockGenesis))
