@@ -492,21 +492,54 @@ namespace Core
     {
         /* Lower Level Database Instance. */
         LLD::CTrustDB trustdb("r+");
+        LLD::CIndexDB indexdb("cr");
 
         /* Trust Key is written from version 5 rules. */
         if(trustdb.ReadMyKey(trustKey))
         {
+            /* Check for expired trust key */
+            bool fExpired = false;
+            bool fGrace = false;
+
+            if(trustKey.Expired(pindexBest->GetBlockHash()))
+            {
+                CTrustKey trustCheck;
+                if(indexdb.ReadTrustKey(trustKey.GetKey(), trustCheck))
+                {
+                    /* Check if trust key is within the grace period. */
+                    if(mapBlockIndex.count(trustCheck.hashLastBlock)
+                        && (fTestNet ? TESTNET_VERSION_TIMELOCK[3] : NETWORK_VERSION_TIMELOCK[3]) - mapBlockIndex[trustCheck.hashLastBlock]->GetBlockTime() > (fTestNet ? TRUST_KEY_TIMESPAN_TESTNET : TRUST_KEY_TIMESPAN))
+                    {
+                        fExpired = true;
+                    }
+                    else
+                        fGrace = true;
+                }
+                else
+                {
+                    /* Can't read key from indexdb to check for grace period. Mark as expired */
+                    fExpired = true;
+                }
+            }
+
             Wallet::NexusAddress address;
             address.SetPubKey(trustKey.vchPubKey);
-            if(pwalletMain->HaveKey(address))
-                return true;
+            if(!fExpired && pwalletMain->HaveKey(address))
+            {
+                printf("Stake Minter : Found my Trust Key %s\n", trustKey.ToString());
 
+                if(fGrace)
+                    printf("Stake Minter : Key is in grace period. Wait until time-lock to activate.");
+
+                return true;
+            }
+
+            /* Trust key is expired or not in current wallet. Remove and call recursively to read from indexdb */
             trustdb.EraseMyKey();
             return FindTrustKey(trustKey);
         }
         else
         {
-            LLD::CIndexDB indexdb("cr");
             std::vector<uint576> vKeys;
             if(indexdb.GetTrustKeys(vKeys))
             {
