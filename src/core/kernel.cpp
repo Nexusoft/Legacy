@@ -526,10 +526,11 @@ namespace Core
             address.SetPubKey(trustKey.vchPubKey);
             if(!fExpired && pwalletMain->HaveKey(address))
             {
-                printf("Stake Minter : Found my Trust Key %s\n", trustKey.ToString());
+                printf("Stake Minter : Found my Trust Key\n");
+                trustKey.Print();
 
                 if(fGrace)
-                    printf("Stake Minter : Key is in grace period. Wait until time-lock to activate.");
+                    printf("Stake Minter : Key is in grace period. Wait until time-lock to activate.\n");
 
                 return true;
             }
@@ -570,7 +571,7 @@ namespace Core
                         printf("Stake Minter : Found my Trust Key %s\n", HexStr(key.begin(), key.end()).c_str());
 
                         if(fGrace)
-                            printf("Stake Minter : Key is in grace period. Wait until time-lock to activate.");
+                            printf("Stake Minter : Key is in grace period. Wait until time-lock to activate.\n");
 
                         /* Set the trust key if found. */
                         trustKey = trustCheck;
@@ -974,7 +975,7 @@ namespace Core
                         if(mapBlockIndex.count(trustKey.hashLastBlock)
                             && (fTestNet ? TESTNET_VERSION_TIMELOCK[3] : NETWORK_VERSION_TIMELOCK[3]) - mapBlockIndex[trustKey.hashLastBlock]->GetBlockTime() < (fTestNet ? TRUST_KEY_TIMESPAN_TESTNET : TRUST_KEY_TIMESPAN))
                         {
-                            printf("Stake Minter : trust key in grace period. Waiting for version 5");
+                            printf("Stake Minter : trust key in grace period. Waiting for version 5\n");
 
                             fGracePeriod = true;
 
