@@ -890,7 +890,33 @@ namespace Core
                     /* In version 4 check if trust key was expired. */
                     if(trustKey.Expired(hashBest))
                     {
-                        //don't stake if version 4 trust key is expired within 3 day grace period
+                        /* Check if trust key is within the grace period. */
+                        if(mapBlockIndex.count(trustKey.hashLastBlock)
+                            && (fTestNet ? TESTNET_VERSION_TIMELOCK[3] : NETWORK_VERSION_TIMELOCK[3]) - mapBlockIndex[trustKey.hashLastBlock]->GetBlockTime() < (fTestNet ? TRUST_KEY_TIMESPAN_TESTNET : TRUST_KEY_TIMESPAN))
+                        {
+                            printf("Stake Minter : trust key in grace period. Waiting for version 5");
+
+                            Sleep(10000);
+
+                            continue;
+                        }
+
+                        error("Stake Minter : version 4 trust key is expired");
+
+                        /* Erase my key from trustdb. */
+                        trustdb.EraseMyKey();
+
+                        /* Get the trust key index. */
+                        uint576 key;
+                        key.SetBytes(trustKey.vchPubKey);
+
+                        /* Erase from indexdb. */
+                        LLD::CIndexDB indexdb("r+");
+                        indexdb.EraseTrustKey(key);
+
+                        /* Set the trust key to null state. */
+                        trustKey.SetNull();
+
                         continue;
                     }
 
