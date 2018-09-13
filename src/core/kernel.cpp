@@ -527,10 +527,10 @@ namespace Core
                         if(mapBlockIndex.count(trustCheck.hashLastBlock)
                             && (fTestNet ? TESTNET_VERSION_TIMELOCK[3] : NETWORK_VERSION_TIMELOCK[3]) - mapBlockIndex[trustCheck.hashLastBlock]->GetBlockTime() > (fTestNet ? TRUST_KEY_TIMESPAN_TESTNET : TRUST_KEY_TIMESPAN))
                         {
-                            printf("Stake Minter : Clearing Expired Key %s\n", HexStr(key.begin(), key.end()).c_str());
+                            //printf("Stake Minter : Clearing Expired Key %s\n", HexStr(key.begin(), key.end()).c_str());
 
                             /* Erase from indexdb. */
-                            indexdb.EraseTrustKey(key);
+                            //indexdb.EraseTrustKey(key);
 
                             continue;
                         }
