@@ -520,6 +520,22 @@ namespace Core
                     if(!indexdb.ReadTrustKey(key, trustCheck))
                         continue;
 
+                    /* Check for expired trust keys */
+                    if(trustCheck.Expired(pindexBest->GetBlockHash()))
+                    {
+                        /* Check if trust key is within the grace period. */
+                        if(mapBlockIndex.count(trustCheck.hashLastBlock)
+                            && (fTestNet ? TESTNET_VERSION_TIMELOCK[3] : NETWORK_VERSION_TIMELOCK[3]) - mapBlockIndex[trustCheck.hashLastBlock]->GetBlockTime() > (fTestNet ? TRUST_KEY_TIMESPAN_TESTNET : TRUST_KEY_TIMESPAN))
+                        {
+                            printf("Stake Minter : Clearing Expired Key %s\n", HexStr(key.begin(), key.end()).c_str());
+
+                            /* Erase from indexdb. */
+                            indexdb.EraseTrustKey(key);
+
+                            continue;
+                        }
+                    }
+
                     Wallet::NexusAddress address;
                     address.SetPubKey(trustCheck.vchPubKey);
                     if(pwalletMain->HaveKey(address))
