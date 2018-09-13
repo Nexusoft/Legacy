@@ -180,6 +180,7 @@ namespace Core
     extern double dTrustWeight;
     extern double dBlockWeight;
     extern double dInterestRate;
+    extern bool   fGracePeriod;
 
     /** Block Accounting Externals **/
     extern CBlockIndex* pindexGenesisBlock;

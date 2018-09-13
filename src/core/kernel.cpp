@@ -488,6 +488,73 @@ namespace Core
     }
 
 
+    bool FindTrustKey(CTrustKey& trustKey)
+    {
+        /* Lower Level Database Instance. */
+        LLD::CTrustDB trustdb("r+");
+
+        /* Trust Key is written from version 5 rules. */
+        if(trustdb.ReadMyKey(trustKey))
+        {
+            Wallet::NexusAddress address;
+            address.SetPubKey(trustKey.vchPubKey);
+            if(pwalletMain->HaveKey(address))
+                return true;
+
+            trustdb.EraseMyKey();
+            return FindTrustKey(trustKey);
+        }
+        else
+        {
+            LLD::CIndexDB indexdb("cr");
+            std::vector<uint576> vKeys;
+            if(indexdb.GetTrustKeys(vKeys))
+            {
+                for(auto key : vKeys)
+                {
+                    CTrustKey trustCheck;
+                    if(!indexdb.ReadTrustKey(key, trustCheck))
+                        continue;
+
+                    /* Check for expired trust keys */
+                    bool fGrace = false;
+                    if(trustCheck.Expired(pindexBest->GetBlockHash()))
+                    {
+                        /* Check if trust key is within the grace period. */
+                        if(mapBlockIndex.count(trustCheck.hashLastBlock)
+                            && (fTestNet ? TESTNET_VERSION_TIMELOCK[3] : NETWORK_VERSION_TIMELOCK[3]) - mapBlockIndex[trustCheck.hashLastBlock]->GetBlockTime() > (fTestNet ? TRUST_KEY_TIMESPAN_TESTNET : TRUST_KEY_TIMESPAN))
+                        {
+                            continue;
+                        }
+                        else
+                            fGrace = true;
+                    }
+
+                    Wallet::NexusAddress address;
+                    address.SetPubKey(trustCheck.vchPubKey);
+                    if(pwalletMain->HaveKey(address))
+                    {
+                        printf("Stake Minter : Found my Trust Key %s\n", HexStr(key.begin(), key.end()).c_str());
+
+                        if(fGrace)
+                            printf("Stake Minter : Key is in grace period. Wait until time-lock to activate.");
+
+                        /* Set the trust key if found. */
+                        trustKey = trustCheck;
+
+                        /* Write my key to disk. */
+                        trustdb.WriteMyKey(trustKey);
+
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+
+
 
     /** Proof of Stake local CPU miner. Uses minimal resources. **/
     void StakeMinter(void* parg)
@@ -503,60 +570,16 @@ namespace Core
 
         /* The trust key in a byte vector. */
         std::vector<unsigned char> vchTrustKey;
-
-        /* Trust Key is written from version 5 rules. */
         CTrustKey trustKey;
-        if(trustdb.ReadMyKey(trustKey))
-            vchTrustKey = trustKey.vchPubKey;
-        else
+        if(!FindTrustKey(trustKey))
         {
-            LLD::CIndexDB indexdb("cr");
-            std::vector<uint576> vKeys;
-            if(indexdb.GetTrustKeys(vKeys))
-            {
-                for(auto key : vKeys)
-                {
-                    CTrustKey trustCheck;
-                    if(!indexdb.ReadTrustKey(key, trustCheck))
-                        continue;
+            printf("Stake Minter : No Trust Key Found. Creating new Genesis\n");
 
-                    /* Check for expired trust keys */
-                    if(trustCheck.Expired(pindexBest->GetBlockHash()))
-                    {
-                        /* Check if trust key is within the grace period. */
-                        if(mapBlockIndex.count(trustCheck.hashLastBlock)
-                            && (fTestNet ? TESTNET_VERSION_TIMELOCK[3] : NETWORK_VERSION_TIMELOCK[3]) - mapBlockIndex[trustCheck.hashLastBlock]->GetBlockTime() > (fTestNet ? TRUST_KEY_TIMESPAN_TESTNET : TRUST_KEY_TIMESPAN))
-                        {
-                            //printf("Stake Minter : Clearing Expired Key %s\n", HexStr(key.begin(), key.end()).c_str());
-
-                            /* Erase from indexdb. */
-                            //indexdb.EraseTrustKey(key);
-
-                            continue;
-                        }
-                    }
-
-                    Wallet::NexusAddress address;
-                    address.SetPubKey(trustCheck.vchPubKey);
-                    if(pwalletMain->HaveKey(address))
-                    {
-                        printf("Stake Minter : Found my Trust Key %s\n", HexStr(key.begin(), key.end()).c_str());
-
-                        /* Set the binary data of trust key. */
-                        vchTrustKey = trustCheck.vchPubKey;
-
-                        /* Set the trust key if found. */
-                        trustKey = trustCheck;
-
-                        /* Write my key to disk. */
-                        trustdb.WriteMyKey(trustKey);
-                    }
-                }
-            }
-
-            if(vchTrustKey.empty())
-                vchTrustKey = reservekey.GetReservedKey();
+            vchTrustKey = reservekey.GetReservedKey();
+            trustKey.SetNull();
         }
+        else
+            vchTrustKey = trustKey.vchPubKey;
 
         while(!fShutdown)
         {
@@ -598,7 +621,8 @@ namespace Core
             /* Version 5 block staking minter. */
             if(block.nVersion >= 5)
             {
-
+                fGracePeriod = false;
+                
                 /* Write the trust key into the output script. */
                 block.vtx[0].vout[0].scriptPubKey << vchTrustKey << Wallet::OP_CHECKSIG;
 
@@ -862,6 +886,13 @@ namespace Core
                             break;
                         }
 
+                        /* Get the trust key index. */
+                        uint576 key;
+                        key.SetBytes(trustKey.vchPubKey);
+
+                        /* Erase from indexdb. */
+                        LLD::CIndexDB indexdb("r+");
+                        indexdb.EraseTrustKey(key);
                         /* Check the stake. */
                         if (!block.CheckTrust())
                         {
@@ -912,6 +943,8 @@ namespace Core
                         {
                             printf("Stake Minter : trust key in grace period. Waiting for version 5");
 
+                            fGracePeriod = true;
+
                             Sleep(10000);
 
                             continue;
@@ -922,16 +955,16 @@ namespace Core
                         /* Erase my key from trustdb. */
                         trustdb.EraseMyKey();
 
-                        /* Get the trust key index. */
-                        uint576 key;
-                        key.SetBytes(trustKey.vchPubKey);
-
-                        /* Erase from indexdb. */
-                        LLD::CIndexDB indexdb("r+");
-                        indexdb.EraseTrustKey(key);
-
                         /* Set the trust key to null state. */
-                        trustKey.SetNull();
+                        if(!FindTrustKey(trustKey))
+                        {
+                            printf("Stake Minter : No Trust Key Found. Creating new Genesis");
+
+                            vchTrustKey = reservekey.GetReservedKey();
+                            trustKey.SetNull();
+                        }
+                        else
+                            trustdb.WriteMyKey(trustKey);
 
                         continue;
                     }

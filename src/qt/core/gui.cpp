@@ -9,6 +9,7 @@
 
 #include "gui.h"
 #include "../../main.h"
+#include "../../core/core.h"
 #include "../models/transactiontablemodel.h"
 #include "../pages/addressbookpage.h"
 #include "../dialogs/sendcoinsdialog.h"
@@ -401,10 +402,10 @@ void NexusGUI::setClientModel(ClientModel *clientModel)
         connect(clientModel, SIGNAL(numBlocksChanged(int)), this, SLOT(setNumBlocks(int)));
 
         // Report errors from network/worker thread
-        connect(clientModel, SIGNAL(error(QString,QString, bool)), this, SLOT(error(QString,QString,bool)));
+        connect(clientModel, SIGNAL(error(QString,QString, bool)), thissetWeight, SLOT(error(QString,QString,bool)));
 
         rpcConsole->setClientModel(clientModel);
-    }
+    }blockWeight
 }
 
 void NexusGUI::setWalletModel(WalletModel *walletModel)
@@ -553,7 +554,12 @@ void NexusGUI::setWeight(double trustWeight, double blockWeight, double interest
     else
         icon = ":/icons/transaction_5";
 
-    if(dPercent == 0)
+    if(Core::fGracePeriod)
+    {
+        icon = ":/icons/transaction_1";
+        labelWeightIcon->setToolTip(tr("Key expired in grace period...\nWaiting for Version 5"));
+    }
+    else if(dPercent == 0)
     {
         icon = ":/icons/transaction_0";
         labelWeightIcon->setToolTip(tr("Staking Inactive...\nNo Coins to Stake"));
