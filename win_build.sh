@@ -23,7 +23,7 @@ if [ $(uname -s | grep -o '^.......') == MINGW64 ]; then
 			fi
 			if [ ! -d boost ]; then
 				echo -e "\nDownloading Boost"
-				wget -c --append-output=/dev/null --show-progress -N https://dl.bintray.com/boostorg/release/1.66.0/source/boost_1_66_0.tar.gz
+				wget -c --append-output=/dev/null --show-progress -N https://dl.bintray.com/boostorg/release/1.68.0/source/boost_1_68_0.tar.gz
 			fi
 			if [ ! -d libpng ]; then
 				echo -e "\nDownloading LibPNG"
@@ -49,7 +49,7 @@ if [ $(uname -s | grep -o '^.......') == MINGW64 ]; then
 			clear
 			if [ ! -d boost ]; then
 				echo -e "\nExtracting Boost"
-				tar zvxf boost_1_66_0.tar.gz | pv -l -s 63468 > /dev/null && mv boost_1_66_0 boost
+				tar zvxf boost_1_68_0.tar.gz | pv -l -s 63468 > /dev/null && mv boost_1_68_0 boost
 			fi
 			if [ ! -d libdb ]; then
 				echo -e "\nExtracting Berkeley DB"
@@ -76,7 +76,7 @@ if [ $(uname -s | grep -o '^.......') == MINGW64 ]; then
 				tar Jvxf qt-everywhere-src-5.10.1.tar.xz | pv -l -s 206858 > /dev/null && mv qt-everywhere-src-5.10.1 qt
 			fi
 			#If files extracted to proper folders, delete the archives.
-			if [ -d boost ]; then rm boost_1_66_0.tar.gz; fi
+			if [ -d boost ]; then rm boost_1_68_0.tar.gz; fi
 			if [ -d libdb ]; then rm db-6.2.32.NC.tar.gz; fi
 			if [ -d libpng ]; then rm lpng1634.zip; fi
 			if [ -d qrencode ]; then rm qrencode-4.0.0.tar.gz; fi
