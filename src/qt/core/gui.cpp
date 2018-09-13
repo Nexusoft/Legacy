@@ -402,10 +402,10 @@ void NexusGUI::setClientModel(ClientModel *clientModel)
         connect(clientModel, SIGNAL(numBlocksChanged(int)), this, SLOT(setNumBlocks(int)));
 
         // Report errors from network/worker thread
-        connect(clientModel, SIGNAL(error(QString,QString, bool)), thissetWeight, SLOT(error(QString,QString,bool)));
+        connect(clientModel, SIGNAL(error(QString,QString, bool)), this, SLOT(error(QString,QString,bool)));
 
         rpcConsole->setClientModel(clientModel);
-    }blockWeight
+    }
 }
 
 void NexusGUI::setWalletModel(WalletModel *walletModel)
