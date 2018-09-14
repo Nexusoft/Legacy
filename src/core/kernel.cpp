@@ -266,7 +266,7 @@ namespace Core
 
             if(GetArg("-verbose", 0) >= 3)
             {
-                printf("Coinstake interest from block...\n");
+                printf("Coinstake interest from block %f...\n", nInterestRate);
                 block.print();
             }
 
