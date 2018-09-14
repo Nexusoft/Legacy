@@ -242,9 +242,12 @@ namespace Core
         double nInterestRate = 0.05; //genesis interest rate
 
         /* Get the trust key from index database. */
-        CTrustKey trustKey;
-        if(indexdb.ReadTrustKey(cKey, trustKey))
-            nInterestRate = trustKey.InterestRate(block, nTime);
+        if(!block.vtx[0].IsGenesis())
+        {
+            CTrustKey trustKey;
+            if(indexdb.ReadTrustKey(cKey, trustKey))
+                nInterestRate = trustKey.InterestRate(block, nTime);
+        }
 
         /** Check the coin age of each Input. **/
         for(int nIndex = 1; nIndex < vin.size(); nIndex++)
@@ -687,7 +690,7 @@ namespace Core
             if(block.nVersion >= 5)
             {
                 fGracePeriod = false;
-                
+
                 /* Write the trust key into the output script. */
                 block.vtx[0].vout[0].scriptPubKey << vchTrustKey << Wallet::OP_CHECKSIG;
 
