@@ -559,6 +559,11 @@ void NexusGUI::setWeight(double trustWeight, double blockWeight, double interest
         icon = ":/icons/transaction_1";
         labelWeightIcon->setToolTip(tr("Key expired in grace period...\nWaiting for Version 5"));
     }
+    else if( (walletModel && walletModel->getEncryptionStatus() != WalletModel::Locked) && Core::fStakeMinterInitializing)
+    {
+        icon = ":/icons/transaction_1";
+        labelWeightIcon->setToolTip(tr("Stake minter initializing...\nPlease wait"));
+    }
     else if(dPercent == 0)
     {
         icon = ":/icons/transaction_0";

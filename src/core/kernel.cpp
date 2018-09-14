@@ -501,25 +501,25 @@ namespace Core
             bool fExpired = false;
             bool fGrace = false;
 
+            if(GetArg("-verbose", 0) >= 2)
+                printf("Stake Minter : Read v5 trust key\n");
+
             if(trustKey.Expired(pindexBest->GetBlockHash()))
             {
-                CTrustKey trustCheck;
-                if(indexdb.ReadTrustKey(trustKey.GetKey(), trustCheck))
+                /* Before activation, check if trust key is within the grace period. */
+                if (GetUnifiedTimestamp() < NETWORK_VERSION_TIMELOCK[3] &&
+                    !trustKey.Expired(pindexBest->GetBlockHash(), TRUST_KEY_TIMESPAN - ( NETWORK_VERSION_TIMELOCK[3] - GetUnifiedTimestamp() )) )
                 {
-                    /* Check if trust key is within the grace period. */
-                    if(mapBlockIndex.count(trustCheck.hashLastBlock)
-                        && (fTestNet ? TESTNET_VERSION_TIMELOCK[3] : NETWORK_VERSION_TIMELOCK[3]) - mapBlockIndex[trustCheck.hashLastBlock]->GetBlockTime() > (fTestNet ? TRUST_KEY_TIMESPAN_TESTNET : TRUST_KEY_TIMESPAN))
-                    {
-                        fExpired = true;
-                    }
-                    else
-                        fGrace = true;
+                    fGrace = true;
                 }
                 else
                 {
-                    /* Can't read key from indexdb to check for grace period. Mark as expired */
                     fExpired = true;
+
+                    if(GetArg("-verbose", 0) >= 2)
+                        printf("Stake Minter : v5 trust key expired\n");
                 }
+
             }
 
             Wallet::NexusAddress address;
@@ -538,11 +538,18 @@ namespace Core
             /* Trust key is expired or not in current wallet. Remove and call recursively to read from indexdb */
             trustdb.EraseMyKey();
             trustKey.SetNull();
+
+            if(GetArg("-verbose", 0) >= 2)
+                printf("Stake Minter : No active v5 trust key. Search for trust key in indexdb\n");
+
             return FindTrustKey(trustKey);
         }
         else
         {
             std::vector<uint576> vKeys;
+            if(GetArg("-verbose", 0) >= 2)
+                printf("Stake Minter : Getting trust keys from indexdb\n");
+
             if(indexdb.GetTrustKeys(vKeys))
             {
                 for(auto key : vKeys)
@@ -552,17 +559,26 @@ namespace Core
                         continue;
 
                     /* Check for expired trust keys */
+                    if(GetArg("-verbose", 0) >= 3)
+                        printf("Stake Minter : Trust key read from indexdb\n");
+
                     bool fGrace = false;
                     if(trustCheck.Expired(pindexBest->GetBlockHash()))
                     {
-                        /* Check if trust key is within the grace period. */
-                        if(mapBlockIndex.count(trustCheck.hashLastBlock)
-                            && (fTestNet ? TESTNET_VERSION_TIMELOCK[3] : NETWORK_VERSION_TIMELOCK[3]) - mapBlockIndex[trustCheck.hashLastBlock]->GetBlockTime() > (fTestNet ? TRUST_KEY_TIMESPAN_TESTNET : TRUST_KEY_TIMESPAN))
+                        /* Before activation, check if trust key is within the grace period. */
+                        if (GetUnifiedTimestamp() < NETWORK_VERSION_TIMELOCK[3] &&
+                            !trustCheck.Expired(pindexBest->GetBlockHash(), TRUST_KEY_TIMESPAN - ( NETWORK_VERSION_TIMELOCK[3] - GetUnifiedTimestamp() )) )
                         {
-                            continue;
+                            fGrace = true;
                         }
                         else
-                            fGrace = true;
+                        {
+                            if(GetArg("-verbose", 0) >= 3)
+                                printf("Stake Minter : Trust key expired\n");
+
+                            continue;
+                        }
+
                     }
 
                     Wallet::NexusAddress address;
@@ -586,6 +602,9 @@ namespace Core
             }
         }
 
+        if(GetArg("-verbose", 0) >= 2)
+            printf("Stake Minter : No Trust Key Found in FindTrustKey()\n");
+
         return false;
     }
 
@@ -606,7 +625,12 @@ namespace Core
         /* The trust key in a byte vector. */
         std::vector<unsigned char> vchTrustKey;
         CTrustKey trustKey;
-        if(!FindTrustKey(trustKey))
+        if(GetArg("-verbose", 0) >= 2)
+            printf("Stake Minter : Finding Current Trust Key\n");
+
+        fStakeMinterInitializing = true;
+
+        if(!FindTrustKey(trustKey) || trustKey.IsNull())
         {
             printf("Stake Minter : No Trust Key Found. Creating new Genesis\n");
 
@@ -614,7 +638,13 @@ namespace Core
             trustKey.SetNull();
         }
         else
+        {
+            printf("Stake Minter : Staking with Found Trust Key\n");
+
             vchTrustKey = trustKey.vchPubKey;
+        }
+
+        fStakeMinterInitializing = false;
 
         while(!fShutdown)
         {
@@ -972,9 +1002,9 @@ namespace Core
                     /* In version 4 check if trust key was expired. */
                     if(trustKey.Expired(hashBest))
                     {
-                        /* Check if trust key is within the grace period. */
-                        if(mapBlockIndex.count(trustKey.hashLastBlock)
-                            && (fTestNet ? TESTNET_VERSION_TIMELOCK[3] : NETWORK_VERSION_TIMELOCK[3]) - mapBlockIndex[trustKey.hashLastBlock]->GetBlockTime() < (fTestNet ? TRUST_KEY_TIMESPAN_TESTNET : TRUST_KEY_TIMESPAN))
+                        /* Before activation, check if trust key is within the grace period. */
+                        if (GetUnifiedTimestamp() < NETWORK_VERSION_TIMELOCK[3] &&
+                            !trustKey.Expired(hashBest, TRUST_KEY_TIMESPAN - ( NETWORK_VERSION_TIMELOCK[3] - GetUnifiedTimestamp() )) )
                         {
                             printf("Stake Minter : trust key in grace period. Waiting for version 5\n");
 
