@@ -537,6 +537,7 @@ namespace Core
 
             /* Trust key is expired or not in current wallet. Remove and call recursively to read from indexdb */
             trustdb.EraseMyKey();
+            trustKey.SetNull();
             return FindTrustKey(trustKey);
         }
         else
