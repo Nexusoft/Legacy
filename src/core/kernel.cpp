@@ -264,6 +264,12 @@ namespace Core
             if (!block.ReadFromDisk(txindex.pos.nFile, txindex.pos.nBlockPos, false))
                 return error("CTransaction::GetCoinstakeInterest() : Failed To Read Block from Disk");
 
+            if(GetArg("-verbose", 0) >= 3)
+            {
+                printf("Coinstake interest from block...\n");
+                block.print();
+            }
+
             /* Calculate the Age and Value of given output. */
             int64 nCoinAge = (nTime - block.GetBlockTime());
             int64 nValue = txPrev.vout[vin[nIndex].prevout.n].nValue;
