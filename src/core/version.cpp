@@ -13,7 +13,7 @@
 const std::string CLIENT_NAME("Nexus");
 
 /* The database type used (Berklee DB or Lower Level Database) */
-const std::string CLIENT_VERSION("0.2.5.0");
+const std::string CLIENT_VERSION("0.2.5.1");
 
 #if defined USE_LLD
     const std::string CLIENT_DATABASE("[LLD]");
@@ -29,7 +29,7 @@ const std::string CLIENT_VERSION("0.2.5.0");
     const std::string BUILD_ARCH = "[x86]";
 #endif
 
-const std::string CLIENT_BUILD(CLIENT_VERSION + " [RC2]" + CLIENT_DATABASE + BUILD_ARCH);
+const std::string CLIENT_BUILD(CLIENT_VERSION + " " + CLIENT_DATABASE + BUILD_ARCH);
 const std::string CLIENT_DATE(__DATE__ " " __TIME__);
 
 /** Used to determine the current features available on the local database */
