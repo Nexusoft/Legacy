@@ -1528,6 +1528,9 @@ namespace Core
         /* Placeholder in case previous block is a version 4 block. */
         unsigned int nScorePrev = 0, nScore = 0;
 
+        print();
+        blockPrev.print();
+
         /* If previous block is genesis, set previous score to 0. */
         if(blockPrev.vtx[0].IsGenesis())
         {
