@@ -1267,7 +1267,7 @@ namespace Core
     }
 
 
-    bool FindGenesis(CTrustKey trustKey, uint1024& hashTrustBlock)
+    bool FindGenesis(CTrustKey& trustKey, uint1024& hashTrustBlock)
     {
         /* Block Object. */
         CBlock block;
@@ -1302,7 +1302,7 @@ namespace Core
             /* Check for genesis. */
             if(vTrustKey == trustKey.vchPubKey && block.vtx[0].IsGenesis())
             {
-                printf("FindGenesis() : Found Genesis. Restoring trust key.");
+                printf("FindGenesis() : Found Genesis (%s). Restoring trust key.\n", block.GetHash().ToString().substr(0, 20).c_str());
 
                 trustKey = Core::CTrustKey(vTrustKey, block.GetHash(), block.vtx[0].GetHash(), block.nTime);
 

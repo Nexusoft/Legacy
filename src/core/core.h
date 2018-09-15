@@ -234,7 +234,7 @@ namespace Core
     bool LoadBlockIndex(bool fAllowNew = true);
     bool CheckBlockIndex(uint1024 hashBlock);
     bool LastTrustBlock(CTrustKey trustKey, uint1024& hashTrustBlock);
-    bool FindGenesis(CTrustKey trustKey, uint1024& hashTrustBlock);
+    bool FindGenesis(CTrustKey& trustKey, uint1024& hashTrustBlock);
 
 
     /** DISPATCH.CPP **/
