@@ -1323,7 +1323,7 @@ namespace Core
         CBigNum bnTarget;
         bnTarget.SetCompact(nBits);
         if(StakeHash() > bnTarget.getuint1024())
-            return error("CBlock::CheckStake() : Proof of Stake Hash not meeting Target.");
+            return error("CBlock::CheckStake() : Proof of Stake Hash (%s) not meeting Target.", StakeHash().ToString().substr(0, 20).c_str());
 
         /* Weight for Trust transactions combine block weight and stake weight. */
         double nTrustWeight = 0.0, nBlockWeight = 0.0;
