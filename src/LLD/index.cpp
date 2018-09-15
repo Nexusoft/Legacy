@@ -223,7 +223,7 @@ namespace LLD
         uint1024 hashBlock = Core::hashGenesisBlock;
         std::vector<uint576> vTrustKeys;
 
-        bool fBootstrap = !Bootstrapped();
+        bool fBootstrap = (!Bootstrapped() || GetBoolArg("-reindex", false));
         std::map<uint576, unsigned int> mapLastBlocks;
         while(!fRequestShutdown)
         {
@@ -400,7 +400,7 @@ namespace LLD
             /* Erase expired trust keys. */
             for(auto key : vTrustKeys)
             {
-                if(mapLastBlocks.count(key) && mapLastBlocks[key] + Core::TRUST_KEY_EXPIRE < Core::pindexBest->GetBlockTime())
+                if(mapLastBlocks.count(key) && mapLastBlocks[key] + Core::TRUST_KEY_TIMESPAN < Core::NETWORK_VERSION_TIMELOCK[3])
                 {
                     EraseTrustKey(key);
 
