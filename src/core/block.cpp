@@ -314,30 +314,13 @@ namespace Core
         uint576 cKey;
         cKey.SetBytes(vTrustKey);
 
-        /* Check the proof of stake claims. */
-        if (IsProofOfStake())
-        {
-            /* Version 5 blocks don't need trust pool - do basic checks here. */
-            if(nVersion >= 5)
-            {
-                /* Check the claimed stake limits are met. */
-                if(!CheckStake())
-                    return DoS(50, error("ConnectBlock() : invalid proof of stake"));
-
-                /* Check the claimed trust scores are met. */
-                if(!CheckTrust())
-                    return DoS(50, error("ConnectBlock() : invalid trust score"));
-            }
-            else if(nVersion < 5 && !VerifyStake())
-                return DoS(50, error("ConnectBlock() : invalid proof of stake"));
-        }
-
         /* Handle Genesis Transaction Rules. Genesis is checked after Trust Key Established. */
         if(vtx[0].IsGenesis())
         {
             /* Check that Transaction is not Genesis when Trust Key is Established. */
             CTrustKey trustCheck;
-            if(nVersion >= 5 && indexdb.ReadTrustKey(cKey, trustCheck))
+            if(indexdb.ReadTrustKey(cKey, trustCheck) &&
+                (trustCheck.hashGenesisBlock != GetHash() || vtx[0].GetHash() != trustCheck.hashGenesisTx || trustCheck.nGenesisTime != nTime))
                 return error("ConnectBlock() : Duplicate Genesis not Allowed");
 
             /* Create the Trust Key from Genesis Transaction Block. */
@@ -362,6 +345,7 @@ namespace Core
             CTrustKey trustKey;
             if(!indexdb.ReadTrustKey(cKey, trustKey))
             {
+                trustKey.vchPubKey = vTrustKey;
                 if(!FindGenesis(trustKey, hashPrevBlock))
                     return error("ConnectBlock() : Cannot Create Trust Transaction without Genesis.");
 
@@ -416,6 +400,24 @@ namespace Core
             /* Dump the Trust Key to Console if not Initializing. */
             if(GetArg("-verbose", 0) >= 2)
                 trustKey.Print();
+        }
+
+        /* Check the proof of stake claims. */
+        if (IsProofOfStake())
+        {
+            /* Version 5 blocks don't need trust pool - do basic checks here. */
+            if(nVersion >= 5)
+            {
+                /* Check the claimed stake limits are met. */
+                if(!CheckStake())
+                    return DoS(50, error("ConnectBlock() : invalid proof of stake"));
+
+                /* Check the claimed trust scores are met. */
+                if(!CheckTrust())
+                    return DoS(50, error("ConnectBlock() : invalid trust score"));
+            }
+            else if(nVersion < 5 && !VerifyStake())
+                return DoS(50, error("ConnectBlock() : invalid proof of stake"));
         }
 
         if(GetArg("-verbose", 0) >= 0)
@@ -1274,7 +1276,7 @@ namespace Core
         std::vector<unsigned char> vTrustKey;
 
         /* Loop through all previous blocks looking for most recent trust block. */
-        while(vTrustKey != trustKey.vchPubKey)
+        while(hashTrustBlock != hashGenesisBlockOfficial)
         {
             /* Check map block index for trust block. */
             if(!mapBlockIndex.count(hashTrustBlock))
@@ -1298,7 +1300,7 @@ namespace Core
                 return error("LastTrustBlock : can't get trust key");
 
             /* Check for genesis. */
-            if(vTrustKey != trustKey.vchPubKey && block.vtx[0].IsGenesis())
+            if(vTrustKey == trustKey.vchPubKey && block.vtx[0].IsGenesis())
             {
                 printf("FindGenesis() : Found Genesis. Restoring trust key.");
 
@@ -1311,7 +1313,7 @@ namespace Core
             hashTrustBlock = pindex->GetBlockHash();
         }
 
-        return true;
+        return false;
     }
 
 
