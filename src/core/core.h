@@ -881,7 +881,7 @@ namespace Core
 				return false;
 
 			/* First Input Previous Transaction must be Empty. */
-			if(!vin[0].prevout.IsNull())
+			if(vin[0].scriptSig.size() != 8)
 				return false;
 
 			return true;
