@@ -1660,7 +1660,7 @@ namespace Core
         if(!TrustKey(cKey))
             return error("CBlock::StakeHash() : Trust key not extracted");
 
-        printf("version = %u, prev = %s, channel = %u, height = %u, bits = %u, key=%s, nonce = %" PRIu64"\n", nVersion, hashPrevBlock.ToString().c_str(), nChannel, nHeight, nBits, cKey.ToString().c_str(), nNonce);
+        printf("version = %u, prev = %s, channel = %u, height = %u, bits = %u, key=%s, nonce = %" PRIu64" hash = %s\n", nVersion, hashPrevBlock.ToString().c_str(), nChannel, nHeight, nBits, cKey.ToString().c_str(), nNonce, SerializeHash(nVersion, hashPrevBlock, nChannel, nHeight, nBits, cKey, nNonce).ToString().c_str());
 
         //nVersion, hashPrevBlock, nChannel, nHeight, nBits, nOnce, vchTrustKey (extracted from coinstake)
         return SerializeHash(nVersion, hashPrevBlock, nChannel, nHeight, nBits, cKey, nNonce);
