@@ -408,9 +408,6 @@ namespace Core
             /* Version 5 blocks don't need trust pool - do basic checks here. */
             if(nVersion >= 5)
             {
-                /* Check the claimed stake limits are met. */
-                if(!CheckStake())
-                    return DoS(50, error("ConnectBlock() : invalid proof of stake"));
 
                 /* Check the claimed trust scores are met. */
                 if(!CheckTrust())
@@ -1112,6 +1109,14 @@ namespace Core
             /* Check that the Coinbase / CoinstakeTimstamp is after Previous Block. */
             if (vtx[0].nTime < pindexPrev->GetBlockTime())
                 return error("AcceptBlock() : coinstake transaction too early");
+
+            /* Version 5 rules. */
+            if(nVersion >= 5)
+            {
+                /* Check the claimed stake limits are met. */
+                if(!CheckStake())
+                    return DoS(50, error("CheckBlock() : invalid proof of stake"));
+            }
         }
 
 
