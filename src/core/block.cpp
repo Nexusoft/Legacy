@@ -1605,13 +1605,13 @@ namespace Core
         if(nScore > (60 * 60 * 24 * 28 * 13))
             nScore = (60 * 60 * 24 * 28 * 13);
 
-        /* Check that published score in this block is equivilent to calculated score. */
-        if(nTrustScore != nScore)
-            return error("CBlock::CheckTrust() : published trust score (%u) not meeting calculated score (%u)", nTrustScore, nScore);
-
         /* Debug output. */
         if(GetArg("-verbose", 0) >= 2)
             printf("CheckTrust: score=%u prev=%u change=%i\n", nScore, nScorePrev, (int)(nScore - nScorePrev));
+
+        /* Check that published score in this block is equivilent to calculated score. */
+        if(nTrustScore != nScore)
+            return error("CBlock::CheckTrust() : published trust score (%u) not meeting calculated score (%u)", nTrustScore, nScore);
 
         return true;
     }
