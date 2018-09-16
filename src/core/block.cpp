@@ -1543,7 +1543,7 @@ namespace Core
                 return error("CBlock::CheckTrust() : version 4 block sequence number not 1 (%u)", nSequence);
 
             /* Establish the index database. */
-            LLD::CIndexDB indexdb("cr");
+            LLD::CIndexDB indexdb("r+");
 
             /* Check the trust pool - this should only execute once transitioning from version 4 to version 5 trust keys. */
             CTrustKey trustKey;
@@ -1603,13 +1603,13 @@ namespace Core
         if(nScore > (60 * 60 * 24 * 28 * 13))
             nScore = (60 * 60 * 24 * 28 * 13);
 
+        /* Debug output. */
+        if(GetArg("-verbose", 0) >= 2)
+            printf("CheckTrust: score=%u prev=%u timespan=%u change=%i\n", nScore, nScorePrev, nTimespan, (int)(nScore - nScorePrev));
+
         /* Check that published score in this block is equivilent to calculated score. */
         if(nTrustScore != nScore)
             return error("CBlock::CheckTrust() : published trust score (%u) not meeting calculated score (%u)", nTrustScore, nScore);
-
-        /* Debug output. */
-        if(GetArg("-verbose", 0) >= 2)
-            printf("CheckTrust: score=%u prev=%u change=%i\n", nScore, nScorePrev, (int)(nScore - nScorePrev));
 
         return true;
     }
