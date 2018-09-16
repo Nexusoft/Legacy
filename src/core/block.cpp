@@ -361,8 +361,13 @@ namespace Core
             /* No Trust Transaction without a Genesis. */
             CTrustKey trustKey;
             if(!indexdb.ReadTrustKey(cKey, trustKey))
-                return error("ConnectBlock() : Cannot Create Trust Transaction without Genesis.");
+            {
+                if(!FindGenesis(trustKey, hashPrevBlock))
+                    return error("ConnectBlock() : no trust without genesis");
 
+                indexdb.WriteTrustKey(cKey, trustKey);
+            }
+            
             /* Check that the Trust Key and Current Block match. */
             if(trustKey.vchPubKey != vTrustKey)
                 return error("ConnectBlock() : Trust Key and Block Key Mismatch.");
@@ -1259,6 +1264,56 @@ namespace Core
     }
 
 
+    bool FindGenesis(CTrustKey& trustKey, uint1024& hashTrustBlock)
+    {
+        /* Block Object. */
+        CBlock block;
+
+        /* Trust key of said block. */
+        std::vector<unsigned char> vTrustKey;
+
+        /* Loop through all previous blocks looking for most recent trust block. */
+        while(hashTrustBlock != hashGenesisBlockOfficial)
+        {
+            /* Check map block index for trust block. */
+            if(!mapBlockIndex.count(hashTrustBlock))
+                return error("LastTrustBlock : Couldn't find last trust block in mapblockindex");
+
+            /* Get the last trust block. */
+            const CBlockIndex* pindex = GetLastChannelIndex(mapBlockIndex[hashTrustBlock]->pprev, 0);
+            if(!pindex || !pindex->pprev)
+                return error("LastTrustBlock : couldn't find index");
+
+            /* If serach block isn't proof of stake, return an error. */
+            if(!pindex->IsProofOfStake())
+                return error("LastTrustBlock : not proof of stake");
+
+            /* Read the previous block from disk. */
+            if(!block.ReadFromDisk(pindex, true))
+                return error("LastTrustBlock : can't read trust block");
+
+            /* Get the trust key from block. */
+            if(!block.TrustKey(vTrustKey))
+                return error("LastTrustBlock : can't get trust key");
+
+            /* Check for genesis. */
+            if(vTrustKey == trustKey.vchPubKey && block.vtx[0].IsGenesis())
+            {
+                printf("FindGenesis() : Found Genesis (%s). Restoring trust key.\n", block.GetHash().ToString().substr(0, 20).c_str());
+
+                trustKey = Core::CTrustKey(vTrustKey, block.GetHash(), block.vtx[0].GetHash(), block.nTime);
+
+                return true;
+            }
+
+            /* Set current trust block in recursion. */
+            hashTrustBlock = pindex->GetBlockHash();
+        }
+
+        return false;
+    }
+
+
     bool CBlock::CheckStake()
     {
         /* Check the proof hash of the stake block on version 5 and above. */
@@ -1489,7 +1544,12 @@ namespace Core
             /* Check the trust pool - this should only execute once transitioning from version 4 to version 5 trust keys. */
             CTrustKey trustKey;
             if(!indexdb.ReadTrustKey(cKey, trustKey))
-                return error("CBlock::CheckTrust() : trust key not found in database");
+            {
+                if(!FindGenesis(trustKey, hashPrevBlock))
+                    return error("CBlock::CheckTrust() : trust key not found in database");
+
+                indexdb.WriteTrustKey(cKey, trustKey);
+            }
 
             /* Ensure that a version 4 trust key is not expired based on new timespan rules. */
             if(trustKey.Expired(hashPrevBlock, (fTestNet ? TRUST_KEY_TIMESPAN_TESTNET : TRUST_KEY_TIMESPAN)))

@@ -121,7 +121,12 @@ namespace Core
         {
             CTrustKey trustKey;
             if(!indexdb.ReadTrustKey(cKey, trustKey))
-                return error("CBlock::VerifyStake() : trust key doesn't exist");
+            {
+                if(!FindGenesis(trustKey, hashPrevBlock))
+                    return error("CBlock::VerifyStake() : trust key doesn't exist");
+
+                indexdb.WriteTrustKey(cKey, trustKey);
+            }
 
             /* Check the genesis and trust timestamps. */
             if(trustKey.nGenesisTime > mapBlockIndex[hashPrevBlock]->GetBlockTime())
