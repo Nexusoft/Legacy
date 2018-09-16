@@ -1561,6 +1561,7 @@ namespace Core
 
             /* Score is the total age of the trust key for version 4. */
             nScorePrev = trustKey.Age(mapBlockIndex[hashPrevBlock]->GetBlockTime());
+            trustKey.Print();
         }
 
         /* Version 5 blocks that are trust must pass sequence checks. */
