@@ -267,6 +267,9 @@ namespace Core
     double dBlockWeight = 0.0;
     double dInterestRate = 0.005;
 
+    bool fStakeMinterInitializing = false;
+    bool fGracePeriod = false;
+
 
     uint64 nLastBlockTx = 0;
     uint64 nLastBlockSize = 0;

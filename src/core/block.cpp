@@ -317,18 +317,12 @@ namespace Core
         /* Check the proof of stake claims. */
         if (IsProofOfStake())
         {
-            /* Version 5 blocks don't need trust pool - do basic checks here. */
-            if(nVersion >= 5)
-            {
-                /* Check the claimed stake limits are met. */
-                if(!CheckStake())
-                    return DoS(50, error("ConnectBlock() : invalid proof of stake"));
+            /* Check the trust scores on version 5 blocks. */
+            if(nVersion >= 5 && !CheckTrust())
+                return DoS(50, error("ConnectBlock() : invalid trust score"));
 
-                /* Check the claimed trust scores are met. */
-                if(!CheckTrust())
-                    return DoS(50, error("ConnectBlock() : invalid trust score"));
-            }
-            else if(nVersion < 5 && !VerifyStake())
+            /* Verify the stake on version 4 blocks. */
+            else if(nVersion == 4 && !VerifyStake())
                 return DoS(50, error("ConnectBlock() : invalid proof of stake"));
         }
 
@@ -338,7 +332,11 @@ namespace Core
             /* Check that Transaction is not Genesis when Trust Key is Established. */
             CTrustKey trustCheck;
             if(nVersion >= 5 && indexdb.ReadTrustKey(cKey, trustCheck))
-                return error("ConnectBlock() : Duplicate Genesis not Allowed");
+            {
+                if(trustCheck.vchPubKey != vTrustKey || trustCheck.hashGenesisBlock != GetHash() ||
+                   trustCheck.hashGenesisTx != vtx[0].GetHash() || trustCheck.nGenesisTime != nTime)
+                   return error("ConnectBlock() : Duplicate Genesis not Allowed");
+            }
 
             /* Create the Trust Key from Genesis Transaction Block. */
             CTrustKey trustKey(vTrustKey, GetHash(), vtx[0].GetHash(), nTime);
@@ -363,7 +361,7 @@ namespace Core
             if(!indexdb.ReadTrustKey(cKey, trustKey))
             {
                 if(!FindGenesis(cKey, trustKey, hashPrevBlock))
-                    return error("ConnectBlock() : no trust without genesis");
+                    return DoS(50, error("ConnectBlock() : no trust without genesis"));
 
                 indexdb.WriteTrustKey(cKey, trustKey);
             }
@@ -1109,6 +1107,10 @@ namespace Core
             /* Check that the Coinbase / CoinstakeTimstamp is after Previous Block. */
             if (vtx[0].nTime < pindexPrev->GetBlockTime())
                 return error("AcceptBlock() : coinstake transaction too early");
+
+            /* Check the claimed stake limits are met. */
+            if(nVersion >= 5 && !CheckStake())
+                return DoS(50, error("ConnectBlock() : invalid proof of stake"));
         }
 
 
@@ -1153,7 +1155,6 @@ namespace Core
         }
 
         // Check for duplicate
-
         if (mapBlockIndex.count(hash))
         {
             return error("ProcessBlock() : already have block %d %s", mapBlockIndex[hash]->nHeight, hash.ToString().substr(0,20).c_str());
@@ -1230,12 +1231,12 @@ namespace Core
         {
             /* Check map block index for trust block. */
             if(!mapBlockIndex.count(hashTrustBlock))
-                return error("LastTrustBlock : Couldn't find last trust block in mapblockindex");
+                return error("LastTrustBlock() : Couldn't find last trust block in mapblockindex");
 
             /* Get the last trust block. */
             const CBlockIndex* pindex = GetLastChannelIndex(mapBlockIndex[hashTrustBlock]->pprev, 0);
             if(!pindex || !pindex->pprev)
-                return error("LastTrustBlock : couldn't find index");
+                return error("LastTrustBlock() : couldn't find index");
 
             /* Check for genesis. */
             if(pindex->GetBlockHash() == trustKey.hashGenesisBlock)
@@ -1246,15 +1247,15 @@ namespace Core
 
             /* If serach block isn't proof of stake, return an error. */
             if(!pindex->IsProofOfStake())
-                return error("LastTrustBlock : not proof of stake");
+                return error("LastTrustBlock() : not proof of stake");
 
             /* Read the previous block from disk. */
             if(!block.ReadFromDisk(pindex, true))
-                return error("LastTrustBlock : can't read trust block");
+                return error("LastTrustBlock() : can't read trust block");
 
             /* Get the trust key from block. */
             if(!block.TrustKey(vTrustKey))
-                return error("LastTrustBlock : can't get trust key");
+                return error("LastTrustBlock() : can't get trust key");
 
             /* Set current trust block in recursion. */
             hashTrustBlock = pindex->GetBlockHash();
@@ -1280,24 +1281,24 @@ namespace Core
         {
             /* Check map block index for trust block. */
             if(!mapBlockIndex.count(hashTrustBlock))
-                return error("FindGenesis : Couldn't find last trust block in mapblockindex");
+                return error("FindGenesis() : Couldn't find last trust block in mapblockindex");
 
             /* Get the last trust block. */
             const CBlockIndex* pindex = GetLastChannelIndex(mapBlockIndex[hashTrustBlock]->pprev, 0);
             if(!pindex || !pindex->pprev)
-                return error("FindGenesis : couldn't find index");
+                return error("FindGenesis() : couldn't find index");
 
             /* If serach block isn't proof of stake, return an error. */
             if(!pindex->IsProofOfStake())
-                return error("FindGenesis : not proof of stake");
+                return error("FindGenesis() : not proof of stake");
 
             /* Read the previous block from disk. */
             if(!block.ReadFromDisk(pindex, true))
-                return error("FindGenesis : can't read trust block");
+                return error("FindGenesis() : can't read trust block");
 
             /* Get the trust key from block. */
             if(!block.TrustKey(vTrustKey))
-                return error("FindGenesis : can't get trust key");
+                return error("FindGenesis() : can't get trust key");
 
             /* Check for genesis. */
             keyTest.SetBytes(vTrustKey);
