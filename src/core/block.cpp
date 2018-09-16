@@ -1494,8 +1494,6 @@ namespace Core
         if(!ExtractTrust(hashLastBlock, nSequence, nTrustScore))
             return error("CBlock::CheckTrust() : failed to extract trust");
 
-        printf("\nFIRST last=%s, nSequence=%u, nScore=%u\n\n", hashLastBlock.ToString().c_str(), nSequence, nTrustScore);
-
         /* Check that the last block is in the block index. */
         if(!mapBlockIndex.count(hashLastBlock))
             return error("CBlock::CheckTrust() : previous block (%s) not in block index", hashLastBlock.ToString().substr(0, 20).c_str());
@@ -1526,19 +1524,6 @@ namespace Core
         /* Placeholder in case previous block is a version 4 block. */
         unsigned int nScorePrev = 0, nScore = 0;
 
-        /* Establish the index database. */
-        LLD::CIndexDB indexdb("r+");
-
-        /* Check the trust pool - this should only execute once transitioning from version 4 to version 5 trust keys. */
-        CTrustKey trustKey;
-        if(!indexdb.ReadTrustKey(cKey, trustKey))
-        {
-            if(!FindGenesis(cKey, trustKey, hashPrevBlock))
-                return error("CBlock::CheckTrust() : trust key not found in database");
-
-            indexdb.WriteTrustKey(cKey, trustKey);
-        }
-
         /* If previous block is genesis, set previous score to 0. */
         if(blockPrev.vtx[0].IsGenesis())
         {
@@ -1553,6 +1538,19 @@ namespace Core
         /* Version 4 blocks need to get score from previous blocks calculated score from the trust pool. */
         else if(blockPrev.nVersion < 5)
         {
+            /* Establish the index database. */
+            LLD::CIndexDB indexdb("r+");
+
+            /* Check the trust pool - this should only execute once transitioning from version 4 to version 5 trust keys. */
+            CTrustKey trustKey;
+            if(!indexdb.ReadTrustKey(cKey, trustKey))
+            {
+                if(!FindGenesis(cKey, trustKey, hashPrevBlock))
+                    return error("CBlock::CheckTrust() : trust key not found in database");
+
+                indexdb.WriteTrustKey(cKey, trustKey);
+            }
+
             /* Enforce sequence number of 1 for anything made from version 4 blocks. */
             if(nSequence != 1)
                 return error("CBlock::CheckTrust() : version 4 block sequence number not 1 (%u)", nSequence);
@@ -1563,8 +1561,6 @@ namespace Core
 
             /* Score is the total age of the trust key for version 4. */
             nScorePrev = trustKey.Age(mapBlockIndex[hashPrevBlock]->GetBlockTime());
-
-            printf("\ntime prev %" PRIu64 " time genesis %u\n", mapBlockIndex[hashPrevBlock]->GetBlockTime(), trustKey.nGenesisTime);
         }
 
         /* Version 5 blocks that are trust must pass sequence checks. */
@@ -1581,8 +1577,6 @@ namespace Core
             /* Enforce Sequence numbering, must be +1 always. */
             if(nSequence != nSequencePrev + 1)
                 return error("CBlock::CheckTrust() : previous sequence (%u) broken (%u)", nSequencePrev, nSequence);
-
-            printf("\nPREV last=%s, nSequence=%u, nScore=%u\n\n", hashBlockPrev.ToString().c_str(), nSequencePrev, nScorePrev);
         }
 
         /* The time it has been since the last trust block for this trust key. */
@@ -1610,7 +1604,6 @@ namespace Core
             nScore = (60 * 60 * 24 * 28 * 13);
 
         /* Debug output. */
-        trustKey.Print();
         if(GetArg("-verbose", 0) >= 2)
             printf("CheckTrust: score=%u prev=%u timespan=%u change=%i\n", nScore, nScorePrev, nTimespan, (int)(nScore - nScorePrev));
 
