@@ -514,8 +514,8 @@ namespace Core
                 continue;
 
             /* Don't stake if there are no available nodes. */
-            if (Net::vNodes.empty() || IsInitialBlockDownload())
-                continue;
+            if (!Net::vNodes.empty() && !IsInitialBlockDownload())
+                break;
         }
 
         // Each thread has its own key and counter
