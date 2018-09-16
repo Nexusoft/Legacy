@@ -122,7 +122,7 @@ namespace Core
             CTrustKey trustKey;
             if(!indexdb.ReadTrustKey(cKey, trustKey))
             {
-                if(!FindGenesis(trustKey, hashPrevBlock))
+                if(!FindGenesis(cKey, trustKey, hashPrevBlock))
                     return error("CBlock::VerifyStake() : trust key doesn't exist");
 
                 indexdb.WriteTrustKey(cKey, trustKey);

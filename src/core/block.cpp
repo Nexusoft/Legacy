@@ -362,12 +362,12 @@ namespace Core
             CTrustKey trustKey;
             if(!indexdb.ReadTrustKey(cKey, trustKey))
             {
-                if(!FindGenesis(trustKey, hashPrevBlock))
+                if(!FindGenesis(cKey, trustKey, hashPrevBlock))
                     return error("ConnectBlock() : no trust without genesis");
 
                 indexdb.WriteTrustKey(cKey, trustKey);
             }
-            
+
             /* Check that the Trust Key and Current Block match. */
             if(trustKey.vchPubKey != vTrustKey)
                 return error("ConnectBlock() : Trust Key and Block Key Mismatch.");
@@ -1264,7 +1264,7 @@ namespace Core
     }
 
 
-    bool FindGenesis(CTrustKey& trustKey, uint1024& hashTrustBlock)
+    bool FindGenesis(uint576 cKey, CTrustKey& trustKey, uint1024& hashTrustBlock)
     {
         /* Block Object. */
         CBlock block;
@@ -1272,32 +1272,36 @@ namespace Core
         /* Trust key of said block. */
         std::vector<unsigned char> vTrustKey;
 
+        /* The key to test for. */
+        uint576 keyTest;
+
         /* Loop through all previous blocks looking for most recent trust block. */
         while(hashTrustBlock != hashGenesisBlockOfficial)
         {
             /* Check map block index for trust block. */
             if(!mapBlockIndex.count(hashTrustBlock))
-                return error("LastTrustBlock : Couldn't find last trust block in mapblockindex");
+                return error("FindGenesis : Couldn't find last trust block in mapblockindex");
 
             /* Get the last trust block. */
             const CBlockIndex* pindex = GetLastChannelIndex(mapBlockIndex[hashTrustBlock]->pprev, 0);
             if(!pindex || !pindex->pprev)
-                return error("LastTrustBlock : couldn't find index");
+                return error("FindGenesis : couldn't find index");
 
             /* If serach block isn't proof of stake, return an error. */
             if(!pindex->IsProofOfStake())
-                return error("LastTrustBlock : not proof of stake");
+                return error("FindGenesis : not proof of stake");
 
             /* Read the previous block from disk. */
             if(!block.ReadFromDisk(pindex, true))
-                return error("LastTrustBlock : can't read trust block");
+                return error("FindGenesis : can't read trust block");
 
             /* Get the trust key from block. */
             if(!block.TrustKey(vTrustKey))
-                return error("LastTrustBlock : can't get trust key");
+                return error("FindGenesis : can't get trust key");
 
             /* Check for genesis. */
-            if(vTrustKey == trustKey.vchPubKey && block.vtx[0].IsGenesis())
+            keyTest.SetBytes(vTrustKey);
+            if(keyTest == cKey && block.vtx[0].IsGenesis())
             {
                 printf("FindGenesis() : Found Genesis (%s). Restoring trust key.\n", block.GetHash().ToString().substr(0, 20).c_str());
 
@@ -1545,7 +1549,7 @@ namespace Core
             CTrustKey trustKey;
             if(!indexdb.ReadTrustKey(cKey, trustKey))
             {
-                if(!FindGenesis(trustKey, hashPrevBlock))
+                if(!FindGenesis(cKey, trustKey, hashPrevBlock))
                     return error("CBlock::CheckTrust() : trust key not found in database");
 
                 indexdb.WriteTrustKey(cKey, trustKey);
