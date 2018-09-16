@@ -1494,7 +1494,7 @@ namespace Core
         if(!ExtractTrust(hashLastBlock, nSequence, nTrustScore))
             return error("CBlock::CheckTrust() : failed to extract trust");
 
-        printf("\nFIRST last=%s, nSequence=%u, nScore=%u\n\n", hashLastBlock, nSequence, nTrustScore);
+        printf("\nFIRST last=%s, nSequence=%u, nScore=%u\n\n", hashLastBlock.ToString().c_str(), nSequence, nTrustScore);
 
         /* Check that the last block is in the block index. */
         if(!mapBlockIndex.count(hashLastBlock))
@@ -1580,7 +1580,7 @@ namespace Core
             if(nSequence != nSequencePrev + 1)
                 return error("CBlock::CheckTrust() : previous sequence (%u) broken (%u)", nSequencePrev, nSequence);
 
-            printf("\nPREV last=%s, nSequence=%u, nScore=%u\n\n", hashBlockPrev, nSequencePrev, nScorePrev);
+            printf("\nPREV last=%s, nSequence=%u, nScore=%u\n\n", hashBlockPrev.ToString().c_str(), nSequencePrev, nScorePrev);
         }
 
         /* The time it has been since the last trust block for this trust key. */
