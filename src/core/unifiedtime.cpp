@@ -263,19 +263,6 @@ void ThreadUnifiedSamples(void* parg)
             SERVER.Connect();
 
 
-            /* If the Core LLP isn't connected, Retry in 10 Seconds. */
-            if(!SERVER.Connected())
-            {
-                /* Erase time seeds that aren't connectable. */
-                SEEDS.erase(SEEDS.begin() + nIterator);
-
-                /* Debug output. */
-                printf("***** Core LLP: Failed To Connect To %s:%s\n", SERVER.IP.c_str(), SERVER.PORT.c_str());
-
-                continue;
-            }
-
-
             /* Use a CMajority to Find the Sample with the Most Weight. */
             CMajority<int> nSamples;
 
