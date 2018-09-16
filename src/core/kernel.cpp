@@ -529,9 +529,37 @@ namespace Core
 
         /* Trust Key is written from version 5 rules. */
         CTrustKey trustKey;
+        trustKey.SetNull();
+
+        /* See if key is cached in database. */
         if(trustdb.ReadMyKey(trustKey))
-            vchTrustKey = trustKey.vchPubKey;
-        else
+        {
+
+            /* Check if my key has a version 4 previous. */
+            uint1024 hashLastBlock = Core::hashBestChain;
+            if(LastTrustBlock(trustKey, hashLastBlock) && mapBlockIndex[hashLastBlock]->nVersion == 4 &&
+                (pindexBest->pprev->GetBlockTime() - mapBlockIndex[hashLastBlock]->GetBlockTime()) > (fTestNet ? TRUST_KEY_TIMESPAN_TESTNET : TRUST_KEY_TIMESPAN))
+            {
+                /* Debug notification. */
+                error("Stake Minter : Version 4 key never made it through grace period.\n");
+
+                /* Erase expired trust key. */
+                LLD::CIndexDB indexdb("r+");
+                indexdb.EraseTrustKey(trustKey.GetKey());
+
+                /* Erase my key if expired. */
+                trustdb.EraseMyKey();
+
+                /* Set trust key to null state. */
+                trustKey.SetNull();
+            }
+            else
+                vchTrustKey = trustKey.vchPubKey;
+
+        }
+
+        /* Search for trust key if it is not cached. */
+        if(trustKey.IsNull())
         {
             LLD::CIndexDB indexdb("r+");
             std::vector<uint576> vKeys;
