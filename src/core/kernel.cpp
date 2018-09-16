@@ -116,7 +116,7 @@ namespace Core
         uint64 nCoinAge = 0, nTrustAge = 0, nBlockAge = 0;
         double nTrustWeight = 0.0, nBlockWeight = 0.0;
 
-        LLD::CIndexDB indexdb("cr");
+        LLD::CIndexDB indexdb("r+");
         if(vtx[0].IsTrust())
         {
             CTrustKey trustKey;
