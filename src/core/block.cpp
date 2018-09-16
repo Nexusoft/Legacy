@@ -1505,7 +1505,7 @@ namespace Core
         /* Check that the block is connected. */
         CBlockIndex* pindexPrev = mapBlockIndex[hashLastBlock];
         if(!pindexPrev->pnext)
-            return error("CBlock::CheckTrust() : previous blocks is not in main chain");
+            return error("CBlock::CheckTrust() : previous block is not in main chain");
 
         /* Read the previous block from disk. */
         CBlock blockPrev;
@@ -1528,8 +1528,9 @@ namespace Core
         /* Placeholder in case previous block is a version 4 block. */
         unsigned int nScorePrev = 0, nScore = 0;
 
+        printf("\n");
         print();
-        blockPrev.print();
+        printf("last=%s, sequence=%u, score=%u\n", hashLastBlock.ToString().c_str(), nSequence, nTrustScore);
 
         /* If previous block is genesis, set previous score to 0. */
         if(blockPrev.vtx[0].IsGenesis())
@@ -1579,6 +1580,10 @@ namespace Core
             /* Enforce Sequence numbering, must be +1 always. */
             if(nSequence != nSequencePrev + 1)
                 return error("CBlock::CheckTrust() : previous sequence (%u) broken (%u)", nSequencePrev, nSequence);
+
+            printf("\n");
+            blockPrev.print();
+            printf("PREV last=%s, sequence=%u, score=%u\n", hashBlockPrev.ToString().c_str(), nSequencePrev, nScorePrev);
         }
 
         /* The time it has been since the last trust block for this trust key. */
