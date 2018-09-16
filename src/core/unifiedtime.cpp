@@ -247,8 +247,8 @@ void ThreadUnifiedSamples(void* parg)
                     /* Debug output to show the clock adjustments. */
                     printf("***** Unified Time: New timespan at %u minutes, adjusting clock back one second (%i new offset). Remaining %i seconds\n", (nTimestamp / 60), UNIFIED_AVERAGE_OFFSET, ((fTestNet ? UNIFIED_TIME_ADJUSTMENT_TESTNET : UNIFEED_TIME_ADJUSTMENT) - TIME_ADJUSTED));
 
-                    /* Sleep for 5 seconds then get seeds from other nodes again. */
-                    Sleep(5000);
+                    /* Sleep for 2 seconds then get seeds from other nodes again. */
+                    Sleep(2000);
                 }
             }
 
@@ -266,6 +266,10 @@ void ThreadUnifiedSamples(void* parg)
             /* If the Core LLP isn't connected, Retry in 10 Seconds. */
             if(!SERVER.Connected())
             {
+                /* Erase time seeds that aren't connectable. */
+                SEEDS.erase(SEEDS.begin() + nIterator);
+
+                /* Debug output. */
                 printf("***** Core LLP: Failed To Connect To %s:%s\n", SERVER.IP.c_str(), SERVER.PORT.c_str());
 
                 continue;
