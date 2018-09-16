@@ -539,7 +539,7 @@ void NexusGUI::setNumConnections(int count)
 
 void NexusGUI::setWeight(double trustWeight, double blockWeight, double interestRate)
 {
-    double dPercent = (trustWeight + blockWeight) / 37.5;
+    double dPercent = (trustWeight + blockWeight) / 100.0;
 
     QString icon;
     if(dPercent < 0.2)
@@ -560,7 +560,7 @@ void NexusGUI::setWeight(double trustWeight, double blockWeight, double interest
     }
     else
     {
-        labelWeightIcon->setToolTip(tr("Interest Rate %1 %").arg(interestRate * 100.0, 0, 'f', 4) + QString("\n") + tr("Stake Weight %1 %").arg(dPercent * 100.0, 0, 'f', 2) + QString("\n") + tr("%1 % Trust Weight").arg((100.0 * trustWeight) / 17.5, 0, 'f', 2)+ QString(".\n") + tr("%1 % Block Weight").arg((100.0 * blockWeight) / 20.0, 0, 'f', 2));
+        labelWeightIcon->setToolTip(tr("%1 % Interest Rate").arg(interestRate * 100.0, 0, 'f', 4) + QString("\n") + tr("%1 % Stake Weight").arg(dPercent * 100.0, 0, 'f', 2) + QString("\n") + tr("%1 % Trust Weight").arg((100.0 * trustWeight) / 90.0, 0, 'f', 2)+ QString("\n") + tr("%1 % Block Weight").arg((100.0 * blockWeight) / 10.0, 0, 'f', 2));
     }
 
     labelWeightIcon->setPixmap(QIcon(icon).pixmap(STATUSBAR_ICONSIZE, STATUSBAR_ICONSIZE));
