@@ -22,8 +22,8 @@ namespace Core
 
 
     /** The current Block Version Activating in this Release. **/
-    const unsigned int NETWORK_BLOCK_CURRENT_VERSION = 5;
-    const unsigned int TESTNET_BLOCK_CURRENT_VERSION = 5;
+    const unsigned int NETWORK_BLOCK_CURRENT_VERSION = 6;
+    const unsigned int TESTNET_BLOCK_CURRENT_VERSION = 6;
 
 
     /** Nexus Max Block size is 2 MB. This is to stay consistent with Nexus's 1 MB limit with 256 bit hashes, where Nexus Transactions are 512 bit. **/
@@ -112,13 +112,15 @@ namespace Core
     const unsigned int TESTNET_VERSION_TIMELOCK[]   = { 1412676000,        //--- Block Version 2 Testnet Activation:  10/07/2014 04:00:00 GMT - 6
                                                         1421293891,        //--- Block Version 3 Testnet Activation:  01/15/2015 07:51:31 GMT - 6
                                                         1421949600,        //--- Block Version 4 Testnet Activation:  05/10/2015 08:01:00 GMT - 6
-                                                        1536562800 };      //--- Block Version 5 Testnet Activation:  09/10/2018 00:00:00 GMT - 7
+                                                        1536562800,        //--- Block Version 5 Testnet Activation:  09/10/2018 00:00:00 GMT - 7
+                                                        1537167600 };      //--- Block Version 6 Testnet Activation:  09/17/2018 00:00:00 GMT - 7
 
     /* Network Time - Lock for the First Nexus Block Update. Version 1 Blocks Rejected after this Time - Lock, Version 2 Blocks Rejected Before it. */
     const unsigned int NETWORK_VERSION_TIMELOCK[]   = { 1412964000,        //--- Block Version 2 Activation:          10/10/2014 12:00:00 GMT - 6
                                                         1421949600,        //--- Block Version 3 Activation:          01/22/2015 12:00:00 GMT - 6
                                                         1438369200,        //--- Block Version 4 Activation:          07/31/2015 12:00:00 GMT - 7
-                                                        1536977460 };      //--- Block Version 5 Activation:          09/14/2018 19:11:00 GMT - 7
+                                                        1536977460,        //--- Block Version 5 Activation:          09/14/2018 19:11:00 GMT - 7
+                                                        1538791860 };      //--- Block Version 6 Activation:          10/05/2018 19:11:00 GMT - 7
 
 
     /** Time - Lock for the Nexus Channels on the Testnet. Each Channel Cannot produce blocks before their corresponding Time - Locks. **/

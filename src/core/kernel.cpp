@@ -245,9 +245,11 @@ namespace Core
         /* Calculate the Variable Interest Rate for Given Coin Age Input. [0.5% Minimum - 3% Maximum].
             Logarithmic Variable Interest Equation = 0.03 ln((9t / 31449600) + 1) / ln(10) */
         double nInterestRate = 0.05; //genesis interest rate
+        if(block.nVersion >= 6)
+            nInterestRate = 0.005;
 
         /* Get the trust key from index database. */
-        if(!block.vtx[0].IsGenesis())
+        if(!block.vtx[0].IsGenesis() || block.nVersion >= 6)
         {
             CTrustKey trustKey;
             if(indexdb.ReadTrustKey(cKey, trustKey))
