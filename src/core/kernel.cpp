@@ -509,7 +509,7 @@ namespace Core
         while(!fShutdown)
         {
             /* Sleep call to keep the thread from running. */
-            Sleep(10000);
+            Sleep(1000);
 
             /* Don't stake if the wallet is locked. */
             if (pwalletMain->IsLocked())
