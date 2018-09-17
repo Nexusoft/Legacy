@@ -13,7 +13,7 @@
 const std::string CLIENT_NAME("Nexus");
 
 /* The database type used (Berklee DB or Lower Level Database) */
-const std::string CLIENT_VERSION("0.2.5.1_testnet");
+const std::string CLIENT_VERSION("0.2.5.1_pre_release_4");
 
 #if defined USE_LLD
     const std::string CLIENT_DATABASE("[LLD]");
