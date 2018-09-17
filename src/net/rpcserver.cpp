@@ -374,7 +374,7 @@ namespace Net
             if(!Core::mapBlockIndex.count(hashLastBlock))
                 continue;
 
-            if(Core::pindexBest->GetBlockTime() - Core::mapBlockIndex[hashLastBlock]->GetBlockTime() > Core::TRUST_KEY_EXPIRE)
+            if(Core::mapBlockIndex[hashLastBlock]->GetBlockTime() < (fTestNet ? Core::TESTNET_VERSION_TIMELOCK[3] : Core::NETWORK_VERSION_TIMELOCK[3]))
                 continue;
 
             Object obj;

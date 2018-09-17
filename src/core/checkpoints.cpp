@@ -67,7 +67,7 @@ namespace Core
         The blockchain from genesis to new hardened checkpoint will then be fixed into place. **/
     bool HardenCheckpoint(CBlockIndex* pcheckpoint, bool fInit)
     {
-        
+
         /** Only Harden New Checkpoint if it Fits new Timestamp. **/
         if(!IsNewTimespan(pcheckpoint->pprev))
             return false;

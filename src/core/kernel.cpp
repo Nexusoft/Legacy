@@ -116,12 +116,17 @@ namespace Core
         uint64 nCoinAge = 0, nTrustAge = 0, nBlockAge = 0;
         double nTrustWeight = 0.0, nBlockWeight = 0.0;
 
-        LLD::CIndexDB indexdb("cr");
+        LLD::CIndexDB indexdb("r+");
         if(vtx[0].IsTrust())
         {
             CTrustKey trustKey;
             if(!indexdb.ReadTrustKey(cKey, trustKey))
-                return error("CBlock::VerifyStake() : trust key doesn't exist");
+            {
+                if(!FindGenesis(cKey, trustKey, hashPrevBlock))
+                    return error("CBlock::VerifyStake() : trust key doesn't exist");
+
+                indexdb.WriteTrustKey(cKey, trustKey);
+            }
 
             /* Check the genesis and trust timestamps. */
             if(trustKey.nGenesisTime > mapBlockIndex[hashPrevBlock]->GetBlockTime())
@@ -240,11 +245,16 @@ namespace Core
         /* Calculate the Variable Interest Rate for Given Coin Age Input. [0.5% Minimum - 3% Maximum].
             Logarithmic Variable Interest Equation = 0.03 ln((9t / 31449600) + 1) / ln(10) */
         double nInterestRate = 0.05; //genesis interest rate
+        if(block.nVersion >= 6)
+            nInterestRate = 0.005;
 
         /* Get the trust key from index database. */
-        CTrustKey trustKey;
-        if(indexdb.ReadTrustKey(cKey, trustKey))
-            nInterestRate = trustKey.InterestRate(block, nTime);
+        if(!block.vtx[0].IsGenesis() || block.nVersion >= 6)
+        {
+            CTrustKey trustKey;
+            if(indexdb.ReadTrustKey(cKey, trustKey))
+                nInterestRate = trustKey.InterestRate(block, nTime);
+        }
 
         /** Check the coin age of each Input. **/
         for(int nIndex = 1; nIndex < vin.size(); nIndex++)
@@ -495,6 +505,21 @@ namespace Core
         printf("Stake Minter Started\n");
         SetThreadPriority(THREAD_PRIORITY_LOWEST);
 
+        /* Thread waiting while downloading or wallet locked. */
+        while(!fShutdown)
+        {
+            /* Sleep call to keep the thread from running. */
+            Sleep(10000);
+
+            /* Don't stake if the wallet is locked. */
+            if (pwalletMain->IsLocked())
+                continue;
+
+            /* Don't stake if there are no available nodes. */
+            if (!Net::vNodes.empty() && !IsInitialBlockDownload())
+                break;
+        }
+
         // Each thread has its own key and counter
         Wallet::CReserveKey reservekey(pwalletMain);
 
@@ -506,11 +531,39 @@ namespace Core
 
         /* Trust Key is written from version 5 rules. */
         CTrustKey trustKey;
+        trustKey.SetNull();
+
+        /* See if key is cached in database. */
         if(trustdb.ReadMyKey(trustKey))
-            vchTrustKey = trustKey.vchPubKey;
-        else
         {
-            LLD::CIndexDB indexdb("cr");
+
+            /* Check if my key has a version 4 previous. */
+            uint1024 hashLastBlock = Core::hashBestChain;
+            if(LastTrustBlock(trustKey, hashLastBlock) && mapBlockIndex[hashLastBlock]->nVersion == 4 &&
+                (pindexBest->pprev->GetBlockTime() - mapBlockIndex[hashLastBlock]->GetBlockTime()) > (fTestNet ? TRUST_KEY_TIMESPAN_TESTNET : TRUST_KEY_TIMESPAN))
+            {
+                /* Debug notification. */
+                error("Stake Minter : Version 4 key never made it through grace period.\n");
+
+                /* Erase expired trust key. */
+                LLD::CIndexDB indexdb("r+");
+                indexdb.EraseTrustKey(trustKey.GetKey());
+
+                /* Erase my key if expired. */
+                trustdb.EraseMyKey();
+
+                /* Set trust key to null state. */
+                trustKey.SetNull();
+            }
+            else
+                vchTrustKey = trustKey.vchPubKey;
+
+        }
+
+        /* Search for trust key if it is not cached. */
+        if(trustKey.IsNull())
+        {
+            LLD::CIndexDB indexdb("r+");
             std::vector<uint576> vKeys;
             if(indexdb.GetTrustKeys(vKeys))
             {
@@ -524,7 +577,19 @@ namespace Core
                     address.SetPubKey(trustCheck.vchPubKey);
                     if(pwalletMain->HaveKey(address))
                     {
-                        printf("Stake Minter : Found my Trust Key %s\n", HexStr(key.begin(), key.end()).c_str());
+                        /* Check for keys that are expired version 4 previous. */
+                        uint1024 hashLastBlock = Core::hashBestChain;
+                        if(LastTrustBlock(trustCheck, hashLastBlock) && mapBlockIndex[hashLastBlock]->nVersion == 4 &&
+                            (pindexBest->pprev->GetBlockTime() - mapBlockIndex[hashLastBlock]->GetBlockTime()) > (fTestNet ? TRUST_KEY_TIMESPAN_TESTNET : TRUST_KEY_TIMESPAN))
+                        {
+                            /* Debug notification. */
+                            error("Stake Minter : Version 4 key never made it through grace period.\n");
+
+                            /* Erase expired trust key. */
+                            indexdb.EraseTrustKey(key);
+
+                            continue;
+                        }
 
                         /* Set the binary data of trust key. */
                         vchTrustKey = trustCheck.vchPubKey;
@@ -534,6 +599,9 @@ namespace Core
 
                         /* Write my key to disk. */
                         trustdb.WriteMyKey(trustKey);
+
+                        /* Debug output for key finder. */
+                        printf("Stake Minter : Found my Trust Key %s\n", HexStr(key.begin(), key.end()).c_str());
                     }
                 }
             }
@@ -544,543 +612,312 @@ namespace Core
 
         while(!fShutdown)
         {
-            /* Sleep call to keep the thread from running. */
-            Sleep(10000);
-
-            /* Don't stake if the wallet is locked. */
-            if (pwalletMain->IsLocked())
-                continue;
-
-            /* Don't stake if there are no available nodes. */
-            if (Net::vNodes.empty() || IsInitialBlockDownload())
-                continue;
+            Sleep(1000);
 
             /* Take a snapshot of the best block. */
             uint1024 hashBest = hashBestChain;
 
-            /* Check in case genesis was disconnected. */
-            if(!trustKey.IsNull())
-            {
-                LLD::CIndexDB indexdb("cr");
-
-                /* Extract my trust key. */
-                uint576 myKey;
-                myKey.SetBytes(trustKey.vchPubKey);
-
-                /* Check the database for trust key. */
-                CTrustKey trustCheck;
-                if(!indexdb.ReadTrustKey(myKey, trustCheck))
-                    trustKey.SetNull();
-
-            }
-
-            /* Create the block(s) to work on. */
+            /* Create the block to work on. */
             CBlock block = CreateNewBlock(reservekey, pwalletMain, 0);
             if(block.IsNull())
                 continue;
 
-            /* Version 5 block staking minter. */
-            if(block.nVersion >= 5)
+            /* Write the trust key into the output script. */
+            block.vtx[0].vout[0].scriptPubKey << vchTrustKey << Wallet::OP_CHECKSIG;
+
+            /* Trust transaction. */
+            if(!trustKey.IsNull())
             {
+                /* Set the key from bytes. */
+                uint576 key;
+                key.SetBytes(trustKey.vchPubKey);
 
-                /* Write the trust key into the output script. */
-                block.vtx[0].vout[0].scriptPubKey << vchTrustKey << Wallet::OP_CHECKSIG;
-
-                /* Trust transaction. */
-                if(!trustKey.IsNull())
+                /* Check that the database has key. */
+                LLD::CIndexDB indexdb("r+");
+                CTrustKey keyCheck;
+                if(!indexdb.ReadTrustKey(key, keyCheck))
                 {
-                    /* Set the key from bytes. */
-                    uint576 key;
-                    key.SetBytes(trustKey.vchPubKey);
+                    error("Stake Minter : trust key was disconnected");
 
-                    /* Check that the database has key. */
-                    LLD::CIndexDB indexdb("r+");
-                    CTrustKey keyCheck;
-                    if(!indexdb.ReadTrustKey(key, keyCheck))
-                    {
-                        error("Stake Minter : trust key was disconnected");
+                    /* Erase my key from trustdb. */
+                    trustdb.EraseMyKey();
 
-                        /* Erase my key from trustdb. */
-                        trustdb.EraseMyKey();
+                    /* Set the trust key to null state. */
+                    trustKey.SetNull();
 
-                        /* Set the trust key to null state. */
-                        trustKey.SetNull();
-
-                        continue;
-                    }
-
-                    /* Previous out needs to be 0 in coinstake transaction. */
-                    block.vtx[0].vin[0].prevout.n = 0;
-
-                    /* Previous out hash is trust key hash */
-                    block.vtx[0].vin[0].prevout.hash = trustKey.GetHash();
-
-                    /* Get the last block of this trust key. */
-                    uint1024 hashLastBlock = hashBest;
-                    if(!LastTrustBlock(trustKey, hashLastBlock))
-                    {
-                        error("Stake Minter : failed to find last block for trust key");
-                        continue;
-                    }
-
-                    /* Get the last block index from map block index. */
-                    CBlock blockPrev;
-                    if(!blockPrev.ReadFromDisk(mapBlockIndex[hashLastBlock], true))
-                    {
-                        error("Stake Minter : failed to read last block for trust key");
-                        continue;
-                    }
-
-                    /* Enforce the minimum trust key interval of 120 blocks. */
-                    if(block.nHeight - blockPrev.nHeight < (fTestNet ? TESTNET_MINIMUM_INTERVAL : MAINNET_MINIMUM_INTERVAL))
-                    {
-                        error("Stake Minter : trust key interval below minimum interval %u", block.nHeight - blockPrev.nHeight);
-                        continue;
-                    }
-
-                    /* Get the sequence and previous trust. */
-                    unsigned int nTrustPrev = 0, nSequence = 0, nScore = 0;
-
-                    /* Handle if previous block was a genesis. */
-                    if(blockPrev.vtx[0].IsGenesis())
-                    {
-                        nSequence   = 1;
-                        nTrustPrev  = 0;
-                    }
-
-                    /* Handle if previous block was version 4 */
-                    else if(blockPrev.nVersion < 5)
-                    {
-                        nSequence   = 1;
-                        nTrustPrev  = trustKey.Age(mapBlockIndex[hashBest]->GetBlockTime());
-                    }
-
-                    /* Handle if previous block is version 5 trust block. */
-                    else
-                    {
-                        /* Extract the trust from the previous block. */
-                        uint1024 hashDummy;
-                        if(!blockPrev.ExtractTrust(hashDummy, nSequence, nTrustPrev))
-                        {
-                            error("Stake Minter : failed to extract trust from previous block");
-                            continue;
-                        }
-
-                        /* Increment Sequence Number. */
-                        nSequence ++;
-
-                    }
-
-                    /* The time it has been since the last trust block for this trust key. */
-                    int nTimespan = (mapBlockIndex[hashBest]->GetBlockTime() - blockPrev.nTime);
-
-                    /* Timespan less than required timespan is awarded the total seconds it took to find. */
-                    if(nTimespan < (fTestNet ? TRUST_KEY_TIMESPAN_TESTNET : TRUST_KEY_TIMESPAN))
-                        nScore = nTrustPrev + nTimespan;
-
-                    /* Timespan more than required timespan is penalized 3 times the time it took past the required timespan. */
-                    else
-                    {
-                        /* Calculate the penalty for score (3x the time). */
-                        int nPenalty = (nTimespan - (fTestNet ? TRUST_KEY_TIMESPAN_TESTNET : TRUST_KEY_TIMESPAN)) * 3;
-
-                        /* Catch overflows and zero out if penalties are greater than previous score. */
-                        if(nPenalty < nTrustPrev)
-                            nScore = (nTrustPrev - nPenalty);
-                    }
-
-                    /* Set maximum trust score to seconds passed for interest rate. */
-                    if(nScore > (60 * 60 * 24 * 28 * 13))
-                        nScore = (60 * 60 * 24 * 28 * 13);
-
-                    /* Serialize the sequence and last block into vin. */
-                    CDataStream scriptPub(block.vtx[0].vin[0].scriptSig, SER_NETWORK, PROTOCOL_VERSION);
-                    scriptPub << hashLastBlock << nSequence << nScore;
-
-                    /* Set the script sig (CScript doesn't support serializing all types needed) */
-                    block.vtx[0].vin[0].scriptSig.clear();
-                    block.vtx[0].vin[0].scriptSig.insert(block.vtx[0].vin[0].scriptSig.end(), scriptPub.begin(), scriptPub.end());
-                }
-
-                /* Add the coinstake inputs */
-                if (!pwalletMain->AddCoinstakeInputs(block))
-                {
-                    error("Stake Minter : failed to add coinstake inputs");
                     continue;
                 }
 
-                /* Weight for Trust transactions combine block weight and stake weight. */
-                double nTrustWeight = 0.0, nBlockWeight = 0.0;
-                if(block.vtx[0].IsTrust())
+                /* Previous out needs to be 0 in coinstake transaction. */
+                block.vtx[0].vin[0].prevout.n = 0;
+
+                /* Previous out hash is trust key hash */
+                block.vtx[0].vin[0].prevout.hash = trustKey.GetHash();
+
+                /* Get the last block of this trust key. */
+                uint1024 hashLastBlock = hashBest;
+                if(!LastTrustBlock(trustKey, hashLastBlock))
                 {
-                    /* Get the score and make sure it all checks out. */
-                    unsigned int nTrustAge;
-                    if(!block.TrustScore(nTrustAge))
-                    {
-                        error("Stake Minter : failed to get trust score");
-                        continue;
-                    }
-
-                    /* Get the weights with the block age. */
-                    unsigned int nBlockAge;
-                    if(!block.BlockAge(nBlockAge))
-                    {
-                        error("Stake Minter : failed to get block age");
-                        continue;
-                    }
-
-                    /* Trust Weight Continues to grow the longer you have staked and higher your interest rate */
-                    nTrustWeight = min(90.0, (((44.0 * log(((2.0 * nTrustAge) / (60 * 60 * 24 * 28 * 3)) + 1.0)) / log(3))) + 1.0);
-
-                    /* Block Weight Reaches Maximum At Trust Key Expiration. */
-                    nBlockWeight = min(10.0, (((9.0 * log(((2.0 * nBlockAge) / ((fTestNet ? TRUST_KEY_TIMESPAN_TESTNET : TRUST_KEY_TIMESPAN))) + 1.0)) / log(3))) + 1.0);
-
-                    /* Set the Reporting Variables for the Qt. */
-                    dTrustWeight = nTrustWeight;
-                    dBlockWeight = nBlockWeight;
+                    error("Stake Minter : failed to find last block for trust key");
+                    continue;
                 }
 
-                /* Weight for Gensis transactions are based on your coin age. */
+                /* Get the last block index from map block index. */
+                CBlock blockPrev;
+                if(!blockPrev.ReadFromDisk(mapBlockIndex[hashLastBlock], true))
+                {
+                    error("Stake Minter : failed to read last block for trust key");
+                    continue;
+                }
+
+                /* Enforce the minimum trust key interval of 120 blocks. */
+                if(block.nHeight - blockPrev.nHeight < (fTestNet ? TESTNET_MINIMUM_INTERVAL : MAINNET_MINIMUM_INTERVAL))
+                {
+                    error("Stake Minter : trust key interval below minimum interval %u", block.nHeight - blockPrev.nHeight);
+                    continue;
+                }
+
+                /* Get the sequence and previous trust. */
+                unsigned int nTrustPrev = 0, nSequence = 0, nScore = 0;
+
+                /* Handle if previous block was a genesis. */
+                if(blockPrev.vtx[0].IsGenesis())
+                {
+                    nSequence   = 1;
+                    nTrustPrev  = 0;
+                }
+
+                /* Handle if previous block was version 4 */
+                else if(blockPrev.nVersion < 5)
+                {
+                    nSequence   = 1;
+                    nTrustPrev  = trustKey.Age(mapBlockIndex[block.hashPrevBlock]->GetBlockTime());
+                }
+
+                /* Handle if previous block is version 5 trust block. */
                 else
                 {
-
-                    /* Calculate the Average Coinstake Age. */
-                    LLD::CIndexDB indexdb("cr");
-                    uint64 nCoinAge;
-                    if(!block.vtx[0].GetCoinstakeAge(indexdb, nCoinAge))
+                    /* Extract the trust from the previous block. */
+                    uint1024 hashDummy;
+                    if(!blockPrev.ExtractTrust(hashDummy, nSequence, nTrustPrev))
                     {
-                        error("Stake Minter : failed to get coinstake age");
+                        error("Stake Minter : failed to extract trust from previous block");
                         continue;
                     }
 
-                    /* Genesis has to wait for one full trust key timespan. */
-                    if(nCoinAge < (fTestNet ? TRUST_KEY_TIMESPAN_TESTNET : TRUST_KEY_TIMESPAN))
-                    {
-                        error("Stake Minter : genesis age is immature");
-                        continue;
-                    }
+                    /* Increment Sequence Number. */
+                    nSequence ++;
 
-                    /* Trust Weight For Genesis Transaction Reaches Maximum at 90 day Limit. */
-                    nTrustWeight = min(10.0, (((9.0 * log(((2.0 * nCoinAge) / (60 * 60 * 24 * 28 * 3)) + 1.0)) / log(3))) + 1.0);
-
-                    /* Set the Reporting Variables for the Qt. */
-                    dTrustWeight = nTrustWeight;
-                    dBlockWeight = 0;
                 }
 
-                /* Calculate the energy efficiency requirements. */
-                double nRequired  = ((108.0 - nTrustWeight - nBlockWeight) * MAX_STAKE_WEIGHT) / block.vtx[0].vout[0].nValue;
+                /* The time it has been since the last trust block for this trust key. */
+                int nTimespan = (mapBlockIndex[block.hashPrevBlock]->GetBlockTime() - blockPrev.nTime);
 
-                /* Calculate the target value based on difficulty. */
-                CBigNum bnTarget;
-                bnTarget.SetCompact(block.nBits);
-                uint1024 hashTarget = bnTarget.getuint1024();
+                /* Timespan less than required timespan is awarded the total seconds it took to find. */
+                if(nTimespan < (fTestNet ? TRUST_KEY_TIMESPAN_TESTNET : TRUST_KEY_TIMESPAN))
+                    nScore = nTrustPrev + nTimespan;
 
-                /* Set the interest rate variable. */
-                dInterestRate = trustKey.InterestRate(block, pindexBest->GetBlockTime());
-
-                /* Sign the new Proof of Stake Block. */
-                if(GetArg("-verbose", 0) >= 0)
-                    printf("Stake Minter : staking from block %s at weight %f and rate %f\n", hashBest.ToString().substr(0, 20).c_str(), (dTrustWeight + dBlockWeight), dInterestRate);
-
-                /* Search for the proof of stake hash. */
-                while(hashBest == hashBestChain)
+                /* Timespan more than required timespan is penalized 3 times the time it took past the required timespan. */
+                else
                 {
-                    /* Update the block time for difficulty accuracy. */
-                    block.UpdateTime();
-                    if(block.nTime == block.vtx[0].nTime)
-                        continue;
+                    /* Calculate the penalty for score (3x the time). */
+                    int nPenalty = (nTimespan - (fTestNet ? TRUST_KEY_TIMESPAN_TESTNET : TRUST_KEY_TIMESPAN)) * 3;
 
-                    /* Calculate the Efficiency Threshold. */
-                    double nThreshold = (double)((block.nTime - block.vtx[0].nTime) * 100.0) / (block.nNonce + 1);
-
-                    /* Allow the Searching For Stake block if Below the Efficiency Threshold. */
-                    if(nThreshold < nRequired)
-                    {
-                        Sleep(1);
-                        continue;
-                    }
-
-                    /* Increment the nOnce. */
-                    block.nNonce ++;
-
-                    /* Debug output. */
-                    if(block.nNonce % 1000 == 0 && GetArg("-verbose", 0) >= 3)
-                        printf("Stake Minter : below threshold %f required %f incrementing nonce %" PRIu64 "\n", nThreshold, nRequired, block.nNonce);
-
-                    /* Handle if block is found. */
-                    if (block.StakeHash() < hashTarget)
-                    {
-                        /* Sign the new Proof of Stake Block. */
-                        if(GetArg("-verbose", 0) >= 0)
-                            printf("Stake Minter : found new stake hash %s\n", block.StakeHash().ToString().substr(0, 20).c_str());
-
-                        /* Set the staking thread priorities. */
-                        SetThreadPriority(THREAD_PRIORITY_NORMAL);
-
-                        /* Add the transactions into the block from memory pool. */
-                        if (!block.vtx[0].IsGenesis())
-                            AddTransactions(block.vtx, pindexBest);
-
-                        /* Build the Merkle Root. */
-                        block.hashMerkleRoot   = block.BuildMerkleTree();
-
-                        /* Sign the block. */
-                        if (!block.SignBlock(*pwalletMain))
-                        {
-                            printf("Stake Minter : failed to sign block");
-                            break;
-                        }
-
-                        /* Check the block. */
-                        if (!block.CheckBlock())
-                        {
-                            error("Stake Minter : check block failed");
-                            break;
-                        }
-
-                        /* Check the stake. */
-                        if (!block.CheckStake())
-                        {
-                            error("Stake Minter : check stake failed");
-                            break;
-                        }
-
-                        /* Check the stake. */
-                        if (!block.CheckTrust())
-                        {
-                            error("Stake Minter : check stake failed");
-                            break;
-                        }
-
-                        /* Check the work for the block. */
-                        if(!CheckWork(&block, *pwalletMain, reservekey))
-                        {
-                            error("Stake Minter : check work failed");
-                            break;
-                        }
-
-                        /* Write the trust key to the key db. */
-                        if(trustKey.IsNull())
-                        {
-                            CTrustKey trustKeyNew(vchTrustKey, block.GetHash(), block.vtx[0].GetHash(), block.nTime);
-                            trustdb.WriteMyKey(trustKeyNew);
-
-                            trustKey = trustKeyNew;
-                            printf("Stake Minter : new trust key written\n");
-                        }
-
-                        break;
-                    }
+                    /* Catch overflows and zero out if penalties are greater than previous score. */
+                    if(nPenalty < nTrustPrev)
+                        nScore = (nTrustPrev - nPenalty);
+                    else
+                        nScore = 0;
                 }
 
-                SetThreadPriority(THREAD_PRIORITY_LOWEST);
+                /* Set maximum trust score to seconds passed for interest rate. */
+                if(nScore > (60 * 60 * 24 * 28 * 13))
+                    nScore = (60 * 60 * 24 * 28 * 13);
+
+                /* Serialize the sequence and last block into vin. */
+                CDataStream scriptPub(block.vtx[0].vin[0].scriptSig, SER_NETWORK, PROTOCOL_VERSION);
+                scriptPub << hashLastBlock << nSequence << nScore;
+
+                /* Set the script sig (CScript doesn't support serializing all types needed) */
+                block.vtx[0].vin[0].scriptSig.clear();
+                block.vtx[0].vin[0].scriptSig.insert(block.vtx[0].vin[0].scriptSig.end(), scriptPub.begin(), scriptPub.end());
+            }
+            else
+                block.vtx[0].vin[0].prevout.SetNull();
+
+            /* Add the coinstake inputs */
+            if (!pwalletMain->AddCoinstakeInputs(block))
+            {
+                error("Stake Minter : no spendable inputs available");
+                continue;
             }
 
-
-            /* Legacy Version 4 proof of stake searching. */
-            else
+            /* Weight for Trust transactions combine block weight and stake weight. */
+            double nTrustWeight = 0.0, nBlockWeight = 0.0;
+            if(block.vtx[0].IsTrust())
             {
-
-                /* Determine Trust Age if the Trust Key Exists. */
-                uint64 nCoinAge = 0, nTrustAge = 0, nBlockAge = 0;
-                double nTrustWeight = 0.0, nBlockWeight = 0.0;
-                if(!trustKey.IsNull())
+                /* Get the score and make sure it all checks out. */
+                unsigned int nTrustAge;
+                if(!block.TrustScore(nTrustAge))
                 {
-                    /* In version 4 check if trust key was expired. */
-                    if(trustKey.Expired(hashBest))
-                    {
-                        //don't stake if version 4 trust key is expired within 3 day grace period
-                        continue;
-                    }
-
-                    /* Set the key from bytes. */
-                    uint576 key;
-                    key.SetBytes(trustKey.vchPubKey);
-
-                    /* Check that the database has key. */
-                    LLD::CIndexDB indexdb("r+");
-                    CTrustKey keyCheck;
-                    if(!indexdb.ReadTrustKey(key, keyCheck))
-                    {
-                        error("Stake Minter : trust key was disconnected");
-
-                        /* Erase my key from trustdb. */
-                        trustdb.EraseMyKey();
-
-                        /* Set the trust key to null state. */
-                        trustKey.SetNull();
-
-                        continue;
-                    }
-
-                    block.vtx[0].vout[0].scriptPubKey << vchTrustKey << Wallet::OP_CHECKSIG;
-                    block.vtx[0].vin[0].prevout.n = 0;
-                    block.vtx[0].vin[0].prevout.hash = trustKey.GetHash();
-
-                    nTrustAge = trustKey.Age(mapBlockIndex[hashBest]->GetBlockTime());
-                    nBlockAge = trustKey.BlockAge(hashBest);
-
-                    /* Trust Weight Reaches Maximum at 30 day Limit. */
-                    nTrustWeight = min(17.5, (((16.5 * log(((2.0 * nTrustAge) / (60 * 60 * 24 * 28)) + 1.0)) / log(3))) + 1.0);
-
-                    /* Block Weight Reaches Maximum At Trust Key Expiration. */
-                    nBlockWeight = min(20.0, (((19.0 * log(((2.0 * nBlockAge) / (TRUST_KEY_EXPIRE)) + 1.0)) / log(3))) + 1.0);
-                }
-                else
-                {
-                    block.vtx[0].vout[0].scriptPubKey << vchTrustKey << Wallet::OP_CHECKSIG;
-
-                    /* Calculate the Average Coinstake Age. */
-                    CBlock temp = block;
-                    if (!pwalletMain->AddCoinstakeInputs(temp))
-                    {
-                        error("Stake Minter : genesis - failed to add coinstake inputs");
-                        continue;
-                    }
-
-                    LLD::CIndexDB indexdb("cr");
-                    if(!temp.vtx[0].GetCoinstakeAge(indexdb, nCoinAge))
-                    {
-                        if(GetArg("-verbose", 0) >= 2)
-                            error("Stake Minter : Genesis - Failed to Get Coinstake Age.");
-
-                        Sleep(1000);
-
-                        continue;
-                    }
-
-
-                    /** Trust Weight For Genesis Transaction Reaches Maximum at 90 day Limit. **/
-                    nTrustWeight = min(17.5, (((16.5 * log(((2.0 * nCoinAge) / (60 * 60 * 24 * 28 * 3)) + 1.0)) / log(3))) + 1.0);
-                }
-
-                /* Get the Total Weight. */
-                int combinedWeight = floor(nTrustWeight + nBlockWeight);
-                int nTotalWeight = max(combinedWeight, 8);
-
-
-                /* Make sure coinstake is created. */
-                int i = 0;
-
-                /* Copy the block pointers. */
-                std::vector<CBlock> vBlocks;
-                vBlocks.resize(nTotalWeight);
-
-                for(i = 0; i < nTotalWeight; i++)
-                {
-                    vBlocks[i] = block;
-
-                    if (!pwalletMain->AddCoinstakeInputs(vBlocks[i]))
-                        break;
-
-                    if (!vBlocks[i].vtx[0].IsGenesis())
-                        AddTransactions(vBlocks[i].vtx, pindexBest);
-
-                    vBlocks[i].hashMerkleRoot   = vBlocks[i].BuildMerkleTree();
-                }
-
-                /* Retry if coinstake wasn't created properly. */
-                if(i != nTotalWeight)
+                    error("Stake Minter : failed to get trust score");
                     continue;
-
-                if(GetArg("-verbose", 0) >= 2)
-                {
-                    printf("Stake Minter : Created New Block %s\n", vBlocks[0].GetHash().ToString().substr(0, 20).c_str());
-                    printf("Stake Minter : Total Nexus to Stake %f\n", (double)vBlocks[0].vtx[0].GetValueOut() / COIN);
                 }
+
+                /* Get the weights with the block age. */
+                unsigned int nBlockAge;
+                if(!block.BlockAge(nBlockAge))
+                {
+                    error("Stake Minter : failed to get block age");
+                    continue;
+                }
+
+                /* Trust Weight Continues to grow the longer you have staked and higher your interest rate */
+                nTrustWeight = min(90.0, (((44.0 * log(((2.0 * nTrustAge) / (60 * 60 * 24 * 28 * 3)) + 1.0)) / log(3))) + 1.0);
+
+                /* Block Weight Reaches Maximum At Trust Key Expiration. */
+                nBlockWeight = min(10.0, (((9.0 * log(((2.0 * nBlockAge) / ((fTestNet ? TRUST_KEY_TIMESPAN_TESTNET : TRUST_KEY_TIMESPAN))) + 1.0)) / log(3))) + 1.0);
 
                 /* Set the Reporting Variables for the Qt. */
                 dTrustWeight = nTrustWeight;
                 dBlockWeight = nBlockWeight;
+            }
 
-                /* Set the interest rate variable. */
-                dInterestRate = trustKey.InterestRate(vBlocks[0], pindexBest->GetBlockTime());
+            /* Weight for Gensis transactions are based on your coin age. */
+            else
+            {
 
-
-                if(GetArg("-verbose", 0) >= 0)
-                    printf("Stake Minter : Staking at Interest %f | Total Weight %u | Trust Weight %f | Block Weight %f | Coin Age %" PRIu64 " | Trust Age %" PRIu64 "| Block Age %" PRIu64 "\n", dInterestRate, nTotalWeight, nTrustWeight, nBlockWeight, nCoinAge, nTrustAge, nBlockAge);
-
-                while(true)
+                /* Calculate the Average Coinstake Age. */
+                LLD::CIndexDB indexdb("cr");
+                uint64 nCoinAge;
+                if(!block.vtx[0].GetCoinstakeAge(indexdb, nCoinAge))
                 {
-                    Sleep(120);
+                    error("Stake Minter : failed to get coinstake age");
+                    continue;
+                }
 
-                    if(hashBestChain != hashBest)
+                /* Genesis has to wait for one full trust key timespan. */
+                if(nCoinAge < (fTestNet ? TRUST_KEY_TIMESPAN_TESTNET : TRUST_KEY_TIMESPAN))
+                {
+                    error("Stake Minter : genesis age is immature");
+                    continue;
+                }
+
+                /* Trust Weight For Genesis Transaction Reaches Maximum at 90 day Limit. */
+                nTrustWeight = min(10.0, (((9.0 * log(((2.0 * nCoinAge) / (60 * 60 * 24 * 28 * 3)) + 1.0)) / log(3))) + 1.0);
+
+                /* Set the Reporting Variables for the Qt. */
+                dTrustWeight = nTrustWeight;
+                dBlockWeight = 0;
+            }
+
+            /* Calculate the energy efficiency requirements. */
+            double nRequired  = ((108.0 - nTrustWeight - nBlockWeight) * MAX_STAKE_WEIGHT) / block.vtx[0].vout[0].nValue;
+
+            /* Calculate the target value based on difficulty. */
+            CBigNum bnTarget;
+            bnTarget.SetCompact(block.nBits);
+            uint1024 hashTarget = bnTarget.getuint1024();
+
+            /* Set the interest rate variable. */
+            dInterestRate = trustKey.InterestRate(block, mapBlockIndex[block.hashPrevBlock]->GetBlockTime());
+
+            /* Sign the new Proof of Stake Block. */
+            if(GetArg("-verbose", 0) >= 0)
+                printf("Stake Minter : staking from block %s at weight %f and rate %f\n", hashBest.ToString().substr(0, 20).c_str(), (dTrustWeight + dBlockWeight), dInterestRate);
+
+            /* Search for the proof of stake hash. */
+            while(hashBest == hashBestChain)
+            {
+                /* Update the block time for difficulty accuracy. */
+                block.UpdateTime();
+                if(block.nTime == block.vtx[0].nTime)
+                    continue;
+
+                /* Calculate the Efficiency Threshold. */
+                double nThreshold = (double)((block.nTime - block.vtx[0].nTime) * 100.0) / (block.nNonce + 1);
+
+                /* Allow the Searching For Stake block if Below the Efficiency Threshold. */
+                if(nThreshold < nRequired)
+                {
+                    Sleep(1);
+                    continue;
+                }
+
+                /* Increment the nOnce. */
+                block.nNonce ++;
+
+                /* Debug output. */
+                if(block.nNonce % 1000 == 0 && GetArg("-verbose", 0) >= 3)
+                    printf("Stake Minter : below threshold %f required %f incrementing nonce %" PRIu64 "\n", nThreshold, nRequired, block.nNonce);
+
+                /* Handle if block is found. */
+                if (block.StakeHash() < hashTarget)
+                {
+                    /* Sign the new Proof of Stake Block. */
+                    if(GetArg("-verbose", 0) >= 0)
+                        printf("Stake Minter : found new stake hash %s\n", block.StakeHash().ToString().substr(0, 20).c_str());
+
+                    /* Set the staking thread priorities. */
+                    SetThreadPriority(THREAD_PRIORITY_NORMAL);
+
+                    /* Add the transactions into the block from memory pool. */
+                    if (!block.vtx[0].IsGenesis())
+                        AddTransactions(block.vtx, pindexBest);
+
+                    /* Build the Merkle Root. */
+                    block.hashMerkleRoot   = block.BuildMerkleTree();
+
+                    /* Sign the block. */
+                    if (!block.SignBlock(*pwalletMain))
                     {
-                        if(GetArg("-verbose", 0) >= 2)
-                            printf("Stake Minter : New Best Block\n");
-
+                        printf("Stake Minter : failed to sign block");
                         break;
                     }
 
-                    for(int i = 0; i < nTotalWeight; i++)
+                    /* Check the block. */
+                    if (!block.CheckBlock())
                     {
-
-                        /* Update the block time for difficulty accuracy. */
-                        vBlocks[i].UpdateTime();
-                        if(vBlocks[i].nTime == vBlocks[i].vtx[0].nTime)
-                            continue;
-
-                        /* Calculate the Efficiency Threshold. */
-                        double nThreshold = (double)((vBlocks[i].nTime - vBlocks[i].vtx[0].nTime) * 100.0) / (vBlocks[i].nNonce + 1); //+1 to account for increment if that nNonce is chosen
-                        double nRequired  = ((50.0 - nTrustWeight - nBlockWeight) * MAX_STAKE_WEIGHT) / std::min((int64)MAX_STAKE_WEIGHT, vBlocks[i].vtx[0].vout[0].nValue);
-
-                        /* Allow the Searching For Stake block if Below the Efficiency Threshold. */
-                        if(nThreshold < nRequired)
-                            continue;
-
-                        vBlocks[i].nNonce ++;
-
-                        CBigNum hashTarget;
-                        hashTarget.SetCompact(vBlocks[i].nBits);
-
-                        if(vBlocks[i].nNonce % (unsigned int)((nTrustWeight + nBlockWeight) * 5) == 0 && GetArg("-verbose", 0) >= 3)
-                            printf("Stake Minter : Below Threshold %f Required %f Incrementing nNonce %" PRIu64 "\n", nThreshold, nRequired, vBlocks[i].nNonce);
-
-                        if (vBlocks[i].GetHash() < hashTarget.getuint1024())
-                        {
-
-                            /* Sign the new Proof of Stake Block. */
-                            if(GetArg("-verbose", 0) >= 0)
-                                printf("Stake Minter : Found New Block Hash %s\n", vBlocks[i].GetHash().ToString().substr(0, 20).c_str());
-
-                            if (!vBlocks[i].SignBlock(*pwalletMain))
-                            {
-                                if(GetArg("-verbose", 0) >= 1)
-                                    printf("Stake Minter : Could Not Sign Proof of Stake Block.");
-
-                                break;
-                            }
-
-                            if (!vBlocks[i].CheckBlock())
-                            {
-                                if(GetArg("-verbose", 0) >= 1)
-                                    error("Stake Minter : Check Block Failed...");
-
-                                break;
-                            }
-
-                            if(GetArg("-verbose", 0) >= 1)
-                                vBlocks[i].print();
-
-                            if(!CheckWork(&vBlocks[i], *pwalletMain, reservekey))
-                                continue;
-
-                            /* Write the trust key to the key db. */
-                            if(trustKey.IsNull())
-                            {
-                                CTrustKey trustKeyNew(vchTrustKey, vBlocks[i].GetHash(), vBlocks[i].vtx[0].GetHash(), vBlocks[i].nTime);
-                                trustdb.WriteMyKey(trustKeyNew);
-
-                                trustKey = trustKeyNew;
-                                printf("Stake Minter : new trust key written\n");
-                            }
-
-                            break;
-                        }
+                        error("Stake Minter : check block failed");
+                        break;
                     }
+
+                    /* Check the stake. */
+                    if (!block.CheckStake())
+                    {
+                        error("Stake Minter : check stake failed");
+                        break;
+                    }
+
+                    /* Check the stake. */
+                    if (!block.CheckTrust())
+                    {
+                        error("Stake Minter : check stake failed");
+                        break;
+                    }
+
+                    /* Check the work for the block. */
+                    if(!CheckWork(&block, *pwalletMain, reservekey))
+                    {
+                        error("Stake Minter : check work failed");
+                        break;
+                    }
+
+                    /* Write the trust key to the key db. */
+                    if(trustKey.IsNull())
+                    {
+                        CTrustKey trustKeyNew(vchTrustKey, block.GetHash(), block.vtx[0].GetHash(), block.nTime);
+                        trustdb.WriteMyKey(trustKeyNew);
+
+                        trustKey = trustKeyNew;
+                        printf("Stake Minter : new trust key written\n");
+                    }
+
+                    break;
                 }
             }
+
+            SetThreadPriority(THREAD_PRIORITY_LOWEST);
         }
     }
 }

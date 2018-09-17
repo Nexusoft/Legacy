@@ -232,6 +232,7 @@ namespace Core
     bool LoadBlockIndex(bool fAllowNew = true);
     bool CheckBlockIndex(uint1024 hashBlock);
     bool LastTrustBlock(CTrustKey trustKey, uint1024& hashTrustBlock);
+    bool FindGenesis(uint576 cKey, CTrustKey& trustKey, uint1024& hashTrustBlock);
 
 
     /** DISPATCH.CPP **/
@@ -878,7 +879,7 @@ namespace Core
 				return false;
 
 			/* First Input Previous Transaction must be Empty. */
-			if(!vin[0].prevout.IsNull())
+            if(!vin[0].prevout.IsNull())
 				return false;
 
 			return true;
