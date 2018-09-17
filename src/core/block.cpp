@@ -1081,8 +1081,7 @@ namespace Core
         {
             unsigned int nSize = vtx[0].vout.size();
 
-            /* Add up the Miner Re            if(nVersion < 5 && !VerifyStake())
-                return DoS(50, error("ConnectBlock() : invalid proof of stake"));wards from Coinbase Tx Outputs. */
+            /* Add up the Miner Rewards from Coinbase Tx Outputs. */
             int64 nMiningReward = 0;
             for(int nIndex = 0; nIndex < nSize - 2; nIndex++)
                 nMiningReward += vtx[0].vout[nIndex].nValue;
@@ -1499,14 +1498,9 @@ namespace Core
         if(!mapBlockIndex.count(hashLastBlock))
             return error("CBlock::CheckTrust() : previous block (%s) not in block index", hashLastBlock.ToString().substr(0, 20).c_str());
 
-        /* Check that the block is connected. */
-        CBlockIndex* pindexPrev = mapBlockIndex[hashLastBlock];
-        if(!pindexPrev->pnext)
-            return error("CBlock::CheckTrust() : previous blocks is not in main chain");
-
         /* Read the previous block from disk. */
         CBlock blockPrev;
-        if(!blockPrev.ReadFromDisk(pindexPrev, true))
+        if(!blockPrev.ReadFromDisk(mapBlockIndex[hashLastBlock], true))
             return error("CBlock::CheckTrust() : can't read previous block");
 
         /* Extract the last trust key */
