@@ -268,7 +268,7 @@ namespace Core
     double dTrustWeight = 0.0;
     double dBlockWeight = 0.0;
     double dInterestRate = 0.005;
-
+    bool fIsWaitPeriod = false;
     bool fStakeMinterInitializing = false;
     bool fGracePeriod = false;
 

@@ -34,6 +34,11 @@ int ClientModel::getNumBlocks() const
     return Core::nBestHeight;
 }
 
+bool ClientModel::getIsWaitPeriod() const
+{
+    return Core::fIsWaitPeriod;
+}
+
 double ClientModel::getTrustWeight() const
 {
     return Core::dTrustWeight;

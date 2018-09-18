@@ -180,6 +180,9 @@ namespace Core
     extern double dTrustWeight;
     extern double dBlockWeight;
     extern double dInterestRate;
+    
+    /** Reporting if in 72hr stake hold. **/
+    extern bool fIsWaitPeriod;
 
     /** Block Accounting Externals **/
     extern CBlockIndex* pindexGenesisBlock;

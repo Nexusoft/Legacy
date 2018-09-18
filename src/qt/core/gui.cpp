@@ -537,7 +537,7 @@ void NexusGUI::setNumConnections(int count)
     labelConnectionsIcon->setToolTip(tr("%n Connection(s) to Nexus", "", count));
 }
 
-void NexusGUI::setWeight(double trustWeight, double blockWeight, double interestRate)
+void NexusGUI::setWeight(double trustWeight, double blockWeight, double interestRate, bool isWaitPeriod)
 {
     double dPercent = (trustWeight + blockWeight) / 100.0;
 
@@ -553,7 +553,12 @@ void NexusGUI::setWeight(double trustWeight, double blockWeight, double interest
     else
         icon = ":/icons/transaction_5";
 
-    if(dPercent == 0)
+    if (isWaitPeriod == true)
+    {
+        icon = ":/icons/notsynced";
+        labelWeightIcon->setToolTip(tr("Waiting the required 72 hours\n since Trust Key creation.\nStaking will begin after..."));
+    }
+    else if(dPercent == 0)
     {
         icon = ":/icons/transaction_0";
         labelWeightIcon->setToolTip(tr("Staking Inactive...\nNo Coins to Stake"));
@@ -578,7 +583,7 @@ void NexusGUI::setNumBlocks(int count)
     }
 
     // set trust and block weight on this signal for now...
-    setWeight(clientModel->getTrustWeight(), clientModel->getBlockWeight(), clientModel->getInterestRate());
+    setWeight(clientModel->getTrustWeight(), clientModel->getBlockWeight(), clientModel->getInterestRate(), clientModel->getIsWaitPeriod());
 
     int nTotalBlocks = clientModel->getNumBlocksOfPeers();
     QString tooltip;

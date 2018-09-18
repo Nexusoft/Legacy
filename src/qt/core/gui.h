@@ -133,7 +133,7 @@ public slots:
        @see WalletModel::EncryptionStatus
     */
     void setEncryptionStatus(int status);
-    void setWeight(double trustWeight, double blockWeight, double interestRate);
+    void setWeight(double trustWeight, double blockWeight, double interestRate, bool isWaitPeriod);
 
     /** Notify the user of an error in the network or transaction handling code. */
     void error(const QString &title, const QString &message, bool modal);

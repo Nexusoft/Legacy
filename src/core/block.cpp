@@ -75,6 +75,9 @@ namespace Core
             nLastBlockTime = GetUnifiedTimestamp();
         }
 
+        if(fTestNet || fLispNet)
+            return (GetUnifiedTimestamp() - nLastBlockTime < 60);
+
         return (pindexBest->GetBlockTime() < GetUnifiedTimestamp() - 20 * 60 && (fTestNet && GetUnifiedTimestamp() - nLastBlockTime < 60));
     }
 

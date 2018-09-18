@@ -45,7 +45,10 @@ public:
     double getTrustWeight() const;
     double getBlockWeight() const;
     double getInterestRate() const;
-
+    
+    //! Return true if in 72hr wait period for staking
+    bool getIsWaitPeriod() const;
+    
     /** Return the Total Coin supply from the Block Chain. **/
     unsigned int GetCoinSupply() const;
     unsigned int GetIdealSupply() const;

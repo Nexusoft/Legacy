@@ -7,6 +7,7 @@ if [ $(uname -s | grep -o '^.......') == MINGW64 ]; then
 		echo -e "You must specify either install, update, or clean when running this script. \n"
 		echo -e "install - Downloads and installs the required dependencies for compiling the Nexus wallet. \n"
 		echo -e "update - Downloads newest version of Nexus wallet source code.\n"
+        echo -e "clean - Removes all downloaded and installed dependents.\n"
 		echo -e "For example '/c/Nexus/win_build.sh install'"
 		exit
 	fi
@@ -23,23 +24,23 @@ if [ $(uname -s | grep -o '^.......') == MINGW64 ]; then
 			fi
 			if [ ! -d boost ]; then
 				echo -e "\nDownloading Boost"
-				wget -c --append-output=/dev/null --show-progress -N https://dl.bintray.com/boostorg/release/1.66.0/source/boost_1_66_0.tar.gz
+				wget -c --append-output=/dev/null --show-progress -N https://dl.bintray.com/boostorg/release/1.68.0/source/boost_1_68_0.tar.gz
 			fi
 			if [ ! -d libpng ]; then
 				echo -e "\nDownloading LibPNG"
-				wget -c --append-output=/dev/null --show-progress -N https://sourceforge.net/projects/libpng/files/libpng16/1.6.34/lpng1634.zip
+				wget -c --append-output=/dev/null --show-progress -N https://sourceforge.net/projects/libpng/files/libpng16/1.6.35/lpng1635.zip
 			fi
 			if [ ! -d miniupnpc ]; then
 				echo -e "\nDownloading Miniupnpc"
-				wget -c --append-output=/dev/null --show-progress -N http://miniupnp.free.fr/files/miniupnpc-2.0.20180222.tar.gz
+				wget -c --append-output=/dev/null --show-progress -N http://miniupnp.free.fr/files/miniupnpc-2.1.tar.gz
 			fi
 			if [ ! -d qrencode ]; then
 				echo -e "\nDownloading QRencode"
-				wget -c --append-output=/dev/null --show-progress -N https://fukuchi.org/works/qrencode/qrencode-4.0.0.tar.gz
+				wget -c --append-output=/dev/null --show-progress -N https://fukuchi.org/works/qrencode/qrencode-4.0.2.tar.gz
 			fi
 			if [ ! -d openssl ]; then
 				echo -e "\nDownloading OpenSSL"
-				wget -c --append-output=/dev/null --show-progress -N https://www.openssl.org/source/openssl-1.0.2n.tar.gz
+				wget -c --append-output=/dev/null --show-progress -N https://www.openssl.org/source/openssl-1.0.2p.tar.gz
 			fi
 			if [ ! -d qt ]; then
 				echo -e "\nDownloading Qt"
@@ -49,7 +50,7 @@ if [ $(uname -s | grep -o '^.......') == MINGW64 ]; then
 			clear
 			if [ ! -d boost ]; then
 				echo -e "\nExtracting Boost"
-				tar zvxf boost_1_66_0.tar.gz | pv -l -s 63468 > /dev/null && mv boost_1_66_0 boost
+				tar zvxf boost_1_68_0.tar.gz | pv -l -s 63468 > /dev/null && mv boost_1_68_0 boost
 			fi
 			if [ ! -d libdb ]; then
 				echo -e "\nExtracting Berkeley DB"
@@ -57,31 +58,31 @@ if [ $(uname -s | grep -o '^.......') == MINGW64 ]; then
 			fi
 			if [ ! -d libpng ]; then
 				echo -e "\nExtracting LibPNG"
-				unzip lpng1634.zip | pv -l -s 379 > /dev/null && mv lpng1634 libpng
+				unzip lpng1635.zip | pv -l -s 379 > /dev/null && mv lpng1635 libpng
 			fi
 			if [ ! -d qrencode ]; then
 				echo -e "\nExtracting QRencode"
-				tar zvxf qrencode-4.0.0.tar.gz | pv -l -s 84 > /dev/null && mv qrencode-4.0.0 qrencode
+				tar zvxf qrencode-4.0.2.tar.gz | pv -l -s 84 > /dev/null && mv qrencode-4.0.2 qrencode
 			fi
 			if [ ! -d miniupnpc ]; then
 				echo -e "\nExtracting Miniupnpc"
-				tar zvxf miniupnpc-2.0.20180222.tar.gz | pv -l -s 83 > /dev/null && mv miniupnpc-2.0.20180222 miniupnpc
+				tar zvxf miniupnpc-2.1.tar.gz | pv -l -s 83 > /dev/null && mv miniupnpc-2.1 miniupnpc
 			fi
 			if [ ! -d openssl ]; then
 				echo -e "\nExtracting OpenSSL"
-				tar zvxf openssl-1.0.2n.tar.gz | pv -l -s 2414 > /dev/null && mv openssl-1.0.2n openssl
+				tar zvxf openssl-1.0.2p.tar.gz | pv -l -s 2496 > /dev/null && mv openssl-1.0.2p openssl
 			fi
 			if [ ! -d qt ]; then
 				echo -e "\nExtracting QT"
 				tar Jvxf qt-everywhere-src-5.10.1.tar.xz | pv -l -s 206858 > /dev/null && mv qt-everywhere-src-5.10.1 qt
 			fi
 			#If files extracted to proper folders, delete the archives.
-			if [ -d boost ]; then rm boost_1_66_0.tar.gz; fi
+			if [ -d boost ]; then rm boost_1_68_0.tar.gz; fi
 			if [ -d libdb ]; then rm db-6.2.32.NC.tar.gz; fi
-			if [ -d libpng ]; then rm lpng1634.zip; fi
-			if [ -d qrencode ]; then rm qrencode-4.0.0.tar.gz; fi
-			if [ -d miniupnpc ]; then rm miniupnpc-2.0.20180222.tar.gz; fi
-			if [ -d openssl ]; then rm openssl-1.0.2n.tar.gz; fi
+			if [ -d libpng ]; then rm lpng1635.zip; fi
+			if [ -d qrencode ]; then rm qrencode-4.0.2.tar.gz; fi
+			if [ -d miniupnpc ]; then rm miniupnpc-2.1.tar.gz; fi
+			if [ -d openssl ]; then rm openssl-1.0.2p.tar.gz; fi
 			if [ -d qt ]; then rm qt-everywhere-src-5.10.1.tar.xz; fi
 			##Compile boost
 			clear
@@ -96,8 +97,9 @@ if [ $(uname -s | grep -o '^.......') == MINGW64 ]; then
 			make -j2 install
 			#Compile libpng
 			cd /c/installfiles/libpng
-			make prefix=/c/deps -j2 -f scripts/makefile.msys all "CC= @echo Compiling $< && gcc"
-			make --silent prefix=/c/deps -j2 -f scripts/makefile.msys install
+			./configure --prefix=/c/deps --enable-silent-rules --build=mingw64
+            make -j2
+            make -j2 install
 			#Compile qrencode
 			cd /c/installfiles/qrencode
 			./configure --enable-silent-rules --enable-static --enable-shared --without-tools --prefix=/c/deps
@@ -105,7 +107,7 @@ if [ $(uname -s | grep -o '^.......') == MINGW64 ]; then
 			make -j2 install
 			#Compile openssl
 			cd /c/installfiles/openssl
-			./configure no-hw shared mingw64 -w -m64 --prefix=/c/deps
+			./configure no-hw threads mingw64 --prefix=/c/deps
 			make --silent
 			make --silent install
 			#Compile miniupnpc
@@ -117,13 +119,13 @@ if [ $(uname -s | grep -o '^.......') == MINGW64 ]; then
 			cp *.exe /c/deps/bin
 			#Compile qt
 			cd /c/installfiles/qt
-			./configure -release -opensource -confirm-license -static -platform win32-g++ -silent -no-sql-sqlite -qt-zlib -qt-libpng -qt-libjpeg -no-style-fusion -style-windows -style-windowsvista -nomake examples -no-opengl -no-openssl -no-dbus -skip qt3d -skip qtactiveqt -skip qtandroidextras -skip qtcanvas3d -skip qtcharts -skip qtconnectivity -skip qtdatavis3d -skip qtdoc -skip qtgamepad -skip qtgraphicaleffects -skip qtlocation -skip qtmacextras -skip qtmultimedia -skip qtnetworkauth -skip qtpurchasing -skip qtquickcontrols -skip qtquickcontrols2 -skip qtremoteobjects -skip qtscript -skip qtscxml -skip qtsensors -skip qtserialbus -skip qtserialport -skip qtspeech -skip qtsvg -skip qttranslations -skip qtvirtualkeyboard -skip qtwayland -skip qtwebchannel -skip qtwebengine -skip qtwebglplugin -skip qtwebsockets -skip qtwebview -skip qtwinextras -skip qtx11extras -skip qtxmlpatterns -prefix "C:\deps" QMAKE_CFLAGS+="-w -m64" QMAKE_CXXFLAGS+="-w -m64" QMAKE_LFLAGS+="-w -m64"
+			./configure -release -opensource -confirm-license -static -platform win32-g++ -silent -no-sql-sqlite -qt-zlib -qt-libpng -qt-libjpeg -nomake examples -no-opengl -no-openssl -no-dbus -skip qt3d -skip qtactiveqt -skip qtandroidextras -skip qtcanvas3d -skip qtcharts -skip qtconnectivity -skip qtdatavis3d -skip qtdoc -skip qtgamepad -skip qtgraphicaleffects -skip qtimageformats -skip qtlocation -skip qtmacextras -skip qtmultimedia -skip qtnetworkauth -skip qtpurchasing -skip qtquickcontrols -skip qtquickcontrols2 -skip qtremoteobjects -skip qtscript -skip qtscxml -skip qtsensors -skip qtserialbus -skip qtserialport -skip qtspeech -skip qtsvg -skip qttranslations -skip qtvirtualkeyboard -skip qtwayland -skip qtwebchannel -skip qtwebengine -skip qtwebglplugin -skip qtwebsockets -skip qtwebview -skip qtwinextras -skip qtx11extras -skip qtxmlpatterns -prefix "C:\deps" QMAKE_CFLAGS+="-w -m64" QMAKE_CXXFLAGS+="-w -m64" QMAKE_LFLAGS+="-w -m64"
 			make -j2 --silent
 			make -j2 --silent install
 			#Set dependent PATH environment variable and make it permanent in MinGW
 			cd ~
-			echo -e "export PATH=/c/deps/bin:$PATH" >> ~/.bash_profile
-			source ~/.bash_profile
+			echo -e "export PATH=/c/deps/bin:$PATH" >> ~/.bashrc
+			source ~/.bashrc
 			#Clear screen and delete installfiles folder
 			clear
 			echo -e " "

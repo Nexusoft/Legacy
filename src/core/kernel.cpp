@@ -673,7 +673,7 @@ namespace Core
                 /* Enforce the minimum trust key interval of 120 blocks. */
                 if(block.nHeight - blockPrev.nHeight < (fTestNet ? TESTNET_MINIMUM_INTERVAL : MAINNET_MINIMUM_INTERVAL))
                 {
-                    error("Stake Minter : trust key interval below minimum interval %u", block.nHeight - blockPrev.nHeight);
+                    //error("Stake Minter : trust key interval below minimum interval %u", block.nHeight - blockPrev.nHeight);
                     continue;
                 }
 
@@ -799,6 +799,7 @@ namespace Core
                 /* Genesis has to wait for one full trust key timespan. */
                 if(nCoinAge < (fTestNet ? TRUST_KEY_TIMESPAN_TESTNET : TRUST_KEY_TIMESPAN))
                 {
+                    fIsWaitPeriod = true;
                     error("Stake Minter : genesis age is immature");
                     continue;
                 }
