@@ -1613,7 +1613,7 @@ namespace Core
     }
 
 
-    bool CBlock::TrustKey(uint576& cKey)
+    bool CBlock::TrustKey(uint576& cKey) const
     {
         /* Extract the Key from the Script Signature. */
         vector<std::vector<unsigned char> > vSolutions;
@@ -1635,7 +1635,7 @@ namespace Core
     }
 
 
-    bool CBlock::TrustKey(std::vector<unsigned char>& vchTrustKey)
+    bool CBlock::TrustKey(std::vector<unsigned char>& vchTrustKey) const
     {
         /* Extract the Key from the Script Signature. */
         vector<std::vector<unsigned char> > vSolutions;
@@ -1657,7 +1657,7 @@ namespace Core
     }
 
     /* New proof hash for all channels (version > 5) */
-    uint1024 CBlock::StakeHash()
+    uint1024 CBlock::StakeHash() const
     {
         /* Get the trust key. */
         uint576 cKey;

@@ -1398,7 +1398,7 @@ namespace Core
 
 
         /* The proof of stake hash. */
-        uint1024 StakeHash();
+        uint1024 StakeHash() const;
 
 
         /* The block age for version 5 blocks. */
@@ -1414,11 +1414,11 @@ namespace Core
 
 
         /* Get the trust key from script. */
-        bool TrustKey(uint576& cKey);
+        bool TrustKey(uint576& cKey) const;
 
 
         /* Get the trust key from script. */
-        bool TrustKey(std::vector<unsigned char>& vchTrustKey);
+        bool TrustKey(std::vector<unsigned char>& vchTrustKey) const;
 
 
         /* Check the proof of stake claims. */

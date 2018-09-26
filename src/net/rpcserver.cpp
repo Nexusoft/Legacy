@@ -127,6 +127,11 @@ namespace Net
     {
         Object result;
         result.push_back(Pair("hash", block.GetHash().GetHex()));
+        // the hash that was relevant for Proof of Stake or Proof of Work (depending on block version)
+        result.push_back(Pair("proofhash",
+                                  block.nVersion < 5   ? block.GetHash().GetHex() :
+                                ((block.nChannel == 0) ? block.StakeHash().GetHex() : block.ProofHash().GetHex())
+                             ));
         result.push_back(Pair("size", (int)::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION)));
         result.push_back(Pair("height", (int)blockindex->nHeight));
         result.push_back(Pair("channel", (int)block.nChannel));
