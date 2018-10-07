@@ -555,8 +555,26 @@ namespace Core
                 /* Set trust key to null state. */
                 trustKey.SetNull();
             }
-            else
+
+
+            /* Validate that cached key belongs to current wallet */
+            Wallet::NexusAddress address;
+            address.SetPubKey(trustCheck.vchPubKey);
+            if(!pwalletMain->HaveKey(address))
+            {
+                /* Erase cached key when not from current wallet. */
+                trustdb.EraseMyKey();
+
+                /* Set trust key to null state. */
+                trustKey.SetNull();
+            }
+
+            if (!trustKey.IsNull())
+            {
+                /*Found valid cached trust key*/
+                printf("Stake Minter : Staking with Cached Trust Key\n");
                 vchTrustKey = trustKey.vchPubKey;
+            }
 
         }
 
