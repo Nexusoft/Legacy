@@ -25,6 +25,8 @@ namespace Wallet
 
     bool CWallet::AddCoinstakeInputs(Core::CBlock& block)
     {
+        int64 nBalance = GetBalance();
+        int64 nReserveBalance = (mapArgs.count("-reservebalance") && ParseMoney(mapArgs["-reservebalance"], nReserveBalance)) ? nReserveBalance : 0;
 
         /* Add Each Input to Transaction. */
         vector<const CWalletTx*> vInputs;
