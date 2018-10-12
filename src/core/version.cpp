@@ -33,7 +33,7 @@ const std::string CLIENT_VERSION("2.5.2");
     const std::string CLIENT_DATABASE("[BDB]");
 #endif
 
-/* The Architecture (32-Bit or 64-Bit)
+/* The Architecture (32-Bit or 64-Bit) */
 #ifdef x64
     const std::string BUILD_ARCH = "[x64]";
 #else

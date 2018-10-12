@@ -10,8 +10,8 @@ endif
 ifndef FOR_TRITIUM
 	override FOR_TRITIUM= 0
 endif
-ifeq (FOR_TRITIUM, 1)
-	DEFS+= TRITIUM_GUI
+ifeq (${FOR_TRITIUM}, 1)
+	DEFS+= -DTRITIUM_GUI
 endif
 
 
