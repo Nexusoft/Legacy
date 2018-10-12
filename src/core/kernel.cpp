@@ -25,8 +25,8 @@ namespace Wallet
 
     bool CWallet::AddCoinstakeInputs(Core::CBlock& block)
     {
-        int64 nBalance = GetBalance();
-        int64 nReserveBalance = (mapArgs.count("-reservebalance") && ParseMoney(mapArgs["-reservebalance"], nReserveBalance)) ? nReserveBalance : 0;
+        //int64 nBalance = GetBalance();
+        //int64 nReserveBalance = (mapArgs.count("-reservebalance") && ParseMoney(mapArgs["-reservebalance"], nReserveBalance)) ? nReserveBalance : 0;
 
         /* Add Each Input to Transaction. */
         vector<const CWalletTx*> vInputs;
@@ -63,8 +63,8 @@ namespace Wallet
                 if (pcoin->nTime > block.vtx[0].nTime)
                     continue;
 
-                if(block.vtx[0].vout[0].nValue > (nBalance - nReserveBalance))
-                    break;
+                //if(block.vtx[0].vout[0].nValue > (nBalance - nReserveBalance))
+                //    break;
 
                 /* Stop adding Inputs if has reached Maximum Transaction Size. */
                 unsigned int nBytes = ::GetSerializeSize(block.vtx[0], SER_NETWORK, PROTOCOL_VERSION);
