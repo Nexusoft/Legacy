@@ -689,7 +689,7 @@ bool AppInit2(int argc, char* argv[])
                 Net::addrman.Add(addr, Net::CNetAddr("127.0.0.1"));
         }
     }
-    
+
     if (mapArgs.count("-paytxfee"))
     {
         if (!ParseMoney(mapArgs["-paytxfee"], Core::nTransactionFee) || Core::nTransactionFee < Core::MIN_TX_FEE)
@@ -701,6 +701,7 @@ bool AppInit2(int argc, char* argv[])
             ThreadSafeMessageBox(_("Warning: -paytxfee is set very high.  This is the transaction fee you will pay if you send a transaction."), _("Nexus"), wxOK | wxICON_EXCLAMATION | wxMODAL);
     }
 
+    /*
     if (mapArgs.count("-reservebalance")) // Nexus: reserve balance amount
     {
         int64 nReserveBalance = 0;
@@ -710,7 +711,7 @@ bool AppInit2(int argc, char* argv[])
             return false;
         }
     }
-
+    */
 
     //
     // Start the node

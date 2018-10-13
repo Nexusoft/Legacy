@@ -25,6 +25,8 @@ namespace Wallet
 
     bool CWallet::AddCoinstakeInputs(Core::CBlock& block)
     {
+        //int64 nBalance = GetBalance();
+        //int64 nReserveBalance = (mapArgs.count("-reservebalance") && ParseMoney(mapArgs["-reservebalance"], nReserveBalance)) ? nReserveBalance : 0;
 
         /* Add Each Input to Transaction. */
         vector<const CWalletTx*> vInputs;
@@ -555,8 +557,29 @@ namespace Core
                 /* Set trust key to null state. */
                 trustKey.SetNull();
             }
-            else
+
+
+            if (!trustKey.IsNull())
+            {
+                /* Validate that cached key belongs to current wallet */
+                Wallet::NexusAddress address;
+                address.SetPubKey(trustKey.vchPubKey);
+                if(!pwalletMain->HaveKey(address))
+                {
+                    /* Erase cached key when not from current wallet. */
+                    trustdb.EraseMyKey();
+
+                    /* Set trust key to null state. */
+                    trustKey.SetNull();
+                }
+            }
+
+            if (!trustKey.IsNull())
+            {
+                /* Found valid cached trust key */
+                printf("Stake Minter : Staking with Cached Trust Key\n");
                 vchTrustKey = trustKey.vchPubKey;
+            }
 
         }
 

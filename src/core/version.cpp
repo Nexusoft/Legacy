@@ -12,9 +12,19 @@
 /** Used for Visual Reference Only **/
 const std::string CLIENT_NAME("Nexus");
 
-/* The database type used (Berklee DB or Lower Level Database) */
-const std::string CLIENT_VERSION("0.2.5.1-sync_patch");
+/* The version number */
+const std::string CLIENT_VERSION("2.5.2");
 
+/* The interface used Qt, CLI, or Tritium) */
+#if defined QT_GUI
+    const std::string CLIENT_INTERFACE("Qt");
+#elif defined TRITIUM_GUI
+    const std::string CLIENT_INTERFACE("Tritium Beta");
+#else
+    const std::string CLIENT_INTERFACE("CLI");
+#endif
+
+/* The database type used (LevelDB, Berkeley DB, or Lower Level Database) */
 #if defined USE_LLD
     const std::string CLIENT_DATABASE("[LLD]");
 #elif defined USE_LEVELDB
@@ -23,13 +33,14 @@ const std::string CLIENT_VERSION("0.2.5.1-sync_patch");
     const std::string CLIENT_DATABASE("[BDB]");
 #endif
 
+/* The Architecture (32-Bit or 64-Bit) */
 #ifdef x64
     const std::string BUILD_ARCH = "[x64]";
 #else
     const std::string BUILD_ARCH = "[x86]";
 #endif
 
-const std::string CLIENT_BUILD(CLIENT_VERSION + " " + CLIENT_DATABASE + BUILD_ARCH);
+const std::string CLIENT_BUILD(CLIENT_VERSION + " " + CLIENT_INTERFACE + " " + CLIENT_DATABASE + BUILD_ARCH);
 const std::string CLIENT_DATE(__DATE__ " " __TIME__);
 
 /** Used to determine the current features available on the local database */

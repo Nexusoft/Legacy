@@ -566,11 +566,11 @@ namespace Net
         obj.push_back(Pair("newmint",       ValueFromAmount(pwalletMain->GetNewMint())));
         obj.push_back(Pair("stake",         ValueFromAmount(pwalletMain->GetStake())));
 
-        double dPercent = ((double)Core::dTrustWeight + (double)Core::dBlockWeight) / 37.5;
+        double dPercent = ((double)Core::dTrustWeight + (double)Core::dBlockWeight) / 100.0;
         obj.push_back(Pair("interestweight", (double)Core::dInterestRate * 100.0));
         obj.push_back(Pair("stakeweight",    dPercent * 100.0));
-        obj.push_back(Pair("trustweight",    (double)Core::dTrustWeight * 100.0 / 17.5));
-        obj.push_back(Pair("blockweight",    (double)Core::dBlockWeight * 100.0  / 20.0));
+        obj.push_back(Pair("trustweight",    (double)Core::dTrustWeight * 100.0 / 90.0));
+        obj.push_back(Pair("blockweight",    (double)Core::dBlockWeight * 100.0  / 10.0));
         obj.push_back(Pair("txtotal",        (int)pwalletMain->mapWallet.size()));
 
         obj.push_back(Pair("blocks",        (int)Core::nBestHeight));
@@ -2453,7 +2453,7 @@ namespace Net
         return blockToJSON(block, pblockindex, params.size() > 1 ? params[1].get_bool() : false);
     }
 
-
+    /*
     // Nexus: reserve balance from being staked for network protection
     Value reservebalance(const Array& params, bool fHelp)
     {
@@ -2494,7 +2494,7 @@ namespace Net
         result.push_back(Pair("amount", ValueFromAmount(nReserveBalance)));
         return result;
     }
-
+    */
 
     // Nexus: check wallet integrity
     Value checkwallet(const Array& params, bool fHelp)
@@ -2827,7 +2827,7 @@ namespace Net
         { "listsinceblock",         &listsinceblock,         false },
         { "dumpprivkey",            &dumpprivkey,            false },
         { "importprivkey",          &importprivkey,          false },
-        { "reservebalance",         &reservebalance,         false },
+        //{ "reservebalance",         &reservebalance,         false },
         { "listtrustkeys",          &listtrustkeys,          false },
         { "checkwallet",            &checkwallet,            false },
         { "repairwallet",           &repairwallet,           false },
@@ -3475,8 +3475,8 @@ namespace Net
         }
 
         if (strMethod == "sendmany"                && n > 2) ConvertTo<boost::int64_t>(params[2]);
-        if (strMethod == "reservebalance"          && n > 0) ConvertTo<bool>(params[0]);
-        if (strMethod == "reservebalance"          && n > 1) ConvertTo<double>(params[1]);
+        //if (strMethod == "reservebalance"          && n > 0) ConvertTo<bool>(params[0]);
+        //if (strMethod == "reservebalance"          && n > 1) ConvertTo<double>(params[1]);
         if (strMethod == "addmultisigaddress"      && n > 0) ConvertTo<boost::int64_t>(params[0]);
         if (strMethod == "addmultisigaddress"      && n > 1)
         {
