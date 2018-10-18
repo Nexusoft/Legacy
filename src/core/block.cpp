@@ -334,7 +334,7 @@ namespace Core
         {
             /* Check that Transaction is not Genesis when Trust Key is Established. */
             CTrustKey trustCheck;
-            if(nVersion >= 5 && indexdb.ReadTrustKey(cKey, trustCheck) && trustCheck.nVersion >= 5)
+            if(nVersion >= 6 && indexdb.ReadTrustKey(cKey, trustCheck))
             {
                 if(trustCheck.vchPubKey != vTrustKey || trustCheck.hashGenesisBlock != GetHash() ||
                    trustCheck.hashGenesisTx != vtx[0].GetHash() || trustCheck.nGenesisTime != nTime)

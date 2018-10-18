@@ -293,8 +293,8 @@ namespace Net
         /* TODO END **/
 
         Object obj;
-        obj.push_back(Pair("average time", (int) nAverageTime));
-        obj.push_back(Pair("average difficulty", nAverageDifficulty));
+        obj.push_back(Pair("averagetime", (int) nAverageTime));
+        obj.push_back(Pair("averagedifficulty", nAverageDifficulty));
 
         /* Calculate the hashrate based on nTimeConstant. */
         uint64 nHashRate = (nTimeConstant / nAverageTime) * nAverageDifficulty;
@@ -334,14 +334,14 @@ namespace Net
         nAverageDifficulty /= nTotal;
 
         Object obj;
-        obj.push_back(Pair("average time", (int) nAverageTime));
-        obj.push_back(Pair("average difficulty", nAverageDifficulty));
+        obj.push_back(Pair("averagetime", (int) nAverageTime));
+        obj.push_back(Pair("averagedifficulty", nAverageDifficulty));
 
         /* Calculate the hashrate based on nTimeConstant. Set the reference from 3ch and
          * Above since 1x and 2x were never useful starting difficulties. */
         uint64 nHashRate = (nTimeConstant / nAverageTime) * std::pow(50.0, (nAverageDifficulty - 3.0));
 
-        obj.push_back(Pair("primes per second", (boost::uint64_t)nHashRate));
+        obj.push_back(Pair("primespersecond", (boost::uint64_t)nHashRate));
 
         return obj;
     }
@@ -387,8 +387,8 @@ namespace Net
                 continue;
 
             obj.push_back(Pair("address", address.ToString()));
-            obj.push_back(Pair("interest rate", 100.0 * trustKey.InterestRate(block, GetUnifiedTimestamp())));
-            obj.push_back(Pair("trust key", trustKey.ToString()));
+            obj.push_back(Pair("interestrate", 100.0 * trustKey.InterestRate(block, GetUnifiedTimestamp())));
+            obj.push_back(Pair("trustkey", trustKey.ToString()));
 
             trustkeys.push_back(obj);
         }
@@ -494,10 +494,10 @@ namespace Net
 
 
         Object obj;
-        obj.push_back(Pair("prime - channel",        Core::GetDifficulty(pindexCPU->nBits, 1)));
-        obj.push_back(Pair("hash  - channel",        Core::GetDifficulty(pindexGPU->nBits, 2)));
+        obj.push_back(Pair("prime",        Core::GetDifficulty(pindexCPU->nBits, 1)));
+        obj.push_back(Pair("hash",        Core::GetDifficulty(pindexGPU->nBits, 2)));
 
-        obj.push_back(Pair("proof-of-stake",       Core::GetDifficulty(pindexPOS->nBits, 0)));
+        obj.push_back(Pair("stake",       Core::GetDifficulty(pindexPOS->nBits, 0)));
         return obj;
     }
 
@@ -585,7 +585,10 @@ namespace Net
         obj.push_back(Pair("keypoolsize",   pwalletMain->GetKeyPoolSize()));
         obj.push_back(Pair("paytxfee",      ValueFromAmount(Core::nTransactionFee)));
         if (pwalletMain->IsCrypted())
+        {
             obj.push_back(Pair("unlocked_until", (boost::int64_t)nWalletUnlockTime / 1000));
+            obj.push_back(Pair("staking_only", Wallet::fWalletUnlockMintOnly));
+        }
         obj.push_back(Pair("errors",        Core::GetWarnings("statusbar")));
         return obj;
     }
@@ -1947,12 +1950,12 @@ namespace Net
                 mapAccountBalances[strSentAccount] -= s.second;
             if (wtx.GetDepthInMainChain() >= nMinDepth)
             {
-                mapAccountBalances[""] += nGeneratedMature;
+                mapAccountBalances["default"] += nGeneratedMature;
                 BOOST_FOREACH(const PAIRTYPE(Wallet::NexusAddress, int64)& r, listReceived)
                     if (pwalletMain->mapAddressBook.count(r.first))
                         mapAccountBalances[pwalletMain->mapAddressBook[r.first]] += r.second;
                     else
-                        mapAccountBalances[""] += r.second;
+                        mapAccountBalances["default"] += r.second;
             }
         }
 
