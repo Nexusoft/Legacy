@@ -51,6 +51,8 @@ namespace Net
     class CNode;
     //extern int nBestHeight;
 
+    extern std::list<CNode*> vNodesDisconnected;
+
     inline unsigned int ReceiveBufferSize() { return 1000*GetArg("-maxreceivebuffer", 10*1000); }
     inline unsigned int SendBufferSize() { return 1000*GetArg("-maxsendbuffer", 10*1000); }
 

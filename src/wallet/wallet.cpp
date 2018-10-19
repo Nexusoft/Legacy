@@ -954,7 +954,7 @@ namespace Wallet
                 if (fOnlyConfirmed && !pcoin->IsConfirmed())
                     continue;
 
-                if (fOnlyConfirmed && pcoin->GetBlocksToMaturity() > 0)
+                if ((pcoin->IsCoinBase() || pcoin->IsCoinStake()) && pcoin->GetBlocksToMaturity() > 0 && pcoin->GetDepthInMainChain() == 0)
                     continue;
 
                 for (int i = 0; i < pcoin->vout.size(); i++)
@@ -962,15 +962,16 @@ namespace Wallet
                     if (pcoin->nTime > nSpendTime)
                         continue;  // ppcoin: timestamp must not exceed spend time
 
-                    if (!(pcoin->IsSpent(i)) && IsMine(pcoin->vout[i]) && pcoin->vout[i].nValue > 0) {
+                    if (!pcoin->IsSpent(i) && IsMine(pcoin->vout[i]) && pcoin->vout[i].nValue > 0)
+                    {
                         NexusAddress cAddress;
                         if(!ExtractAddress(pcoin->vout[i].scriptPubKey, cAddress) || !cAddress.IsValid())
                             return false;
 
                         if(mapAddresses.count(cAddress))
-                            mapAddresses[cAddress] = pcoin->vout[i].nValue;
-                        else
                             mapAddresses[cAddress] += pcoin->vout[i].nValue;
+                        else
+                            mapAddresses[cAddress] = pcoin->vout[i].nValue;
 
                     }
                 }

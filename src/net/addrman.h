@@ -251,6 +251,9 @@ namespace Net
 
     public:
 
+        // Clear the address manager
+        void Clear();
+
         IMPLEMENT_SERIALIZE
         (({
             // serialized format:
@@ -393,6 +396,32 @@ namespace Net
              nIdCount = 0;
              nTried = 0;
              nNew = 0;
+        }
+
+        CAddrMan(const CAddrMan& addr)
+        {
+            nKey     = addr.nKey;
+            nIdCount = addr.nIdCount;
+            nTried   = addr.nTried;
+            nNew     = addr.nNew;
+
+            vRandom  = addr.vRandom;
+            vvTried  = addr.vvTried;
+            vvNew    = addr.vvNew;
+        }
+
+        CAddrMan& operator=(CAddrMan addr)
+        {
+            nKey     = addr.nKey;
+            nIdCount = addr.nIdCount;
+            nTried   = addr.nTried;
+            nNew     = addr.nNew;
+
+            vRandom  = addr.vRandom;
+            vvTried  = addr.vvTried;
+            vvNew    = addr.vvNew;
+
+            return *this;
         }
 
         // Return the number of (unique) addresses in all tables.

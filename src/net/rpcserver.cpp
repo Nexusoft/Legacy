@@ -220,33 +220,6 @@ namespace Net
         return tableRPC.help(strCommand);
     }
 
-    // Adding the getRPCMapComands function.
-    // string CRPCTable::help(string strCommand) const
-    std::vector<std::string> CRPCTable::getMapCommandsKeyVector() const
-    {
-        std::vector<std::string> rpcTableKeys; // a standard vector of strings...
-        for(map<string, const CRPCCommand*>::const_iterator it = this->mapCommands.begin(); it!= this->mapCommands.end(); ++it) {
-            rpcTableKeys.push_back(it->first);
-        }
-        return rpcTableKeys;
-    }
-
-    Value getMapCommandsKeyVector(const Array& params, bool fHelp) {
-        // if (fHelp || params.size() != 0)
-        //     throw runtime_error(
-        //         "getMapCommandsKeyVector\n"
-        //         "returns a Vector of the keys for the RPC");
-        // std::stringstream result;
-        // std::copy(tableRPC.getMapCommandsKeyVector().begin(), tableRPC.getMapCommandsKeyVector().end(), std::ostream_iterator<string>(result, ", "));
-        Array ret;
-        BOOST_FOREACH(const std::string it, tableRPC.getMapCommandsKeyVector())
-        {
-            ret.push_back(it);
-        }
-
-        return ret;
-    }
-
 
     Value stop(const Array& params, bool fHelp)
     {
@@ -445,6 +418,82 @@ namespace Net
             pnode->copyStats(stats);
             vstats.push_back(stats);
         }
+    }
+
+    Value flushpeers(const Array& params, bool fHelp)
+    {
+        if(fHelp || params.size() != 0)
+            throw runtime_error(
+                "flushpeers\n"
+                "Flush peers in address manager to seed nodes state");
+
+        //disconnect all nodes currently active
+        {
+            LOCK(cs_vNodes);
+            // Disconnect unused nodes
+            vector<CNode*> vNodesCopy = vNodes;
+            BOOST_FOREACH(CNode* pnode, vNodesCopy)
+            {
+                // remove from vNodes
+                vNodes.erase(remove(vNodes.begin(), vNodes.end(), pnode), vNodes.end());
+
+                // close socket and cleanup
+                pnode->CloseSocketDisconnect();
+                pnode->Cleanup();
+
+                // hold in disconnected pool until all refs are released
+                pnode->nReleaseTime = max(pnode->nReleaseTime, GetUnifiedTimestamp() + 15 * 60);
+                if (pnode->fNetworkNode || pnode->fInbound)
+                    pnode->Release();
+                vNodesDisconnected.push_back(pnode);
+            }
+        }
+
+        //clear the address manager object
+        addrman.Clear();
+
+        //restore address manager with only seed nodes
+        for(int nIndex = 0; nIndex < SEED_NODES.size(); nIndex++)
+            addrman.Add(SEED_NODES[nIndex], (Net::CNetAddr)SEED_NODES[nIndex], true);
+
+        //write changes to disk
+        Wallet::CAddrDB("cr+").WriteAddrman(addrman);
+
+        return "success";
+    }
+
+
+    Value reset(const Array& params, bool fHelp)
+    {
+        if(fHelp || params.size() != 0)
+            throw runtime_error(
+                "reset\n"
+                "Restart all node connections");
+
+        //disconnect all nodes currently active
+        {
+            LOCK(cs_vNodes);
+            // Disconnect unused nodes
+            vector<CNode*> vNodesCopy = vNodes;
+            BOOST_FOREACH(CNode* pnode, vNodesCopy)
+            {
+                // remove from vNodes
+                vNodes.erase(remove(vNodes.begin(), vNodes.end(), pnode), vNodes.end());
+
+                // close socket and cleanup
+                pnode->CloseSocketDisconnect();
+                pnode->Cleanup();
+
+                // hold in disconnected pool until all refs are released
+                pnode->nReleaseTime = max(pnode->nReleaseTime, GetUnifiedTimestamp() + 15 * 60);
+                if (pnode->fNetworkNode || pnode->fInbound)
+                    pnode->Release();
+                vNodesDisconnected.push_back(pnode);
+            }
+        }
+        ReadConfigFile(mapArgs, mapMultiArgs);
+
+        return "success";
     }
 
     Value getpeerinfo(const Array& params, bool fHelp)
@@ -679,7 +728,7 @@ namespace Net
                 "so payments received with the address will be credited to [account].");
 
         // Parse the account first so we don't generate a key if there's an error
-        string strAccount;
+        string strAccount = "default";
         if (params.size() > 0)
             strAccount = AccountFromValue(params[0]);
 
@@ -747,7 +796,6 @@ namespace Net
         string strAccount = AccountFromValue(params[0]);
 
         Value ret;
-
         ret = GetAccountAddress(strAccount).ToString();
 
         return ret;
@@ -819,7 +867,7 @@ namespace Net
         {
             const Wallet::NexusAddress& address = item.first;
             const string& strName = item.second;
-            if (strName == strAccount)
+            if (strName == strAccount || (strName == "" && strAccount == "default"))
                 ret.push_back(address.ToString());
         }
         return ret;
@@ -1920,11 +1968,38 @@ namespace Net
     }
 
 
+    /* */
+    Value listaddresses(const Array& params, bool fHelp)
+    {
+        if (fHelp || params.size() != 0)
+            throw runtime_error(
+                "listaddresses [max=100]\n"
+                "Returns list of addresses\n");
+
+        /* Limit the size. */
+        int nMax = 100;
+        if (params.size() > 0)
+            nMax = params[0].get_int();
+
+        /* Get the available addresses from the wallet */
+        map<Wallet::NexusAddress, int64> mapAddresses;
+        if(!pwalletMain->AvailableAddresses((unsigned int)GetUnifiedTimestamp(), mapAddresses))
+            throw JSONRPCError(-3, "Error Extracting the Addresses from Wallet File. Please Try Again.");
+
+        /* Find all the addresses in the list */
+        Object list;
+        for (map<Wallet::NexusAddress, int64>::iterator it = mapAddresses.begin(); it != mapAddresses.end() && list.size() < nMax; ++it)
+            list.push_back(Pair(it->first.ToString(), ValueFromAmount(it->second)));
+
+        return list;
+    }
+
+
     Value listaccounts(const Array& params, bool fHelp)
     {
         if (fHelp || params.size() > 1)
             throw runtime_error(
-                "listaccounts [minconf=1]\n"
+                "listaccounts\n"
                 "Returns Object that has account names as keys, account balances as values.");
 
         int nMinDepth = 1;
@@ -1934,40 +2009,37 @@ namespace Net
         map<string, int64> mapAccountBalances;
         BOOST_FOREACH(const PAIRTYPE(Wallet::NexusAddress, string)& entry, pwalletMain->mapAddressBook) {
             if (pwalletMain->HaveKey(entry.first)) // This address belongs to me
-                mapAccountBalances[entry.second] = 0;
-        }
-
-        for (map<uint512, Wallet::CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
-        {
-            const Wallet::CWalletTx& wtx = (*it).second;
-            int64 nGeneratedImmature, nGeneratedMature, nFee;
-            string strSentAccount;
-            list<pair<Wallet::NexusAddress, int64> > listReceived;
-            list<pair<Wallet::NexusAddress, int64> > listSent;
-            wtx.GetAmounts(nGeneratedImmature, nGeneratedMature, listReceived, listSent, nFee, strSentAccount);
-            mapAccountBalances[strSentAccount] -= nFee;
-            BOOST_FOREACH(const PAIRTYPE(Wallet::NexusAddress, int64)& s, listSent)
-                mapAccountBalances[strSentAccount] -= s.second;
-            if (wtx.GetDepthInMainChain() >= nMinDepth)
             {
-                mapAccountBalances["default"] += nGeneratedMature;
-                BOOST_FOREACH(const PAIRTYPE(Wallet::NexusAddress, int64)& r, listReceived)
-                    if (pwalletMain->mapAddressBook.count(r.first))
-                        mapAccountBalances[pwalletMain->mapAddressBook[r.first]] += r.second;
-                    else
-                        mapAccountBalances["default"] += r.second;
+                if(entry.second == "" || entry.second == "default")
+                    mapAccountBalances["default"] = 0;
+                else
+                    mapAccountBalances[entry.second] = 0;
             }
         }
 
-        list<Wallet::CAccountingEntry> acentries;
-        Wallet::CWalletDB(pwalletMain->strWalletFile).ListAccountCreditDebit("*", acentries);
-        BOOST_FOREACH(const Wallet::CAccountingEntry& entry, acentries)
-            mapAccountBalances[entry.strAccount] += entry.nCreditDebit;
+        /* Get the available addresses from the wallet */
+        map<Wallet::NexusAddress, int64> mapAddresses;
+        if(!pwalletMain->AvailableAddresses((unsigned int)GetUnifiedTimestamp(), mapAddresses))
+            throw JSONRPCError(-3, "Error Extracting the Addresses from Wallet File. Please Try Again.");
+
+        /* Find all the addresses in the list */
+        for (map<Wallet::NexusAddress, int64>::iterator it = mapAddresses.begin(); it != mapAddresses.end(); ++it)
+            if(pwalletMain->mapAddressBook.count(it->first))
+            {
+                string strAccount = pwalletMain->mapAddressBook[it->first];
+                if(strAccount == "")
+                    strAccount = "default";
+
+                mapAccountBalances[strAccount] += it->second;
+            }
+            else
+                mapAccountBalances["default"] += it->second;
 
         Object ret;
         BOOST_FOREACH(const PAIRTYPE(string, int64)& accountBalance, mapAccountBalances) {
             ret.push_back(Pair(accountBalance.first, ValueFromAmount(accountBalance.second)));
         }
+
         return ret;
     }
 
@@ -2776,6 +2848,8 @@ namespace Net
         { "getblockcount",          &getblockcount,          true  },
         { "getblocknumber",         &getblocknumber,         true  },
         { "getconnectioncount",     &getconnectioncount,     true  },
+        { "flushpeers",             &flushpeers,             true  },
+        { "reset",                  &reset,                  true  },
         { "getpeerinfo",            &getpeerinfo,            true  },
         { "getdifficulty",          &getdifficulty,          true  },
         { "getsupplyrates",         &getsupplyrates,         true  },
@@ -2824,6 +2898,7 @@ namespace Net
         { "signmessage",            &signmessage,            false },
         { "verifymessage",          &verifymessage,          false },
         { "listaccounts",           &listaccounts,           false },
+        { "listaddresses",          &listaddresses,          false },
         { "listunspent",            &listunspent,            false },
         { "unspentbalance",         &unspentbalance,         false },
         { "settxfee",               &settxfee,               false },
@@ -2835,7 +2910,6 @@ namespace Net
         { "checkwallet",            &checkwallet,            false },
         { "repairwallet",           &repairwallet,           false },
         { "makekeypair",            &makekeypair,            false },
-        { "getMapCommandsKeyVector",&getMapCommandsKeyVector,false },
         { "getrawmempool",          &getrawmempool,          false }
     };
 
@@ -3444,7 +3518,7 @@ namespace Net
         if (strMethod == "totaltransactions"      && n > 0) ConvertTo<bool>(params[0]);
         if (strMethod == "gettransactions"        && n > 1) ConvertTo<int>(params[1]);
         if (strMethod == "gettransactions"        && n > 2) ConvertTo<bool>(params[2]);
-        if (strMethod == "listNTransactions"      && n > 0) ConvertTo<boost::int64_t>(params[0]);
+        if (strMethod == "listaddresses"          && n > 0) ConvertTo<boost::int64_t>(params[0]);
         if (strMethod == "listaccounts"           && n > 0) ConvertTo<boost::int64_t>(params[0]);
         if (strMethod == "listunspent"            && n > 0) ConvertTo<boost::int64_t>(params[0]);
         if (strMethod == "listunspent"            && n > 1) ConvertTo<boost::int64_t>(params[1]);

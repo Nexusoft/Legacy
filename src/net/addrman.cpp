@@ -265,6 +265,22 @@ namespace Net
         return;
     }
 
+
+    void CAddrMan::Clear()
+    {
+        vRandom = std::vector<int>(0);
+        vvTried = std::vector< std::vector<int> >(ADDRMAN_TRIED_BUCKET_COUNT, std::vector<int>(0));
+        vvNew   = std::vector< std::set<int> >   (ADDRMAN_NEW_BUCKET_COUNT, std::set<int>());
+
+        nKey.resize(32);
+        RAND_bytes(&nKey[0], 32);
+
+        nIdCount = 0;
+        nTried = 0;
+        nNew = 0;
+    }
+
+
     void CAddrMan::Good_(const CService &addr, int64 nTime)
     {
     //    printf("Good: addr=%s\n", addr.ToString().c_str());
@@ -357,7 +373,7 @@ namespace Net
         } else {
             pinfo = Create(addr, source, &nId);
             pinfo->nTime = max((int64)0, (int64)pinfo->nTime - nTimePenalty);
-    //        printf("Added %s [nTime=%fhr]\n", pinfo->ToString().c_str(), (GetUnifiedTimestamp() - pinfo->nTime) / 3600.0);
+            printf("Added %s [nTime=%fhr]\n", pinfo->ToString().c_str(), (GetUnifiedTimestamp() - pinfo->nTime) / 3600.0);
             nNew++;
             fNew = true;
         }
