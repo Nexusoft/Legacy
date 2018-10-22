@@ -224,7 +224,7 @@ bool AppInit2(int argc, char* argv[])
             "  -port=<port>     \t\t  " + _("Listen for connections on <port> (default: 9323 or testnet: 8313)") + "\n" +
             "  -maxconnections=<n>\t  " + _("Maintain at most <n> connections to peers (default: 125)") + "\n" +
             "  -addnode=<ip>    \t  "   + _("Add a node to connect to and attempt to keep the connection open") + "\n" +
-            "  -addseednode=<ip>    "   + _("Add a node to list of hardcoded seed nodes") + "\n" +
+            "  -addseednode=<ip>\t  "   + _("Add a node to list of hardcoded seed nodes") + "\n" +
             "  -connect=<ip>    \t\t  " + _("Connect only to the specified node") + "\n" +
             "  -listen          \t  "   + _("Accept connections from outside (default: 1)") + "\n" +
             "  -unified         \t  "   + _("Enable sending unified time samples. Used for seed nodes") + "\n" +
@@ -263,7 +263,7 @@ bool AppInit2(int argc, char* argv[])
         #endif
                     "  -llpallowip=<ip> \t  "   + _("Allow mining from specified IP address or range (192.168.6.* for example") + "\n" +
                     "  -banned=<ip>     \t  "   + _("Manually Ban Addresses from Config File") + "\n" +
-                    "  -mining             \t  "   + _("Allow mining (default: 0)") + "\n" +
+                    "  -mining          \t  "   + _("Allow mining (default: 0)") + "\n" +
                     "  -miningport=<port> "     + _("Listen for mining connections on <port> (default: 9325)") + "\n" +
                     "  -rpcuser=<user>  \t  "   + _("Username for JSON-RPC connections") + "\n" +
                     "  -rpcpassword=<pw>\t  "   + _("Password for JSON-RPC connections") + "\n" +

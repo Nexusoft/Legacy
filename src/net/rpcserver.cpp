@@ -420,7 +420,7 @@ namespace Net
         }
     }
 
-    Value flushpeers(const Array& params, bool fHelp)
+    /*Value flushpeers(const Array& params, bool fHelp)
     {
         if(fHelp || params.size() != 0)
             throw runtime_error(
@@ -460,7 +460,7 @@ namespace Net
         Wallet::CAddrDB("cr+").WriteAddrman(addrman);
 
         return "success";
-    }
+    }*/
 
 
     Value reset(const Array& params, bool fHelp)
@@ -2848,7 +2848,7 @@ namespace Net
         { "getblockcount",          &getblockcount,          true  },
         { "getblocknumber",         &getblocknumber,         true  },
         { "getconnectioncount",     &getconnectioncount,     true  },
-        { "flushpeers",             &flushpeers,             true  },
+        //{ "flushpeers",             &flushpeers,             true  },
         { "reset",                  &reset,                  true  },
         { "getpeerinfo",            &getpeerinfo,            true  },
         { "getdifficulty",          &getdifficulty,          true  },

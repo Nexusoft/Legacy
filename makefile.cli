@@ -6,6 +6,16 @@ else
 	detected_OS:= Linux
 endif
 
+ifndef STATIC
+	override STATIC=0
+endif
+ifeq (${STATIC}, 1)
+	DEFS+= -DSTATIC
+	ifeq (${detected_OS},Linux)
+		LIBS+=-Wl,-Bstatic -lz -lpthread_nonshared
+	endif
+endif
+
 #Set flag for indicating binary is part of tritium package
 ifndef FOR_TRITIUM
 	override FOR_TRITIUM= 0
@@ -476,10 +486,15 @@ CXX= g++
 endif
 
 #Configure OS Specific Build Environment
-LIBS+= -Wl,-Bdynamic \
-	-lz \
-	-ldl \
-	-lpthread
+
+LIBS+= 	-Wl,-Bdynamic \
+		-ldl
+
+ifneq (${STATIC}, 1)
+	LIBS+=	-lz \
+		-lpthread
+endif
+
 
 #Arch Linux Fix
 ifeq ($(shell uname -r | grep -o ....$), ARCH)
