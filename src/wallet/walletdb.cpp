@@ -81,7 +81,7 @@ namespace Wallet
             // Read next record
             CDataStream ssKey(SER_DISK, DATABASE_VERSION);
             if (fFlags == DB_SET_RANGE)
-                ssKey << boost::make_tuple(string("acentry"), (fAllAccounts? string("") : strAccount), uint64(0));
+                ssKey << boost::make_tuple(string("acentry"), (fAllAccounts? string("default") : strAccount), uint64(0));
             CDataStream ssValue(SER_DISK, DATABASE_VERSION);
             int ret = ReadAtCursor(pcursor, ssKey, ssValue, fFlags);
             fFlags = DB_NEXT;
@@ -174,7 +174,7 @@ namespace Wallet
                         vWalletRemove.push_back(hash);
                     }
                     else if (wtx.GetHash() != hash) {
-                        printf("Error in wallet.dat, hash mismatch. Removing Transaction from wallet map. Run the rescan command to restore.\n");
+                        printf("LoadWallet() corrupted tx in wallet. Run the rescan command to restore.\n");
 
                         vWalletRemove.push_back(hash);
                     }
@@ -212,10 +212,19 @@ namespace Wallet
                 {
                     string strAccount;
                     ssKey >> strAccount;
+
                     uint64 nNumber;
                     ssKey >> nNumber;
+
                     if (nNumber > nAccountingEntryNumber)
                         nAccountingEntryNumber = nNumber;
+
+                    if(strAccount == "")
+                    {
+                        printf("LoadWallet() reindexing default account\n");
+
+                        strAccount = "default";
+                    }
                 }
                 else if (strType == "key" || strType == "wkey")
                 {
@@ -331,7 +340,7 @@ namespace Wallet
                 EraseTx(hash);
                 pwallet->mapWallet.erase(hash);
 
-                printf("Erasing Transaction at hash %s\n", hash.ToString().c_str());
+                printf("LoadWallet() repairing tx at hash %s\n", hash.ToString().c_str());
             }
         }
 

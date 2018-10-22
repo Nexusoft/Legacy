@@ -512,10 +512,11 @@ namespace Net
         printf("ThreadSocketHandler exiting\n");
     }
 
+    list<CNode*> vNodesDisconnected;
     void ThreadSocketHandler2(void* parg)
     {
         printf("ThreadSocketHandler started\n");
-        list<CNode*> vNodesDisconnected;
+
         unsigned int nPrevNodeCount = 0;
 
         loop() {

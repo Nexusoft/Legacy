@@ -53,7 +53,7 @@ namespace Net
 
         pwalletMain->ScanForWalletTransactions(Core::pindexGenesisBlock, true);
 
-        return "Wallet Rescanning Complete";
+        return "success";
     }
 
     Value importprivkey(const Array& params, bool fHelp)

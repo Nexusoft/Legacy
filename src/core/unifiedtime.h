@@ -39,6 +39,14 @@ extern std::vector<int> UNIFIED_TIME_DATA;
 extern std::vector<Net::CAddress> SEED_NODES;
 extern std::vector<Net::CAddress> TRUSTED_NODES;
 
+extern std::vector<std::string> DNS_SeedNodes;
+
+/** Declarations for the DNS Seed Nodes. **/
+extern std::vector<std::string> DNS_SeedNodes_Testnet;
+
+/** Declarations for the DNS Seed Nodes. **/
+extern std::vector<std::string> DNS_SeedNodes_LISPnet;
+
 
 
 /** The Maximum Seconds that a Clock can be Off. This is set to account

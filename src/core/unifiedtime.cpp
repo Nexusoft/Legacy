@@ -36,7 +36,7 @@ std::vector<Net::CAddress> SEED_NODES;
 std::map<std::string, int> MAP_TIME_DATA;
 
 /** Declarations for the DNS Seed Nodes. **/
-static std::vector<std::string> DNS_SeedNodes =
+std::vector<std::string> DNS_SeedNodes =
 {
     "node1.nexusearth.com",
     "node1.nexusoft.io",
@@ -125,7 +125,7 @@ static std::vector<std::string> DNS_SeedNodes =
 };
 
 /** Declarations for the DNS Seed Nodes. **/
-static std::vector<std::string> DNS_SeedNodes_Testnet =
+std::vector<std::string> DNS_SeedNodes_Testnet =
 {
     "node1.nexusoft.io",
     "node2.nexusoft.io",
@@ -135,7 +135,7 @@ static std::vector<std::string> DNS_SeedNodes_Testnet =
 
 
 /** Declarations for the DNS Seed Nodes. **/
-static std::vector<std::string> DNS_SeedNodes_LISPnet =
+std::vector<std::string> DNS_SeedNodes_LISPnet =
 {
     "node1.nexus.lispers.net",
     "node2.nexus.lispers.net",
@@ -265,13 +265,13 @@ void ThreadUnifiedSamples(void* parg)
 
             /* If the Core LLP isn't connected, Retry in 10 Seconds. */
             if(!SERVER.Connected())
-            {   
+            {
                 /* Debug output. */
                 printf("***** Core LLP: Failed To Connect To %s:%s\n", SERVER.IP.c_str(), SERVER.PORT.c_str());
-                 
+
                 continue;
              }
-            
+
             /* Use a CMajority to Find the Sample with the Most Weight. */
             CMajority<int> nSamples;
 
