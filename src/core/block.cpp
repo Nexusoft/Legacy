@@ -336,9 +336,10 @@ namespace Core
             CTrustKey trustCheck;
             if(nVersion >= 6 && indexdb.ReadTrustKey(cKey, trustCheck))
             {
-                if(trustCheck.vchPubKey != vTrustKey || trustCheck.hashGenesisBlock != GetHash() ||
-                   trustCheck.hashGenesisTx != vtx[0].GetHash() || trustCheck.nGenesisTime != nTime)
-                   return error("ConnectBlock() : Duplicate Genesis not Allowed");
+                //if(trustCheck.vchPubKey != vTrustKey || trustCheck.hashGenesisBlock != GetHash() ||
+                   //trustCheck.hashGenesisTx != vtx[0].GetHash() || trustCheck.nGenesisTime != nTime)
+                   //return error("ConnectBlock() : Duplicate Genesis not Allowed");
+                   printf("ConnectBlock(): Duplicate Genesis was used. Continuing.");
             }
 
             /* Create the Trust Key from Genesis Transaction Block. */
