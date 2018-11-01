@@ -2507,6 +2507,22 @@ namespace Net
         return pblockindex->phashBlock->GetHex();
     }
 
+    Value isorphan(const Array& params, bool fHelp)
+    {
+        if (fHelp || params.size() < 1 || params.size() > 2)
+            throw runtime_error(
+                "isorphan <hash> [txinfo]\n"
+                "Returns whether a block is an orphan or not");
+
+        std::string strHash = params[0].get_str();
+        uint1024 hash(strHash);
+
+        if (Core::mapBlockIndex.count(hash) == 0)
+            throw JSONRPCError(-5, "Block not found");
+
+        return (Core::mapBlockIndex[hash]->IsInMainChain());
+    }
+
     Value getblock(const Array& params, bool fHelp)
     {
         if (fHelp || params.size() < 1 || params.size() > 2)
@@ -2885,6 +2901,7 @@ namespace Net
         { "sendmany",               &sendmany,               false },
         { "addmultisigaddress",     &addmultisigaddress,     false },
         { "getblock",               &getblock,               false },
+        { "isorphan",               &isorphan,               false },
         { "getblockhash",           &getblockhash,           false },
         { "gettransaction",         &gettransaction,         false },
         { "getrawtransaction",      &getrawtransaction,      false },
