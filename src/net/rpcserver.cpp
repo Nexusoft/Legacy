@@ -2520,7 +2520,7 @@ namespace Net
         if (Core::mapBlockIndex.count(hash) == 0)
             throw JSONRPCError(-5, "Block not found");
 
-        return (Core::mapBlockIndex[hash]->IsInMainChain());
+        return (!Core::mapBlockIndex[hash]->IsInMainChain());
     }
 
     Value getblock(const Array& params, bool fHelp)
