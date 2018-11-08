@@ -832,16 +832,19 @@ namespace Core
                 /* Genesis has to wait for one full trust key timespan. */
                 if(nCoinAge < (fTestNet ? TRUST_KEY_TIMESPAN_TESTNET : TRUST_KEY_TIMESPAN))
                 {
-                    /* Increase sleep time to wait for coin age to meet requirement (5 minute check) */
-                    sleepTime = 300000;
-
                     /* Set flag to display appropriate message in interface */
                     fIsWaitPeriod = true;
+
+                    /* Increase sleep time to wait for coin age to meet requirement (5 minute check) */
+                    sleepTime = 300000;
 
                     printf("Stake Minter : genesis age is immature\n");
                     continue;
                 }
                 else if (sleepTime == 300000) {
+                    /* Reset interface flag */
+                    fIsWaitPeriod = false;
+
                     /* Reset sleep time after coin age meets requirement. */
                     sleepTime = 1000;
                 }
