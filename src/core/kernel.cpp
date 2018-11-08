@@ -256,6 +256,8 @@ namespace Core
             CTrustKey trustKey;
             if(indexdb.ReadTrustKey(cKey, trustKey))
                 nInterestRate = trustKey.InterestRate(block, nTime);
+            else if( !block.vtx[0].IsGenesis() )
+                return error("CTransaction::GetCoinstakeInterest() : Unable to read trust key");
         }
 
         /** Check the coin age of each Input. **/

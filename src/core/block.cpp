@@ -254,6 +254,31 @@ namespace Core
         //// issue here: it doesn't know the version
         unsigned int nTxPos = pindex->nBlockPos + ::GetSerializeSize(CBlock(), SER_DISK, DATABASE_VERSION) - (2 * GetSizeOfCompactSize(0)) + GetSizeOfCompactSize(vtx.size());
 
+        // handle for trust keys
+        std::vector<unsigned char> vTrustKey;
+        uint576 cKey;
+        CTrustKey trustKey;
+        if(!TrustKey(vTrustKey))
+            return error("ConnectBlock() : can't extract trust key.");
+
+        /* Set the ckey object. */
+        cKey.SetBytes(vTrustKey);
+
+        /* Verify that we have the trust key for stake block in the indexdb */
+        if(vtx[0].IsTrust())
+        {
+            /* No Trust Transaction without a Genesis. */
+            if(!indexdb.ReadTrustKey(cKey, trustKey))
+            {
+                /* FindGenesis will set hashPrevBlock to genesis block. Don't want to change that here, so use temp hash */
+                uint1024 hashGenesisBlock = hashPrevBlock;
+                if(!FindGenesis(cKey, trustKey, hashGenesisBlock))
+                    return DoS(50, error("ConnectBlock() : no trust without genesis"));
+
+                indexdb.WriteTrustKey(cKey, trustKey);
+            }
+        }
+
         map<uint512, CTxIndex> mapQueuedChanges;
         int64 nFees = 0;
         int64 nValueIn = 0;
@@ -308,15 +333,6 @@ namespace Core
         if (vtx[0].vin[0].scriptSig.size() < 2 || vtx[0].vin[0].scriptSig.size() > (nVersion < 5 ? 100 : 144))
             return DoS(100, error("CTransaction::CheckTransaction() : coinbase/coinstake script size"));
 
-        // handle for trust keys
-        std::vector<unsigned char> vTrustKey;
-        if(!TrustKey(vTrustKey))
-            return error("ConnectBlock() : can't extract trust key.");
-
-        /* Set the ckey object. */
-        uint576 cKey;
-        cKey.SetBytes(vTrustKey);
-
         /* Check the proof of stake claims. */
         if (IsProofOfStake())
         {
@@ -360,16 +376,6 @@ namespace Core
         /* Handle Adding Trust Transactions. */
         else if(vtx[0].IsTrust())
         {
-            /* No Trust Transaction without a Genesis. */
-            CTrustKey trustKey;
-            if(!indexdb.ReadTrustKey(cKey, trustKey))
-            {
-                if(!FindGenesis(cKey, trustKey, hashPrevBlock))
-                    return DoS(50, error("ConnectBlock() : no trust without genesis"));
-
-                indexdb.WriteTrustKey(cKey, trustKey);
-            }
-
             /* Check that the Trust Key and Current Block match. */
             if(trustKey.vchPubKey != vTrustKey)
                 return error("ConnectBlock() : Trust Key and Block Key Mismatch.");
@@ -1268,7 +1274,7 @@ namespace Core
     }
 
 
-    bool FindGenesis(uint576 cKey, CTrustKey& trustKey, uint1024& hashTrustBlock)
+    bool FindGenesis(const uint576 cKey, CTrustKey& trustKey, uint1024& hashTrustBlock)
     {
         /* Block Object. */
         CBlock block;
