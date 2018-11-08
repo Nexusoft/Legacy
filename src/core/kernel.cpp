@@ -635,9 +635,11 @@ namespace Core
                 vchTrustKey = reservekey.GetReservedKey();
         }
 
+        int64 sleepTime = 1000;
+
         while(!fShutdown)
         {
-            Sleep(1000);
+            Sleep(sleepTime);
 
             /* Take a snapshot of the best block. */
             uint1024 hashBest = hashBestChain;
@@ -773,8 +775,14 @@ namespace Core
             /* Add the coinstake inputs */
             if (!pwalletMain->AddCoinstakeInputs(block))
             {
-                error("Stake Minter : no spendable inputs available");
+                /* Wallet has no balance, or balance unavailable for staking. Increase sleep time to wait for balance. */
+                sleepTime = 30000;
+                printf("Stake Minter : no spendable inputs available\n");
                 continue;
+            }
+            else if (sleepTime == 30000) {
+                /* Reset sleep time after inputs become available. */
+                sleepTime = 1000;
             }
 
             /* Weight for Trust transactions combine block weight and stake weight. */
@@ -824,9 +832,18 @@ namespace Core
                 /* Genesis has to wait for one full trust key timespan. */
                 if(nCoinAge < (fTestNet ? TRUST_KEY_TIMESPAN_TESTNET : TRUST_KEY_TIMESPAN))
                 {
+                    /* Increase sleep time to wait for coin age to meet requirement (5 minute check) */
+                    sleepTime = 300000;
+
+                    /* Set flag to display appropriate message in interface */
                     fIsWaitPeriod = true;
-                    error("Stake Minter : genesis age is immature");
+
+                    printf("Stake Minter : genesis age is immature\n");
                     continue;
+                }
+                else if (sleepTime == 300000) {
+                    /* Reset sleep time after coin age meets requirement. */
+                    sleepTime = 1000;
                 }
 
                 /* Trust Weight For Genesis Transaction Reaches Maximum at 90 day Limit. */
