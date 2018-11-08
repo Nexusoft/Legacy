@@ -256,7 +256,7 @@ namespace Core
             CTrustKey trustKey;
             if(indexdb.ReadTrustKey(cKey, trustKey))
                 nInterestRate = trustKey.InterestRate(block, nTime);
-            else if( !block.vtx[0].IsGenesis() )
+            else if(!block.vtx[0].IsGenesis())
                 return error("CTransaction::GetCoinstakeInterest() : Unable to read trust key");
         }
 
@@ -635,11 +635,11 @@ namespace Core
                 vchTrustKey = reservekey.GetReservedKey();
         }
 
-        int64 sleepTime = 1000;
+        int64 nSleepTime = 1000;
 
         while(!fShutdown)
         {
-            Sleep(sleepTime);
+            Sleep(nSleepTime);
 
             /* Take a snapshot of the best block. */
             uint1024 hashBest = hashBestChain;
@@ -776,13 +776,13 @@ namespace Core
             if (!pwalletMain->AddCoinstakeInputs(block))
             {
                 /* Wallet has no balance, or balance unavailable for staking. Increase sleep time to wait for balance. */
-                sleepTime = 30000;
+                nSleepTime = 30000;
                 printf("Stake Minter : no spendable inputs available\n");
                 continue;
             }
-            else if (sleepTime == 30000) {
+            else if (nSleepTime == 30000) {
                 /* Reset sleep time after inputs become available. */
-                sleepTime = 1000;
+                nSleepTime = 1000;
             }
 
             /* Weight for Trust transactions combine block weight and stake weight. */
@@ -836,17 +836,17 @@ namespace Core
                     fIsWaitPeriod = true;
 
                     /* Increase sleep time to wait for coin age to meet requirement (5 minute check) */
-                    sleepTime = 300000;
+                    nSleepTime = 300000;
 
                     printf("Stake Minter : genesis age is immature\n");
                     continue;
                 }
-                else if (sleepTime == 300000) {
+                else if (nSleepTime == 300000) {
                     /* Reset interface flag */
                     fIsWaitPeriod = false;
 
                     /* Reset sleep time after coin age meets requirement. */
-                    sleepTime = 1000;
+                    nSleepTime = 1000;
                 }
 
                 /* Trust Weight For Genesis Transaction Reaches Maximum at 90 day Limit. */
