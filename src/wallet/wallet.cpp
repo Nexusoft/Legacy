@@ -383,7 +383,7 @@ namespace Wallet
     // Add a transaction to the wallet, or update it.
     // pblock is optional, but should be provided if the transaction is known to be in a block.
     // If fUpdate is true, existing transactions will be updated.
-    bool CWallet::AddToWalletIfInvolvingMe(const Core::CTransaction& tx, const Core::CBlock* pblock, bool fUpdate, bool fFindBlock, bool isRescan)
+    bool CWallet::AddToWalletIfInvolvingMe(const Core::CTransaction& tx, const Core::CBlock* pblock, bool fUpdate, bool fFindBlock, bool fRescan)
     {
         uint512 hash = tx.GetHash();
         {
@@ -394,7 +394,7 @@ namespace Wallet
             {
                 CWalletTx wtx(this,tx);
 
-                if (isRescan) {
+                if (fRescan) {
                     // On rescan, set wtx time to transaction time instead of time tx received (which sets it to time of rescan)
                     wtx.nTimeReceived = tx.nTime;
                 }
