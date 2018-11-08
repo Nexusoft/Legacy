@@ -394,8 +394,8 @@ namespace Wallet
             {
                 CWalletTx wtx(this,tx);
 
-                if (fRescan) {
-                    // On rescan, set wtx time to transaction time instead of time tx received (which sets it to time of rescan)
+                if (fRescan || Core::IsInitialBlockDownload()) {
+                    // On rescan or initial download, set wtx time to transaction time instead of time tx received 
                     wtx.nTimeReceived = tx.nTime;
                 }
 
