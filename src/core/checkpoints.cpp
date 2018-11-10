@@ -17,7 +17,7 @@ namespace Core
 {
     /** Hardened Checkpoints. **/
     std::map<unsigned int, uint1024> mapCheckpoints;
-    unsigned int CHECKPOINT_TIMESPAN = 30, MAX_CHECKPOINTS_SEARCH = 1;
+    unsigned int CHECKPOINT_TIMESPAN = 10, MAX_CHECKPOINTS_SEARCH = 1;
 
 
     /** Check Checkpoint Timespan. **/
@@ -84,7 +84,7 @@ namespace Core
 
         /** Dump the Checkpoint if not Initializing. **/
         if(!fInit)
-            printg("===== Hardened Checkpoint %s Height = %u\n",
+            printf("===== Hardened Checkpoint %s Height = %u\n",
             pcheckpoint->pprev->PendingCheckpoint.second.ToString().substr(0, 20).c_str(),
             pcheckpoint->pprev->PendingCheckpoint.first);
 

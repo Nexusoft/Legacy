@@ -383,6 +383,7 @@ LIBS+= $(BOOST_LIB_PATH)/libboost_system-mt.a \
 CXXFLAGS+= -mmacosx-version-min=10.10 \
 	-O3 \
 	$(DEFS) \
+	$(DEBUG) \
 	$(INCLUDEPATHS)
 
 #set -std=c++ for all but c compiling

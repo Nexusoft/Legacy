@@ -481,23 +481,6 @@ namespace Core
         }
         else
         {
-            if(nVersion < 5 && !fTestNet && !IsInitialBlockDownload() && IsProofOfStake())
-            {
-                uint576 cKey;
-                if(TrustKey(cKey))
-                {
-                    CTrustKey trustKey;
-                    if(indexdb.ReadTrustKey(cKey, trustKey) && !trustKey.IsValid(*this))
-                    {
-                        error("\x1b[31m SOFTBAN: Invalid nPoS %s\x1b[0m", hash.ToString().substr(0, 20).c_str());
-
-                        return true;
-                    }
-                }
-                else
-                    error("\x1b[31m SOFTBAN \x1b[0m : couldn't get trust key");
-            }
-
             CBlockIndex* pfork = pindexBest;
             CBlockIndex* plonger = pindexNew;
             while (pfork != plonger)
@@ -570,6 +553,10 @@ namespace Core
                     if (!(tx.IsCoinBase() || tx.IsCoinStake()))
                         vDelete.push_back(tx);
             }
+
+            /* Connect the checkpoint. */
+            if(pindexNew->pprev)
+                HardenCheckpoint(pindexNew);
 
             /* Write the Best Chain to the Index Database LLD. */
             if (!indexdb.WriteHashBestChain(pindexNew->GetBlockHash()))
@@ -744,7 +731,7 @@ namespace Core
         }
 
         /* Add the Pending Checkpoint into the Blockchain. */
-        if(!pindexNew->pprev || HardenCheckpoint(pindexNew))
+        if(!pindexNew->pprev || IsNewTimespan(pindexNew->pprev))
         {
             pindexNew->PendingCheckpoint = make_pair(pindexNew->nHeight, pindexNew->GetBlockHash());
 
@@ -758,7 +745,7 @@ namespace Core
             unsigned int nAge = pindexNew->pprev->GetBlockTime() - mapBlockIndex[pindexNew->PendingCheckpoint.second]->GetBlockTime();
 
             if(GetArg("-verbose", 0) >= 2)
-                printg("===== Pending Checkpoint Age = %u Hash = %s Height = %u\n", nAge, pindexNew->PendingCheckpoint.second.ToString().substr(0, 15).c_str(), pindexNew->PendingCheckpoint.first);
+                printf("===== Pending Checkpoint Age = %u Hash = %s Height = %u\n", nAge, pindexNew->PendingCheckpoint.second.ToString().substr(0, 15).c_str(), pindexNew->PendingCheckpoint.first);
         }
 
         /* Add to the MapBlockIndex */
