@@ -142,7 +142,7 @@ namespace Wallet
 
         void MarkDirty();
         bool AddToWallet(const CWalletTx& wtxIn);
-        bool AddToWalletIfInvolvingMe(const Core::CTransaction& tx, const Core::CBlock* pblock, bool fUpdate = false, bool fFindBlock = false);
+        bool AddToWalletIfInvolvingMe(const Core::CTransaction& tx, const Core::CBlock* pblock, bool fUpdate = false, bool fFindBlock = false, bool fRescan = false);
         bool EraseFromWallet(uint512 hash);
         void WalletUpdateSpent(const Core::CTransaction& prevout);
         int ScanForWalletTransactions(Core::CBlockIndex* pindexStart, bool fUpdate = false);

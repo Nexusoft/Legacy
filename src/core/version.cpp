@@ -13,7 +13,7 @@
 const std::string CLIENT_NAME("Nexus");
 
 /* The version number */
-const std::string CLIENT_VERSION("2.5.3");
+const std::string CLIENT_VERSION("2.5.4");
 
 /* The interface used Qt, CLI, or Tritium) */
 #if defined QT_GUI

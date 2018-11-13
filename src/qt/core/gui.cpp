@@ -556,7 +556,7 @@ void NexusGUI::setWeight(double trustWeight, double blockWeight, double interest
     if (isWaitPeriod == true)
     {
         icon = ":/icons/notsynced";
-        labelWeightIcon->setToolTip(tr("Waiting the required 72 hours\n since Trust Key creation.\nStaking will begin after..."));
+        labelWeightIcon->setToolTip(tr("Average age of balance\nless than 72 hours.\nWaiting to begin staking..."));
     }
     else if(dPercent == 0)
     {

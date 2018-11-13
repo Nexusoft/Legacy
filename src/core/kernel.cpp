@@ -256,6 +256,8 @@ namespace Core
             CTrustKey trustKey;
             if(indexdb.ReadTrustKey(cKey, trustKey))
                 nInterestRate = trustKey.InterestRate(block, nTime);
+            else if(!block.vtx[0].IsGenesis())
+                return error("CTransaction::GetCoinstakeInterest() : Unable to read trust key");
         }
 
         /** Check the coin age of each Input. **/
@@ -287,123 +289,6 @@ namespace Core
         }
 
         nAverageAge /= (vin.size() - 1);
-
-        return true;
-    }
-
-
-    bool CTrustKey::IsValid(CBlock cBlock)
-    {
-
-        /* Set the Public Key Integer Key from Bytes. */
-        uint576 cKey;
-        if(!cBlock.TrustKey(cKey))
-            return error("CTrustKey::IsValid() : couldn't get trust key");
-
-        /* Find the last 6 nPoS blocks. */
-        CBlock pblock[6];
-        const CBlockIndex* pindex[6];
-
-        unsigned int nAverageTime = 0, nTotalGenesis = 0;
-        for(int i = 0; i < 6; i++)
-        {
-            pindex[i] = GetLastChannelIndex(i == 0 ? mapBlockIndex[cBlock.hashPrevBlock] : pindex[i - 1]->pprev, 0);
-            if(!pindex[i])
-                return error("CTrustKey::IsValid() : Can't Find last Channel Index");
-
-            if(!pblock[i].ReadFromDisk(pindex[i], true))
-                return error("CTrustKey::IsValid() : Can't Read Block from Disk");
-
-            if(i > 0)
-                nAverageTime += (pblock[i - 1].nTime - pblock[i].nTime);
-
-            if(pblock[i].vtx[0].IsGenesis())
-                nTotalGenesis++;
-        }
-        nAverageTime /= 5;
-
-        /* Create an LLD instance for Tx Lookups. */
-        LLD::CIndexDB indexdb("cr");
-
-        /* Handle Genesis Transaction Rules. Genesis is checked after Trust Key Established. */
-        if(cBlock.vtx[0].IsGenesis())
-        {
-            /* RULE: Average Block time of last six blocks not to go below 30 seconds */
-            if(nTotalGenesis > 3 && nAverageTime < 30)
-                return error("\x1b[31m SOFTBAN: \u001b[37;1m 5 Genesis Average block time < 20 seconds %u \x1b[0m", nAverageTime );
-
-            /* Check the coin age of each Input. */
-            for(int nIndex = 1; nIndex < cBlock.vtx[0].vin.size(); nIndex++)
-            {
-                CTransaction txPrev;
-                CTxIndex txindex;
-
-                /* Ignore Outputs that are not in the Main Chain. */
-                if (!txPrev.ReadFromDisk(indexdb, cBlock.vtx[0].vin[nIndex].prevout, txindex))
-                    return error("CTrustKey::IsValid() : Invalid Previous Transaction");
-
-                /* Read the Previous Transaction's Block from Disk. */
-                CBlock block;
-                if (!block.ReadFromDisk(txindex.pos.nFile, txindex.pos.nBlockPos, false))
-                    return error("CTrustKey::IsValid() : Failed To Read Block from Disk");
-
-                /* Check that Genesis has no Transactions. */
-                if(cBlock.vtx.size() != 1)
-                    return error("CTrustKey::IsValid() : Cannot Include Transactions with Genesis Transaction");
-
-                /* RULE: No Genesis if coin age is less than 1 days old. */
-                if((cBlock.nTime - block.GetBlockTime()) < 24 * 60 * 60)
-                    return error("\x1b[31m SOFTBAN: \u001b[37;1m Genesis Input less than 24 hours Age \x1b[0m");
-            }
-
-            /* Genesis Rules: Less than 1000 NXS in block. */
-            if(cBlock.vtx[0].GetValueOut() < 1000 * COIN)
-            {
-                /* RULE: More than 2 conesuctive Genesis with < 1000 NXS */
-                if (pblock[0].vtx[0].GetValueOut() < 1000 * COIN &&
-                    pblock[1].vtx[0].GetValueOut() < 1000 * COIN)
-                    return error("\x1b[31m SOFTBAN: \u001b[37;1m More than 2 Consecutive blocks < 1000 NXS \x1b[0m");
-            }
-        }
-
-        /** Handle Adding Trust Transactions. **/
-        else if(cBlock.vtx[0].IsTrust())
-        {
-
-            /* RULE: Average Block time of last six blocks not to go below 30 seconds */
-            if(nAverageTime < 20 && (cBlock.nTime - pblock[0].nTime) < 30)
-                return error("\x1b[31m SOFTBAN: \u001b[37;1m Trust Average block time < 30 seconds %u \x1b[0m", nAverageTime);
-
-
-            /* Check the coin age of each Input. */
-            for(int nIndex = 1; nIndex < cBlock.vtx[0].vin.size(); nIndex++)
-            {
-                CTransaction txPrev;
-                CTxIndex txindex;
-
-                /* Ignore Outputs that are not in the Main Chain. */
-                if (!txPrev.ReadFromDisk(indexdb, cBlock.vtx[0].vin[nIndex].prevout, txindex))
-                    return error("CTrustKey() : Invalid Previous Transaction");
-
-                /* Read the Previous Transaction's Block from Disk. */
-                CBlock block;
-                if (!block.ReadFromDisk(txindex.pos.nFile, txindex.pos.nBlockPos, false))
-                    return error("CTrustKey() : Failed To Read Block from Disk");
-
-                /* RULE: Inputs need to have at least 100 confirmations */
-                if(cBlock.nHeight - block.nHeight < 100)
-                    return error("\x1b[31m SOFTBAN: \u001b[37;1m Trust Input less than 100 confirmations \x1b[0m");
-            }
-
-            /* Genesis Rules: Less than 1000 NXS in block. */
-            if(cBlock.vtx[0].GetValueOut() < 1000 * COIN)
-            {
-                /* RULE: More than 2 conesuctive Genesis with < 1000 NXS */
-                if (pblock[0].vtx[0].GetValueOut() < 1000 * COIN &&
-                    pblock[1].vtx[0].GetValueOut() < 1000 * COIN)
-                    return error("\x1b[31m SOFTBAN: \u001b[37;1m More than 2 Consecutive Trust < 1000 NXS \x1b[0m");
-            }
-        }
 
         return true;
     }
@@ -633,9 +518,11 @@ namespace Core
                 vchTrustKey = reservekey.GetReservedKey();
         }
 
+        int64 nSleepTime = 1000;
+
         while(!fShutdown)
         {
-            Sleep(1000);
+            Sleep(nSleepTime);
 
             /* Take a snapshot of the best block. */
             uint1024 hashBest = hashBestChain;
@@ -771,8 +658,14 @@ namespace Core
             /* Add the coinstake inputs */
             if (!pwalletMain->AddCoinstakeInputs(block))
             {
-                error("Stake Minter : no spendable inputs available");
+                /* Wallet has no balance, or balance unavailable for staking. Increase sleep time to wait for balance. */
+                nSleepTime = 30000;
+                printf("Stake Minter : no spendable inputs available\n");
                 continue;
+            }
+            else if (nSleepTime == 30000) {
+                /* Reset sleep time after inputs become available. */
+                nSleepTime = 1000;
             }
 
             /* Weight for Trust transactions combine block weight and stake weight. */
@@ -822,9 +715,21 @@ namespace Core
                 /* Genesis has to wait for one full trust key timespan. */
                 if(nCoinAge < (fTestNet ? TRUST_KEY_TIMESPAN_TESTNET : TRUST_KEY_TIMESPAN))
                 {
+                    /* Set flag to display appropriate message in interface */
                     fIsWaitPeriod = true;
-                    error("Stake Minter : genesis age is immature");
+
+                    /* Increase sleep time to wait for coin age to meet requirement (5 minute check) */
+                    nSleepTime = 300000;
+
+                    printf("Stake Minter : genesis age is immature\n");
                     continue;
+                }
+                else if (nSleepTime == 300000) {
+                    /* Reset interface flag */
+                    fIsWaitPeriod = false;
+
+                    /* Reset sleep time after coin age meets requirement. */
+                    nSleepTime = 1000;
                 }
 
                 /* Trust Weight For Genesis Transaction Reaches Maximum at 90 day Limit. */

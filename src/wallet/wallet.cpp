@@ -316,8 +316,10 @@ namespace Wallet
             CWalletTx& wtx = (*ret.first).second;
             wtx.BindWallet(this);
             bool fInsertedNew = ret.second;
-            if (fInsertedNew)
+            if (fInsertedNew && wtx.nTimeReceived == 0) {
+                // Set time received to current time of not preset by processing (such as rescan)
                 wtx.nTimeReceived = GetUnifiedTimestamp();
+            }
 
             bool fUpdated = false;
             if (!fInsertedNew)
@@ -381,7 +383,7 @@ namespace Wallet
     // Add a transaction to the wallet, or update it.
     // pblock is optional, but should be provided if the transaction is known to be in a block.
     // If fUpdate is true, existing transactions will be updated.
-    bool CWallet::AddToWalletIfInvolvingMe(const Core::CTransaction& tx, const Core::CBlock* pblock, bool fUpdate, bool fFindBlock)
+    bool CWallet::AddToWalletIfInvolvingMe(const Core::CTransaction& tx, const Core::CBlock* pblock, bool fUpdate, bool fFindBlock, bool fRescan)
     {
         uint512 hash = tx.GetHash();
         {
@@ -391,6 +393,12 @@ namespace Wallet
             if (IsMine(tx) || IsFromMe(tx))
             {
                 CWalletTx wtx(this,tx);
+
+                if (fRescan || Core::IsInitialBlockDownload()) {
+                    // On rescan or initial download, set wtx time to transaction time instead of time tx received 
+                    wtx.nTimeReceived = tx.nTime;
+                }
+
                 // Get merkle branch if transaction was found in a block
                 if (pblock)
                     wtx.SetMerkleBranch(pblock);
@@ -684,7 +692,7 @@ namespace Wallet
                 block.ReadFromDisk(pindex, true);
                 BOOST_FOREACH(Core::CTransaction& tx, block.vtx)
                 {
-                    if (AddToWalletIfInvolvingMe(tx, &block, fUpdate))
+                    if (AddToWalletIfInvolvingMe(tx, &block, fUpdate, false, true))
                         ret++;
                 }
                 pindex = pindex->pnext;
