@@ -1655,7 +1655,12 @@ namespace Core
     {
         /* Get the trust key. */
         uint576 cKey;
-        TrustKey(cKey);
+
+        /* Block Version 7 rules. Trust Key is part of stake hash if not genesis. */
+        if(nVersion >= 7 && vtx[0].IsGenesis())
+            cKey = 0;
+        else
+            TrustKey(cKey);
 
         //nVersion, hashPrevBlock, nChannel, nHeight, nBits, nOnce, vchTrustKey (extracted from coinstake)
         return SerializeHash(nVersion, hashPrevBlock, nChannel, nHeight, nBits, cKey, nNonce);
