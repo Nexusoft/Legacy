@@ -1653,16 +1653,17 @@ namespace Core
     /* New proof hash for all channels (version > 5) */
     uint1024 CBlock::StakeHash() const
     {
-        /* Get the trust key. */
-        uint576 cKey;
-
         /* Block Version 7 rules. Trust Key is part of stake hash if not genesis. */
         if(nVersion >= 7 && vtx[0].IsGenesis())
-            cKey = 0;
-        else
-            TrustKey(cKey);
+        {
+            uint512 hash = vtx[0].vin[1].prevout.hash;
+            return SerializeHash(nVersion, hashPrevBlock, nChannel, nHeight, nBits, hash, nNonce);
+        }
 
-        //nVersion, hashPrevBlock, nChannel, nHeight, nBits, nOnce, vchTrustKey (extracted from coinstake)
+        /* Get the trust key. */
+        uint576 cKey;
+        TrustKey(cKey);
+
         return SerializeHash(nVersion, hashPrevBlock, nChannel, nHeight, nBits, cKey, nNonce);
     }
 
