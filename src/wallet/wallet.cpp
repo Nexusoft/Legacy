@@ -395,7 +395,7 @@ namespace Wallet
                 CWalletTx wtx(this,tx);
 
                 if (fRescan || Core::IsInitialBlockDownload()) {
-                    // On rescan or initial download, set wtx time to transaction time instead of time tx received 
+                    // On rescan or initial download, set wtx time to transaction time instead of time tx received
                     wtx.nTimeReceived = tx.nTime;
                 }
 
@@ -472,8 +472,8 @@ namespace Wallet
         // which output, if any, was change).
         if (ExtractAddress(txout.scriptPubKey, address) && HaveKey(address))
         {
-            LOCK(cs_wallet);
-            if (!mapAddressBook.count(address))
+            //LOCK(cs_wallet);
+            //if (!mapAddressBook.count(address))
                 return true;
         }
         return false;
@@ -530,6 +530,8 @@ namespace Wallet
         listReceived.clear();
         listSent.clear();
         strSentAccount = strFromAccount;
+        if(strSentAccount == "")
+            strSentAccount = "default";
 
         if (IsCoinBase() || IsCoinStake())
         {
@@ -560,17 +562,12 @@ namespace Wallet
                 address = " unknown ";
             }
 
-            // Don't report 'change' txouts
-            if (nDebit > 0 && pwallet->IsChange(txout))
-                continue;
-
             if (nDebit > 0)
                 listSent.push_back(make_pair(address, txout.nValue));
 
             if (pwallet->IsMine(txout))
                 listReceived.push_back(make_pair(address, txout.nValue));
         }
-
     }
 
     void CWalletTx::GetAccountAmounts(const string& strAccount, int64& nGenerated, int64& nReceived,
@@ -603,7 +600,7 @@ namespace Wallet
                     if (mi != pwallet->mapAddressBook.end() && (*mi).second == strAccount)
                         nReceived += r.second;
                 }
-                else if (strAccount.empty())
+                else if (strAccount.empty() || strAccount == "*")
                 {
                     nReceived += r.second;
                 }
@@ -947,7 +944,7 @@ namespace Wallet
     }
 
     /** Get the available addresses that have a balance associated with a wallet. **/
-    bool CWallet::AvailableAddresses(unsigned int nSpendTime, map<NexusAddress, int64>& mapAddresses, bool fOnlyConfirmed) const
+    bool CWallet::AvailableAddresses(unsigned int nSpendTime, map<NexusAddress, int64>& mapAddresses, bool fOnlyConfirmed, int nMinDepth) const
     {
         mapAddresses.clear();
         {
@@ -960,6 +957,9 @@ namespace Wallet
                     continue;
 
                 if (fOnlyConfirmed && !pcoin->IsConfirmed())
+                    continue;
+
+                if (pcoin->GetDepthInMainChain() < nMinDepth)
                     continue;
 
                 if ((pcoin->IsCoinBase() || pcoin->IsCoinStake()) && pcoin->GetBlocksToMaturity() > 0 && pcoin->GetDepthInMainChain() == 0)
@@ -990,7 +990,62 @@ namespace Wallet
     }
 
 
-    bool CWallet::SelectCoinsMinConf(int64 nTargetValue, unsigned int nSpendTime, int nConfMine, int nConfTheirs, set<pair<const CWalletTx*,unsigned int> >& setCoinsRet, int64& nValueRet) const
+    /** Get the available addresses that have a balance associated with a wallet. **/
+    bool CWallet::BalanceByAccount(std::string strAccount, int64& nBalance, int nMinDepth) const
+    {
+        {
+            LOCK(cs_wallet);
+            nBalance = 0;
+            for (map<uint512, CWalletTx>::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
+            {
+                const CWalletTx* pcoin = &(*it).second;
+                if (!pcoin->IsFinal())
+                    continue;
+
+                if (pcoin->GetDepthInMainChain() < nMinDepth)
+                    continue;
+
+                if ((pcoin->IsCoinBase() || pcoin->IsCoinStake()) && pcoin->GetBlocksToMaturity() > 0)
+                    continue;
+
+                for (int i = 0; i < pcoin->vout.size(); i++)
+                {
+
+                    if (!pcoin->IsSpent(i) && IsMine(pcoin->vout[i]) && pcoin->vout[i].nValue > 0)
+                    {
+                        if(strAccount == "*")
+                        {
+                            nBalance += pcoin->vout[i].nValue;
+
+                            continue;
+                        }
+
+                        NexusAddress address;
+                        if(!ExtractAddress(pcoin->vout[i].scriptPubKey, address) || !address.IsValid())
+                            return false;
+
+                        if(mapAddressBook.count(address))
+                        {
+                            std::string strEntry = mapAddressBook.at(address);
+                            if(strEntry == "")
+                                strEntry = "default";
+
+                            if(strEntry == strAccount)
+                                nBalance += pcoin->vout[i].nValue;
+                        }
+                        else if(strAccount == "default")
+                            nBalance += pcoin->vout[i].nValue;
+
+                    }
+                }
+            }
+        }
+
+        return true;
+    }
+
+
+    bool CWallet::SelectCoinsMinConf(int64 nTargetValue, unsigned int nSpendTime, int nConfMine, int nConfTheirs, set<pair<const CWalletTx*,unsigned int> >& setCoinsRet, int64& nValueRet, std::string strAccount) const
     {
         /* Add Each Input to Transaction. */
         setCoinsRet.clear();
@@ -1030,8 +1085,38 @@ namespace Wallet
                 if(nValueRet >= nTargetValue)
                     break;
 
-                setCoinsRet.insert(make_pair(pcoin, i));
-                nValueRet += pcoin->vout[i].nValue;
+                /* Handle account selection here. */
+                if(strAccount != "*")
+                {
+                    NexusAddress address;
+                    if(!ExtractAddress(pcoin->vout[i].scriptPubKey, address) || !address.IsValid())
+                        continue;
+
+                    if(mapAddressBook.count(address))
+                    {
+                        std::string strEntry = mapAddressBook.at(address);
+                        if(strEntry == "")
+                            strEntry = "default";
+
+                        if(strEntry == strAccount)
+                        {
+                            setCoinsRet.insert(make_pair(pcoin, i));
+                            nValueRet += pcoin->vout[i].nValue;
+                        }
+                    }
+                    else if(strAccount == "default")
+                    {
+                        setCoinsRet.insert(make_pair(pcoin, i));
+                        nValueRet += pcoin->vout[i].nValue;
+                    }
+                }
+
+                /* Handle wildcard here. */
+                else
+                {
+                    setCoinsRet.insert(make_pair(pcoin, i));
+                    nValueRet += pcoin->vout[i].nValue;
+                }
             }
         }
 
@@ -1057,17 +1142,17 @@ namespace Wallet
     }
 
 
-    bool CWallet::SelectCoins(int64 nTargetValue, unsigned int nSpendTime, set<pair<const CWalletTx*,unsigned int> >& setCoinsRet, int64& nValueRet) const
+    bool CWallet::SelectCoins(int64 nTargetValue, unsigned int nSpendTime, set<pair<const CWalletTx*,unsigned int> >& setCoinsRet, int64& nValueRet, std::string strAccount, int nMinDepth) const
     {
-        return (SelectCoinsMinConf(nTargetValue, nSpendTime, 3, 3, setCoinsRet, nValueRet) ||
-                SelectCoinsMinConf(nTargetValue, nSpendTime, 3, 3, setCoinsRet, nValueRet) ||
-                SelectCoinsMinConf(nTargetValue, nSpendTime, 3, 3, setCoinsRet, nValueRet));
+        return (SelectCoinsMinConf(nTargetValue, nSpendTime, nMinDepth, nMinDepth, setCoinsRet, nValueRet, strAccount) ||
+                SelectCoinsMinConf(nTargetValue, nSpendTime, nMinDepth, nMinDepth, setCoinsRet, nValueRet, strAccount) ||
+                SelectCoinsMinConf(nTargetValue, nSpendTime, nMinDepth, nMinDepth, setCoinsRet, nValueRet, strAccount));
     }
 
 
 
 
-    bool CWallet::CreateTransaction(const vector<pair<CScript, int64> >& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, int64& nFeeRet)
+    bool CWallet::CreateTransaction(const vector<pair<CScript, int64> >& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, int64& nFeeRet, int nMinDepth)
     {
         int64 nValue = 0;
         BOOST_FOREACH (const PAIRTYPE(CScript, int64)& s, vecSend)
@@ -1102,7 +1187,7 @@ namespace Wallet
                     // Choose coins to use
                     set<pair<const CWalletTx*,unsigned int> > setCoins;
                     int64 nValueIn = 0;
-                    if (!SelectCoins(nTotalValue, wtxNew.nTime, setCoins, nValueIn))
+                    if (!SelectCoins(nTotalValue, wtxNew.nTime, setCoins, nValueIn, wtxNew.strFromAccount, nMinDepth))
                         return false;
 
                     CScript scriptChange;
@@ -1151,10 +1236,19 @@ namespace Wallet
                             // TODO: pass in scriptChange instead of reservekey so
                             // change transaction isn't always pay-to-nexus-address
                             scriptChange.SetNexusAddress(vchPubKey);
+
+                            if(wtxNew.strFromAccount != "*")
+                            {
+                                NexusAddress address;
+                                if(!ExtractAddress(scriptChange, address) || !address.IsValid())
+                                    return false;
+
+                                SetAddressBookName(address, wtxNew.strFromAccount);
+                            }
                         }
 
                         // Insert change txn at random position:
-                        vector<Core::CTxOut>::iterator position = wtxNew.vout.begin()+GetRandInt(wtxNew.vout.size());
+                        vector<Core::CTxOut>::iterator position = wtxNew.vout.begin()+ GetRandInt(wtxNew.vout.size());
                         wtxNew.vout.insert(position, Core::CTxOut(nChange, scriptChange));
                     }
                     else
@@ -1196,11 +1290,11 @@ namespace Wallet
         return true;
     }
 
-    bool CWallet::CreateTransaction(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew, CReserveKey& reservekey, int64& nFeeRet)
+    bool CWallet::CreateTransaction(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew, CReserveKey& reservekey, int64& nFeeRet, int nMinDepth)
     {
         vector< pair<CScript, int64> > vecSend;
         vecSend.push_back(make_pair(scriptPubKey, nValue));
-        return CreateTransaction(vecSend, wtxNew, reservekey, nFeeRet);
+        return CreateTransaction(vecSend, wtxNew, reservekey, nFeeRet, nMinDepth);
     }
 
     // Call after CreateTransaction unless you want to abort
@@ -1256,7 +1350,7 @@ namespace Wallet
 
 
 
-    string CWallet::SendMoney(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew, bool fAskFee)
+    string CWallet::SendMoney(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew, bool fAskFee, int nMinDepth)
     {
         CReserveKey reservekey(this);
         int64 nFeeRequired;
@@ -1273,7 +1367,7 @@ namespace Wallet
             printf("SendMoney() : %s", strError.c_str());
             return strError;
         }
-        if (!CreateTransaction(scriptPubKey, nValue, wtxNew, reservekey, nFeeRequired))
+        if (!CreateTransaction(scriptPubKey, nValue, wtxNew, reservekey, nFeeRequired, nMinDepth))
         {
             string strError;
             if (nValue + nFeeRequired > GetBalance())
@@ -1296,11 +1390,12 @@ namespace Wallet
 
 
 
-    string CWallet::SendToNexusAddress(const NexusAddress& address, int64 nValue, CWalletTx& wtxNew, bool fAskFee)
+    string CWallet::SendToNexusAddress(const NexusAddress& address, int64 nValue, CWalletTx& wtxNew, bool fAskFee, int nMinDepth)
     {
         // Check amount
         if (nValue <= 0)
             return _("Invalid amount");
+
         if (nValue + Core::nTransactionFee > GetBalance())
             return _("Insufficient funds");
 
@@ -1308,7 +1403,7 @@ namespace Wallet
         CScript scriptPubKey;
         scriptPubKey.SetNexusAddress(address);
 
-        return SendMoney(scriptPubKey, nValue, wtxNew, fAskFee);
+        return SendMoney(scriptPubKey, nValue, wtxNew, fAskFee, nMinDepth);
     }
 
 

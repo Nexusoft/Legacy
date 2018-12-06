@@ -120,6 +120,7 @@ namespace Net
         string strAccount = value.get_str();
         if (strAccount == "*")
             throw JSONRPCError(-11, "Invalid account name");
+
         return strAccount;
     }
 
@@ -751,43 +752,34 @@ namespace Net
         return address.ToString();
     }
 
-
-    Wallet::NexusAddress GetAccountAddress(string strAccount, bool bForceNew=false)
+    void GetAccountAddresses(string strAccount, set<Wallet::NexusAddress>& setAddress)
     {
-        Wallet::CWalletDB walletdb(pwalletMain->strWalletFile);
-
-        Wallet::CAccount account;
-        walletdb.ReadAccount(strAccount, account);
-
-        bool bKeyUsed = false;
-
-        // Check if the current key has been used
-        if (!account.vchPubKey.empty())
+        BOOST_FOREACH(const PAIRTYPE(Wallet::NexusAddress, string)& item, pwalletMain->mapAddressBook)
         {
-            Wallet::CScript scriptPubKey;
-            scriptPubKey.SetNexusAddress(account.vchPubKey);
-            for (map<uint512, Wallet::CWalletTx>::iterator it = pwalletMain->mapWallet.begin();
-                 it != pwalletMain->mapWallet.end() && !account.vchPubKey.empty();
-                 ++it)
+            const Wallet::NexusAddress& address = item.first;
+            const string& strName = item.second;
+            if (strName == strAccount)
+                setAddress.insert(address);
+        }
+    }
+
+
+    bool GetAccountAddress(string strAccount, Wallet::NexusAddress& addressRet)
+    {
+        /* Get the list of addresses. */
+        BOOST_FOREACH(const PAIRTYPE(Wallet::NexusAddress, string)& item, pwalletMain->mapAddressBook)
+        {
+            const Wallet::NexusAddress& address = item.first;
+            const string& strName = item.second;
+            if (strName == strAccount)
             {
-                const Wallet::CWalletTx& wtx = (*it).second;
-                BOOST_FOREACH(const Core::CTxOut& txout, wtx.vout)
-                    if (txout.scriptPubKey == scriptPubKey)
-                        bKeyUsed = true;
+                addressRet = address;
+
+                return true;
             }
         }
 
-        // Generate a new key
-        if (account.vchPubKey.empty() || bForceNew || bKeyUsed)
-        {
-            if (!pwalletMain->GetKeyFromPool(account.vchPubKey, false))
-                throw JSONRPCError(-12, "Error: Keypool ran out, please call keypoolrefill first");
-
-            pwalletMain->SetAddressBookName(Wallet::NexusAddress(account.vchPubKey), strAccount);
-            walletdb.WriteAccount(strAccount, account);
-        }
-
-        return Wallet::NexusAddress(account.vchPubKey);
+        return false;
     }
 
     Value getaccountaddress(const Array& params, bool fHelp)
@@ -795,15 +787,16 @@ namespace Net
         if (fHelp || params.size() != 1)
             throw runtime_error(
                 "getaccountaddress <account>\n"
-                "Returns the current Nexus address for receiving payments to this account.");
+                "Returns a current Nexus address for receiving payments to this account.");
 
         // Parse the account first so we don't generate a key if there's an error
         string strAccount = AccountFromValue(params[0]);
 
-        Value ret;
-        ret = GetAccountAddress(strAccount).ToString();
+        Wallet::NexusAddress address;
+        if(!GetAccountAddress(strAccount, address))
+            throw JSONRPCError(-5, "No addresses for account");
 
-        return ret;
+        return address.ToString();
     }
 
 
@@ -819,18 +812,9 @@ namespace Net
         if (!address.IsValid())
             throw JSONRPCError(-5, "Invalid Nexus address");
 
-
         string strAccount;
         if (params.size() > 1)
             strAccount = AccountFromValue(params[1]);
-
-        // Detect when changing the account of an address that is the 'unused current key' of another account:
-        if (pwalletMain->mapAddressBook.count(address))
-        {
-            string strOldAccount = pwalletMain->mapAddressBook[address];
-            if (address == GetAccountAddress(strOldAccount))
-                GetAccountAddress(strOldAccount, true);
-        }
 
         pwalletMain->SetAddressBookName(address, strAccount);
 
@@ -875,6 +859,7 @@ namespace Net
             if (strName == strAccount || (strName == "" && strAccount == "default"))
                 ret.push_back(address.ToString());
         }
+
         return ret;
     }
 
@@ -914,6 +899,7 @@ namespace Net
 
         // Wallet comments
         Wallet::CWalletTx wtx;
+        wtx.strFromAccount = "*";
         if (params.size() > 2 && params[2].type() != null_type && !params[2].get_str().empty())
             wtx.mapValue["comment"] = params[2].get_str();
         if (params.size() > 3 && params[3].type() != null_type && !params[3].get_str().empty())
@@ -922,11 +908,11 @@ namespace Net
         if (pwalletMain->IsLocked())
             throw JSONRPCError(-13, "Error: Please enter the wallet passphrase with walletpassphrase first.");
 
-        string strError = pwalletMain->SendToNexusAddress(address, nAmount, wtx);
-        if (strError != "")
-            throw JSONRPCError(-4, strError);
+            string strError = pwalletMain->SendToNexusAddress(address, nAmount, wtx);
+            if (strError != "")
+                throw JSONRPCError(-4, strError);
 
-        return wtx.GetHash().GetHex();
+            return wtx.GetHash().GetHex();
     }
 
     Value signmessage(const Array& params, bool fHelp)
@@ -1030,18 +1016,6 @@ namespace Net
         }
 
         return  ValueFromAmount(nAmount);
-    }
-
-
-    void GetAccountAddresses(string strAccount, set<Wallet::NexusAddress>& setAddress)
-    {
-        BOOST_FOREACH(const PAIRTYPE(Wallet::NexusAddress, string)& item, pwalletMain->mapAddressBook)
-        {
-            const Wallet::NexusAddress& address = item.first;
-            const string& strName = item.second;
-            if (strName == strAccount)
-                setAddress.insert(address);
-        }
     }
 
 
@@ -1265,14 +1239,15 @@ namespace Net
         Core::CTransaction cTransaction;
 
         LLD::CIndexDB indexdb("cr");
-        if(!indexdb.ReadTxIndex(hash, txindex))
+        if(Core::mempool.exists(hash))
+            cTransaction = Core::mempool.lookup(hash);
+        else
         {
-            throw JSONRPCError(-5, "Invalid transaction id");
-        }
+            if(!indexdb.ReadTxIndex(hash, txindex))
+                throw JSONRPCError(-5, "Invalid transaction id");
 
-        if(!cTransaction.ReadFromDisk(txindex.pos))
-        {
-            throw JSONRPCError(-5, "Failed to Read Transaction");
+            if(!cTransaction.ReadFromDisk(txindex.pos))
+                throw JSONRPCError(-5, "Failed to Read Transaction");
         }
 
 
@@ -1347,24 +1322,7 @@ namespace Net
     int64 GetAccountBalance(Wallet::CWalletDB& walletdb, const string& strAccount, int nMinDepth)
     {
         int64 nBalance = 0;
-
-        // Tally wallet transactions
-        for (map<uint512, Wallet::CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
-        {
-            const Wallet::CWalletTx& wtx = (*it).second;
-            if (!wtx.IsFinal())
-                continue;
-
-            int64 nGenerated, nReceived, nSent, nFee;
-            wtx.GetAccountAmounts(strAccount, nGenerated, nReceived, nSent, nFee);
-
-            if (nReceived != 0 && wtx.GetDepthInMainChain() >= nMinDepth)
-                nBalance += nReceived;
-            nBalance += nGenerated - nSent - nFee;
-        }
-
-        // Tally internal accounting entries
-        nBalance += walletdb.GetAccountCreditDebit(strAccount);
+        pwalletMain->BalanceByAccount(strAccount, nBalance, nMinDepth);
 
         return nBalance;
     }
@@ -1423,10 +1381,17 @@ namespace Net
         }
 
         string strAccount = AccountFromValue(params[0]);
-
         int64 nBalance = GetAccountBalance(strAccount, nMinDepth);
 
         return ValueFromAmount(nBalance);
+    }
+
+    template<typename key, typename value>
+    bool Find(std::map<key, value> map, value search)
+    {
+        for(typename std::map<key, value>::iterator it = map.begin(); it != map.end(); it++)
+            if(it->second == search)
+                return true;
     }
 
 
@@ -1435,46 +1400,52 @@ namespace Net
         if (fHelp || params.size() < 3 || params.size() > 5)
             throw runtime_error(
                 "move <fromaccount> <toaccount> <amount> [minconf=1] [comment]\n"
-                "Move from one account in your wallet to another.");
+                "Move funds one account in your wallet to another.\n"
+                "Funds are moving over the main chain.");
 
         string strFrom = AccountFromValue(params[0]);
         string strTo = AccountFromValue(params[1]);
         int64 nAmount = AmountFromValue(params[2]);
+
+        int nMinDepth = 1;
         if (params.size() > 3)
-            // unused parameter, used to be nMinDepth, keep type-checking it though
-            (void)params[3].get_int();
+            nMinDepth = params[3].get_int();
+
         string strComment;
         if (params.size() > 4)
             strComment = params[4].get_str();
 
-        Wallet::CWalletDB walletdb(pwalletMain->strWalletFile);
-        if (!walletdb.TxnBegin())
-            throw JSONRPCError(-20, "database error");
+        /* Check for accounts. */
+        if(strFrom != "default" && !Find(pwalletMain->mapAddressBook, strFrom))
+            throw JSONRPCError(-5, strprintf("%s from account doesn't exist.", strFrom.c_str()));
 
-        int64 nNow = GetUnifiedTimestamp();
+        if(!Find(pwalletMain->mapAddressBook, strTo))
+            throw JSONRPCError(-5, strprintf("%s to account doesn't exist.", strTo.c_str()));
 
-        // Debit
-        Wallet::CAccountingEntry debit;
-        debit.strAccount = strFrom;
-        debit.nCreditDebit = -nAmount;
-        debit.nTime = nNow;
-        debit.strOtherAccount = strTo;
-        debit.strComment = strComment;
-        walletdb.WriteAccountingEntry(debit);
+        /* Build the from transaction. */
+        Wallet::CWalletTx wtx;
+        wtx.strFromAccount = strFrom;
+        if (params.size() > 4 && params[4].type() != null_type && !params[4].get_str().empty())
+            wtx.mapValue["comment"] = params[4].get_str();
 
-        // Credit
-        Wallet::CAccountingEntry credit;
-        credit.strAccount = strTo;
-        credit.nCreditDebit = nAmount;
-        credit.nTime = nNow;
-        credit.strOtherAccount = strFrom;
-        credit.strComment = strComment;
-        walletdb.WriteAccountingEntry(credit);
+        /* Watch for encryption. */
+        if (pwalletMain->IsLocked())
+            throw JSONRPCError(-13, "Error: Please enter the wallet passphrase with walletpassphrase first.");
 
-        if (!walletdb.TxnCommit())
-            throw JSONRPCError(-20, "database error");
+        /* Check the account balance. */
+        int64 nBalance = GetAccountBalance(strFrom, nMinDepth);
+        if (nAmount > nBalance)
+            throw JSONRPCError(-6, "Account has insufficient funds");
 
-        return true;
+        Wallet::NexusAddress address;
+        if(!GetAccountAddress(strTo, address))
+            throw JSONRPCError(-7, "No address for to account");
+
+        string strError = pwalletMain->SendToNexusAddress(address, nAmount, wtx, false, nMinDepth);
+        if (strError != "")
+            throw JSONRPCError(-4, strError);
+
+        return wtx.GetHash().GetHex();
     }
 
 
@@ -1495,6 +1466,7 @@ namespace Net
         if (!address.IsValid())
             throw JSONRPCError(-5, "Invalid Nexus address");
         int64 nAmount = AmountFromValue(params[2]);
+
         if (nAmount < Core::MIN_TXOUT_AMOUNT)
             throw JSONRPCError(-101, "Send amount too small");
         int nMinDepth = 1;
@@ -1517,7 +1489,7 @@ namespace Net
             throw JSONRPCError(-6, "Account has insufficient funds");
 
         // Send
-        string strError = pwalletMain->SendToNexusAddress(address, nAmount, wtx);
+        string strError = pwalletMain->SendToNexusAddress(address, nAmount, wtx, false, nMinDepth);
         if (strError != "")
             throw JSONRPCError(-4, strError);
 
@@ -1585,7 +1557,7 @@ namespace Net
         // Send
         Wallet::CReserveKey keyChange(pwalletMain);
         int64 nFeeRequired = 0;
-        bool fCreated = pwalletMain->CreateTransaction(vecSend, wtx, keyChange, nFeeRequired);
+        bool fCreated = pwalletMain->CreateTransaction(vecSend, wtx, keyChange, nFeeRequired, nMinDepth);
         if (!fCreated)
         {
             if (totalAmount + nFeeRequired > pwalletMain->GetBalance())
@@ -1840,15 +1812,35 @@ namespace Net
             ret.push_back(entry);
         }
 
+        std::map<Wallet::NexusAddress, int> mapExclude;
+        for(auto r : listReceived)
+        {
+            /* Set default address string. */
+            string account = "default";
+            if (pwalletMain->mapAddressBook.count(r.first))
+                account = pwalletMain->mapAddressBook[r.first];
+
+            /* Check if there are change transactions. */
+            if (strSentAccount == account)
+            {
+                auto result = std::find(listSent.begin(), listSent.end(), r);
+                if(result != listSent.end())
+                    mapExclude[r.first] = 0;
+            }
+        }
+
         // Sent
         if ((!listSent.empty() || nFee != 0) && (fAllAccounts || strAccount == strSentAccount))
         {
             BOOST_FOREACH(const PAIRTYPE(Wallet::NexusAddress, int64)& s, listSent)
             {
+                if(mapExclude.count(s.first))
+                    continue;
+
                 Object entry;
                 entry.push_back(Pair("account", strSentAccount));
                 entry.push_back(Pair("address", s.first.ToString()));
-                entry.push_back(Pair("category", "send"));
+                entry.push_back(Pair("category", "debit"));
                 entry.push_back(Pair("amount", ValueFromAmount(-s.second)));
                 entry.push_back(Pair("fee", ValueFromAmount(-nFee)));
                 if (fLong)
@@ -1862,6 +1854,9 @@ namespace Net
         {
             BOOST_FOREACH(const PAIRTYPE(Wallet::NexusAddress, int64)& r, listReceived)
             {
+                if(mapExclude.count(r.first))
+                    continue;
+
                 string account;
                 if (pwalletMain->mapAddressBook.count(r.first))
                     account = pwalletMain->mapAddressBook[r.first];
@@ -1870,30 +1865,13 @@ namespace Net
                     Object entry;
                     entry.push_back(Pair("account", account));
                     entry.push_back(Pair("address", r.first.ToString()));
-                    entry.push_back(Pair("category", "receive"));
+                    entry.push_back(Pair("category", "credit"));
                     entry.push_back(Pair("amount", ValueFromAmount(r.second)));
                     if (fLong)
                         WalletTxToJSON(wtx, entry);
                     ret.push_back(entry);
                 }
             }
-        }
-    }
-
-    void AcentryToJSON(const Wallet::CAccountingEntry& acentry, const string& strAccount, Array& ret)
-    {
-        bool fAllAccounts = (strAccount == string("*"));
-
-        if (fAllAccounts || acentry.strAccount == strAccount)
-        {
-            Object entry;
-            entry.push_back(Pair("account", acentry.strAccount));
-            entry.push_back(Pair("category", "move"));
-            entry.push_back(Pair("time", (boost::int64_t)acentry.nTime));
-            entry.push_back(Pair("amount", ValueFromAmount(acentry.nCreditDebit)));
-            entry.push_back(Pair("otheraccount", acentry.strOtherAccount));
-            entry.push_back(Pair("comment", acentry.strComment));
-            ret.push_back(entry);
         }
     }
 
@@ -1919,37 +1897,24 @@ namespace Net
         if (nFrom < 0)
             throw JSONRPCError(-8, "Negative from");
 
+        /* Get the transactions into a multimap. */
         Array ret;
-        Wallet::CWalletDB walletdb(pwalletMain->strWalletFile);
-
-        // First: get all Wallet::CWalletTx and Wallet::CAccountingEntry into a sorted-by-time multimap.
-        typedef pair<Wallet::CWalletTx*, Wallet::CAccountingEntry*> TxPair;
-        typedef multimap<int64, TxPair > TxItems;
-        TxItems txByTime;
+        std::multimap<int64, Wallet::CWalletTx*> txByTime;
 
         // Note: maintaining indices in the database of (account,time) --> txid and (account, time) --> acentry
         // would make this much faster for applications that do this a lot.
         for (map<uint512, Wallet::CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
         {
             Wallet::CWalletTx* wtx = &((*it).second);
-            txByTime.insert(make_pair(wtx->GetTxTime(), TxPair(wtx, (Wallet::CAccountingEntry*)0)));
-        }
-        list<Wallet::CAccountingEntry> acentries;
-        walletdb.ListAccountCreditDebit(strAccount, acentries);
-        BOOST_FOREACH(Wallet::CAccountingEntry& entry, acentries)
-        {
-            txByTime.insert(make_pair(entry.nTime, TxPair((Wallet::CWalletTx*)0, &entry)));
+            txByTime.insert(make_pair(wtx->GetTxTime(), wtx));
         }
 
         // iterate backwards until we have nCount items to return:
-        for (TxItems::reverse_iterator it = txByTime.rbegin(); it != txByTime.rend(); ++it)
+        for (auto it = txByTime.rbegin(); it != txByTime.rend(); ++it)
         {
-            Wallet::CWalletTx *const pwtx = (*it).second.first;
+            Wallet::CWalletTx *const pwtx = (*it).second;
             if (pwtx != 0)
                 ListTransactions(*pwtx, strAccount, 0, true, ret);
-            Wallet::CAccountingEntry *const pacentry = (*it).second.second;
-            if (pacentry != 0)
-                AcentryToJSON(*pacentry, strAccount, ret);
 
             if (ret.size() >= (nCount+nFrom)) break;
         }
@@ -2012,7 +1977,8 @@ namespace Net
             nMinDepth = params[0].get_int();
 
         map<string, int64> mapAccountBalances;
-        BOOST_FOREACH(const PAIRTYPE(Wallet::NexusAddress, string)& entry, pwalletMain->mapAddressBook) {
+        BOOST_FOREACH(const PAIRTYPE(Wallet::NexusAddress, string)& entry, pwalletMain->mapAddressBook)
+        {
             if (pwalletMain->HaveKey(entry.first)) // This address belongs to me
             {
                 if(entry.second == "" || entry.second == "default")

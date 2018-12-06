@@ -65,8 +65,8 @@ namespace Wallet
     class CWallet : public CCryptoKeyStore
     {
     private:
-        bool SelectCoinsMinConf(int64 nTargetValue, unsigned int nSpendTime, int nConfMine, int nConfTheirs, std::set<std::pair<const CWalletTx*,unsigned int> >& setCoinsRet, int64& nValueRet) const;
-        bool SelectCoins(int64 nTargetValue, unsigned int nSpendTime, std::set<std::pair<const CWalletTx*,unsigned int> >& setCoinsRet, int64& nValueRet) const;
+        bool SelectCoinsMinConf(int64 nTargetValue, unsigned int nSpendTime, int nConfMine, int nConfTheirs, std::set<std::pair<const CWalletTx*,unsigned int> >& setCoinsRet, int64& nValueRet, std::string strAccount = "*") const;
+        bool SelectCoins(int64 nTargetValue, unsigned int nSpendTime, std::set<std::pair<const CWalletTx*,unsigned int> >& setCoinsRet, int64& nValueRet, std::string strAccount = "*", int nMinDepth = 1) const;
 
         CWalletDB *pwalletdbEncryption;
 
@@ -155,14 +155,16 @@ namespace Wallet
         int64 GetNewMint() const;
 
         void AvailableCoins(unsigned int nSpendTime, std::vector<COutput>& vCoins, bool fOnlyConfirmed) const;
-        bool AvailableAddresses(unsigned int nSpendTime, std::map<NexusAddress, int64>& mapAddresses, bool fOnlyConfirmed = false) const;
+        bool AvailableAddresses(unsigned int nSpendTime, std::map<NexusAddress, int64>& mapAddresses, bool fOnlyConfirmed = false, int nMinDepth = 1) const;
 
-        bool CreateTransaction(const std::vector<std::pair<CScript, int64> >& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, int64& nFeeRet);
-        bool CreateTransaction(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew, CReserveKey& reservekey, int64& nFeeRet);
+        bool BalanceByAccount(std::string strAccount, int64& nBalance, int nMinDepth = 3) const;
+
+        bool CreateTransaction(const std::vector<std::pair<CScript, int64> >& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, int64& nFeeRet, int nMinDepth = 1);
+        bool CreateTransaction(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew, CReserveKey& reservekey, int64& nFeeRet, int nMinDepth = 1);
         bool AddCoinstakeInputs(Core::CBlock& block);
         bool CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey);
-        std::string SendMoney(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew, bool fAskFee=false);
-        std::string SendToNexusAddress(const NexusAddress& address, int64 nValue, CWalletTx& wtxNew, bool fAskFee=false);
+        std::string SendMoney(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew, bool fAskFee=false, int nMinDepth = 1);
+        std::string SendToNexusAddress(const NexusAddress& address, int64 nValue, CWalletTx& wtxNew, bool fAskFee=false, int nMinDepth = 1);
 
         bool NewKeyPool();
         bool TopUpKeyPool();
