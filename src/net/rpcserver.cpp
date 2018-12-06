@@ -758,7 +758,7 @@ namespace Net
         {
             const Wallet::NexusAddress& address = item.first;
             const string& strName = item.second;
-            if (strName == strAccount)
+            if (strName == strAccount || (strName == "" && strAccount == "default"))
                 setAddress.insert(address);
         }
     }
@@ -771,7 +771,7 @@ namespace Net
         {
             const Wallet::NexusAddress& address = item.first;
             const string& strName = item.second;
-            if (strName == strAccount)
+            if (strName == strAccount || (strName == "" && strAccount == "default"))
             {
                 addressRet = address;
 
@@ -1419,7 +1419,7 @@ namespace Net
         if(strFrom != "default" && !Find(pwalletMain->mapAddressBook, strFrom))
             throw JSONRPCError(-5, strprintf("%s from account doesn't exist.", strFrom.c_str()));
 
-        if(!Find(pwalletMain->mapAddressBook, strTo))
+        if(strTo != "default" && !Find(pwalletMain->mapAddressBook, strTo))
             throw JSONRPCError(-5, strprintf("%s to account doesn't exist.", strTo.c_str()));
 
         /* Build the from transaction. */
