@@ -55,7 +55,7 @@ namespace Core
         cBlock.SetNull();
 
         /** Create the block from Previous Best Block. **/
-        CBlockIndex* pindexPrev = pindexBest;
+        CBlockIndex* pindexPrev = Core::pindexBest;
 
         /** Modulate the Block Versions if they correspond to their proper time stamp **/
         if(GetUnifiedTimestamp() >= (fTestNet ? TESTNET_VERSION_TIMELOCK[TESTNET_BLOCK_CURRENT_VERSION - 2] : NETWORK_VERSION_TIMELOCK[NETWORK_BLOCK_CURRENT_VERSION - 2]))

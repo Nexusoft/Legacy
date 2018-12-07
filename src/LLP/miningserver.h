@@ -253,9 +253,9 @@ namespace LLP
                     return;
 
                 /** Check the Round Automatically on Subscribed Worker. **/
-                if(pindexBest == NULL || !pindexBest || pindexBest->GetBlockHash() != Core::pindexBest->GetBlockHash())
+                if(MiningLLP::pindexBest == NULL || !MiningLLP::pindexBest || MiningLLP::pindexBest->GetBlockHash() != Core::pindexBest->GetBlockHash())
                 {
-                    pindexBest = Core::pindexBest;
+                    MiningLLP::pindexBest = Core::pindexBest;
                     ClearMap();
 
                     /** Construct a response packet by serializing the Block. **/
@@ -403,10 +403,11 @@ namespace LLP
                 this->WritePacket(RESPONSE);
 
                 /** Clear the Maps if Requested Height that is a New Best Block. **/
-                if(Core::nBestHeight > nBestHeight)
+                if(MiningLLP::pindexBest == NULL || !MiningLLP::pindexBest || MiningLLP::pindexBest->GetBlockHash() != Core::pindexBest->GetBlockHash())
                 {
                     ClearMap();
                     nBestHeight = Core::nBestHeight;
+                    MiningLLP::pindexBest = Core::pindexBest;
 
                     BASE_BLOCK = Core::CreateNewBlock(*pMiningKey, pwalletMain, nChannel, 1, pCoinbaseTx);
                 }
@@ -416,26 +417,28 @@ namespace LLP
 
             if(PACKET.HEADER == GET_ROUND)
             {
-                if(pindexBest == NULL)
+                if(MiningLLP::pindexBest == NULL)
                 {
                     Packet RESPONSE;
                     RESPONSE.HEADER = NEW_ROUND;
                     this->WritePacket(RESPONSE);
 
-                    pindexBest = Core::pindexBest;
+                    MiningLLP::pindexBest = Core::pindexBest;
+                    BASE_BLOCK = Core::CreateNewBlock(*pMiningKey, pwalletMain, nChannel, 1, pCoinbaseTx);
 
                     return true;
                 }
 
-                if(!pindexBest)
+                if(!MiningLLP::pindexBest)
                     return true;
 
                 Packet RESPONSE;
                 RESPONSE.HEADER = OLD_ROUND;
 
-                if(pindexBest->GetBlockHash() != Core::pindexBest->GetBlockHash())
+                if(MiningLLP::pindexBest->GetBlockHash() != Core::pindexBest->GetBlockHash())
                 {
-                    pindexBest = Core::pindexBest;
+                    nBestHeight = Core::nBestHeight;
+                    MiningLLP::pindexBest = Core::pindexBest;
                     RESPONSE.HEADER = NEW_ROUND;
 
                     ClearMap();
@@ -487,8 +490,9 @@ namespace LLP
                 Clears map once new block is submitted successfully. **/
             if(PACKET.HEADER == GET_BLOCK)
             {
-                /* Reject request if there is no base block created already. */
-                if(BASE_BLOCK.IsNull())
+                /* Reject request if there is no base block created already or if the block height has changed. */
+                if(BASE_BLOCK.IsNull() 
+                    || (MiningLLP::pindexBest == NULL || !MiningLLP::pindexBest || MiningLLP::pindexBest->GetBlockHash() != Core::pindexBest->GetBlockHash()) )
                     BASE_BLOCK = Core::CreateNewBlock(*pMiningKey, pwalletMain, nChannel, 1, pCoinbaseTx);
 
 
@@ -507,8 +511,8 @@ namespace LLP
                     if(nChannel != 1 || NEW_BLOCK.nVersion < 5)
                         break;
 
-                    /* Don't deliver blocks that are below the minimum prime origins. */
-                    if(NEW_BLOCK.ProofHash() > Core::bnPrimeMinOrigins.getuint1024())
+                    /* Don't deliver blocks that are below the minimum prime origins or > 1023-bit. */
+                    if(NEW_BLOCK.ProofHash() > Core::bnPrimeMinOrigins.getuint1024() && !NEW_BLOCK.ProofHash().high_bits(0x80000000) )
                         break;
                 }
 
