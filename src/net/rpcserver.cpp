@@ -899,7 +899,7 @@ namespace Net
 
         // Wallet comments
         Wallet::CWalletTx wtx;
-        wtx.strFromAccount = "*";
+        wtx.strFromAccount = "default";
         if (params.size() > 2 && params[2].type() != null_type && !params[2].get_str().empty())
             wtx.mapValue["comment"] = params[2].get_str();
         if (params.size() > 3 && params[3].type() != null_type && !params[3].get_str().empty())
@@ -1812,20 +1812,24 @@ namespace Net
             ret.push_back(entry);
         }
 
-        std::map<Wallet::NexusAddress, int> mapExclude;
+        std::map<Wallet::NexusAddress, std::string> mapExclude;
         for(auto r : listReceived)
         {
             /* Set default address string. */
-            string account = "default";
+            string account = "";
             if (pwalletMain->mapAddressBook.count(r.first))
                 account = pwalletMain->mapAddressBook[r.first];
+
+            /* Catch for blank being default. */
+            if(account == "" || account == "*")
+                account = "default";
 
             /* Check if there are change transactions. */
             if (strSentAccount == account)
             {
                 auto result = std::find(listSent.begin(), listSent.end(), r);
                 if(result != listSent.end())
-                    mapExclude[r.first] = 0;
+                    mapExclude[r.first] = account;
             }
         }
 
@@ -1845,6 +1849,7 @@ namespace Net
                 entry.push_back(Pair("fee", ValueFromAmount(-nFee)));
                 if (fLong)
                     WalletTxToJSON(wtx, entry);
+
                 ret.push_back(entry);
             }
         }
@@ -1857,9 +1862,13 @@ namespace Net
                 if(mapExclude.count(r.first))
                     continue;
 
-                string account;
+                string account = "";
                 if (pwalletMain->mapAddressBook.count(r.first))
                     account = pwalletMain->mapAddressBook[r.first];
+
+                if(account == "" || account == "*")
+                    account = "default";
+
                 if (fAllAccounts || (account == strAccount))
                 {
                     Object entry;
@@ -1869,6 +1878,7 @@ namespace Net
                     entry.push_back(Pair("amount", ValueFromAmount(r.second)));
                     if (fLong)
                         WalletTxToJSON(wtx, entry);
+
                     ret.push_back(entry);
                 }
             }
