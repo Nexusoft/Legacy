@@ -490,9 +490,8 @@ namespace LLP
                 Clears map once new block is submitted successfully. **/
             if(PACKET.HEADER == GET_BLOCK)
             {
-                /* Reject request if there is no base block created already or if the block height has changed. */
-                if(BASE_BLOCK.IsNull() 
-                    || (MiningLLP::pindexBest == NULL || !MiningLLP::pindexBest || MiningLLP::pindexBest->GetBlockHash() != Core::pindexBest->GetBlockHash()) )
+                /* Generate new base block if we haven't created one already  */
+                if(BASE_BLOCK.IsNull())
                     BASE_BLOCK = Core::CreateNewBlock(*pMiningKey, pwalletMain, nChannel, 1, pCoinbaseTx);
 
 
@@ -516,7 +515,7 @@ namespace LLP
                         break;
                 }
 
-                if(GetArg("-verbose", 0) >= 3)
+                if(GetArg("-verbose", 0) >= 5)
                     printf("***** Mining LLP: Created new Block %s\n", NEW_BLOCK.hashMerkleRoot.ToString().substr(0, 20).c_str());
 
                 /* Store the new block in the memory map of recent blocks being worked on. */
