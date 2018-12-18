@@ -797,7 +797,8 @@ namespace Core
                 pto->nLastGetBlocks = GetUnifiedTimestamp();
                 pto->PushGetBlocks(pindexBest, uint1024(0));
 
-                printf("##### No blocks in thirty seconds, requesting getblocks from %s...\n", hashBestChain.ToString().substr(0, 20).c_str());
+                printf("##### No blocks in thirty seconds (%s), requesting getblocks from %s...\n",
+                       pto ? pto->addr.ToStringIP().c_str() : "N/A", hashBestChain.ToString().substr(0, 20).c_str());
             }
 
             // Resend wallet transactions that haven't gotten in a block yet

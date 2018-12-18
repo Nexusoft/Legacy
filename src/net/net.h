@@ -53,8 +53,9 @@ namespace Net
 
     extern std::list<CNode*> vNodesDisconnected;
 
-    inline unsigned int ReceiveBufferSize() { return 1000*GetArg("-maxreceivebuffer", 10*1000); }
-    inline unsigned int SendBufferSize() { return 1000*GetArg("-maxsendbuffer", 10*1000); }
+    /* 25 mb max buffer sizes */
+    inline unsigned int ReceiveBufferSize() { return 1000*GetArg("-maxreceivebuffer", 25*1000); }
+    inline unsigned int SendBufferSize() { return 1000*GetArg("-maxsendbuffer", 25*1000); }
 
     bool RecvLine(SOCKET hSocket, std::string& strLine);
     bool GetMyExternalIP(CNetAddr& ipRet);
@@ -348,7 +349,7 @@ namespace Net
             memcpy((char*)&vSend[nHeaderStart] + offsetof(CMessageHeader, nChecksum), &nChecksum, sizeof(nChecksum));
 
             if (GetArg("-verbose", 0) >= 3) {
-                printf("(%d bytes)\n", nSize);
+                printf("(%d bytes) (%s)\n", nSize, addr.ToStringIP().c_str());
             }
 
             nHeaderStart = -1;

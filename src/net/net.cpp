@@ -815,7 +815,7 @@ namespace Net
                         printf("socket no message in first 60 seconds, %d %d\n", pnode->nLastRecv != 0, pnode->nLastSend != 0);
                         pnode->fDisconnect = true;
                     }
-                    else if (GetUnifiedTimestamp() - pnode->nLastSend > 60 && GetUnifiedTimestamp() - pnode->nLastRecv > 60)
+                    else if (GetUnifiedTimestamp() - pnode->nLastSend > GetArg("-timeout", 120) && GetUnifiedTimestamp() - pnode->nLastRecv > GetArg("-timeout", 120))
                     {
                         printf("socket inactivity timeout\n");
                         pnode->fDisconnect = true;
