@@ -342,6 +342,14 @@ namespace Core
                         if(!block.ReadFromDisk((*mi).second))
                             return error("ProcessMessage() : Could not read Block.");
 
+                        // skip blocks that are going to set send buffer over size limits
+                        if(block.GetSerializeSize(SER_NETWORK, PROTOCOL_VERSION) + pfrom->vSend.size() > Net::SendBufferSize())
+                            break;
+
+                        // skip blocks that are going to set send buffer over size limits
+                        if(block.GetSerializeSize(SER_NETWORK, PROTOCOL_VERSION) + pfrom->vSend.size() > Net::SendBufferSize())
+                            break;
+
                         pfrom->PushMessage("block", block);
 
                         // Trigger them to send a getblocks request for the next batch of inventory
