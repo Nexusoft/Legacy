@@ -24,7 +24,7 @@ bool fIsSeedNode = false;
 int UNIFIED_AVERAGE_OFFSET = 0;
 int UNIFIED_MOVING_ITERATOR = 0;
 
-const int UNIFEED_TIME_ADJUSTMENT = 300;
+const int UNIFEED_TIME_ADJUSTMENT = 8240;
 const int UNIFIED_TIME_ADJUSTMENT_TESTNET = 144;
 int TIME_ADJUSTED = 0;
 
@@ -220,10 +220,10 @@ void ThreadUnifiedSamples(void* parg)
             Sleep(1000);
 
             /* Check for unified time adjustment. This code will be removed in 2.5.1 release - only needed for one time unified time sync rollback */
-            if(GetUnifiedTimestamp() > (fTestNet ? Core::TESTNET_VERSION_TIMELOCK[4] : Core::NETWORK_VERSION_TIMELOCK[4]))
+            if(GetUnifiedTimestamp() > (fTestNet ? Core::TESTNET_VERSION_TIMELOCK[3] : Core::NETWORK_VERSION_TIMELOCK[3]))
             {
                 /* Get the time elapsed since the activation time-lock. */
-                unsigned int nTimestamp = (GetUnifiedTimestamp() - (fTestNet ? Core::TESTNET_VERSION_TIMELOCK[4] : Core::NETWORK_VERSION_TIMELOCK[4]));
+                unsigned int nTimestamp = (GetUnifiedTimestamp() - (fTestNet ? Core::TESTNET_VERSION_TIMELOCK[3] : Core::NETWORK_VERSION_TIMELOCK[3]));
 
                 /* Break this into ten minute increments for adjustment period. */
                 unsigned int nTenMinutes = (unsigned int)(nTimestamp / 600.0); //the total time passed unified offset
@@ -241,8 +241,8 @@ void ThreadUnifiedSamples(void* parg)
                     /* Clear time samples to get the new offset. All time seeds should be rolled back 1 second at this point. */
                     MAP_TIME_DATA.clear();
 
-                    /* Increase the unified average offset by 1 second. */
-                    UNIFIED_AVERAGE_OFFSET += 1;
+                    /* Reduce the unified average offset by 1 second. */
+                    UNIFIED_AVERAGE_OFFSET -= 1;
 
                     /* Debug output to show the clock adjustments. */
                     printf("***** Unified Time: New timespan at %u minutes, adjusting clock back one second (%i new offset). Remaining %i seconds\n", (nTimestamp / 60), UNIFIED_AVERAGE_OFFSET, ((fTestNet ? UNIFIED_TIME_ADJUSTMENT_TESTNET : UNIFEED_TIME_ADJUSTMENT) - TIME_ADJUSTED));
