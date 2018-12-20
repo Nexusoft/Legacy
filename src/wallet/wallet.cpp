@@ -1053,6 +1053,11 @@ namespace Wallet
 
         nValueRet = 0;
 
+        if (GetBoolArg("-printselectcoin"))
+        {
+            printf("SelectCoins() for Min Depth %d Account %s\n", nConfMine, strAccount.c_str());
+        }
+
         {
         LOCK(cs_wallet);
 
@@ -1187,7 +1192,20 @@ namespace Wallet
                     // Choose coins to use
                     set<pair<const CWalletTx*,unsigned int> > setCoins;
                     int64 nValueIn = 0;
-                    if (!SelectCoins(nTotalValue, wtxNew.nTime, setCoins, nValueIn, wtxNew.strFromAccount, nMinDepth))
+                    bool fSelectCoinsSuccessful = false;
+
+                    if (wtxNew.strFromAccount == "")
+                    {
+                        /* SendCoins via QT wallet interface does not populate strFromAccount, so use defaults for SelectCoins */
+                        fSelectCoinsSuccessful = SelectCoins(nTotalValue, wtxNew.nTime, setCoins, nValueIn);
+                    }
+                    else
+                    {
+                        /* RPC server calls do use strFromAccount for all transactions, so pass this value forward */
+                        fSelectCoinsSuccessful = SelectCoins(nTotalValue, wtxNew.nTime, setCoins, nValueIn, wtxNew.strFromAccount, nMinDepth);
+                    }
+
+                    if (!fSelectCoinsSuccessful)
                         return false;
 
                     CScript scriptChange;
