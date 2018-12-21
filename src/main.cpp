@@ -226,6 +226,7 @@ bool AppInit2(int argc, char* argv[])
             "  -addnode=<ip>    \t  "   + _("Add a node to connect to and attempt to keep the connection open") + "\n" +
             "  -addseednode=<ip>\t  "   + _("Add a node to list of hardcoded seed nodes") + "\n" +
             "  -connect=<ip>    \t\t  " + _("Connect only to the specified node") + "\n" +
+            "  -avatar=0        \t\t  " + _("Send transaction change to new key (default: 1") + "\n" +
             "  -listen          \t  "   + _("Accept connections from outside (default: 1)") + "\n" +
             "  -unified         \t  "   + _("Enable sending unified time samples. Used for seed nodes") + "\n" +
             "  -unifiedport     \t  "   + _("Listen for unified time samples on <port> (default: 9324 or testnet: 8329). Does not affect outgoing port.") + "\n" +
