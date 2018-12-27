@@ -505,6 +505,57 @@ namespace Core
             vector<CBlockIndex*> vConnect;
             for (CBlockIndex* pindex = pindexNew; pindex != pfork; pindex = pindex->pprev)
                 vConnect.push_back(pindex);
+
+
+            /* Special Genesis Rules. */
+            if(!IsInitialBlockDownload())
+            {
+                uint32_t nConsecutive = 0;
+                if(pindexBest && vConnect.size() == 1)
+                {
+                    CBlock block;
+                    if (!block.ReadFromDisk(pindexBest))
+                        return error("CBlock::SetBestChain() : ReadFromDisk for connect failed");
+
+                    /* Check for 2 consecutive genesis if connecting only one block. */
+                    if(block.vtx[0].IsGenesis())
+                    {
+                        if (!block.ReadFromDisk(vConnect[0]))
+                            return error("CBlock::SetBestChain() : ReadFromDisk for connect failed");
+
+                        if(block.vtx[0].IsGenesis())
+                        {
+                            error("Malicious Behavior Detected. 2 consecutive genesis", nConsecutive);
+
+                            return true;
+                        }
+                    }
+                }
+                else
+                {
+                    /* Check back recent 5 blocks to detect consecutive genesis. */
+                    for (unsigned int i = 0; i < std::min((uint32_t)5, (uint32_t)vConnect.size()); i++)
+                    {
+                        CBlock block;
+                        if (!block.ReadFromDisk(vConnect[i]))
+                            return error("CBlock::SetBestChain() : ReadFromDisk for connect failed");
+
+                        /* Check for consecutive genesis. */
+                        if(block.vtx[0].IsGenesis())
+                            nConsecutive ++;;
+                        else
+                            nConsecutive = 0;
+
+                        /* Ignore this connect if more than two consecutive. */
+                        if(nConsecutive >= 2)
+                        {
+                            error("Malicious Behavior Detected. %u reverse consecutive genesis", nConsecutive);
+
+                            return true;
+                        }
+                    }
+                }
+            }
             reverse(vConnect.begin(), vConnect.end());
 
 
