@@ -542,9 +542,13 @@ namespace Core
 
                         /* Check for consecutive genesis. */
                         if(block.vtx[0].IsGenesis())
+                        {
                             nConsecutive ++;;
+                        }
                         else
+                        {
                             nConsecutive = 0;
+                        }
 
                         /* Ignore this connect if more than two consecutive. */
                         if(nConsecutive >= 2)
