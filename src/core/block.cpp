@@ -534,7 +534,7 @@ namespace Core
                 else
                 {
                     /* Check back recent 5 blocks to detect consecutive genesis. */
-                    for (unsigned int i = 0; i < std::min((uint32_t)5, (uint32_t)vConnect.size()); i++)
+                    for (unsigned int i = 0; i < std::min((uint32_t)3, (uint32_t)vConnect.size()); i++)
                     {
                         CBlock block;
                         if (!block.ReadFromDisk(vConnect[i]))
@@ -918,12 +918,12 @@ namespace Core
 
         /** Make sure the Block was Created within Active Channel. **/
         if (GetChannel() > 2)
-            return DoS(50, error("CheckBlock() : Channel out of Range."));
+            return error("CheckBlock() : Channel out of Range.");
 
 
         /** Check that the time was within range. */
         if (GetBlockTime() > GetUnifiedTimestamp() + MAX_UNIFIED_DRIFT)
-            return error("AcceptBlock() : block timestamp too far in the future");
+            return error("CheckBlock() : block timestamp too far in the future");
 
 
         /** Do not allow blocks to be accepted above the Current Blo>::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
