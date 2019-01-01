@@ -93,7 +93,7 @@ class FrameworkInfo(object):
         if line.startswith("/System/Library/") or line.startswith("@executable_path") or (line.startswith("/usr/lib/") and "libQt" not in line):
             return None
 
-	if "QtWebEngineCore" in line:
+        if "QtWebEngineCore" in line:
             return None
 
         m = cls.reOLine.match(line)
