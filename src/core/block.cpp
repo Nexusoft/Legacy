@@ -231,9 +231,9 @@ namespace Core
 
     bool CBlock::ConnectBlock(LLD::CIndexDB& indexdb, CBlockIndex* pindex)
     {
-        /* Double check channel range here. */
-        if (GetChannel() > 2)
-            return error("ConnectBlock() : Channel out of Range.");
+        /* Double check block here. */
+        if (!CheckBlock())
+            return error("ConnectBlock() : Connect Block failed");
 
         // Do not allow blocks that contain transactions which 'overwrite' older transactions,
         // unless those are already completely spent.
