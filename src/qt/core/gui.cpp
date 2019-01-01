@@ -588,7 +588,8 @@ void NexusGUI::setNumBlocks(int count)
     int nTotalBlocks = clientModel->getNumBlocksOfPeers();
     QString tooltip;
 
-    if(count < nTotalBlocks)
+    // 2.5.5 Update: only show status bar during initial block download
+    if(count < nTotalBlocks && clientModel->inInitialBlockDownload())
     {
         int nRemainingBlocks = nTotalBlocks - count;
         float nPercentageDone = count / (nTotalBlocks * 0.01f);
@@ -651,7 +652,8 @@ void NexusGUI::setNumBlocks(int count)
     }
 
     // Set icon state: spinning if catching up, tick otherwise
-    if(secs < 90*60 && count >= nTotalBlocks)
+    // 2.5.5 Update: only show spinner during initial block download
+    if(secs < 90*60 && (count >= nTotalBlocks || !clientModel->inInitialBlockDownload()))
     {
         tooltip = tr("Up to date") + QString(".\n") + tooltip;
         labelBlocksIcon->setPixmap(QIcon(":/icons/synced").pixmap(STATUSBAR_ICONSIZE, STATUSBAR_ICONSIZE));
