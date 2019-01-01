@@ -231,6 +231,9 @@ namespace Core
 
     bool CBlock::ConnectBlock(LLD::CIndexDB& indexdb, CBlockIndex* pindex)
     {
+        /* Double check block here. */
+        if (!CheckBlock())
+            return error("ConnectBlock() : Connect Block failed");
 
         // Do not allow blocks that contain transactions which 'overwrite' older transactions,
         // unless those are already completely spent.
@@ -505,6 +508,61 @@ namespace Core
             vector<CBlockIndex*> vConnect;
             for (CBlockIndex* pindex = pindexNew; pindex != pfork; pindex = pindex->pprev)
                 vConnect.push_back(pindex);
+
+
+            /* Special Genesis Rules. */
+            if(!IsInitialBlockDownload())
+            {
+                uint32_t nConsecutive = 0;
+                if(pindexBest && vConnect.size() == 1)
+                {
+                    CBlock block;
+                    if (!block.ReadFromDisk(pindexBest))
+                        return error("CBlock::SetBestChain() : ReadFromDisk for connect failed");
+
+                    /* Check for 2 consecutive genesis if connecting only one block. */
+                    if(block.vtx[0].IsGenesis())
+                    {
+                        if (!block.ReadFromDisk(vConnect[0]))
+                            return error("CBlock::SetBestChain() : ReadFromDisk for connect failed");
+
+                        if(block.vtx[0].IsGenesis())
+                        {
+                            error("Malicious Behavior Detected. 2 consecutive genesis", nConsecutive);
+
+                            return true;
+                        }
+                    }
+                }
+                else
+                {
+                    /* Check back recent 5 blocks to detect consecutive genesis. */
+                    for (unsigned int i = 0; i < std::min((uint32_t)3, (uint32_t)vConnect.size()); i++)
+                    {
+                        CBlock block;
+                        if (!block.ReadFromDisk(vConnect[i]))
+                            return error("CBlock::SetBestChain() : ReadFromDisk for connect failed");
+
+                        /* Check for consecutive genesis. */
+                        if(block.vtx[0].IsGenesis())
+                        {
+                            nConsecutive ++;;
+                        }
+                        else
+                        {
+                            nConsecutive = 0;
+                        }
+
+                        /* Ignore this connect if more than two consecutive. */
+                        if(nConsecutive >= 2)
+                        {
+                            error("Malicious Behavior Detected. %u reverse consecutive genesis", nConsecutive);
+
+                            return true;
+                        }
+                    }
+                }
+            }
             reverse(vConnect.begin(), vConnect.end());
 
 
@@ -863,17 +921,16 @@ namespace Core
 
         /** Make sure the Block was Created within Active Channel. **/
         if (GetChannel() > 2)
-            return DoS(50, error("CheckBlock() : Channel out of Range."));
+            return error("CheckBlock() : Channel out of Range.");
 
 
         /** Check that the time was within range. */
         if (GetBlockTime() > GetUnifiedTimestamp() + MAX_UNIFIED_DRIFT)
-            return error("AcceptBlock() : block timestamp too far in the future");
+            return error("CheckBlock() : block timestamp too far in the future");
 
 
-        /** Do not allow blocks to be accepted above the Current Blo>::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
-            vCoins.push_back(&(*it).ck Version. **/
-        if(nVersion > (fTestNet ? TESTNET_BLOCK_CURRENT_VERSION : NETWORK_BLOCK_CURRENT_VERSION))
+        /** Do not allow blocks to be accepted above the Current Block Version. **/
+        if(nVersion == 0 || nVersion > (fTestNet ? TESTNET_BLOCK_CURRENT_VERSION : NETWORK_BLOCK_CURRENT_VERSION))
             return DoS(50, error("CheckBlock() : Invalid Block Version."));
 
 
@@ -958,6 +1015,9 @@ namespace Core
         /* Ensure the Block is for Proof of Stake Only. */
         if(IsProofOfStake())
         {
+            /* Check for nNonce zero. */
+            if(nHeight > 2392970 && nNonce == 0)
+                return error("CheckBlock() : Stake cannot have nonce of 0");
 
             /* Check the Coinstake Time is before Unified Timestamp. */
             if(vtx[0].nTime > (GetUnifiedTimestamp() + MAX_UNIFIED_DRIFT))
@@ -1654,10 +1714,10 @@ namespace Core
     /* New proof hash for all channels (version > 5) */
     uint1024 CBlock::StakeHash() const
     {
-        /* Block Version 7 rules. Trust Key is part of stake hash if not genesis. */
-        if(nVersion >= 7 && vtx[0].IsGenesis())
+        /* Trust Key is part of stake hash if not genesis. */
+        if(nHeight > 2392970 && vtx[0].IsGenesis())
         {
-            uint512 hashPrevout = vtx[0].vin[1].prevout.hash;
+            uint512 hashPrevout = 0;
             return SerializeHash(nVersion, hashPrevBlock, nChannel, nHeight, nBits, hashPrevout, nNonce);
         }
 

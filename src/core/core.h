@@ -180,7 +180,7 @@ namespace Core
     extern double dTrustWeight;
     extern double dBlockWeight;
     extern double dInterestRate;
-    
+
     /** Reporting if in 72hr stake hold. **/
     extern bool fIsWaitPeriod;
 
@@ -1362,7 +1362,7 @@ namespace Core
 			nChannel = nNewChannel;
 		}
 
-		int GetChannel() const
+		unsigned int GetChannel() const
 		{
 			return nChannel;
 		}

@@ -1184,7 +1184,7 @@ namespace Wallet
                     wtxNew.fFromMe = true;
 
                     int64 nTotalValue = nValue + nFeeRet;
-                    double dPriority = 0;
+
                     // vouts to the payees
                     BOOST_FOREACH (const PAIRTYPE(CScript, int64)& s, vecSend)
                         wtxNew.vout.push_back(Core::CTxOut(s.second, s.first));
@@ -1208,14 +1208,6 @@ namespace Wallet
                     if (!fSelectCoinsSuccessful)
                         return false;
 
-                    CScript scriptChange;
-                    BOOST_FOREACH(PAIRTYPE(const CWalletTx*, unsigned int) pcoin, setCoins)
-                    {
-                        int64 nCredit = pcoin.first->vout[pcoin.second].nValue;
-                        dPriority += (double)nCredit * pcoin.first->GetDepthInMainChain();
-                        scriptChange = pcoin.first->vout[pcoin.second].scriptPubKey;
-                    }
-
                     int64 nChange = nValueIn - nValue - nFeeRet;
 
                     // if sub-cent change is required, the fee must be raised to at least MIN_TX_FEE
@@ -1237,15 +1229,17 @@ namespace Wallet
 
                     if (nChange > 0)
                     {
-                        // Note: We use a new key here to keep it from being obvious which side is the change.
-                        //  The drawback is that by not reusing a previous key, the change may be lost if a
-                        //  backup is restored, if the backup doesn't have the new private key for the change.
-                        //  If we reused the old key, it would be possible to add code to look for and
-                        //  rediscover unknown transactions that were written with keys of ours to recover
-                        //  post-backup change.
+                        CScript scriptChange;
 
-                        if (!GetBoolArg("-avatar")) // Nexus: not avatar mode
+                        if (!GetBoolArg("-avatar", true)) // Avatar mode enabled by default
                         {
+                            // Note: We use a new key here to keep it from being obvious which side is the change.
+                            //  The drawback is that by not reusing a previous key, the change may be lost if a
+                            //  backup is restored, if the backup doesn't have the new private key for the change.
+                            //  If we reused the old key, it would be possible to add code to look for and
+                            //  rediscover unknown transactions that were written with keys of ours to recover
+                            //  post-backup change.
+
                             // Reserve a new key pair from key pool
                             vector<unsigned char> vchPubKey = reservekey.GetReservedKey();
                             // assert(mapKeys.count(vchPubKey));
@@ -1261,13 +1255,26 @@ namespace Wallet
                                 if(!ExtractAddress(scriptChange, address) || !address.IsValid())
                                     return false;
 
-                                SetAddressBookName(address, wtxNew.strFromAccount);
+                                if (wtxNew.strFromAccount == "")
+                                    SetAddressBookName(address, "default");
+                                else
+                                    SetAddressBookName(address, wtxNew.strFromAccount);
                             }
+                        }
+                        else
+                        {
+                            /* For avatar mode, return change to the last address in the input set */
+                            BOOST_FOREACH(PAIRTYPE(const CWalletTx*, unsigned int) pcoin, setCoins)
+                            {
+                                scriptChange = pcoin.first->vout[pcoin.second].scriptPubKey;
+                            }
+
                         }
 
                         // Insert change txn at random position:
                         vector<Core::CTxOut>::iterator position = wtxNew.vout.begin()+ GetRandInt(wtxNew.vout.size());
                         wtxNew.vout.insert(position, Core::CTxOut(nChange, scriptChange));
+
                     }
                     else
                         reservekey.ReturnKey();
@@ -1286,7 +1293,6 @@ namespace Wallet
                     unsigned int nBytes = ::GetSerializeSize(*(Core::CTransaction*)&wtxNew, SER_NETWORK, PROTOCOL_VERSION);
                     if (nBytes >= Core::MAX_BLOCK_SIZE_GEN/5)
                         return false;
-                    dPriority /= nBytes;
 
                     // Check that enough fee is included
                     int64 nPayFee = Core::nTransactionFee * (1 + (int64)nBytes / 1000);
