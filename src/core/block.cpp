@@ -1016,7 +1016,7 @@ namespace Core
         if(IsProofOfStake())
         {
             /* Check for nNonce zero. */
-            if(nNonce == 0)
+            if(nHeight > 2392970 && nNonce == 0)
                 return error("CheckBlock() : Stake cannot have nonce of 0");
 
             /* Check the Coinstake Time is before Unified Timestamp. */
