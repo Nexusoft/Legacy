@@ -625,8 +625,8 @@ if len(add_qt_tr) > 0 and verbose >= 2:
 
 for lng_file in add_qt_tr:
     if verbose >= 3:
-        print(os.path.join(qt_tr_dir, lng_file), "->", os.path.join(applicationBundle.resourcesPath, lng_file)
-    shutil.copy2(os.path.join(qt_tr_dir, lng_file), os.path.join(applicationBundle.resourcesPath, lng_file)))
+        print(os.path.join(qt_tr_dir, lng_file), "->", os.path.join(applicationBundle.resourcesPath, lng_file))
+    shutil.copy2(os.path.join(qt_tr_dir, lng_file), os.path.join(applicationBundle.resourcesPath, lng_file))
 
 # ------------------------------------------------
 
@@ -725,8 +725,8 @@ if config.dmg is not None:
         if fancy.has_key("background_picture"):
             bg_path = os.path.join(disk_root, os.path.basename(fancy["background_picture"]))
             if verbose >= 3:
-                print(fancy["background_picture"], "->", bg_path
-            shutil.copy2(fancy["background_picture"], bg_path))
+                print(fancy["background_picture"], "->", bg_path)
+            shutil.copy2(fancy["background_picture"], bg_path)
         else:
             bg_path = None
 
