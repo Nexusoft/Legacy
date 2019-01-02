@@ -513,6 +513,10 @@ namespace Core
             /* Special Genesis Rules. */
             if(!IsInitialBlockDownload())
             {
+                /* Check that Block is Descendant of Hardened Checkpoints. */
+                if(pindexNew->pprev && !IsDescendant(pindexNew->pprev))
+                    return error("CBlock::SetBestChain() : Not a descendant of Last Checkpoint");
+
                 uint32_t nConsecutive = 0;
                 if(pindexBest && vConnect.size() == 1)
                 {
@@ -1126,11 +1130,6 @@ namespace Core
         /* Check That Block Timestamp is not before previous block. */
         if (GetBlockTime() <= pindexPrev->GetBlockTime())
             return error("AcceptBlock() : block's timestamp too early Block: %" PRId64 " Prev: %" PRId64 "", GetBlockTime(), pindexPrev->GetBlockTime());
-
-
-        /* Check that Block is Descendant of Hardened Checkpoints. */
-        if(!IsInitialBlockDownload() && pindexPrev && !IsDescendant(pindexPrev))
-            return error("AcceptBlock() : Not a descendant of Last Checkpoint");
 
 
         /* Check the Coinbase Transactions in Block Version 3. */

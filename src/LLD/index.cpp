@@ -380,40 +380,6 @@ namespace LLD
             Core::pindexBest  = pindexNew;
             hashBlock = diskindex.hashNext;
         }
-
-
-        /* Check for my trust key. */
-        if(fBootstrap)
-        {
-            InitMessage("Cleaning up Expired Trust Keys...");
-            Bootstrap();
-
-            LLD::CTrustDB trustdb("r+");
-            Core::CTrustKey myTrustKey;
-            uint576 myKey;
-
-            /* If one has their trust key. */
-            bool fHasKey = trustdb.ReadMyKey(myTrustKey);
-            if(fHasKey)
-                myKey.SetBytes(myTrustKey.vchPubKey);
-
-            /* Erase expired trust keys. */
-            for(auto key : vTrustKeys)
-            {
-                if(mapLastBlocks.count(key) && mapLastBlocks[key] + Core::TRUST_KEY_EXPIRE < Core::pindexBest->GetBlockTime())
-                {
-                    EraseTrustKey(key);
-
-                    printf("Erasing Expired Trust Key %s\n", HexStr(key.begin(), key.end()).c_str());
-
-                    if(fHasKey && key == myKey)
-                        trustdb.EraseMyKey();
-
-                    continue;
-                }
-            }
-        }
-
         if(fRequestShutdown)
             return false;
 
@@ -481,7 +447,7 @@ namespace LLD
             if (!block.ReadFromDisk(pindex))
                 return error("LoadBlockIndex() : block.ReadFromDisk failed");
 
-            block.print();
+            //block.print();
 
             if (nCheckLevel > 0 && !block.CheckBlock())
             {

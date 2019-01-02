@@ -16,14 +16,14 @@
 namespace Core
 {
     /** Hardened Checkpoints. **/
-    std::map<unsigned int, uint1024> mapCheckpoints;
-    unsigned int CHECKPOINT_TIMESPAN = 10, MAX_CHECKPOINTS_SEARCH = 1;
+    uint1024 hashCheckpoint;
+    unsigned int CHECKPOINT_TIMESPAN = 10;
 
 
     /** Check Checkpoint Timespan. **/
     bool IsNewTimespan(CBlockIndex* pindex)
     {
-        if(mapCheckpoints.empty() || !pindex->pprev)
+        if(!pindex->pprev)
             return true;
 
         int nFirstMinutes = floor((pindex->GetBlockTime() - mapBlockIndex[pindex->PendingCheckpoint.second]->GetBlockTime()) / 60.0);
@@ -36,24 +36,24 @@ namespace Core
     /** Checks whether given block index is a descendant of last hardened checkpoint. **/
     bool IsDescendant(CBlockIndex* pindex)
     {
-        if(mapCheckpoints.empty() || pindex->nHeight <= 1)
+        if(hashCheckpoint == 0)
             return true;
 
-        /** Ensure that the block is made after last hardened Checkpoint. **/
-        unsigned int nTotalCheckpoints = 0;
+        /* Ensure that the block is made after last hardened Checkpoint. */
+        unsigned int nTotalTimespans = 0;
 
-        /** Check The Block Hash **/
-        while(pindex && pindex->pprev)
+        /* Check The Block Hash */
+        while(pindex->pprev)
         {
-            if(mapCheckpoints.count(pindex->pprev->nHeight))
+            if(pindex->GetBlockHash() == hashCheckpoint)
+                return true;
+
+            if(IsNewTimespan(pindex))
             {
-                if(pindex->pprev->GetBlockHash() == mapCheckpoints[pindex->pprev->nHeight])
-                    return true;
+                nTotalTimespans++;
 
-                if(nTotalCheckpoints >= MAX_CHECKPOINTS_SEARCH)
-                    return false;
-
-                nTotalCheckpoints ++;
+                if(nTotalTimespans > 3)
+                    return error("IsDescendant() : New Timespan found with no checkpoint %s", hashCheckpoint.ToString().substr(0, 20).c_str());
             }
 
             pindex = pindex->pprev;
@@ -67,22 +67,20 @@ namespace Core
         The blockchain from genesis to new hardened checkpoint will then be fixed into place. **/
     bool HardenCheckpoint(CBlockIndex* pcheckpoint, bool fInit)
     {
-
-        /** Only Harden New Checkpoint if it Fits new Timestamp. **/
+        /* Only Harden New Checkpoint if it Fits new Timestamp. */
         if(!IsNewTimespan(pcheckpoint->pprev))
             return false;
 
 
-        /** Only Harden a New Checkpoint if it isn't already hardened. **/
-        if(mapCheckpoints.count(pcheckpoint->pprev->PendingCheckpoint.first))
+        /* Only Harden a New Checkpoint if it isn't already hardened. */
+        if(hashCheckpoint == pcheckpoint->pprev->PendingCheckpoint.second)
             return true;
 
+        /* Update the Checkpoints into Memory. */
+        hashCheckpoint = pcheckpoint->pprev->PendingCheckpoint.second;
 
-        /** Update the Checkpoints into Memory. **/
-        mapCheckpoints[pcheckpoint->pprev->PendingCheckpoint.first] = pcheckpoint->pprev->PendingCheckpoint.second;
 
-
-        /** Dump the Checkpoint if not Initializing. **/
+        /* Dump the Checkpoint if not Initializing. */
         if(!fInit)
             printf("===== Hardened Checkpoint %s Height = %u\n",
             pcheckpoint->pprev->PendingCheckpoint.second.ToString().substr(0, 20).c_str(),
