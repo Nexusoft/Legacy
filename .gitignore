@@ -19,5 +19,4 @@ Makefile
 Makefile.Debug
 Makefile.Release
 nexus
-qrc_nexus.cppy
-
+qrc_nexus.cpp
