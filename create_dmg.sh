@@ -1,8 +1,3 @@
-#!/bin/bash
-if [ -d "/usr/local/lib/python2.7" ]; then
-	brew uninstall python@2
-	rm -rf /usr/local/lib/python2.7
-fi
 
 brew install python@2
 pip2 install appscript
