@@ -4,7 +4,7 @@ VERSION = 0.1.0.0
 INCLUDEPATH += src src/core src/hash src/json src/net src/qt src/util src/wallet src/LLD src/LLP
 DEFINES += QT_GUI BOOST_THREAD_USE_LIB BOOST_SPIRIT_THREADSAFE
 win32:DEFINES+= BOOST_USE_WINDOWS_H WIN32_LEAN_AND_MEAN
-CONFIG += no_include_pwd optimize_full c++11 thread 
+CONFIG += no_include_pwd optimize_full c++11 thread
 greaterThan(QT_MAJOR_VERSION, 4) {
 	QT += uitools widgets
 }
@@ -165,7 +165,7 @@ contains(RELEASE, 1) {
 
     #Static Configuration
     win32:CONFIG += STATIC
-	
+
     win32:QMAKE_LFLAGS += -Wl,--dynamicbase -Wl,--nxcompat -static -static-libgcc -static-libstdc++
     !win32:!macx {
         # Linux: static link
@@ -252,7 +252,7 @@ build_pass:DebugBuild {
 build_pass:ReleaseBuild {
 	QMAKE_DISTCLEAN += object_script.nexus-qt.Release
 }
-					
+
 #Source File List
 DEPENDPATH += src \
     src/LLP \

@@ -16,7 +16,9 @@
 namespace Core
 {
     /** Hardened Checkpoints. **/
-    uint1024 hashCheckpoint;
+    uint1024 hashCheckpoint   = 0;
+
+    unsigned int nCheckHeight = 0;
     unsigned int CHECKPOINT_TIMESPAN = 10;
 
 
@@ -40,7 +42,8 @@ namespace Core
             return true;
 
         /* Ensure that the block is made after last hardened Checkpoint. */
-        unsigned int nTotalTimespans = 0;
+        if(!pindex->pprev)
+            return true;
 
         /* Check The Block Hash */
         while(pindex->pprev)
@@ -48,13 +51,8 @@ namespace Core
             if(pindex->GetBlockHash() == hashCheckpoint)
                 return true;
 
-            if(IsNewTimespan(pindex))
-            {
-                nTotalTimespans++;
-
-                if(nTotalTimespans > 3)
-                    return error("IsDescendant() : New Timespan found with no checkpoint %s", hashCheckpoint.ToString().substr(0, 20).c_str());
-            }
+            if(pindex->nHeight < nCheckHeight)
+                return error("IsDescendant() : New Timespan found with no checkpoint = %s height = %u", hashCheckpoint.ToString().substr(0, 20).c_str(), nCheckHeight);
 
             pindex = pindex->pprev;
         }
@@ -71,14 +69,13 @@ namespace Core
         if(!IsNewTimespan(pcheckpoint->pprev))
             return false;
 
-
         /* Only Harden a New Checkpoint if it isn't already hardened. */
         if(hashCheckpoint == pcheckpoint->pprev->PendingCheckpoint.second)
             return true;
 
         /* Update the Checkpoints into Memory. */
-        hashCheckpoint = pcheckpoint->pprev->PendingCheckpoint.second;
-
+        hashCheckpoint    = pcheckpoint->pprev->PendingCheckpoint.second;
+        nCheckHeight      = pcheckpoint->pprev->PendingCheckpoint.first;
 
         /* Dump the Checkpoint if not Initializing. */
         if(!fInit)

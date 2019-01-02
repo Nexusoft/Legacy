@@ -510,12 +510,15 @@ namespace Core
                 vConnect.push_back(pindex);
 
 
+
             /* Special Genesis Rules. */
             if(!IsInitialBlockDownload())
             {
+
                 /* Check that Block is Descendant of Hardened Checkpoints. */
                 if(pindexNew->pprev && !IsDescendant(pindexNew->pprev))
                     return error("CBlock::SetBestChain() : Not a descendant of Last Checkpoint");
+
 
                 uint32_t nConsecutive = 0;
                 if(pindexBest && vConnect.size() == 1)
@@ -617,8 +620,9 @@ namespace Core
             }
 
             /* Connect the checkpoint. */
-            if(pindexNew->pprev)
-                HardenCheckpoint(pindexNew);
+            for (unsigned int i = 0; i < vConnect.size(); i++)
+                if(vConnect[i]->pprev)
+                    HardenCheckpoint(vConnect[i]);
 
             /* Write the Best Chain to the Index Database LLD. */
             if (!indexdb.WriteHashBestChain(pindexNew->GetBlockHash()))
@@ -1242,6 +1246,9 @@ namespace Core
 
             return true;
         }
+
+        if(GetArg("-verbose", 0) >= 1)
+            pblock->print();
 
         if (!pblock->AcceptBlock())
             return error("ProcessBlock() : AcceptBlock FAILED");

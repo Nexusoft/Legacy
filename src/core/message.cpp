@@ -587,9 +587,6 @@ namespace Core
             if(GetArg("-verbose", 0) >= 3)
                 printf("received block %s\n", block.GetHash().ToString().substr(0,20).c_str());
 
-            if(GetArg("-verbose", 0) >= 1)
-                block.print();
-
             Net::CInv inv(Net::MSG_BLOCK, block.GetHash());
             pfrom->AddInventoryKnown(inv);
 
