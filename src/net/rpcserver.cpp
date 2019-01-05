@@ -121,6 +121,9 @@ namespace Net
         if (strAccount == "*")
             throw JSONRPCError(-11, "Invalid account name");
 
+        if (strAccount == "")
+            strAccount = "default";
+
         return strAccount;
     }
 
@@ -1124,7 +1127,7 @@ namespace Net
                 continue;
 
             Object obj;
-            obj.push_back(Pair("type", tx.first ? "debit" : "credit"));
+            obj.push_back(Pair("type", tx.first ? "send" : "receive"));
             obj.push_back(Pair("txid", tx.second.ToString()));
             obj.push_back(Pair("time", (int)TX.nTime));
             obj.push_back(Pair("amount", ValueFromAmount(TX.GetValueOut())));
@@ -1844,7 +1847,7 @@ namespace Net
                 Object entry;
                 entry.push_back(Pair("account", strSentAccount));
                 entry.push_back(Pair("address", s.first.ToString()));
-                entry.push_back(Pair("category", "debit"));
+                entry.push_back(Pair("category", "send"));
                 entry.push_back(Pair("amount", ValueFromAmount(-s.second)));
                 entry.push_back(Pair("fee", ValueFromAmount(-nFee)));
                 if (fLong)
@@ -1874,7 +1877,7 @@ namespace Net
                     Object entry;
                     entry.push_back(Pair("account", account));
                     entry.push_back(Pair("address", r.first.ToString()));
-                    entry.push_back(Pair("category", "credit"));
+                    entry.push_back(Pair("category", "receive"));
                     entry.push_back(Pair("amount", ValueFromAmount(r.second)));
                     if (fLong)
                         WalletTxToJSON(wtx, entry);
