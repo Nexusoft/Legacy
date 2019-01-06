@@ -582,7 +582,12 @@ namespace Wallet
         list<pair<NexusAddress, int64> > listSent;
         GetAmounts(allGeneratedImmature, allGeneratedMature, listReceived, listSent, allFee, strSentAccount);
 
-        if (strAccount == "")
+        if(strSentAccount == "" && strAccount =="default")
+            strSentAccount = "default";
+        if(strSentAccount == "default" && strAccount == "")
+            strSentAccount = "";
+
+        if (strAccount == "" || strAccount == "default")
             nGenerated = allGeneratedMature;
         if (strAccount == strSentAccount)
         {
@@ -1027,13 +1032,16 @@ namespace Wallet
                         if(mapAddressBook.count(address))
                         {
                             std::string strEntry = mapAddressBook.at(address);
-                            if(strEntry == "")
+                            if(strEntry == "" && strAccount == "default")
                                 strEntry = "default";
+
+                            if(strEntry == "default" && strAccount == "")
+                                strAccount = "default";
 
                             if(strEntry == strAccount)
                                 nBalance += pcoin->vout[i].nValue;
                         }
-                        else if(strAccount == "default")
+                        else if(strAccount == "default" || strAccount == "")
                             nBalance += pcoin->vout[i].nValue;
 
                     }

@@ -121,8 +121,11 @@ namespace Net
         if (strAccount == "*")
             throw JSONRPCError(-11, "Invalid account name");
 
-        if (strAccount == "")
-            strAccount = "default";
+        if(!GetBoolArg("-legacy"))
+        {
+            if (strAccount == "")
+                strAccount = "default";
+        }
 
         return strAccount;
     }
@@ -737,7 +740,10 @@ namespace Net
                 "so payments received with the address will be credited to [account].");
 
         // Parse the account first so we don't generate a key if there's an error
-        string strAccount = "default";
+        string strAccount = "";
+        if(!GetBoolArg("-legacy"))
+            strAccount = "default";
+
         if (params.size() > 0)
             strAccount = AccountFromValue(params[0]);
 
@@ -902,7 +908,11 @@ namespace Net
 
         // Wallet comments
         Wallet::CWalletTx wtx;
-        wtx.strFromAccount = "default";
+        if(!GetBoolArg("-legacy"))
+            wtx.strFromAccount = "default";
+        else
+            wtx.strFromAccount = "";
+
         if (params.size() > 2 && params[2].type() != null_type && !params[2].get_str().empty())
             wtx.mapValue["comment"] = params[2].get_str();
         if (params.size() > 3 && params[3].type() != null_type && !params[3].get_str().empty())
@@ -1419,10 +1429,10 @@ namespace Net
             strComment = params[4].get_str();
 
         /* Check for accounts. */
-        if(strFrom != "default" && !Find(pwalletMain->mapAddressBook, strFrom))
+        if((strFrom != "default" || strFrom != "") && !Find(pwalletMain->mapAddressBook, strFrom))
             throw JSONRPCError(-5, strprintf("%s from account doesn't exist.", strFrom.c_str()));
 
-        if(strTo != "default" && !Find(pwalletMain->mapAddressBook, strTo))
+        if((strTo != "default" || strTo != "") && !Find(pwalletMain->mapAddressBook, strTo))
             throw JSONRPCError(-5, strprintf("%s to account doesn't exist.", strTo.c_str()));
 
         /* Build the from transaction. */
@@ -1791,10 +1801,10 @@ namespace Net
         bool fAllAccounts = (strAccount == string("*"));
 
         // Generated blocks assigned to account ""
-        if ((nGeneratedMature+nGeneratedImmature) != 0 && (fAllAccounts || strAccount == ""))
+        if ((nGeneratedMature+nGeneratedImmature) != 0 && (fAllAccounts || (strAccount == "" || strAccount == "default")))
         {
             Object entry;
-            entry.push_back(Pair("account", string("")));
+            entry.push_back(Pair("account", GetBoolArg("-legacy") ? string("") : string("default")));
             if (nGeneratedImmature)
             {
                 entry.push_back(Pair("category", wtx.GetDepthInMainChain() ? "immature" : "orphan"));
@@ -1824,8 +1834,19 @@ namespace Net
                 account = pwalletMain->mapAddressBook[r.first];
 
             /* Catch for blank being default. */
-            if(account == "" || account == "*")
-                account = "default";
+            if(!GetBoolArg("-legacy"))
+            {
+                if(account == "" || account == "*")
+                    account = "default";
+            }
+            else
+            {
+                if(strSentAccount == "default")
+                    strSentAccount = "";
+
+                if(account == "default" || account == "*")
+                    account = "";
+            }
 
             /* Check if there are change transactions. */
             if (strSentAccount == account)
@@ -1872,8 +1893,14 @@ namespace Net
                 if(account == "" || account == "*")
                     account = "default";
 
+                if(strAccount == "" && account == "default")
+                    account = "";
+
                 if (fAllAccounts || (account == strAccount))
                 {
+                    if(GetBoolArg("-legacy") && account == "default")
+                        account = "";
+
                     Object entry;
                     entry.push_back(Pair("account", account));
                     entry.push_back(Pair("address", r.first.ToString()));
@@ -1995,7 +2022,13 @@ namespace Net
             if (pwalletMain->HaveKey(entry.first)) // This address belongs to me
             {
                 if(entry.second == "" || entry.second == "default")
-                    mapAccountBalances["default"] = 0;
+                {
+                    if(GetBoolArg("-legacy"))
+                        mapAccountBalances[""] = 0;
+                    else
+                        mapAccountBalances["default"] = 0;
+                }
+
                 else
                     mapAccountBalances[entry.second] = 0;
             }
@@ -2014,10 +2047,19 @@ namespace Net
                 if(strAccount == "")
                     strAccount = "default";
 
+                if(GetBoolArg("-legacy") && strAccount == "default")
+                    strAccount = "";
+
                 mapAccountBalances[strAccount] += it->second;
             }
             else
-                mapAccountBalances["default"] += it->second;
+            {
+                if(GetBoolArg("-legacy"))
+                    mapAccountBalances[""] += it->second;
+                else
+                    mapAccountBalances["default"] += it->second;
+            }
+
 
         Object ret;
         BOOST_FOREACH(const PAIRTYPE(string, int64)& accountBalance, mapAccountBalances) {
