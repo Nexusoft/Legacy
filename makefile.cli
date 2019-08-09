@@ -595,7 +595,7 @@ build/%.o: src/wallet/%.cpp
 
 
 nexus: $(OBJS:obj/%=build/%)
-	$(CXX) $(CXXFLAGS) -rdynamic -o $@ $^ $(LDFLAGS) $(LIBS)
+	$(CXX) $(CXXFLAGS) -rdynamic -o $@ $(LIBPATHS) $^ $(LIBS)
 	@echo ' '
 	@echo Finished building nexus
 	@echo ' '
