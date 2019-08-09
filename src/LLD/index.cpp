@@ -413,7 +413,7 @@ namespace LLD
 
         /** Verify the Blocks in the Best Chain To Last Checkpoint. **/
         int nCheckLevel = GetArg("-checklevel", 6);
-        int nCheckDepth = GetArg("-checkblocks", 3000);
+        int nCheckDepth = GetArg("-checkblocks", 20000);
         if (nCheckDepth == 0)
             nCheckDepth = 1000000000;
 
